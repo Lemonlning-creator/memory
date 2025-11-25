@@ -1,0 +1,14 @@
+[project]
+name = "memory"
+version = "0.1.0"
+description = "memory for conversational agent"
+authors = [
+    {name = "Anonymous Submission", email = "author@example.com"}
+]
+dependencies = [
+    "requests>=2.24.0",
+    "pandas>=1.0.0",
+    "regex>=2025.11.3",
+    "openai>=2.8.1",
+    "python-dotenv>=1.2.1",
+]
