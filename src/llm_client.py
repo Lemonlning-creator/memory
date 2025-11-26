@@ -4,6 +4,7 @@ import requests
 from openai import OpenAI  # 需安装：pip install openai
 import config
 import re
+from logger import logger
 
 class LLMClient:
     """大模型客户端：支持非流式（结构化数据提取）和流式（智能体回复）调用"""
@@ -51,20 +52,40 @@ class LLMClient:
         :param prompt: 提示词
         :return: 解析后的JSON字典
         """
+
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            stream=False
+        )
+        raw_content = response.choices[0].message.content
+        if not raw_content:
+            logger.warning("LLM返回空响应")
+            return {}
+
+        # 2. 提取代码块中的JSON内容（兼容带```json和不带的情况）
+        json_pattern = re.compile(r'```(?:json)?\s*(.*?)\s*```', re.DOTALL)
+        match = json_pattern.search(raw_content)
+        if match:
+            # 提取代码块内的JSON字符串
+            json_str = match.group(1).strip()
+        else:
+            # 无代码块标记，直接使用原始响应（假设是纯JSON字符串）
+            json_str = raw_content.strip()
+
+        # 3. 解析JSON为字典
         try:
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
-                stream=False
-            )
-            content = response.choices[0].message.content
-            print("llm response:", content)
-            return self._parse_response(content)
+            result_dict = json.loads(json_str)
+            logger.debug(f"LLM响应解析成功：{result_dict}")
+            return result_dict
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON解析失败：错误位置{e.pos}，原因{e.msg}，原始JSON：{json_str}")
+            return {}
         except Exception as e:
-            print(f"大模型非流式调用失败：{str(e)}")
-            return None
+            logger.error(f"LLM响应处理异常：{str(e)}", exc_info=True)
+            return {}
     
     def call_stream(self, prompt: str) -> Generator[str, None, None]:
         """

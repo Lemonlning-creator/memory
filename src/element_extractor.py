@@ -19,22 +19,20 @@ class ElementExtractor:
         """
         # 1. 生成提示词
         extract_prompt = prompt.get_element_extract_prompt(dialog=dialog, current_topic=topic)
+        # logger.info(f"要素提取提示词：{extract_prompt}")
         
         # 2. 大模型非流式调用
         result = self.llm_client.call_non_stream(prompt=extract_prompt)
-        print("element:", result)
+        # print("element:", result)
         
-        # 3. 处理结果（解析失败则返回空要素）
-        key_elements = []
-        detailed_elements = []
-        if isinstance(result, dict):
-            key_elements = result.get("key_elements", [])
-            detailed_elements = result.get("detailed_elements", [])
-            # 安全校验：确保是列表类型
-            key_elements = key_elements if isinstance(key_elements, list) else []
-            detailed_elements = detailed_elements if isinstance(detailed_elements, list) else []
-            logger.info(f"要素提取成功：关键要素={key_elements}，细节要素={detailed_elements}")
-        else:
-            logger.warning(f"要素提取解析失败，返回空要素：对话={dialog}")
+        # 严格校验返回格式
+        if not isinstance(result, dict):
+            logger.warning("LLM返回非字典格式，使用空要素")
+            return Element([], [])
         
-        return Element(key_elements=key_elements, detailed_elements=detailed_elements)
+        key_elements = result.get("key_elements", [])
+        detailed_elements = result.get("detailed_elements", [])
+        # 强制类型转换（避免非列表类型导致的错误）
+        key_elements = key_elements if isinstance(key_elements, list) else []
+        detailed_elements = detailed_elements if isinstance(detailed_elements, list) else []
+        return Element(key_elements, detailed_elements)

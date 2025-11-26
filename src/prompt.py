@@ -59,17 +59,17 @@ def boundary_detection_prompt(conversation_history: str, new_messages: str) -> s
 
     输出格式示例：
     ```json
-    {
+    {{
         "topic_changed": true/false,
         "confidence": 0.0-1.0
-    }
+    }}
     ```
 
     注意事项：
     -若对话历史为空（即当前为第一条消息），返回 false
     -检测到明确话题变更时，即使对话过渡自然，也需拆分
     -每个片段应是独立完整的对话单元，可单独理解
-"""
+""".format(conversation_history=conversation_history, new_messages=new_messages) 
 
 def get_element_extract_prompt(dialog: str, current_topic: str) -> str:
     """
@@ -96,12 +96,12 @@ def get_element_extract_prompt(dialog: str, current_topic: str) -> str:
 
     输出格式示例：
     ```json
-    {
+    {{
         "key_elements": ["要素1", "要素2", ...],  // 无则为空数组
         "detailed_elements": ["要素1", "要素2", ...]  // 无则为空数组
-    }
+    }}
     ```
-    """
+    """.format(dialog=dialog, current_topic=current_topic)
 
 def get_topic_initialize_prompt(first_dialog: str) -> str:
     """
@@ -110,12 +110,14 @@ def get_topic_initialize_prompt(first_dialog: str) -> str:
     :return: 完整提示词
     """
     return """
-    任务：从用户的第一轮对话中提炼核心主题，主题需简洁明了（不超过20字），准确反映用户核心需求或话题。
-
+    任务：从用户首轮对话中提炼宏观的情景总结作为主题，主题需包含「时间+核心事件+延伸范围」，避免单一关键词，长度控制在20字内。
+    
     特殊处理规则：
     1. 若用户对话是简单问候、寒暄（如"hello"、"你好"、"嗨"、"早上好"等），主题统一提炼为"打招呼/问候"。
     2. 若用户对话是无明确核心需求的闲聊（如"今天天气不错"），主题提炼为"日常闲聊"。
-    3. 若用户对话有明确需求/话题（如"求推荐午饭"、"想改代码"），提炼具体核心主题。
+    3. 若用户对话有明确需求/话题（如"求推荐午饭"、"想改代码"），提炼宏观核心主题。
+    4. 有明确核心事件 → 主题需概括"事件+延伸"；
+    5. 是宏观情景的总结，避免过细粒度。
 
     用户对话：{first_dialog}
     
@@ -127,11 +129,11 @@ def get_topic_initialize_prompt(first_dialog: str) -> str:
 
     输出格式示例：
     ```json
-    {
+    {{
         "topic": "提炼后的主题文本"
-    }
+    }}
     ```
-    """
+    """.format(first_dialog=first_dialog)
 
 def get_topic_update_prompt(current_topic: str, current_key_info: list, new_key_elements: list) -> str:
     """
@@ -142,10 +144,14 @@ def get_topic_update_prompt(current_topic: str, current_key_info: list, new_key_
     :return: 完整提示词
     """
     return """
-    任务：基于当前主题、已有关键信息和新增关键要素，判断是否需要更新主题。
+    任务：判断是否需要更新当前主题，核心原则是「同一情景延伸则合并更新，完全无关则不更新」。
+    
     判定规则：
     1. 若新增关键要素导致主题核心含义发生变化（如需求变更、话题切换），则需要更新主题。
     2. 若新增关键要素仅补充细节（不改变核心），则不需要更新主题。
+    3. 若新增关键要素属于当前主题的情景延伸（如新增时间、地点、人物等细节），则更新主题以涵盖新要素。
+    4. 更新后的主题需保持宏观情景总结，包含原有核心+新延伸（避免拆分）。
+    5. 由于是对每轮对话均进行主题更新判断，因此当前主题有可能会很细粒度，请在更新时保持宏观总结。
     
     当前主题：{current_topic}
     已有关键信息：{current_key_info}
@@ -160,12 +166,45 @@ def get_topic_update_prompt(current_topic: str, current_key_info: list, new_key_
 
     输出格式示例：
     ```json 
-    {
+    {{
         "need_update": true/false,  // 是否需要更新主题
         "new_topic": "更新后的主题文本"  // 不需要更新则填原主题，需要则填新主题（不超过20字）
-    }
+    }}
     ```
+    """.format(current_topic=current_topic, current_key_info=current_key_info, new_key_elements=new_key_elements)
+
+def get_noise_detection_prompt(dialog: str, topic_context: str) -> str:
     """
+    噪声检测提示词：明确噪声定义，避免误判新主题
+    """
+    return """
+    任务：判断用户的对话是否为无意义的临时噪声（不影响对话流程、无实际需求的内容）。
+    噪声的严格定义（必须同时满足）：
+    1. 临时插入：仅为当前时刻的短期操作，不延续为新的对话主题；
+    2. 无实际需求：不包含任何核心需求、话题讨论、信息询问；
+    3. 不影响后续交流：忽略该对话后，后续对话仍可正常进行。
+    
+    非噪声的情况（满足任一即可）：
+    1. 包含明确的需求（如“吃夜宵吗”“推荐电影”）；
+    2. 开启新的对话主题（与旧主题无关，但有实际讨论意义）；
+    3. 对当前/新主题的补充、回应（如“吃烤冷面？”“加鸡蛋吗”）。
+    
+    辅助判断上下文：{topic_context}
+    待判断对话：{dialog}
+    
+    输出要求：
+    必须严格按照以下JSON格式输出，不要添加任何额外文字！
+    1. JSON 内容需严格包裹在 ```json 和 ``` 之间（代码块格式）
+    2. 仅包含指定字段，不得新增其他字段
+    3. is_noise 为布尔值  
+
+    输出格式示例：
+    ```json 
+    {{
+        "is_noise": true/false  // 仅为布尔值，true=噪声，false=非噪声
+    }}
+    """.format(dialog=dialog, topic_context=topic_context)
+
 
 def get_agent_response_prompt(user_input: str, current_memory: dict) -> str:
     """
@@ -181,7 +220,11 @@ def get_agent_response_prompt(user_input: str, current_memory: dict) -> str:
     key_info = info_block.get("key_info_block", [])     # 安全获取关键信息
     aux_info = info_block.get("aux_info_block", [])     # 安全获取辅助信息
 
-    return f"""
+    # 处理空值显示（避免列表为空时显示"[]"）
+    key_info_str = ", ".join(key_info) if key_info else "无"
+    aux_info_str = ", ".join(aux_info) if aux_info else "无"
+
+    return """
     你是一个聊天智能体“小具”，需要基于用户输入和当前对话记忆，生成自然、连贯的回复。
     回复规则：
     1. 优先参考当前记忆中的主题和关键信息，确保回复与上下文相关。
@@ -190,11 +233,16 @@ def get_agent_response_prompt(user_input: str, current_memory: dict) -> str:
     
     当前对话记忆：
     主题：{topic}
-    关键信息：{key_info if key_info else "无"}
-    辅助信息：{aux_info if aux_info else "无"}
+    关键信息：{key_info_str}
+    辅助信息：{aux_info_str}
     
     用户最新输入：{user_input}
     
     输出要求：
     仅输出自然语言回复文本，不要添加任何额外格式！
-    """
+    """.format(
+        topic=topic,
+        key_info_str=key_info_str,
+        aux_info_str=aux_info_str,
+        user_input=user_input
+    )

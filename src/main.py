@@ -31,7 +31,7 @@ def main():
     memory_store = MemoryStore()
     llm_client = LLMClient()
     
-    print("=== 记忆动态分层构建 - 人机交互测试 ===")
+    print("========= 小具上线啦 =========")
     print("提示：输入 'exit' 退出对话，输入 'show memory' 查看当前记忆，输入 'load history' 加载历史记忆\n")
     logger.info("程序启动，进入人机交互模式")
     

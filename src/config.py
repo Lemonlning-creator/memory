@@ -10,6 +10,7 @@ DETAILED_ELEMENT_FILTER = ["补充", "说明", "细节", "备注"]  # 细节要�
 # Topic更新配置
 TOPIC_UPDATE_THRESHOLD = 0.6  # 关键信息变化占比阈值（超过则更新主题）
 TOPIC_INIT_MAX_LENGTH = 20  # 初始主题最大长度
+TOPIC_UPDATE_MAX_LENGTH = 20  # 更新后主题最大长度
 
 # 存储配置
 MEMORY_PERSIST_PATH = "./memory_cache.json"  # 记忆持久化路径（可选）
@@ -19,7 +20,7 @@ LLM_PROVIDER = "openai"  # 支持 "openai"、"zhipu"、"qianfan" 等
 LLM_MODEL = "qwen-max"  # 模型名称（根据提供商调整）
 LLM_API_KEY = "sk-7c0d7996ace54d368aa8a6f05b0078e0"  # 替换为你的API密钥
 LLM_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1"  # 自定义Base URL（如智谱、千帆的专属URL）
-LLM_TEMPERATURE = 0.3  # 大模型温度（越低越稳定）
+LLM_TEMPERATURE = 0.1  # 大模型温度（越低越稳定）
 LLM_MAX_TOKENS = 512  # 最大输出 tokens
 
 # 流式输出配置

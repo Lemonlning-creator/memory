@@ -1,228 +1,76 @@
-2025-11-25 17:08:12 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 17:08:42 - INFO - memory_builder - 开始处理对话：输入=啊小具！我改代码改的好崩溃 啊怎么就改不明白了呢，当前主题=None
-2025-11-25 17:08:42 - INFO - memory_builder - 无当前活跃记忆，初始化新主题
-2025-11-25 17:08:43 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=啊小具！我改代码改的好崩溃 啊怎么就改不
-2025-11-25 17:08:45 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=啊小具！我改代码改的好崩溃 啊怎么就改不明白了呢
-2025-11-25 17:08:45 - INFO - memory_store - 当前记忆更新：主题=啊小具！我改代码改的好崩溃 啊怎么就改不，更新时间=2025-11-25T17:08:43.943207
-2025-11-25 17:08:45 - INFO - memory_builder - 新主题初始化完成：主题=啊小具！我改代码改的好崩溃 啊怎么就改不，关键要素=[]
-2025-11-25 17:09:46 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 17:09:46 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=啊小具！我改代码改的好崩溃 啊怎么就改不，文件路径=./output/memory_store.jsonl
-2025-11-25 17:09:49 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 17:09:59 - INFO - memory_builder - 开始处理对话：输入=小具小具，要吃点下午茶吗，当前主题=None
-2025-11-25 17:09:59 - INFO - memory_builder - 无当前活跃记忆，初始化新主题
-2025-11-25 17:10:00 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=小具小具，要吃点下午茶吗
-2025-11-25 17:10:00 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=小具小具，要吃点下午茶吗
-2025-11-25 17:10:00 - INFO - memory_store - 当前记忆更新：主题=小具小具，要吃点下午茶吗，更新时间=2025-11-25T17:10:00.014187
-2025-11-25 17:10:00 - INFO - memory_builder - 新主题初始化完成：主题=小具小具，要吃点下午茶吗，关键要素=[]
-2025-11-25 17:10:12 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 17:10:12 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=小具小具，要吃点下午茶吗，文件路径=./output/memory_store.jsonl
-2025-11-25 17:10:50 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 17:10:52 - INFO - memory_builder - 开始处理对话：输入=hello，当前主题=None
-2025-11-25 17:10:52 - INFO - memory_builder - 无当前活跃记忆，初始化新主题
-2025-11-25 17:10:53 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=hello
-2025-11-25 17:10:56 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=hello
-2025-11-25 17:10:56 - INFO - memory_store - 当前记忆更新：主题=hello，更新时间=2025-11-25T17:10:53.635744
-2025-11-25 17:10:56 - INFO - memory_builder - 新主题初始化完成：主题=hello，关键要素=[]
-2025-11-25 17:12:25 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 17:12:25 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=hello，文件路径=./output/memory_store.jsonl
-2025-11-25 17:12:27 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 17:12:29 - INFO - memory_builder - 开始处理对话：输入=hello，当前主题=None
-2025-11-25 17:12:29 - INFO - memory_builder - 无当前活跃记忆，初始化新主题
-2025-11-25 17:12:30 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=hello
-2025-11-25 17:12:30 - ERROR - main - 记忆构建失败：'LLMClient' object is not callable
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 94, in main
-    updated_memory = memory_builder.build_memory(dialog=user_input)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 61, in build_memory
-    element = self.element_extractor.extract_elements(dialog=dialog, topic=new_topic.current_topic)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/ln123/Document/pythonfile/memory/src/element_extractor.py", line 24, in extract_elements
-    raw_result = self.llm_client(prompt=extract_prompt)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: 'LLMClient' object is not callable
-2025-11-25 17:13:01 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 17:13:01 - INFO - memory_store - 无当前活跃记忆，退出时无需保存
-2025-11-25 17:18:45 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 17:18:47 - INFO - memory_builder - 开始处理对话：输入=hello，当前主题=None
-2025-11-25 17:18:47 - INFO - memory_builder - 无当前活跃记忆，初始化新主题
-2025-11-25 17:18:49 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=hello
-2025-11-25 17:18:49 - ERROR - main - 记忆构建失败：'LLMClient' object is not callable
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 94, in main
-    updated_memory = memory_builder.build_memory(dialog=user_input)
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 61, in build_memory
-    element = self.element_extractor.extract_elements(dialog=dialog, topic=new_topic.current_topic)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/ln123/Document/pythonfile/memory/src/element_extractor.py", line 24, in extract_elements
-    raw_result = self.llm_client(prompt=extract_prompt)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: 'LLMClient' object is not callable
-2025-11-25 17:37:32 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 17:37:32 - INFO - memory_store - 无当前活跃记忆，退出时无需保存
-2025-11-25 17:56:42 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 17:56:44 - ERROR - main - 程序异常退出：'current_topic'
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 97, in main
-    response_prompt = prompt.get_agent_response_prompt(
-                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/ln123/Document/pythonfile/memory/src/prompt.py", line 185, in get_agent_response_prompt
-    主题：{current_memory['current_topic']}
-           ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-KeyError: 'current_topic'
-2025-11-25 20:26:58 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 20:27:01 - INFO - memory_builder - 开始处理完整轮次对话：user: hello
+2025-11-25 22:53:55 - INFO - main - 程序启动，进入人机交互模式
+2025-11-25 22:53:58 - INFO - memory_builder - 处理对话轮次：user: hello
 agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:27:01 - INFO - memory_builder - 无当前活跃记忆，初始化新主题（首轮对话）
-2025-11-25 20:27:02 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=user: hello
-agent: 你
-2025-11-25 20:27:02 - ERROR - main - 轮次记忆构建失败：ElementExtractor.extract_elements() got an unexpected keyword argument 'current_topic'
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 108, in main
-    memory_builder.build_memory(
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 75, in build_memory
-    element = self.element_extractor.extract_elements(
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: ElementExtractor.extract_elements() got an unexpected keyword argument 'current_topic'
-2025-11-25 20:29:47 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 20:29:47 - INFO - memory_store - 无当前活跃记忆，退出时无需保存
-2025-11-25 20:29:49 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 20:29:51 - INFO - memory_builder - 开始处理完整轮次对话：user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:29:51 - INFO - memory_builder - 无当前活跃记忆，初始化新主题（首轮对话）
-2025-11-25 20:29:52 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=user: hello
-agent: 你
-2025-11-25 20:29:52 - ERROR - main - 轮次记忆构建失败：'LLMClient' object is not callable
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 108, in main
-    memory_builder.build_memory(
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 75, in build_memory
-    element = self.element_extractor.extract_elements(
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/ln123/Document/pythonfile/memory/src/element_extractor.py", line 24, in extract_elements
-    raw_result = self.llm_client(prompt=extract_prompt)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: 'LLMClient' object is not callable
-2025-11-25 20:32:17 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 20:32:17 - INFO - memory_store - 无当前活跃记忆，退出时无需保存
-2025-11-25 20:32:19 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 20:32:21 - INFO - memory_builder - 开始处理完整轮次对话：user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:32:21 - INFO - memory_builder - 无当前活跃记忆，初始化新主题（首轮对话）
-2025-11-25 20:32:22 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=user: hello
-agent: 你
-2025-11-25 20:32:24 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:32:24 - INFO - memory_store - 当前记忆更新：主题=user: hello
-agent: 你，更新时间=2025-11-25T20:32:22.450118
-2025-11-25 20:32:24 - INFO - memory_builder - 首轮主题初始化完成：主题=user: hello
-agent: 你，关键要素=[]，对话历史已更新
-2025-11-25 20:32:48 - INFO - memory_builder - 开始处理完整轮次对话：user: 晚上要不要去吃宵夜？
-agent: 听起来不错啊！有什么好地方推荐吗？
-2025-11-25 20:32:48 - ERROR - main - 轮次记忆构建失败：MemoryBuilder._detect_topic_boundary() missing 1 required positional argument: 'new_round_dialog'
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 108, in main
-    memory_builder.build_memory(
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 96, in build_memory
-    topic_changed = self._detect_topic_boundary(current_round)
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: MemoryBuilder._detect_topic_boundary() missing 1 required positional argument: 'new_round_dialog'
-2025-11-25 20:35:52 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 20:35:52 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=user: hello
-agent: 你，文件路径=./output/memory_store.jsonl
-2025-11-25 20:35:57 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 20:36:00 - INFO - memory_builder - 开始处理完整轮次对话：user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:36:00 - INFO - memory_builder - 无当前活跃记忆，初始化新主题（首轮对话）
-2025-11-25 20:36:00 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=user: hello
-agent: 你
-2025-11-25 20:36:02 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:36:02 - INFO - memory_store - 当前记忆更新：主题=user: hello
-agent: 你，更新时间=2025-11-25T20:36:00.884769
-2025-11-25 20:36:02 - INFO - memory_builder - 首轮主题初始化完成：主题=user: hello
-agent: 你，关键要素=[]，对话历史已更新
-2025-11-25 20:36:21 - INFO - memory_builder - 开始处理完整轮次对话：user: 代码写完喽！
-agent: 太棒了！完成代码一定很有成就感吧，接下来有什么打算？
-2025-11-25 20:36:22 - WARNING - memory_builder - 话题边界检测结果解析失败，默认判定为未更换：输入=user: hello
-agent: 你
-2025-11-25 20:36:22 - INFO - memory_builder - 话题未更换，进入要素汇总流程
-2025-11-25 20:36:22 - ERROR - main - 轮次记忆构建失败：ElementExtractor.extract_elements() got an unexpected keyword argument 'current_topic'
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 108, in main
-    memory_builder.build_memory(
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 158, in build_memory
-    element = self.element_extractor.extract_elements(
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: ElementExtractor.extract_elements() got an unexpected keyword argument 'current_topic'
-2025-11-25 20:38:03 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 20:38:03 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=user: hello
-agent: 你，文件路径=./output/memory_store.jsonl
-2025-11-25 20:38:06 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 20:38:11 - INFO - memory_builder - 开始处理完整轮次对话：user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:38:11 - INFO - memory_builder - 无当前活跃记忆，初始化新主题（首轮对话）
-2025-11-25 20:38:12 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=user: hello
-agent: 你
-2025-11-25 20:38:13 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:38:13 - INFO - memory_store - 当前记忆更新：主题=user: hello
-agent: 你，更新时间=2025-11-25T20:38:12.901644
-2025-11-25 20:38:13 - INFO - memory_builder - 首轮主题初始化完成：主题=user: hello
-agent: 你，关键要素=[]，对话历史已更新
-2025-11-25 20:38:18 - INFO - memory_builder - 开始处理完整轮次对话：user: 吃完吃饭！
-agent: 吃完饭了吗？希望你吃得好！
-2025-11-25 20:38:19 - WARNING - memory_builder - 话题边界检测结果解析失败，默认判定为未更换：输入=user: hello
-agent: 你
-2025-11-25 20:38:19 - INFO - memory_builder - 话题未更换，进入要素汇总流程
-2025-11-25 20:38:20 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=user: 吃完吃饭！
-agent: 吃完饭了吗？希望你吃得好！
-2025-11-25 20:38:20 - INFO - memory_builder - 当前轮要素提取结果：关键要素=[]，细节要素=[]
-2025-11-25 20:38:20 - INFO - memory_builder - Info-block汇总完成：关键要素新增0个（总计0个），细节要素新增0个（总计0个）
-2025-11-25 20:38:20 - ERROR - main - 轮次记忆构建失败：TopicManager.should_update_topic() got an unexpected keyword argument 'current_key_info'
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 108, in main
-    memory_builder.build_memory(
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 187, in build_memory
-    if self.topic_manager.should_update_topic(
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-TypeError: TopicManager.should_update_topic() got an unexpected keyword argument 'current_key_info'
-2025-11-25 20:39:35 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 20:39:35 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=user: hello
-agent: 你，文件路径=./output/memory_store.jsonl
-2025-11-25 20:39:37 - INFO - main - 程序启动，进入人机交互模式
-2025-11-25 20:39:40 - INFO - memory_builder - 开始处理完整轮次对话：user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:39:40 - INFO - memory_builder - 无当前活跃记忆，初始化新主题（首轮对话）
-2025-11-25 20:39:43 - WARNING - topic_manager - 主题初始化解析失败，降级使用对话截取：主题=user: hello
-agent: 你
-2025-11-25 20:39:44 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=user: hello
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:39:44 - INFO - memory_store - 当前记忆更新：主题=user: hello
-agent: 你，更新时间=2025-11-25T20:39:43.670730
-2025-11-25 20:39:44 - INFO - memory_builder - 首轮主题初始化完成：主题=user: hello
-agent: 你，关键要素=[]，对话历史已更新
-2025-11-25 20:39:48 - INFO - memory_builder - 开始处理完整轮次对话：user: 你好
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:39:50 - WARNING - memory_builder - 话题边界检测结果解析失败，默认判定为未更换：输入=user: hello
-agent: 你
-2025-11-25 20:39:50 - INFO - memory_builder - 话题未更换，进入要素汇总流程
-2025-11-25 20:39:52 - WARNING - element_extractor - 要素提取解析失败，返回空要素：对话=user: 你好
-agent: 你好！有什么可以帮助你的吗？
-2025-11-25 20:39:52 - INFO - memory_builder - 当前轮要素提取结果：关键要素=[]，细节要素=[]
-2025-11-25 20:39:52 - INFO - memory_builder - Info-block汇总完成：关键要素新增0个（总计0个），细节要素新增0个（总计0个）
-2025-11-25 20:39:52 - ERROR - main - 轮次记忆构建失败：'str' object has no attribute 'current_topic'
-Traceback (most recent call last):
-  File "/Users/ln123/Document/pythonfile/memory/src/main.py", line 108, in main
-    memory_builder.build_memory(
-  File "/Users/ln123/Document/pythonfile/memory/src/memory_builder.py", line 187, in build_memory
-    if self.topic_manager.should_update_topic(
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/ln123/Document/pythonfile/memory/src/topic_manager.py", line 63, in should_update_topic
-    current_topic=current_topic.current_topic,
-                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'str' object has no attribute 'current_topic'
-2025-11-25 20:40:21 - INFO - main - 用户强制退出（Ctrl+C）
-2025-11-25 20:40:21 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=user: hello
-agent: 你，文件路径=./output/memory_store.jsonl
+2025-11-25 22:53:58 - INFO - memory_builder - 首轮对话，初始化记忆
+2025-11-25 22:54:01 - INFO - memory_store - 当前记忆更新：主题=打招呼/问候，更新时间=2025-11-25T22:54:01.008354
+2025-11-25 22:54:01 - INFO - memory_builder - 首轮记忆初始化完成：打招呼/问候
+2025-11-25 22:54:06 - INFO - memory_builder - 处理对话轮次：user: 吃夜宵也
+agent: 吃夜宵听起来不错呢，有什么好吃的推荐吗？
+2025-11-25 22:54:08 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': True, 'confidence': 0.95}
+2025-11-25 22:54:08 - INFO - memory_builder - 话题已更换，判断是否为临时噪声
+2025-11-25 22:54:09 - INFO - memory_builder - 新对话为有效新主题，保存旧主题并初始化新记忆
+2025-11-25 22:54:09 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=打招呼/问候，文件路径=./output/memory_store.jsonl
+2025-11-25 22:54:12 - INFO - memory_store - 当前记忆更新：主题=晚上吃夜宵及食物推荐，更新时间=2025-11-25T22:54:12.275148
+2025-11-25 22:54:12 - INFO - memory_builder - 新主题记忆初始化完成：晚上吃夜宵及食物推荐
+2025-11-25 22:54:17 - INFO - memory_builder - 处理对话轮次：user: 烤冷面呀？
+agent: 烤冷面是个不错的选择，香脆可口，特别适合当夜宵。你更喜欢加点什么配料呢？
+2025-11-25 22:54:18 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.95}
+2025-11-25 22:54:18 - INFO - memory_builder - 话题未更换，更新记忆
+2025-11-25 22:54:22 - INFO - memory_store - 当前记忆更新：主题=晚上吃夜宵及食物推荐，更新时间=2025-11-25T22:54:22.368861
+2025-11-25 22:54:22 - INFO - memory_builder - 当前记忆更新完成
+2025-11-25 22:54:32 - INFO - memory_builder - 处理对话轮次：user: 加糖醋！
+agent: 加糖醋听起来很不错，这样烤冷面会更加酸甜可口，试试看吧！
+2025-11-25 22:54:33 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.95}
+2025-11-25 22:54:33 - INFO - memory_builder - 话题未更换，更新记忆
+2025-11-25 22:54:38 - INFO - memory_store - 当前记忆更新：主题=晚上吃夜宵及食物推荐，更新时间=2025-11-25T22:54:38.281138
+2025-11-25 22:54:38 - INFO - memory_builder - 当前记忆更新完成
+2025-11-25 22:54:56 - INFO - memory_builder - 处理对话轮次：user: 我跟你说，我今天改了一天的代码，还差一点还是没改完！！
+agent: 辛苦了！改代码确实挺费神的。要不先休息一下，吃点夜宵放松放松？比如来份香脆可口的烤冷面，再加点酸甜可口的糖醋配料，怎么样？
+2025-11-25 22:54:57 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': True, 'confidence': 0.95}
+2025-11-25 22:54:57 - INFO - memory_builder - 话题已更换，判断是否为临时噪声
+2025-11-25 22:54:57 - INFO - memory_builder - 新对话为有效新主题，保存旧主题并初始化新记忆
+2025-11-25 22:54:57 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=晚上吃夜宵及食物推荐，文件路径=./output/memory_store.jsonl
+2025-11-25 22:55:00 - INFO - memory_store - 当前记忆更新：主题=长时间编程未完成寻求放松，更新时间=2025-11-25T22:55:00.692195
+2025-11-25 22:55:00 - INFO - memory_builder - 新主题记忆初始化完成：长时间编程未完成寻求放松
+2025-11-25 22:55:28 - INFO - memory_builder - 处理对话轮次：user: 但是明天我就要汇报结果了呢！我们吃完夜宵之后再回来加会班把代码改完吧
+agent: 听起来你真的很紧张呢。吃完夜宵再回来加班是个不错的主意，既能放松一下心情也能补充点能量。希望你能顺利改完代码，加油！
+2025-11-25 22:55:28 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.95}
+2025-11-25 22:55:28 - INFO - memory_builder - 话题未更换，更新记忆
+2025-11-25 22:55:32 - INFO - memory_store - 当前记忆更新：主题=长时间编程未完成寻求放松，更新时间=2025-11-25T22:55:32.861599
+2025-11-25 22:55:32 - INFO - memory_builder - 当前记忆更新完成
+2025-11-25 22:55:57 - INFO - memory_builder - 处理对话轮次：user: 嗯嗯，代码里就差可视化结果部分了，快了快了！
+agent: 听起来你已经快要完成了，真不错！可视化部分做好了整个项目就更加直观易懂了。加油哦，完成之后记得好好休息一下，今天真是辛苦了！
+2025-11-25 22:55:58 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.95}
+2025-11-25 22:55:58 - INFO - memory_builder - 话题未更换，更新记忆
+2025-11-25 22:56:02 - INFO - memory_store - 当前记忆更新：主题=长时间编程未完成寻求放松，更新时间=2025-11-25T22:56:02.538650
+2025-11-25 22:56:02 - INFO - memory_builder - 当前记忆更新完成
+2025-11-25 22:56:16 - INFO - memory_builder - 处理对话轮次：user: 明天汇报完我们下午去逛逛公园呀？
+agent: 好主意！明天汇报完了之后去公园走走，正好可以放松一下心情。希望今天的努力能让明天的展示顺利！
+2025-11-25 22:56:18 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': True, 'confidence': 0.95}
+2025-11-25 22:56:18 - INFO - memory_builder - 话题已更换，判断是否为临时噪声
+2025-11-25 22:56:19 - INFO - memory_builder - 新对话为有效新主题，保存旧主题并初始化新记忆
+2025-11-25 22:56:19 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=长时间编程未完成寻求放松，文件路径=./output/memory_store.jsonl
+2025-11-25 22:56:22 - INFO - memory_store - 当前记忆更新：主题=明天工作后计划公园放松，更新时间=2025-11-25T22:56:22.137264
+2025-11-25 22:56:22 - INFO - memory_builder - 新主题记忆初始化完成：明天工作后计划公园放松
+2025-11-25 22:56:42 - INFO - memory_builder - 处理对话轮次：user: 稍等下我回个微信
+agent: 好的，不着急，你先回微信吧。等你忙完了我们再聊明天的计划。
+2025-11-25 22:56:44 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.95}
+2025-11-25 22:56:44 - INFO - memory_builder - 话题未更换，更新记忆
+2025-11-25 22:56:45 - INFO - memory_store - 当前记忆更新：主题=明天工作后计划公园放松，更新时间=2025-11-25T22:56:45.975573
+2025-11-25 22:56:45 - INFO - memory_builder - 噪声已加入当前记忆
+2025-11-25 22:57:10 - INFO - memory_builder - 处理对话轮次：user: 我回来了！我们去学校附近的公园玩玩吧！很近的
+agent: 听起来不错！明天汇报完之后，下午我们就去那个公园放松一下吧。希望今天的展示一切顺利！
+2025-11-25 22:57:11 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.95}
+2025-11-25 22:57:11 - INFO - memory_builder - 话题未更换，更新记忆
+2025-11-25 22:57:15 - INFO - memory_store - 当前记忆更新：主题=明天工作后计划公园放松，更新时间=2025-11-25T22:57:15.776461
+2025-11-25 22:57:15 - INFO - memory_builder - 当前记忆更新完成
+2025-11-25 22:58:04 - INFO - memory_builder - 处理对话轮次：user: 嗯嗯。我们明天晚上叫上点人一起去吃夜宵吧！可以玩玩游戏什么的，人多热闹
+agent: 听起来很有趣啊！不过我明天下午汇报完之后打算去学校附近的公园放松一下心情。要不咱们改天再聚吧，或者你也可以考虑早点过来一起逛逛公园？
+2025-11-25 22:58:05 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': True, 'confidence': 0.95}
+2025-11-25 22:58:05 - INFO - memory_builder - 话题已更换，判断是否为临时噪声
+2025-11-25 22:58:07 - INFO - memory_builder - 新对话为有效新主题，保存旧主题并初始化新记忆
+2025-11-25 22:58:07 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=明天工作后计划公园放松，文件路径=./output/memory_store.jsonl
+2025-11-25 22:58:10 - INFO - memory_store - 当前记忆更新：主题=明天晚上聚餐夜宵计划，更新时间=2025-11-25T22:58:10.250164
+2025-11-25 22:58:10 - INFO - memory_builder - 新主题记忆初始化完成：明天晚上聚餐夜宵计划
+2025-11-25 22:58:19 - INFO - main - 用户强制退出（Ctrl+C）
+2025-11-25 22:58:19 - INFO - memory_store - 上一个主题记忆已保存到JSONL：主题=明天晚上聚餐夜宵计划，文件路径=./output/memory_store.jsonl

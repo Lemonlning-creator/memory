@@ -1,40 +1,25 @@
-from typing import Optional
-import config
+# from typing import bool
+from llm_client import LLMClient
+from prompt import get_noise_detection_prompt
+from logger import logger
 
 class NoiseDetector:
-    """噪声检测器：基于主题相关性判断对话是否为噪声"""
+    def __init__(self):
+        self.llm_client = LLMClient()
     
-    @staticmethod
-    def calculate_relevance(dialog: str, topic: Optional[str]) -> float:
+    def is_noise(self, dialog: str, topic_context: str = "") -> bool:
         """
-        计算对话与主题的相关性（简单实现：关键词匹配率，可替换为LLM语义相似度）
-        :param dialog: 当前对话文本
-        :param topic: 当前主题（新主题时为None）
-        :return: 相关性得分（0-1）
+        判断对话是否为无意义临时噪声
+        :param dialog: 待判断的对话轮次
+        :param topic_context: 主题上下文（辅助模型判断）
+        :return: 是否为噪声
         """
-        if not topic:
-            return 1.0  # 新主题无相关性计算，直接返回1.0（跳过噪声判断）
+        prompt = get_noise_detection_prompt(dialog=dialog, topic_context=topic_context)
+        logger.debug(f"噪声检测提示词：{prompt}")
+        result = self.llm_client.call_non_stream(prompt=prompt)
         
-        # 提取主题关键词（简单分词，可替换为jieba等工具）
-        topic_keywords = [w for w in topic.strip().split() if len(w) >= 2]
-        if not topic_keywords:
-            return 0.0
-        
-        # 计算对话中匹配的主题关键词占比
-        dialog_words = set(dialog.strip().split())
-        match_count = sum(1 for kw in topic_keywords if kw in dialog_words)
-        return match_count / len(topic_keywords)
-    
-    def is_noise(self, dialog: str, topic: Optional[str]) -> bool:
-        """
-        判断对话是否为噪声
-        :param dialog: 当前对话文本
-        :param topic: 当前主题（新主题时为None）
-        :return: True=噪声，False=非噪声
-        """
-        # 新主题第一轮对话跳过噪声判断
-        if not topic and config.NEW_TOPIC_SKIP_NOISE_CHECK:
+        if not isinstance(result, dict) or "is_noise" not in result:
+            logger.warning("噪声检测结果解析失败，默认视为非噪声")
             return False
         
-        relevance = self.calculate_relevance(dialog, topic)
-        return relevance < config.NOISE_RELEVANCE_THRESHOLD
+        return result["is_noise"]
