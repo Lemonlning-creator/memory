@@ -1,81 +1,63 @@
 import json
-from typing import Optional, List
-from memory_structures import Topic
+import os
+from typing import List, Optional, Dict
+from memory_structures import Memory
 from logger import logger
 import config
 
 class MemoryStore:
-    """记忆存储：单例模式，新增JSONL保存上一个主题记忆"""
-    _instance: Optional["MemoryStore"] = None
-    current_memory: Optional[Topic] = None
-    _jsonl_path: str
+    """记忆存储管理器：负责记忆的持久化存储"""
     
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.current_memory = None  # 当前活跃主题记忆
-            cls._instance._jsonl_path = config.MEMORY_JSONL_PATH  # JSONL存储路径
-        return cls._instance
+    def __init__(self):
+        self.memory_path = config.MEMORY_JSONL_PATH
+        # 确保存储目录存在
+        os.makedirs(os.path.dirname(self.memory_path), exist_ok=True)
     
-    def get_current_memory(self) -> Optional[Topic]:
-        """获取当前活跃主题记忆"""
-        return self.current_memory
-    
-    def update_memory(self, new_memory: Topic) -> None:
-        """更新当前活跃主题记忆"""
-        self.current_memory = new_memory
-        logger.info(f"当前记忆更新：主题={new_memory.current_topic}，更新时间={new_memory.update_time}")
-    
-    def save_prev_memory_to_jsonl(self, prev_memory: Topic) -> bool:
-        """
-        将上一个主题记忆保存到JSONL文件（追加模式）
-        :param prev_memory: 上一个已完成的主题记忆
-        :return: 保存成功与否
-        """
-        if not prev_memory:
-            logger.warning("尝试保存空的上一个记忆，跳过")
-            return False
-        
+    def save_memory(self, memory: Memory) -> bool:
+        """保存记忆到JSONL文件"""
         try:
-            # 转换为字典格式
-            memory_dict = prev_memory.to_dict()
-            # 追加写入JSONL（每行一个JSON对象）
-            with open(self._jsonl_path, "a", encoding=config.JSONL_ENCODING) as f:
-                json.dump(memory_dict, f, ensure_ascii=False, indent=None)
-                f.write("\n")  # 换行分隔不同记忆
-            logger.info(f"上一个主题记忆已保存到JSONL：主题={prev_memory.current_topic}，文件路径={self._jsonl_path}")
+            with open(self.memory_path, 'a', encoding='utf-8') as f:
+                json.dump(memory.to_dict(), f, ensure_ascii=False)
+                f.write('\n')
+            logger.info(f"记忆已保存：{memory.topic}")
             return True
         except Exception as e:
-            logger.error(f"保存上一个记忆到JSONL失败：{str(e)}", exc_info=True)
+            logger.error(f"保存记忆失败：{str(e)}", exc_info=True)
             return False
     
-    def save_current_memory_on_exit(self) -> bool:
-        """退出时保存当前活跃主题记忆（若存在）"""
-        if not self.current_memory:
-            logger.info("无当前活跃记忆，退出时无需保存")
-            return False
-        
-        return self.save_prev_memory_to_jsonl(prev_memory=self.current_memory)
-    
-    def load_all_memories_from_jsonl(self) -> List[dict]:
-        """从JSONL加载所有历史主题记忆（可选调用）"""
+    def load_all_memories(self) -> List[Dict]:
+        """从JSONL文件加载所有记忆"""
         memories = []
         try:
-            with open(self._jsonl_path, "r", encoding=config.JSONL_ENCODING) as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    memory_dict = json.loads(line)
-                    memories.append(memory_dict)
-            logger.info(f"从JSONL加载历史记忆成功，共{len(memories)}个主题")
-        except FileNotFoundError:
-            logger.warning(f"JSONL记忆文件不存在：{self._jsonl_path}")
+            if os.path.exists(self.memory_path):
+                with open(self.memory_path, 'r', encoding='utf-8') as f:
+                    for line_num, line in enumerate(f, 1):
+                        line = line.strip()
+                        if not line:
+                            continue  # 跳过空行
+                        try:
+                            memories.append(json.loads(line))
+                        except json.JSONDecodeError as e:
+                            logger.error(f"第 {line_num} 行 JSON 解析失败: {e.msg}，原始内容: {line}")
+                        except Exception as e:
+                            logger.error(f"第 {line_num} 行读取失败: {str(e)}", exc_info=True)
+            logger.info(f"已加载 {len(memories)} 条记忆")
         except Exception as e:
-            logger.error(f"加载JSONL记忆失败：{str(e)}", exc_info=True)
+            logger.error(f"加载记忆失败：{str(e)}", exc_info=True)
         return memories
     
-    def reset_memory(self) -> None:
-        """重置当前活跃记忆（不影响JSONL历史）"""
-        self.current_memory = None
-        logger.info("当前活跃记忆已重置")
+    def get_latest_memory(self) -> Optional[Dict]:
+        """获取最新的一条记忆"""
+        memories = self.load_all_memories()
+        return memories[-1] if memories else None
+    
+    def clear_all_memories(self) -> bool:
+        """清空所有记忆"""
+        try:
+            if os.path.exists(self.memory_path):
+                os.remove(self.memory_path)
+            logger.info("所有记忆已清空")
+            return True
+        except Exception as e:
+            logger.error(f"清空记忆失败：{str(e)}", exc_info=True)
+            return False
