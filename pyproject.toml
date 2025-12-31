@@ -11,4 +11,5 @@ dependencies = [
     "regex>=2025.11.3",
     "openai>=2.8.1",
     "python-dotenv>=1.2.1",
+    "sentence-transformers>=5.2.0",
 ]

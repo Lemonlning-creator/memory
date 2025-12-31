@@ -1,23 +1,57 @@
 import json
 import os
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Callable
 from memory_structures import Memory
 from logger import logger
 import config
+from domain import DomainManager 
+import numpy as np
+from sentence_transformers import SentenceTransformer, util
 
 class MemoryStore:
     """记忆存储管理器：负责记忆的持久化存储"""
     
-    def __init__(self):
+    def __init__(self, is_worthy_func: Optional[Callable[[Dict], bool]] = None):
         self.memory_path = config.MEMORY_JSONL_PATH
+        self.is_worthy_func = is_worthy_func
         # 确保存储目录存在
         os.makedirs(os.path.dirname(self.memory_path), exist_ok=True)
+        # 初始化向量模型（用于检索）
+        self.embedding_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
     
+
+    ########################记忆直接存储方法（不含域约束判断）########################
+    # def save_memory(self, memory: Memory) -> bool:
+    #     """保存记忆到JSONL文件"""
+    #     try:
+    #         with open(self.memory_path, 'a', encoding='utf-8') as f:
+    #             json.dump(memory.to_dict(), f, ensure_ascii=False)
+    #             f.write('\n')
+    #         logger.info(f"记忆已保存：{memory.topic}")
+    #         return True
+    #     except Exception as e:
+    #         logger.error(f"保存记忆失败：{str(e)}", exc_info=True)
+    #         return False
+
+    ################################域约束下的记忆存储#############################
     def save_memory(self, memory: Memory) -> bool:
-        """保存记忆到JSONL文件"""
+        """
+        保存记忆到JSONL文件（增加域约束判断）
+        :param memory: 要保存的记忆对象
+        :return: 是否成功保存
+        """
+        # 将记忆转换为字典格式，用于判断
+        memory_dict = memory.to_dict()
+        
+        # 如果有判断函数，先判断
+        if self.is_worthy_func and not self.is_worthy_func(memory_dict):
+            logger.info(f"记忆不符合域约束，不保存：{memory.topic}")
+            return False
+        
+        # 如果符合约束，执行保存操作
         try:
             with open(self.memory_path, 'a', encoding='utf-8') as f:
-                json.dump(memory.to_dict(), f, ensure_ascii=False)
+                json.dump(memory_dict, f, ensure_ascii=False)
                 f.write('\n')
             logger.info(f"记忆已保存：{memory.topic}")
             return True
@@ -61,3 +95,47 @@ class MemoryStore:
         except Exception as e:
             logger.error(f"清空记忆失败：{str(e)}", exc_info=True)
             return False
+        
+    def retrieve_related_memories(self, query: str, top_k: int = 5) -> List[Dict]:
+        """
+        根据用户输入检索相关记忆（向量匹配）
+        :param query: 用户输入
+        :param top_k: 返回最相关的 top_k 条记忆
+        :return: 按相似度排序的记忆列表
+        """
+        memories = self.load_all_memories()
+        if not memories:
+            logger.info("没有记忆可供检索")
+            return []
+        
+        # 将记忆内容拼接成一个字符串（用于向量表示）
+        memory_texts = [
+            f"{mem['topic']} {mem['content']} {' '.join(mem['keywords'])}"
+            for mem in memories
+        ]
+        
+        # 向量化用户输入和记忆文本
+        query_embedding = self.embedding_model.encode(query, convert_to_tensor=True)
+        memory_embeddings = self.embedding_model.encode(memory_texts, convert_to_tensor=True)
+        
+        # 计算余弦相似度
+        cos_scores = util.cos_sim(query_embedding, memory_embeddings)[0]
+        
+        # 按相似度排序
+        top_results = np.argpartition(-cos_scores, range(top_k))[0:top_k]
+        
+        # 组装结果
+        results = []
+        for idx in top_results:
+            if cos_scores[idx] > 0.3:  # 相似度阈值，可调整
+                results.append({
+                    "memory": memories[idx],
+                    "similarity": float(cos_scores[idx].cpu().numpy())
+                })
+        
+        # 按相似度降序排列
+        results.sort(key=lambda x: x["similarity"], reverse=True)
+        
+        logger.info(f"检索到 {len(results)} 条相关记忆")
+        logger.info(f"相关记忆内容：{results}")
+        return results

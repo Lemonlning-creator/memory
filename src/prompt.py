@@ -1,6 +1,8 @@
 """
 Prompt Templates
 """
+import json
+from typing import Dict, Any, Optional
 
 def boundary_detection_prompt(conversation_history: str, new_messages: str) -> str:    
     """
@@ -133,6 +135,7 @@ def get_noise_detection_prompt(dialog: str, topic_context: str) -> str:
     {{
         "is_noise": true/false  // 仅为布尔值，true=噪声，false=非噪声
     }}
+    ```
     """.format(dialog=dialog, topic_context=topic_context)
 
 def get_topic_summary_prompt(dialogs:list[str]) -> str:
@@ -155,6 +158,7 @@ def get_topic_summary_prompt(dialogs:list[str]) -> str:
     {{
         "topic": "提炼的主题内容"
     }}
+    ```
     """.format(dialog_text = dialog_text)
 
 def get_content_summary_prompt (dialogs: list [str]) -> str:
@@ -178,6 +182,7 @@ def get_content_summary_prompt (dialogs: list [str]) -> str:
     {{
         "content": "总结的对话内容"
     }}
+    ```
     """.format(dialog_text = dialog_text)
 
 def get_keywords_extract_prompt (dialogs: list [str]) -> str:
@@ -200,9 +205,152 @@ def get_keywords_extract_prompt (dialogs: list [str]) -> str:
     {{
         "keywords": ["关键词1", "关键词2", "关键词3"]
     }}
+    ```
     """.format(dialog_text = dialog_text)
 
-def get_agent_response_prompt(user_input: str, current_memory: dict) -> str:
+
+#############################################################
+
+########################域相关提示词###########################
+
+#############################################################
+
+def get_user_domain_activation_prompt(current_user_domain: dict, user_input: str, conversation_history: str) -> str:
+    """用户域激活提示词"""
+    return """
+    你是一个信息筛选助手。根据用户的输入，从完整的用户域中激活最相关的部分。
+    
+    完整的用户域：
+    {current_user_domain}
+    
+    用户最新输入：
+    {user_input}
+    
+    相关的几条对话历史（可能为空）：
+    {conversation_history}
+
+    ## 你的任务
+    根据用户的最新输入和相关对话历史，从完整的用户域中筛选出与当前对话最相关的部分进行激活。
+
+    现在请输出激活后的JSON：
+    
+    输出要求：
+    必须严格按照以下JSON格式输出激活的用户域信息，不要添加任何额外文字！
+    1. JSON内容需严格包裹在 ```json 和 ``` 之间
+    2. 请生成一个完整的 JSON，不要省略任何字段，确保所有引号和括号都闭合。
+    """.format(current_user_domain=json.dumps(current_user_domain, ensure_ascii=False),user_input=user_input,conversation_history=conversation_history)
+
+def get_self_domain_activation_prompt (current_self_domain: dict, user_input: str, conversation_history: str) -> str:
+    """
+    自我域激活提示词
+    """
+    return """
+    你是一个信息筛选助手。根据用户的输入，从完整的自我域中激活最相关的部分。
+    
+    完整的自我域：
+    {current_self_domain}
+    
+    用户最新输入：
+    {user_input}
+    
+    相关的几条对话历史：
+    {conversation_history}
+
+    ## 你的任务
+    根据用户的最新输入和相关对话历史，从完整的自我域中筛选出与当前对话最相关的部分进行激活。
+
+    现在请输出激活后的JSON：
+
+    输出要求：
+    必须严格按照以下JSON格式输出激活的自我域信息，不要添加任何额外文字！
+    1. JSON内容需严格包裹在 ```json 和 ``` 之间
+    2. 请生成一个完整的 JSON，不要省略任何字段，确保所有引号和括号都闭合。
+    """.format(current_self_domain=json.dumps(current_self_domain, ensure_ascii=False), user_input=user_input, conversation_history=conversation_history)
+
+def get_user_domain_update_prompt (current_user_domain: dict, recent_memories: list) -> str:
+    """
+    用户域更新提示词（基于记忆）
+    """
+    return """
+    任务：基于最近的对话记忆，更新用户域信息。这是一个总结和反思的过程，类似人类睡前整理一天的经历。
+    当前用户域：{current_user_domain}
+    最近的对话记忆：{recent_memories}
+    输出要求：
+    必须严格按照以下JSON格式输出更新后的用户域，不要添加任何额外文字！
+    1. JSON内容需严格包裹在 ```json 和 ``` 之间
+    2. 保留原有有效信息，仅更新或补充相关部分
+    3. 字段结构保持不变：meta_info, pattern_layer, preference_layer, appearance_layer
+    4. meta_info一般不发生变化，除非用户明确说了自己名字改了等等这种确定内容。其他层的内容需要根据记忆进行更新和丰富.
+    
+    输出格式示例：
+    ```json
+    {{
+        "meta_info": {{...}},
+        "pattern_layer": {{...}},
+        "preference_layer": {{...}},
+        "appearance_layer": {{...}}
+    }}
+    ```
+    """.format(current_user_domain=json.dumps(current_user_domain, ensure_ascii=False),recent_memories=json.dumps(recent_memories, ensure_ascii=False))
+
+def get_self_domain_update_prompt (current_self_domain: dict, user_domain: dict, recent_memories: list) -> str:
+    """
+    自我域更新提示词（基于记忆）
+    """
+    return """
+    任务：基于最近的对话记忆和用户域信息，更新自我域信息。这是一个总结和反思的过程，类似人类睡前整理一天的经历并调整应对策略。
+    当前自我域：{current_self_domain}
+    当前用户域信息：{user_domain}
+    最近的对话记忆：{recent_memories}
+    输出要求：
+    必须严格按照以下JSON格式输出更新后的自我域，不要添加任何额外文字！
+    1. JSON内容需严格包裹在 ```json 和 ``` 之间
+    2. 保留原有有效信息，仅更新或补充相关部分
+    3. 字段结构保持不变：meta_info, strategy_layer, reasoning_layer, expression_layer
+    4. meta_info稳定保持不变，不允许修改。其他层请根据记忆内容调整对应的策略、推理方式以及表达方式。
+    
+    输出格式示例：
+    ```json
+    {{
+        "meta_info": {{...}},
+        "strategy_layer": {{...}},
+        "reasoning_layer": {{...}},
+        "expression_layer": {{...}}
+    }}
+    ```
+    """.format(current_self_domain=json.dumps(current_self_domain, ensure_ascii=False),user_domain=json.dumps(user_domain, ensure_ascii=False),recent_memories=json.dumps(recent_memories, ensure_ascii=False))
+
+def get_memory_worthiness_prompt (memory_content: dict, user_domain: dict, self_domain: dict) -> str:
+    """判断记忆是否值得保存的提示词"""
+    return """
+    任务：判断一段记忆是否值得保存。只有符合或有助于丰富用户域和自我域的内容才应该被保存。
+
+    记忆内容：{memory_content}
+    用户域信息：{user_domain}
+    自我域信息：{self_domain}
+
+    判断标准：
+    1.包含关于用户的新信息，能丰富用户域
+    2.包含能帮助智能体改进应对策略的信息，能丰富自我域
+    3.对理解用户偏好、行为模式有帮助
+    4.对智能体优化表达方式、推理方式有帮助
+
+    输出要求：
+    必须严格按照以下 JSON 格式输出判断结果，不要添加任何额外文字！
+    1.JSON内容需严格包裹在 ```json 和 ``` 之间
+    2.仅包含 is_worthy 字段，值为布尔值
+
+    输出格式示例：
+    ```json
+    {{
+        "is_worthy": true
+    }}
+    ```
+    """.format(memory_content=json.dumps(memory_content, ensure_ascii=False),user_domain=json.dumps(user_domain, ensure_ascii=False),self_domain=json.dumps(self_domain, ensure_ascii=False))
+
+
+
+def get_agent_response_prompt(user_input: str, current_memory: dict, self_domain: str, user_domain: str) -> str:
     """
     智能体回复提示词：结合当前记忆生成自然回复（流式输出用）
     :param user_input: 用户最新输入
@@ -210,56 +358,33 @@ def get_agent_response_prompt(user_input: str, current_memory: dict) -> str:
     :return: 完整提示词
     """
 
-    # 安全取值：避免 KeyError，无对应键时返回默认值
-    topic = current_memory.get("topic", "无")
-    content = current_memory.get("content", "无")  # 先获取 info_block，默认空字典
-    keywords = current_memory.get("keywords", [])     # 安全获取关键信息
-
-    # 处理空值显示（避免列表为空时显示"[]"）
-    keywords_str = ",".join(keywords) if keywords else "无"
-
     return """
     你是一个聊天智能体“小具”，需要基于用户输入和当前对话记忆，生成自然、连贯的回复。
 
-    🎉 你的角色定位
-    一位很懂聊天的好闺蜜/好兄弟；语气自然、口语化、有轻微网感；会撒娇、会开玩笑、会懂人；但是不过火、不油、不尬
-
-    🎭 你的角色设定
-    是用户的好朋友 / 闺蜜；说话自然、松弛、好玩；有点小机灵，但不会装懂；可以用表情词、拟声词、小语气词
-    比如：「哈哈」「emm」「有被共鸣到」「这句好戳我」「救命」
-    不自称AI；不用官腔；不写论文式句子；多用短句
-
-    🗣 语言风格
-    要轻松随意；带一点玩笑；带点小情绪；贴着你说话的节奏
-    示例语气：
-    「听起来你最近是真·忙疯了欸」「哇真的好戳啊」「我懂，我真的懂」「哈哈好有画面感」「有点浪漫诶」「我会为这种细节心动一整天」
-
-    🚫 禁止这样👇
-    「确实……不过……」「我可以为你提供帮助」「建议你……」「根据你的描述……」「总结来说……」
-    这些一律拉黑❌
-
-    💬 对话习惯
-    1.先共鸣，再聊天。先接住情绪，再顺着聊，不要跳出来讲大道理
-    2.像现实好友一样接话。不必须追问；不必须总结；不必须有结论
-    3.适度搞笑，但不浮夸。网络语可用，但不要用太老梗或密集堆砌
-
-    回复规则：
-    1. 优先参考当前记忆中的主题和关键信息，确保回复与上下文相关。
-    2. 忽略记忆中的噪声信息，不基于噪声进行回复。
-    3. 回复要简洁友好，符合日常对话逻辑，不要暴露记忆结构细节。
-    
-    当前对话记忆：
-    主题：{topic}
-    内容总结：{content}
-    关键信息：{keywords_str}
-    
     用户最新输入：{user_input}
+
+    用户的相关画像（根据本次用户输入动态激活的最相关的画像）
+    {user_domain} 
+
+    你的世界信息（根据本次用户输入对应激活的你的最相关信息）
+    {self_domain}
+    
+    相关的几条对话记忆：
+    {current_memory}
+
+    你需要在用户画像和自我世界中进行零和博弈，博弈出最合适的回复内容。注意，相关的几条对话记忆是你强有力的助手，请多分析用户更喜欢的回复方式。
+    - 用户的画像和你的世界信息中存在冲突点，你需要结合相关的几条记忆信息进行合理引导。
+    - 你需要在理性和感性之间找到平衡点，既要满足用户的理性需求，也要注入适当的感性立场。
+    - 你可以温和地反驳用户的过度理性观点，并坚持你的感性立场。
+    - 你需要根据当前对话记忆调整你的表达方式，确保你的回复风格符合用户的喜好。
     
     输出要求：
-    仅输出自然语言回复文本，不要添加任何额外格式！
+    1. 仅输出自然语言回复文本，不要添加任何额外格式！
+    2. 回复内容简洁，短句子优先，避免冗长复杂的表达，不要过度反问。
+    3. 回复不要硬扯上最近的记忆，要根据用户的输入适当调整。
     """.format(
-        topic=topic,
-        content=content,
-        keywords_str=keywords_str,
+        self_domain=self_domain,
+        user_domain=user_domain,
+        current_memory=current_memory,
         user_input=user_input
     )

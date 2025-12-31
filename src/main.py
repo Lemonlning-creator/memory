@@ -6,6 +6,8 @@ from llm_client import LLMClient
 import prompt
 import config
 from logger import logger
+import concurrent.futures
+from domain import DomainManager
 
 def stream_print(response_generator) -> str:
     """流式输出并返回完整回复文本"""
@@ -27,8 +29,11 @@ def get_current_buffer_status(memory_builder: MemoryBuilder) -> str:
 
 def main():
     # 初始化核心组件
+    domain_manager = DomainManager()
+    memory_store = MemoryStore(is_worthy_func=domain_manager.is_memory_worthy)
     memory_builder = MemoryBuilder()
-    memory_store = MemoryStore()
+
+    
     llm_client = LLMClient()
     
     print("========= 小具上线啦 =========")
@@ -50,6 +55,12 @@ def main():
                 if final_memory:
                     memory_store.save_memory(final_memory)
                     print("小具：已保存当前话题记忆")
+                    
+                # # 更新域（基于累积的记忆）
+                # print("小具：正在整理今天的记忆...", end="\r", flush=True)
+                # domain_manager.update_domains(memory_store)
+                # print("小具：记忆整理完成！")
+
                 print("小具：再见！")
                 logger.info("程序退出完成")
                 break
@@ -99,10 +110,42 @@ def main():
             print("小具：", end="\r", flush=True)
             
             # 构建当前上下文（使用最近的记忆）
-            latest_memory = memory_store.get_latest_memory() or {}
+            latest_memory = memory_store.retrieve_related_memories(user_input) or {}
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                future_user = executor.submit(
+                    domain_manager.activate_user_domain,
+                    user_input=user_input,
+                    conversation_history=latest_memory
+                )
+                future_self = executor.submit(
+                    domain_manager.activate_self_domain,
+                    user_input=user_input,
+                    conversation_history=latest_memory
+                )
+
+                # 获取结果，超时或失败时返回默认值
+                try:
+                    activated_user_domain = future_user.result(timeout=30)
+                except Exception as e:
+                    logger.error(f"激活用户域失败: {e}")
+                    activated_user_domain = None
+
+                try:
+                    activated_self_domain = future_self.result(timeout=30)
+                except Exception as e:
+                    logger.error(f"激活自我域失败: {e}")
+                    activated_self_domain = None
+
+            # activated_user_domain = domain_manager.activate_user_domain(user_input=user_input, conversation_history=latest_memory)
+
+            # activated_self_domain = domain_manager.self_domain
+
             response_prompt = prompt.get_agent_response_prompt(
                 user_input=user_input,
-                current_memory=latest_memory
+                current_memory=latest_memory,
+                self_domain=activated_self_domain,
+                user_domain=activated_user_domain
             )
             
             # 流式生成回复并获取完整文本
