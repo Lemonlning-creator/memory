@@ -1,61 +1,156 @@
-# 小具动态记忆构建系统
+---
+language:
+- multilingual
+- ar
+- bg
+- ca
+- cs
+- da
+- de
+- el
+- en
+- es
+- et
+- fa
+- fi
+- fr
+- gl
+- gu
+- he
+- hi
+- hr
+- hu
+- hy
+- id
+- it
+- ja
+- ka
+- ko
+- ku
+- lt
+- lv
+- mk
+- mn
+- mr
+- ms
+- my
+- nb
+- nl
+- pl
+- pt
+- ro
+- ru
+- sk
+- sl
+- sq
+- sr
+- sv
+- th
+- tr
+- uk
+- ur
+- vi
+license: apache-2.0
+library_name: sentence-transformers
+tags:
+- sentence-transformers
+- feature-extraction
+- sentence-similarity
+- transformers
+language_bcp47:
+- fr-ca
+- pt-br
+- zh-cn
+- zh-tw
+pipeline_tag: sentence-similarity
+---
 
-这是一个用于对话型智能体的记忆构建与语音交互示例项目（中文说明）。
-项目把记忆构建、记忆存储、噪声检测、要素提取与 TTS/ASR 语音能力整合在一起，便于做原型验证或二次开发。
+# sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
 
-## 主要功能
-- 记忆动态构建与主题管理（持久化为 JSONL）
-- 噪声检测（使用 LLM 判断临时噪声）
+This is a [sentence-transformers](https://www.SBERT.net) model: It maps sentences & paragraphs to a 384 dimensional dense vector space and can be used for tasks like clustering or semantic search.
 
-## 目录结构（简要）
+
+
+## Usage (Sentence-Transformers)
+
+Using this model becomes easy when you have [sentence-transformers](https://www.SBERT.net) installed:
+
 ```
-./
-├─ pyproject.toml          # 项目依赖声明
-├─ src/
-│  ├─ main.py              # 程序入口（CLI）
-│  ├─ main_voice.py        # 语音交互主逻辑（ChatSession / VoiceManager）
-│  ├─ memory_builder.py    # 记忆构建器
-│  ├─ memory_store.py      # 记忆存取（JSONL 持久化）
-│  ├─ memory_structures.py # 记忆数据结构
-│  ├─ noise_detector.py    # 噪声检测逻辑
-│  ├─ llm_client.py        # LLM 调用封装（流式/非流式）
-│  ├─ prompt.py            # 各类提示词模板
-│  │  └─ config.py         # 配置（请勿在公共仓库中提交真实密钥）
-│  └─ voice/               # 语音相关实现（可选模块）
-│     ├─ tts/              # 多种 TTS 实现（kdxf, nailong, edge, local 等）
-│     └─ asr/              # ASR 实现（如 tencent_asr）
+pip install -U sentence-transformers
 ```
 
-## 安装与依赖
-建议使用虚拟环境（venv / conda）来隔离依赖。
+Then you can use the model like this:
 
-1. 克隆仓库并进入目录：
-```bash
-git clone https://github.com/Lemonlning-creator/memory.git
-cd memory
+```python
+from sentence_transformers import SentenceTransformer
+sentences = ["This is an example sentence", "Each sentence is converted"]
+
+model = SentenceTransformer('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+embeddings = model.encode(sentences)
+print(embeddings)
 ```
 
-2. 创建并激活虚拟环境：
-```bash
-uv sync
-source .venv/bin/activate
+
+
+## Usage (HuggingFace Transformers)
+Without [sentence-transformers](https://www.SBERT.net), you can use the model like this: First, you pass your input through the transformer model, then you have to apply the right pooling-operation on-top of the contextualized word embeddings.
+
+```python
+from transformers import AutoTokenizer, AutoModel
+import torch
+
+
+# Mean Pooling - Take attention mask into account for correct averaging
+def mean_pooling(model_output, attention_mask):
+    token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+    return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
+
+# Sentences we want sentence embeddings for
+sentences = ['This is an example sentence', 'Each sentence is converted']
+
+# Load model from HuggingFace Hub
+tokenizer = AutoTokenizer.from_pretrained('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+model = AutoModel.from_pretrained('sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2')
+
+# Tokenize sentences
+encoded_input = tokenizer(sentences, padding=True, truncation=True, return_tensors='pt')
+
+# Compute token embeddings
+with torch.no_grad():
+    model_output = model(**encoded_input)
+
+# Perform pooling. In this case, max pooling.
+sentence_embeddings = mean_pooling(model_output, encoded_input['attention_mask'])
+
+print("Sentence embeddings:")
+print(sentence_embeddings)
 ```
 
-## 配置
-- 配置文件：`src/config.py` 包含默认值和示例配置（LLM 提供商、模型、路径等）。
-- 强烈建议不要把真实的 API Key 或凭证直接提交到仓库。可用环境变量或 `.env` 文件配合 `python-dotenv` 加载敏感信息。
 
-## 运行
-```bash
-uv run src/main.py
+
+## Full Model Architecture
+```
+SentenceTransformer(
+  (0): Transformer({'max_seq_length': 128, 'do_lower_case': False}) with Transformer model: BertModel 
+  (1): Pooling({'word_embedding_dimension': 384, 'pooling_mode_cls_token': False, 'pooling_mode_mean_tokens': True, 'pooling_mode_max_tokens': False, 'pooling_mode_mean_sqrt_len_tokens': False})
+)
 ```
 
-或运行语音交互入口（如果你只想测试语音一体化模块）：
+## Citing & Authors
 
-```bash
-uv run src/main_voice.py
+This model was trained by [sentence-transformers](https://www.sbert.net/). 
+        
+If you find this model helpful, feel free to cite our publication [Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks](https://arxiv.org/abs/1908.10084):
+```bibtex 
+@inproceedings{reimers-2019-sentence-bert,
+    title = "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+    author = "Reimers, Nils and Gurevych, Iryna",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing",
+    month = "11",
+    year = "2019",
+    publisher = "Association for Computational Linguistics",
+    url = "http://arxiv.org/abs/1908.10084",
+}
 ```
-
-## 日志与持久化
-- 记忆会按主题以 JSONL 追加保存到 `src/config.py` 指定的 `MEMORY_JSONL_PATH`（默认 `./output/memory_store.jsonl`）
-- 日志文件路径与级别同样在 `src/config.py` 中配置，默认输出到 `./logs/` 目录

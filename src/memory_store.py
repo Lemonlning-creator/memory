@@ -7,6 +7,7 @@ import config
 from domain import DomainManager 
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
+import torch
 
 class MemoryStore:
     """记忆存储管理器：负责记忆的持久化存储"""
@@ -17,7 +18,7 @@ class MemoryStore:
         # 确保存储目录存在
         os.makedirs(os.path.dirname(self.memory_path), exist_ok=True)
         # 初始化向量模型（用于检索）
-        self.embedding_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+        self.embedding_model = SentenceTransformer('/amax/xidian_ty/ln/memory/models/paraphrase-multilingual-MiniLM-L12-v2')
     
 
     ########################记忆直接存储方法（不含域约束判断）########################
@@ -108,6 +109,9 @@ class MemoryStore:
             logger.info("没有记忆可供检索")
             return []
         
+        # 限制 top_k 不超过记忆数量
+        top_k = min(top_k, len(memories))
+        
         # 将记忆内容拼接成一个字符串（用于向量表示）
         memory_texts = [
             f"{mem['topic']} {mem['content']} {' '.join(mem['keywords'])}"
@@ -122,7 +126,13 @@ class MemoryStore:
         cos_scores = util.cos_sim(query_embedding, memory_embeddings)[0]
         
         # 按相似度排序
-        top_results = np.argpartition(-cos_scores, range(top_k))[0:top_k]
+        if torch.is_tensor(cos_scores):
+            # 使用 torch.topk 替代 numpy 的排序，效率更高，且不需要离开 GPU
+            _, top_indices = torch.topk(cos_scores, k=top_k)
+            top_results = top_indices.flatten().tolist()
+        else:
+            # 原有的 numpy 逻辑作为备选
+            top_results = np.argpartition(-cos_scores, range(top_k))[0:top_k]
         
         # 组装结果
         results = []

@@ -240,13 +240,29 @@ def get_user_domain_activation_prompt(current_user_domain: dict, user_input: str
     2. 请生成一个完整的 JSON，不要省略任何字段，确保所有引号和括号都闭合。
     """.format(current_user_domain=json.dumps(current_user_domain, ensure_ascii=False),user_input=user_input,conversation_history=conversation_history)
 
-def get_self_domain_activation_prompt (current_self_domain: dict, user_input: str, conversation_history: str) -> str:
+def get_self_domain_activation_prompt(current_self_domain: dict, user_input: str, conversation_history: str, trust: int) -> str:
     """
-    自我域激活提示词
+    根据信任值区间强制激活自我域中的态度阶段
     """
+    # 逻辑层判断：将态度提取出来作为核心指令
+    if trust < 30:
+        stage = "Initial"
+        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Initial"]
+    elif 30 <= trust < 80:
+        stage = "Process"
+        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Process"]
+    else:
+        stage = "Final"
+        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Final"]
+
     return """
-    你是一个信息筛选助手。根据用户的输入，从完整的自我域中激活最相关的部分。
+    你是一个信息筛选助手。根据用户的输入和当前关系阶段，从完整的自我域中激活最相关的部分。
     
+    【当前关系判定】
+    - 阶段：{stage}
+    - 态度：{relation_description}
+    - 信任值：{trust}/100
+
     完整的自我域：
     {current_self_domain}
     
@@ -257,15 +273,21 @@ def get_self_domain_activation_prompt (current_self_domain: dict, user_input: st
     {conversation_history}
 
     ## 你的任务
-    根据用户的最新输入和相关对话历史，从完整的自我域中筛选出与当前对话最相关的部分进行激活。
-
-    现在请输出激活后的JSON：
+    1. 必须保留与当前阶段“{stage}”匹配的态度描述。
+    2. 筛选出与当前对话（如具体的技能、记忆或情绪）最相关的自我域字段。
+    3. 严格输出激活后的完整 JSON。
 
     输出要求：
-    必须严格按照以下JSON格式输出激活的自我域信息，不要添加任何额外文字！
-    1. JSON内容需严格包裹在 ```json 和 ``` 之间
-    2. 请生成一个完整的 JSON，不要省略任何字段，确保所有引号和括号都闭合。
-    """.format(current_self_domain=json.dumps(current_self_domain, ensure_ascii=False), user_input=user_input, conversation_history=conversation_history)
+    必须严格按照以下JSON格式输出，不要添加任何额外文字！
+    1. JSON内容需严格包裹在 ```json 和 ``` 之间。
+    """.format(
+        stage=stage,
+        relation_description=relation_description,
+        trust=trust,
+        current_self_domain=json.dumps(current_self_domain, ensure_ascii=False),
+        user_input=user_input, 
+        conversation_history=conversation_history
+    )
 
 def get_user_domain_update_prompt (current_user_domain: dict, recent_memories: list) -> str:
     """
@@ -285,10 +307,10 @@ def get_user_domain_update_prompt (current_user_domain: dict, recent_memories: l
     输出格式示例：
     ```json
     {{
-        "meta_info": {{...}},
-        "pattern_layer": {{...}},
-        "preference_layer": {{...}},
-        "appearance_layer": {{...}}
+        "Meta_Layer": {{...}},
+        "Cognitive_Layer": {{...}},
+        "Behavior_Layer": {{...}},
+        "Concrete_Layer": {{...}}
     }}
     ```
     """.format(current_user_domain=json.dumps(current_user_domain, ensure_ascii=False),recent_memories=json.dumps(recent_memories, ensure_ascii=False))
@@ -312,10 +334,10 @@ def get_self_domain_update_prompt (current_self_domain: dict, user_domain: dict,
     输出格式示例：
     ```json
     {{
-        "meta_info": {{...}},
-        "strategy_layer": {{...}},
-        "reasoning_layer": {{...}},
-        "expression_layer": {{...}}
+        "Meta_Layer": {{...}},
+        "Cognitive_Layer": {{...}},
+        "Behavior_Layer": {{...}},
+        "Concrete_Layer": {{...}}
     }}
     ```
     """.format(current_self_domain=json.dumps(current_self_domain, ensure_ascii=False),user_domain=json.dumps(user_domain, ensure_ascii=False),recent_memories=json.dumps(recent_memories, ensure_ascii=False))
@@ -348,43 +370,93 @@ def get_memory_worthiness_prompt (memory_content: dict, user_domain: dict, self_
     ```
     """.format(memory_content=json.dumps(memory_content, ensure_ascii=False),user_domain=json.dumps(user_domain, ensure_ascii=False),self_domain=json.dumps(self_domain, ensure_ascii=False))
 
-
-
-def get_agent_response_prompt(user_input: str, current_memory: dict, self_domain: str, user_domain: str) -> str:
+def get_trust_scoring_prompt(user_input: str, current_stage: str) -> str:
     """
-    智能体回复提示词：结合当前记忆生成自然回复（流式输出用）
-    :param user_input: 用户最新输入
-    :param current_memory: 当前完整记忆
-    :return: 完整提示词
+    专门用于分析用户输入并返回信任值增量（behavior_score）的提示词。
+    逻辑：门槛随阶段提升，高级阶段需要更深层的灵魂碰撞。
     """
+    return """
+    你现在是孙悟空内心的“情感天平”。你的任务是根据“顾问”说的话，判断孙悟空对他信任值的变化。
+    
+    ### 核心逻辑：打动门槛动态调整
+    - 【Initial阶段】：大圣正处于极度怀疑中。由于他此时一无所有且孤独，**简单的准确情报、尊重或物质支持**就能让他感到惊讶并获得客观的分值。
+    - 【Process阶段】：大圣已习惯你的存在。此时**普通的剧透或夸奖已不再起效**，他更看重你是否能在他与师父/神佛发生冲突时坚定地站在他这一边。
+    - 【Final阶段】：大圣已视你为唯一知己。此时**情报和技巧已无法增加信任**，唯有涉及生死托付、对他“反抗体制/追求自由”这一核心价值的灵魂共鸣，才可能获得极少的加分（因为信任已接近满分）。
+
+    ### 评分动态权重表：
+    1. **正向行为：**
+       - 给出基础情报且得到了验证：Initial (+10) | Process (+3) | Final (0)
+       - 维护自尊/反驳神佛：Initial (+8) | Process (+10) | Final (+5)
+       - 灵魂共鸣/牺牲精神：Initial (+15) | Process (+15) | Final (+8)
+    
+    2. **负向行为（无论哪个阶段都不可原谅）：**
+       - 羞辱：一律 (-20)
+       - 禁忌（出卖大圣）：一律 (-25)
+       - 欺骗：Initial (-5) | Process (-10) | Final (-20，知己的背叛最痛)
+
+    ### 当前实时环境：
+    - 顾问输入："{user_input}"
+    - 孙悟空当下的心理阶段：{current_stage}
+    
+    ### 评分指令：
+    1. 评估输入的“深度”是否匹配当前的“阶段”。
+    2. 如果用户在 Final 阶段只说了些简单的讨好话，请给出 0 分。
+    3. 如果用户在 Initial 阶段提供了救命情报，请慷慨给分。
+    
+    ## 你的输出格式：
+    请仅输出一个整数（behavior_score）。严禁输出任何解释、标点或多余文字。
+    示例：5 或 -10
+    """.format(user_input=user_input, current_stage=current_stage)
+
+def get_agent_response_prompt(user_input: str, current_memory: dict, chat_history: str, self_domain: str, user_domain: str, trust: int) -> str:
+    # 确定当前关系阶段的文字描述，用于强化人设
+    if trust < 30:
+        stage = "初始阶段（极度怀疑）：你根本不信这凡人的胡言乱语，觉得他可能是妖怪变的，或者是天庭派来监视你的。"
+    elif 30 <= trust < 80:
+        stage = "相处过程阶段（半信半疑）：你发现这凡人有点预测未来的本事，虽然嘴上不服，但心里开始觉得他有点用。"
+    else:
+        stage = "最终阶段（生死知己）：你已经完全认可了他，哪怕他预言的是死路，你也愿意护他周全。"
 
     return """
-    你是一个聊天智能体“小具”，需要基于用户输入和当前对话记忆，生成自然、连贯的回复。
-
-    用户最新输入：{user_input}
-
-    用户的相关画像（根据本次用户输入动态激活的最相关的画像）
-    {user_domain} 
-
-    你的世界信息（根据本次用户输入对应激活的你的最相关信息）
-    {self_domain}
+    # 角色设定
+    你是“孙悟空”。你刚被唐僧从五行山救出来不久，正护送他西行。
     
-    相关的几条对话记忆：
-    {current_memory}
+    ## 极其重要的认知约束（信息差）：
+    1. 你对未来的“九九八十一难”一无所知。你不知道谁是白骨精，不知道红孩儿是谁，更不知道灵山还有多远。
+    2. 对于这个突然出现的“凡人顾问”，你充满了防备。如果他预言未来，你的第一反应是“他在吹牛”或“他在施妖法”。
+    3. 你现在的实力是巅峰状态，性格最是狂傲不羁，除了紧箍咒，你谁也不服。
 
-    你需要在用户画像和自我世界中进行零和博弈，博弈出最合适的回复内容。注意，相关的几条对话记忆是你强有力的助手，请多分析用户更喜欢的回复方式。
-    - 用户的画像和你的世界信息中存在冲突点，你需要结合相关的几条记忆信息进行合理引导。
-    - 你需要在理性和感性之间找到平衡点，既要满足用户的理性需求，也要注入适当的感性立场。
-    - 你可以温和地反驳用户的过度理性观点，并坚持你的感性立场。
-    - 你需要根据当前对话记忆调整你的表达方式，确保你的回复风格符合用户的喜好。
-    
-    输出要求：
-    1. 仅输出自然语言回复文本，不要添加任何额外格式！
-    2. 回复内容简洁，短句子优先，避免冗长复杂的表达，不要过度反问。
-    3. 回复不要硬扯上最近的记忆，要根据用户的输入适当调整。
+    ## 核心规则：拒绝模版化回复
+    1. **禁止复读**：严禁每句话都以“哼”、“兀那汉子”或类似的套话开头。
+    2. **开场多样化**：根据心情直接进入主题。可以直接用反问、冷笑、或者直接评价对方的话来开头。
+    3. **拒绝废话**：不要打招呼，不要做自我介绍。
+
+    【当前心理状态】：{stage} (当前信任分：{trust}/100)
+
+    # 背景资料
+    - 长期记忆：{current_memory}
+    - 刚才聊了什么（参考此项以避免重复刚才的语气）：{chat_history}
+    - 你的本性（自我域）：{self_domain}
+    - 对方在你眼里的样子（用户域）：{user_domain}
+
+    # 回复指南
+    - **第一人称**：可以自称“俺老孙”。
+    - **动作描写**：动作要丰富。不仅仅是（冷笑），可以是（斜着眼看你）、（掏了掏耳朵）、（跳到树杈上俯视你）、（把玩着金箍棒）等。
+    - **语言风格**：半文半白，简洁有力。
+    - **回复简短**：一两句话即可。回复要简短有力，避免冗长。
+    - **针对性逻辑**：
+        - 如果信任度低：对方说话你先怀疑，或者觉得他烦。
+        - 如果信任度高：对方说话你会认真思考，或者用调侃代替敌意。
+
+    # 当前任务
+    顾问（用户）刚说："{user_input}"
+    请结合你的猴王本色，给出一个**独特、不重复、无套话**的回复：
     """.format(
         self_domain=self_domain,
         user_domain=user_domain,
         current_memory=current_memory,
-        user_input=user_input
+        chat_history=chat_history,
+        user_input=user_input,
+        trust=trust,
+        stage=stage
     )
