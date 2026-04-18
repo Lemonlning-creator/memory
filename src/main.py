@@ -30,7 +30,7 @@ def get_current_buffer_status(memory_builder: MemoryBuilder) -> str:
 def main():
     # 初始化核心组件
     domain_manager = DomainManager()
-    memory_store = MemoryStore(is_worthy_func=domain_manager.is_memory_worthy)
+    memory_store = MemoryStore()
     memory_builder = MemoryBuilder()
 
     
@@ -108,23 +108,27 @@ def main():
 
             # 7. 生成智能体回复
             print("小具：", end="\r", flush=True)
-            
-            # 构建当前上下文（使用最近的记忆）
-            latest_memory = memory_store.retrieve_related_memories(user_input) or {}
 
-            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            # 检索相关记忆
+            related_memories = memory_store.retrieve_related_memories(user_input) or []
+
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
                 future_user = executor.submit(
                     domain_manager.activate_user_domain,
                     user_input=user_input,
-                    conversation_history=latest_memory
+                    conversation_history=related_memories
                 )
                 future_self = executor.submit(
                     domain_manager.activate_self_domain,
                     user_input=user_input,
-                    conversation_history=latest_memory
+                    conversation_history=related_memories
+                )
+                future_three_dim = executor.submit(
+                    domain_manager.analyze_three_dimensions,
+                    user_input=user_input,
+                    related_memories=related_memories
                 )
 
-                # 获取结果，超时或失败时返回默认值
                 try:
                     activated_user_domain = future_user.result(timeout=30)
                 except Exception as e:
@@ -137,15 +141,27 @@ def main():
                     logger.error(f"激活自我域失败: {e}")
                     activated_self_domain = None
 
-            # activated_user_domain = domain_manager.activate_user_domain(user_input=user_input, conversation_history=latest_memory)
+                try:
+                    user_profile, agent_persona = future_three_dim.result(timeout=30)
+                except Exception as e:
+                    logger.error(f"三维度分析失败: {e}")
+                    user_profile, agent_persona = None, None
 
-            # activated_self_domain = domain_manager.self_domain
+            # 三维度分析完成后，用预测/风险增强检索
+            if user_profile:
+                related_memories = memory_store.retrieve_related_memories(
+                    user_input,
+                    user_prediction=user_profile.future.get("prediction", ""),
+                    user_risk=user_profile.future.get("risk", "")
+                ) or []
 
             response_prompt = prompt.get_agent_response_prompt(
                 user_input=user_input,
-                current_memory=latest_memory,
+                current_memory=related_memories,
                 self_domain=activated_self_domain,
-                user_domain=activated_user_domain
+                user_domain=activated_user_domain,
+                user_profile_three_dim=user_profile.to_dict() if user_profile else None,
+                agent_persona_three_dim=agent_persona.to_dict() if agent_persona else None,
             )
             
             # 流式生成回复并获取完整文本
@@ -158,7 +174,9 @@ def main():
                 # 处理对话，返回需要保存的记忆（如果话题更换）
                 new_memory = memory_builder.process_dialog(
                     user_input=user_input,
-                    agent_response=agent_response
+                    agent_response=agent_response,
+                    user_profile=user_profile,
+                    agent_persona=agent_persona
                 )
                 
                 # 如果有新记忆，保存

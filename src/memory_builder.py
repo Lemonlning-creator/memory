@@ -19,8 +19,13 @@ class MemoryBuilder:
     def __init__(self):
         self.noise_detector = NoiseDetector()
         self.llm_client = LLMClient()
-        self.buffer: List[str] = []  # 存储当前话题的对话
-        self.current_topic: Optional[str] = None  # 当前话题
+        self.buffer: List[str] = []
+        self.current_topic: Optional[str] = None
+        # 累积当前话题内所有轮次的三维度分析
+        self._user_predictions: List[str] = []
+        self._user_risks: List[str] = []
+        self._agent_empathies: List[str] = []
+        self._agent_actions: List[str] = []
     
     def _format_round_dialog(self, user_input: str, agent_response: str) -> str:
         """格式化一轮对话"""
@@ -109,84 +114,80 @@ class MemoryBuilder:
             logger.error(f"关键词提取失败：{str(e)}", exc_info=True)
             return []
     
-    def process_dialog(self, user_input: str, agent_response: str) -> Optional[Memory]:
+    def process_dialog(self, user_input: str, agent_response: str,
+                       user_profile=None, agent_persona=None) -> Optional[Memory]:
         """处理一轮对话，返回需要保存的记忆（如果有的话）"""
         current_round = self._format_round_dialog(user_input, agent_response)
         logger.info(f"处理对话轮次：{current_round}")
-        
+
+        # 每轮都追加三维度分析到累积列表
+        if user_profile:
+            if user_profile.future.get("prediction"):
+                self._user_predictions.append(user_profile.future["prediction"])
+            if user_profile.future.get("risk"):
+                self._user_risks.append(user_profile.future["risk"])
+        if agent_persona:
+            if agent_persona.present.get("empathy"):
+                self._agent_empathies.append(agent_persona.present["empathy"])
+            if agent_persona.future.get("action"):
+                self._agent_actions.append(agent_persona.future["action"])
+
         # 1. 首轮对话
         if not self.buffer:
             logger.info("首轮对话，初始化话题和buffer")
             self.buffer.append(current_round)
             self.current_topic = self._initialize_topic(current_round)
-            return None  # 首轮不保存记忆
-        
+            return None
+
         # 2. 非首轮对话：检测话题是否更换
         topic_changed = self._detect_topic_boundary(current_round)
-        
+
         if not topic_changed:
-            # 2.1 话题未更换：添加到buffer
             self.buffer.append(current_round)
             logger.info("话题未更换，已添加到buffer")
             return None
-        
+
         else:
-            # 2.2 话题更换：处理当前buffer
             logger.info("话题已更换，处理当前buffer")
-            
-            # 判断是否为噪声
             is_noise = self.noise_detector.is_noise(
                 dialog=current_round,
                 topic_context=f"当前旧主题：{self.current_topic}"
             )
-            
             if is_noise:
-                # 噪声：弃掉该轮对话，不影响当前buffer
                 logger.info("检测到噪声，已忽略该轮对话")
                 return None
-            
-            # 非噪声：生成记忆
-            topic = self._summarize_topic()
-            content = self._summarize_content()
-            keywords = self._extract_keywords()
-            create_time = Memory.get_current_time()
-            
-            memory = Memory(
-                topic=topic,
-                content=content,
-                keywords=keywords,
-                create_time=create_time,
-                update_time=create_time
-            )
-            
-            # 清空buffer，准备新话题
-            self.buffer = []
+
+            memory = self._build_memory()
+
+            # 重置buffer和累积列表，准备新话题
+            self.buffer = [current_round]
             self.current_topic = self._initialize_topic(current_round)
-            # 将当前轮对话添加到新buffer
-            self.buffer.append(current_round)
-            
-            logger.info(f"已生成记忆并保存：{topic}")
+            self._user_predictions = []
+            self._user_risks = []
+            self._agent_empathies = []
+            self._agent_actions = []
+
+            logger.info(f"已生成记忆：{memory.topic}")
             return memory
     
-    def finalize_memory(self) -> Optional[Memory]:
+    def _build_memory(self) -> Memory:
+        """用当前 buffer 和累积的三维度分析构建记忆"""
+        create_time = Memory.get_current_time()
+        return Memory(
+            topic=self._summarize_topic(),
+            content=self._summarize_content(),
+            keywords=self._extract_keywords(),
+            create_time=create_time,
+            update_time=create_time,
+            user_prediction=" | ".join(dict.fromkeys(self._user_predictions)),
+            user_risk=" | ".join(dict.fromkeys(self._user_risks)),
+            agent_empathy=" | ".join(dict.fromkeys(self._agent_empathies)),
+            agent_action=" | ".join(dict.fromkeys(self._agent_actions)),
+        )
+
+    def finalize_memory(self, user_profile=None, agent_persona=None) -> Optional[Memory]:
         """对话结束时，处理剩余的buffer内容"""
         if not self.buffer:
             return None
-        
         logger.info("对话结束，处理剩余buffer内容")
-        
-        # 生成记忆
-        topic = self._summarize_topic()
-        content = self._summarize_content()
-        keywords = self._extract_keywords()
-        create_time = Memory.get_current_time()
-        
-        memory = Memory(
-            topic=topic,
-            content=content,
-            keywords=keywords,
-            create_time=create_time,
-            update_time=create_time
-        )
-        
-        return memory
+        return self._build_memory()

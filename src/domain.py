@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from logger import logger
 from llm_client import LLMClient
 import prompt
+from memory_structures import UserProfile, AgentPersona
 
 # 持久化文件路径
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
@@ -275,6 +276,43 @@ class DomainManager:
         self._save_domains() 
         logger.info("域更新完成")
     
+    def analyze_three_dimensions(self, user_input: str, related_memories: list) -> tuple:
+        """
+        三维度分析：同时分析用户画像和智能体人设的过去/现在/将来
+        返回 (UserProfile, AgentPersona)
+        """
+        logger.info("开始三维度分析...")
+
+        # 用户画像三维度
+        user_profile_prompt = prompt.get_user_profile_three_dim_prompt(
+            past_profile=self.user_domain.to_dict(),
+            user_input=user_input,
+            related_memories=related_memories
+        )
+        user_result = self.llm_client.call_non_stream(prompt=user_profile_prompt)
+
+        user_profile = UserProfile(past=self.user_domain.to_dict())
+        if isinstance(user_result, dict):
+            user_profile.present = user_result.get("present", user_profile.present)
+            user_profile.future = user_result.get("future", user_profile.future)
+
+        # 智能体人设三维度
+        agent_persona_prompt = prompt.get_agent_persona_three_dim_prompt(
+            past_persona=self.self_domain.to_dict(),
+            user_profile=user_profile.to_dict(),
+            user_input=user_input
+        )
+        agent_result = self.llm_client.call_non_stream(prompt=agent_persona_prompt)
+
+        agent_persona = AgentPersona(past=self.self_domain.to_dict())
+        if isinstance(agent_result, dict):
+            agent_persona.present = agent_result.get("present", agent_persona.present)
+            agent_persona.future = agent_result.get("future", agent_persona.future)
+
+        logger.info(f"三维度分析完成 - 用户现在: {user_profile.present}, 将来: {user_profile.future}")
+        logger.info(f"三维度分析完成 - 智能体现在: {agent_persona.present}, 将来: {agent_persona.future}")
+        return user_profile, agent_persona
+
     def is_memory_worthy(self, memory_content: Dict[str, Any]) -> bool:
         """
         判断记忆是否值得保存

@@ -1,3 +1,5 @@
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 import json
 from typing import Optional, Dict, Any, Generator
 import requests
@@ -101,9 +103,17 @@ class LLMClient:
                 max_tokens=self.max_tokens,
                 stream=True
             )
+
             for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
+                # ✅ 安全判断：防止 choices 为空列表
+                if not chunk.choices:
+                    continue
+                
+                delta = chunk.choices[0].delta
+                # ✅ 安全判断：防止 content 不存在 / 为 None
+                if hasattr(delta, 'content') and delta.content is not None:
+                    yield delta.content
+
         except Exception as e:
             print(f"大模型流式调用失败：{str(e)}")
             yield "抱歉，当前无法生成回复，请稍后再试~"

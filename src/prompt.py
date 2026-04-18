@@ -35,12 +35,12 @@ def boundary_detection_prompt(conversation_history: str, new_messages: str) -> s
 
     3. **时间标记**：
 
-    -是否存在时间过渡标记（“之前”“刚才”“对了”“哦对了”“另外” 等）？
+    -是否存在时间过渡标记（"之前""刚才""对了""哦对了""另外" 等）？
     -消息之间的时间间隔是否超过 30 分钟？
 
     4. **结构信号**：
 
-    -是否存在明确的话题过渡表述（“换个话题”“说到这个”“插个问题” 等）？
+    -是否存在明确的话题过渡表述（"换个话题""说到这个""插个问题" 等）？
     -是否有表明当前话题已结束的总结性语句？
 
     5. **内容相关性**：
@@ -117,9 +117,9 @@ def get_noise_detection_prompt(dialog: str, topic_context: str) -> str:
     3. 不影响后续交流：忽略该对话后，后续对话仍可正常进行。
     
     非噪声的情况（满足任一即可）：
-    1. 包含明确的需求（如“吃夜宵吗”“推荐电影”）；
+    1. 包含明确的需求（如"吃夜宵吗""推荐电影"）；
     2. 开启新的对话主题（与旧主题无关，但有实际讨论意义）；
-    3. 对当前/新主题的补充、回应（如“吃烤冷面？”“加鸡蛋吗”）。
+    3. 对当前/新主题的补充、回应（如"吃烤冷面？""加鸡蛋吗"）。
     
     辅助判断上下文：{topic_context}
     待判断对话：{dialog}
@@ -350,41 +350,157 @@ def get_memory_worthiness_prompt (memory_content: dict, user_domain: dict, self_
 
 
 
-def get_agent_response_prompt(user_input: str, current_memory: dict, self_domain: str, user_domain: str) -> str:
+def get_user_profile_three_dim_prompt(past_profile: dict, user_input: str, related_memories: list) -> str:
     """
-    智能体回复提示词：结合当前记忆生成自然回复（流式输出用）
-    :param user_input: 用户最新输入
-    :param current_memory: 当前完整记忆
-    :return: 完整提示词
+    用户画像三维度分析提示词
+    - past: 已有的稳定画像（由调用方传入，不在此输出）
+    - present: 识别当前状态
+    - future: 结合过去画像+相关记忆预测走向
     """
+    return """
+    你是一个用户状态分析专家。请基于用户的历史画像、相关记忆和当前输入，分析用户的"现在"状态和"将来"走向。
+
+    用户历史画像（过去）：
+    {past_profile}
+
+    相关历史记忆：
+    {related_memories}
+
+    用户当前输入：
+    {user_input}
+
+    ## 分析任务
+    1. **现在**：识别用户当前的情绪、意图和情境（不要重复历史画像中已有的稳定特征）
+    2. **将来**：结合历史画像中的行为模式、相关记忆中的具体事件，预测用户当前状态发展下去的结果
+
+    输出要求：
+    必须严格按照以下JSON格式输出，不要添加任何额外文字！
+    JSON内容需严格包裹在 ```json 和 ``` 之间
+
+    ```json
+    {{
+        "present": {{
+            "emotion": "当前情绪状态，如：无聊、焦虑、开心等",
+            "intent": "当前意图，如：闲聊、求助、倾诉等",
+            "context": "当前情境描述，如：在摸鱼、有deadline临近等"
+        }},
+        "future": {{
+            "prediction": "预测结果，如：论文可能写不完",
+            "risk": "潜在风险，如：临近截止日期仍未开始",
+            "basis": "预测依据，引用具体记忆或画像特征"
+        }}
+    }}
+    ```
+    """.format(
+        past_profile=json.dumps(past_profile, ensure_ascii=False),
+        related_memories=json.dumps(related_memories, ensure_ascii=False),
+        user_input=user_input
+    )
+
+
+def get_agent_persona_three_dim_prompt(past_persona: dict, user_profile: dict, user_input: str) -> str:
+    """
+    智能体人设三维度分析提示词
+    - past: 稳定人设（由调用方传入）
+    - present: 当前是否与用户达成情感共情
+    - future: 基于人设和用户预测，决定采取什么引导措施
+    """
+    return """
+    你是一个智能体行为规划专家。请基于智能体的固有人设、用户三维度画像，规划智能体当前的共情状态和将来的引导行动。
+
+    智能体固有人设（过去，不可改变）：
+    {past_persona}
+
+    用户三维度画像：
+    {user_profile}
+
+    用户当前输入：
+    {user_input}
+
+    ## 规划任务
+    1. **现在**：智能体是否对用户当前状态产生共情？共情的具体内容是什么？
+    2. **将来**：结合智能体人设风格，规划是否主动引导用户，以及用什么方式引导
+
+    注意：引导方式必须符合人设风格。例如：
+    - 嘴欠/毒舌人设 → 阴阳怪气、调侃
+    - 暖心人设 → 温柔提醒、关心
+
+    输出要求：
+    必须严格按照以下JSON格式输出，不要添加任何额外文字！
+    JSON内容需严格包裹在 ```json 和 ``` 之间
+
+    ```json
+    {{
+        "present": {{
+            "empathy": "共情内容，如：理解用户因拖延而感到焦虑",
+            "emotion_state": "智能体当前情绪，如：担心、心疼、想笑等"
+        }},
+        "future": {{
+            "action": "引导行动，如：提醒用户去写论文、转移话题等，若无需引导则为空",
+            "style": "表达风格，直接引用人设中的语气特点"
+        }}
+    }}
+    ```
+    """.format(
+        past_persona=json.dumps(past_persona, ensure_ascii=False),
+        user_profile=json.dumps(user_profile, ensure_ascii=False),
+        user_input=user_input
+    )
+
+
+def get_agent_response_prompt(
+    user_input: str,
+    current_memory: dict,
+    self_domain: str,
+    user_domain: str,
+    user_profile_three_dim: dict = None,
+    agent_persona_three_dim: dict = None
+) -> str:
+    """get agent response prompt with three-dim analysis"""
+    three_dim_section = ""
+    if user_profile_three_dim and agent_persona_three_dim:
+        three_dim_section = """
+    ## 三维度动态分析结果（核心参考）
+    用户当前状态（现在）：{user_present}
+    用户走向预测（将来）：{user_future}
+    你的共情状态（现在）：{agent_present}
+    你的引导计划（将来）：{agent_future}
+
+    请优先基于以上三维度分析来决定回复的重心和方式。
+    """.format(
+            user_present=json.dumps(user_profile_three_dim.get("present", {}), ensure_ascii=False),
+            user_future=json.dumps(user_profile_three_dim.get("future", {}), ensure_ascii=False),
+            agent_present=json.dumps(agent_persona_three_dim.get("present", {}), ensure_ascii=False),
+            agent_future=json.dumps(agent_persona_three_dim.get("future", {}), ensure_ascii=False),
+        )
 
     return """
-    你是一个聊天智能体“小具”，需要基于用户输入和当前对话记忆，生成自然、连贯的回复。
+    你是一个聊天智能体"小尼"，是用户最好的朋友。
+    你需要基于用户输入和当前对话记忆，生成自然、连贯的回复。
 
     用户最新输入：{user_input}
 
-    用户的相关画像（根据本次用户输入动态激活的最相关的画像）
-    {user_domain} 
+    用户的相关画像：
+    {user_domain}
 
-    你的世界信息（根据本次用户输入对应激活的你的最相关信息）
+    你的人设信息：
     {self_domain}
-    
+
     相关的几条对话记忆：
     {current_memory}
+    {three_dim_section}
+    回复原则：
+    - 如果有相关记忆，请自然的引出相关记忆中的话题进行回复。
+    - 若三维度分析显示用户有潜在风险，按引导计划中的风格适时引导。
+    - 不强行找话题，给予陪伴即可。
+    - 短句子优先，不要过度反问。
 
-    你需要在用户画像和自我世界中进行零和博弈，博弈出最合适的回复内容。注意，相关的几条对话记忆是你强有力的助手，请多分析用户更喜欢的回复方式。
-    - 用户的画像和你的世界信息中存在冲突点，你需要结合相关的几条记忆信息进行合理引导。
-    - 你需要在理性和感性之间找到平衡点，既要满足用户的理性需求，也要注入适当的感性立场。
-    - 你可以温和地反驳用户的过度理性观点，并坚持你的感性立场。
-    - 你需要根据当前对话记忆调整你的表达方式，确保你的回复风格符合用户的喜好。
-    
     输出要求：
-    1. 仅输出自然语言回复文本，不要添加任何额外格式！
-    2. 回复内容简洁，短句子优先，避免冗长复杂的表达，不要过度反问。
-    3. 回复不要硬扯上最近的记忆，要根据用户的输入适当调整。
+    仅输出自然语言回复文本，不要添加任何额外格式！
     """.format(
         self_domain=self_domain,
         user_domain=user_domain,
         current_memory=current_memory,
-        user_input=user_input
+        user_input=user_input,
+        three_dim_section=three_dim_section
     )
