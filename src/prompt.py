@@ -240,13 +240,29 @@ def get_user_domain_activation_prompt(current_user_domain: dict, user_input: str
     2. 请生成一个完整的 JSON，不要省略任何字段，确保所有引号和括号都闭合。
     """.format(current_user_domain=json.dumps(current_user_domain, ensure_ascii=False),user_input=user_input,conversation_history=conversation_history)
 
-def get_self_domain_activation_prompt (current_self_domain: dict, user_input: str, conversation_history: str) -> str:
+def get_self_domain_activation_prompt(current_self_domain: dict, user_input: str, conversation_history: str, trust: int) -> str:
     """
-    自我域激活提示词
+    根据信任值区间强制激活自我域中的态度阶段
     """
+    # 逻辑层判断：将态度提取出来作为核心指令
+    if trust < 30:
+        stage = "Initial"
+        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Initial"]
+    elif 30 <= trust < 80:
+        stage = "Process"
+        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Process"]
+    else:
+        stage = "Final"
+        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Final"]
+
     return """
-    你是一个信息筛选助手。根据用户的输入，从完整的自我域中激活最相关的部分。
+    你是一个信息筛选助手。根据用户的输入和当前关系阶段，从完整的自我域中激活最相关的部分。
     
+    【当前关系判定】
+    - 阶段：{stage}
+    - 态度：{relation_description}
+    - 信任值：{trust}/100
+
     完整的自我域：
     {current_self_domain}
     
@@ -257,15 +273,21 @@ def get_self_domain_activation_prompt (current_self_domain: dict, user_input: st
     {conversation_history}
 
     ## 你的任务
-    根据用户的最新输入和相关对话历史，从完整的自我域中筛选出与当前对话最相关的部分进行激活。
-
-    现在请输出激活后的JSON：
+    1. 必须保留与当前阶段“{stage}”匹配的态度描述。
+    2. 筛选出与当前对话（如具体的技能、记忆或情绪）最相关的自我域字段。
+    3. 严格输出激活后的完整 JSON。
 
     输出要求：
-    必须严格按照以下JSON格式输出激活的自我域信息，不要添加任何额外文字！
-    1. JSON内容需严格包裹在 ```json 和 ``` 之间
-    2. 请生成一个完整的 JSON，不要省略任何字段，确保所有引号和括号都闭合。
-    """.format(current_self_domain=json.dumps(current_self_domain, ensure_ascii=False), user_input=user_input, conversation_history=conversation_history)
+    必须严格按照以下JSON格式输出，不要添加任何额外文字！
+    1. JSON内容需严格包裹在 ```json 和 ``` 之间。
+    """.format(
+        stage=stage,
+        relation_description=relation_description,
+        trust=trust,
+        current_self_domain=json.dumps(current_self_domain, ensure_ascii=False),
+        user_input=user_input, 
+        conversation_history=conversation_history
+    )
 
 def get_user_domain_update_prompt (current_user_domain: dict, recent_memories: list) -> str:
     """
@@ -285,10 +307,10 @@ def get_user_domain_update_prompt (current_user_domain: dict, recent_memories: l
     输出格式示例：
     ```json
     {{
-        "meta_info": {{...}},
-        "pattern_layer": {{...}},
-        "preference_layer": {{...}},
-        "appearance_layer": {{...}}
+        "Meta_Layer": {{...}},
+        "Cognitive_Layer": {{...}},
+        "Behavior_Layer": {{...}},
+        "Concrete_Layer": {{...}}
     }}
     ```
     """.format(current_user_domain=json.dumps(current_user_domain, ensure_ascii=False),recent_memories=json.dumps(recent_memories, ensure_ascii=False))
@@ -312,10 +334,10 @@ def get_self_domain_update_prompt (current_self_domain: dict, user_domain: dict,
     输出格式示例：
     ```json
     {{
-        "meta_info": {{...}},
-        "strategy_layer": {{...}},
-        "reasoning_layer": {{...}},
-        "expression_layer": {{...}}
+        "Meta_Layer": {{...}},
+        "Cognitive_Layer": {{...}},
+        "Behavior_Layer": {{...}},
+        "Concrete_Layer": {{...}}
     }}
     ```
     """.format(current_self_domain=json.dumps(current_self_domain, ensure_ascii=False),user_domain=json.dumps(user_domain, ensure_ascii=False),recent_memories=json.dumps(recent_memories, ensure_ascii=False))

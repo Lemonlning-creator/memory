@@ -1,1 +1,5 @@
 /src/config.py
+/models/*
+/data/*
+/logs/*
+/outputs/*

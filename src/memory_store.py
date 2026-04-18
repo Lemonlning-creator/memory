@@ -9,6 +9,7 @@ import config
 from domain import DomainManager 
 import numpy as np
 from sentence_transformers import SentenceTransformer, util
+import torch
 
 class MemoryStore:
     """记忆存储管理器：负责记忆的持久化存储"""

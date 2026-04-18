@@ -65,6 +65,7 @@ git clone https://github.com/Lemonlning-creator/memory.git
 cd memory
 uv sync
 source .venv/bin/activate
+pip install --upgrade pip
 ```
 
 ---
