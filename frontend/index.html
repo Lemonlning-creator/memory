@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户画像对话 Agent</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page-shell">
+        <div class="ambient ambient-left"></div>
+        <div class="ambient ambient-right"></div>
+
+        <main class="container">
+            <aside class="profile-panel">
+                <section class="profile-hero">
+                    <div class="profile-hero-text">
+                        <p class="eyebrow">User Profile</p>
+                        <h1>用户画像</h1>
+                        <p class="profile-hero-desc">沉淀用户信息与近期变化，让每次对话都更贴近用户本人。</p>
+                    </div>
+                </section>
+
+                <section class="panel-block panel-block-profile">
+                    <div class="panel-title-row">
+                        <h2>画像卡片</h2>
+                        <span class="panel-title-tip">实时刷新</span>
+                    </div>
+                    <div id="profileContent" class="profile-content">
+                        <div class="loading">加载中...</div>
+                    </div>
+                </section>
+
+                <button id="resetBtn" class="btn btn-danger">重置对话</button>
+            </aside>
+
+            <section class="chat-panel">
+                <header class="chat-header">
+                    <div class="assistant-identity">
+                        <div class="assistant-meta">
+                            <p class="eyebrow">Conversation Agent</p>
+                            <h2>个性化对话助手</h2>
+                            <p class="assistant-subtitle">结合上下文与用户画像，给出更自然、个性化的回复。</p>
+                        </div>
+                    </div>
+
+                    <div class="header-status-card">
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <div>
+                            <p class="status-label">连接状态</p>
+                            <p class="status-text" id="statusText">在线</p>
+                        </div>
+                    </div>
+                </header>
+
+                <div class="chat-stage">
+                    <div id="chatHistory" class="chat-history">
+                        <div class="message system">
+                            <div class="message-content">你好！我是你的个性化助手。请尽情聊天吧！</div>
+                        </div>
+                    </div>
+                </div>
+
+                <footer class="chat-input-area">
+                    <div class="input-panel">
+                        <div class="input-wrapper">
+                            <input
+                                type="text"
+                                id="userInput"
+                                class="input-field"
+                                placeholder="输入消息，按 Enter 发送"
+                                autocomplete="off"
+                            >
+                            <button id="sendBtn" class="btn btn-primary">发送</button>
+                        </div>
+                    </div>
+                </footer>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
