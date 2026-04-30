@@ -9,8 +9,8 @@ from openai import OpenAI
 
 
 client = OpenAI(
-    api_key="sk-e209b10eff1d4b35b6d55a3f611f2bc4",
-    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+    api_key="",
+    base_url="",
 )
 
 MODEL = "qwen-max"
