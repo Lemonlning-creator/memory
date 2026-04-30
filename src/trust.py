@@ -32,6 +32,7 @@ class TrustManager:
             "change": behavior_score,
             "trust_score": self.current_trust
         }
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
         with open(self.file_path, 'a', encoding='utf-8') as f:
             f.write(json.dumps(record, ensure_ascii=False) + '\n')
         

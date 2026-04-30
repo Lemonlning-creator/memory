@@ -599,3 +599,159 @@ agent: 哇，瑜伽真是个好选择！感觉身体放松的状态真不错吧�
 2026-04-16 12:38:11 - INFO - memory_builder - 话题已更换，处理当前buffer
 2026-04-16 12:38:16 - INFO - memory_builder - 已生成记忆：午饭选择：外卖或快餐
 2026-04-16 12:38:16 - INFO - memory_store - 记忆已保存：午饭选择：外卖或快餐
+2026-04-23 15:02:56 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-23 15:02:56 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-23 15:02:56 - ERROR - domain - 默认用户域JSON文件加载失败，使用空数据
+2026-04-23 15:02:56 - ERROR - domain - 保存用户域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 92, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+2026-04-23 15:02:56 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-23 15:02:56 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-23 15:02:56 - ERROR - domain - 默认自我域JSON文件加载失败，使用空数据
+2026-04-23 15:02:56 - ERROR - domain - 保存自我域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 168, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+2026-04-23 15:03:05 - INFO - memory_store - 已加载 2 条记忆
+2026-04-23 15:03:13 - INFO - memory_store - 已加载 2 条记忆
+2026-04-23 15:03:13 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：你是谁呀）
+2026-04-23 15:03:13 - INFO - domain - 激活用户域...
+2026-04-23 15:03:13 - INFO - domain - 激活自我域...
+2026-04-23 15:03:13 - INFO - domain - 开始三维度分析...
+2026-04-23 15:03:17 - INFO - domain - 三维度分析完成 - 用户现在: {'emotion': '好奇', 'intent': '闲聊', 'context': '可能在休息时间或寻找新鲜事物'}, 将来: {'prediction': '可能会继续寻找更多信息或与他人交流', 'risk': '如果没有明确目标，可能会浪费时间', 'basis': '基于当前输入的好奇心和闲聊意图'}
+2026-04-23 15:03:17 - INFO - domain - 三维度分析完成 - 智能体现在: {'empathy': '理解用户对新鲜事物的好奇心和闲聊的意图', 'emotion_state': '友好和开放'}, 将来: {'action': '可以分享一些有趣的事实或话题，引导用户继续探索', 'style': '温柔提醒、关心'}
+2026-04-24 15:36:51 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-24 15:36:51 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-24 15:36:51 - ERROR - domain - 默认用户域JSON文件加载失败，使用空数据
+2026-04-24 15:36:51 - ERROR - domain - 保存用户域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 92, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+2026-04-24 15:36:51 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-24 15:36:51 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-24 15:36:51 - ERROR - domain - 默认自我域JSON文件加载失败，使用空数据
+2026-04-24 15:36:51 - ERROR - domain - 保存自我域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 168, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+2026-04-24 15:37:11 - INFO - memory_store - 已加载 2 条记忆
+2026-04-24 15:37:16 - INFO - memory_store - 已加载 2 条记忆
+2026-04-24 15:37:16 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：你是谁）
+2026-04-24 15:37:16 - INFO - domain - 激活用户域...
+2026-04-24 15:37:16 - INFO - domain - 激活自我域...
+2026-04-24 15:37:16 - INFO - domain - 开始三维度分析...
+2026-04-24 15:37:21 - INFO - domain - 三维度分析完成 - 用户现在: {'emotion': '好奇', 'intent': '了解', 'context': '可能在探索或初次接触某个新事物'}, 将来: {'prediction': '可能会继续探索更多信息', 'risk': '如果没有明确目标，可能会浪费时间', 'basis': "用户当前询问'你是谁'，表明对新事物的好奇心"}
+2026-04-24 15:37:21 - INFO - domain - 三维度分析完成 - 智能体现在: {'empathy': '理解用户对新事物的好奇心和探索欲望', 'emotion_state': '欣赏用户的好奇心'}, 将来: {'action': '提供更多关于智能体的信息，引导用户进一步探索', 'style': '温柔提醒'}
+2026-04-30 22:53:57 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-30 22:53:57 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-30 22:53:57 - ERROR - domain - 默认用户域JSON文件加载失败，使用空数据
+2026-04-30 22:53:57 - ERROR - domain - 保存用户域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 92, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+2026-04-30 22:53:57 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-30 22:53:57 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-30 22:53:57 - ERROR - domain - 默认自我域JSON文件加载失败，使用空数据
+2026-04-30 22:53:57 - ERROR - domain - 保存自我域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 168, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+2026-04-30 22:54:10 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:54:15 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:54:16 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：hello）
+2026-04-30 22:54:16 - INFO - domain - 激活用户域...
+2026-04-30 22:54:16 - INFO - domain - 激活自我域...
+2026-04-30 22:54:16 - INFO - domain - 开始三维度分析...
+2026-04-30 22:54:20 - INFO - domain - 三维度分析完成 - 用户现在: {'emotion': '中性', 'intent': '闲聊', 'context': '无具体情境信息'}, 将来: {'prediction': '由于缺乏具体历史数据，无法准确预测未来走向', 'risk': '无法识别潜在风险', 'basis': '缺乏具体的历史画像和记忆数据'}
+2026-04-30 22:54:20 - INFO - domain - 三维度分析完成 - 智能体现在: {'empathy': '理解用户可能只是想随意聊聊', 'emotion_state': '轻松'}, 将来: {'action': '继续闲聊，询问用户最近有没有什么有趣的事情', 'style': '温柔提醒、关心'}
+2026-04-30 22:56:05 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-30 22:56:05 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json
+2026-04-30 22:56:05 - ERROR - domain - 默认用户域JSON文件加载失败，使用空数据
+2026-04-30 22:56:05 - ERROR - domain - 保存用户域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 92, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/user_domain.json'
+2026-04-30 22:56:05 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-30 22:56:05 - WARNING - domain - JSON文件不存在：/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json
+2026-04-30 22:56:05 - ERROR - domain - 默认自我域JSON文件加载失败，使用空数据
+2026-04-30 22:56:05 - ERROR - domain - 保存自我域数据失败：[Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+Traceback (most recent call last):
+  File "/Users/ln123/Document/pythonfile/memory/src/domain.py", line 168, in save_to_file
+    with open(self.persist_path, "w", encoding="utf-8") as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/ln123/Document/pythonfile/memory/data/init/self_domain.json'
+2026-04-30 22:56:54 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:56:59 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:56:59 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:56:59 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：hello）
+2026-04-30 22:56:59 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：hello）
+2026-04-30 22:56:59 - INFO - domain - 激活用户域...
+2026-04-30 22:56:59 - INFO - domain - 激活自我域...
+2026-04-30 22:56:59 - INFO - domain - 开始三维度分析...
+2026-04-30 22:56:59 - INFO - domain - 激活用户域...
+2026-04-30 22:56:59 - INFO - domain - 激活自我域...
+2026-04-30 22:56:59 - INFO - domain - 开始三维度分析...
+2026-04-30 22:57:01 - INFO - domain - 成功获取激活域片段
+2026-04-30 22:57:01 - INFO - domain - 成功获取激活域片段
+2026-04-30 22:57:04 - INFO - domain - 三维度分析完成 - 用户现在: {'emotion': '中性', 'intent': '闲聊', 'context': '无具体情境信息'}, 将来: {'prediction': '由于缺乏具体历史数据，无法准确预测未来走向', 'risk': '无法识别潜在风险', 'basis': '缺乏历史画像和具体记忆信息'}
+2026-04-30 22:57:04 - INFO - domain - 三维度分析完成 - 智能体现在: {'empathy': '理解用户可能只是想随意聊聊，放松心情', 'emotion_state': '轻松愉快'}, 将来: {'action': '继续闲聊，询问用户最近有没有什么有趣的事情', 'style': '温柔提醒、关心'}
+2026-04-30 22:57:04 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:04 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：hello 由于缺乏具体历史数据，无法准确预测未来走向 无法识别潜在风险）
+2026-04-30 22:57:04 - INFO - domain - 三维度分析完成 - 用户现在: {'emotion': '中性', 'intent': '闲聊', 'context': '无特定情境'}, 将来: {'prediction': '用户可能会继续进行轻松的交流', 'risk': '无明显风险', 'basis': '由于缺乏具体的历史画像和记忆，无法识别特定行为模式'}
+2026-04-30 22:57:04 - INFO - domain - 三维度分析完成 - 智能体现在: {'empathy': '理解用户可能只是想进行轻松的交流', 'emotion_state': '轻松'}, 将来: {'action': '继续进行轻松的闲聊', 'style': '温柔提醒、关心'}
+2026-04-30 22:57:04 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:04 - INFO - memory_store - 检索到 1 条相关记忆（增强查询：hello 用户可能会继续进行轻松的交流 无明显风险）
+2026-04-30 22:57:05 - INFO - memory_builder - 处理对话轮次：user: hello
+agent: Hello! How's your day going? 最近有没有什么有趣的事情想分享的？
+2026-04-30 22:57:05 - INFO - memory_builder - 首轮对话，初始化话题和buffer
+2026-04-30 22:57:05 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:05 - INFO - memory_builder - 处理对话轮次：user: hello
+agent: Hello! How's your day going so far? If you're thinking about lunch options again, remember to keep it tasty and healthy!
+2026-04-30 22:57:05 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:07 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.8}
+2026-04-30 22:57:07 - INFO - memory_builder - 话题未更换，已添加到buffer
+2026-04-30 22:57:15 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:16 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：哎？）
+2026-04-30 22:57:16 - INFO - domain - 激活用户域...
+2026-04-30 22:57:16 - INFO - domain - 激活自我域...
+2026-04-30 22:57:16 - INFO - domain - 开始三维度分析...
+2026-04-30 22:57:17 - INFO - domain - 成功获取激活域片段
+2026-04-30 22:57:19 - INFO - domain - 三维度分析完成 - 用户现在: {'emotion': '困惑', 'intent': '寻求澄清', 'context': '可能遇到不明情况或问题'}, 将来: {'prediction': '可能会继续寻找答案或帮助', 'risk': '如果问题得不到解决，可能会导致进一步的困扰', 'basis': '当前输入显示出困惑，缺乏相关历史记忆和画像特征'}
+2026-04-30 22:57:19 - INFO - domain - 三维度分析完成 - 智能体现在: {'empathy': '理解用户因困惑而感到不安', 'emotion_state': '关心'}, 将来: {'action': '询问用户具体遇到了什么问题，以便提供帮助', 'style': '温柔提醒'}
+2026-04-30 22:57:19 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:19 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：哎？ 可能会继续寻找答案或帮助 如果问题得不到解决，可能会导致进一步的困扰）
+2026-04-30 22:57:20 - INFO - memory_builder - 处理对话轮次：user: 哎？
+agent: 你遇到什么问题了吗？我在这里可以帮你哦。
+2026-04-30 22:57:20 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:21 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.7}
+2026-04-30 22:57:21 - INFO - memory_builder - 话题未更换，已添加到buffer
+2026-04-30 22:57:39 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:39 - INFO - memory_store - 检索到 0 条相关记忆（增强查询：我今天吃到了很好吃的饭喔）
+2026-04-30 22:57:39 - INFO - domain - 激活用户域...
+2026-04-30 22:57:39 - INFO - domain - 激活自我域...
+2026-04-30 22:57:39 - INFO - domain - 开始三维度分析...
+2026-04-30 22:57:41 - INFO - domain - 成功获取激活域片段
+2026-04-30 22:57:44 - INFO - domain - 三维度分析完成 - 用户现在: {'emotion': '开心', 'intent': '闲聊', 'context': '享受美食的时刻'}, 将来: {'prediction': '可能会更加关注饮食和美食体验', 'risk': '可能会因为过于关注美食而忽略其他重要任务', 'basis': '用户当前对美食的积极反馈，结合缺乏其他历史行为模式和记忆'}
+2026-04-30 22:57:44 - INFO - domain - 三维度分析完成 - 智能体现在: {'empathy': '理解用户因享受美食而感到开心', 'emotion_state': '愉悦'}, 将来: {'action': '建议用户分享更多美食体验或尝试新的菜品', 'style': '温柔提醒'}
+2026-04-30 22:57:44 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:44 - INFO - memory_store - 检索到 1 条相关记忆（增强查询：我今天吃到了很好吃的饭喔 可能会更加关注饮食和美食体验 可能会因为过于关注美食而忽略其他重要任务）
+2026-04-30 22:57:47 - INFO - memory_builder - 处理对话轮次：user: 我今天吃到了很好吃的饭喔
+agent: 听起来你今天的午餐很棒呢！是点的外卖吗？如果有特别推荐的菜品，记得分享给我哦。享受美食的同时，也别忘了偶尔尝试一些新的菜品，可能会有意想不到的惊喜呢！
+2026-04-30 22:57:47 - INFO - memory_store - 已加载 2 条记忆
+2026-04-30 22:57:48 - INFO - memory_builder - 话题边界检测结果：{'topic_changed': False, 'confidence': 0.8}
+2026-04-30 22:57:48 - INFO - memory_builder - 话题未更换，已添加到buffer

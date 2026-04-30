@@ -244,16 +244,16 @@ def get_self_domain_activation_prompt(current_self_domain: dict, user_input: str
     """
     根据信任值区间强制激活自我域中的态度阶段
     """
-    # 逻辑层判断：将态度提取出来作为核心指令
+    # 逻辑层判断：根据信任值确定阶段描述
     if trust < 30:
         stage = "Initial"
-        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Initial"]
-    elif 30 <= trust < 80:
+        relation_description = "保持警惕，观察用户意图，不轻易信任"
+    elif trust < 80:
         stage = "Process"
-        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Process"]
+        relation_description = "逐渐熟悉，开始展现真实性格，适度放开"
     else:
         stage = "Final"
-        relation_description = current_self_domain["Cognitive_Layer"]["Attitude_towards_User"]["Final"]
+        relation_description = "高度信任，完全展现自我，深度陪伴"
 
     return """
     你是一个信息筛选助手。根据用户的输入和当前关系阶段，从完整的自我域中激活最相关的部分。
@@ -468,6 +468,24 @@ def get_agent_persona_three_dim_prompt(past_persona: dict, user_profile: dict, u
         user_profile=json.dumps(user_profile, ensure_ascii=False),
         user_input=user_input
     )
+
+
+def get_trust_scoring_prompt(user_input: str, current_stage: str) -> str:
+    """信任评分提示词：根据用户输入评估行为分值"""
+    return """
+    你是一个行为评分助手。根据用户的输入内容，评估该行为对信任关系的影响。
+
+    当前关系阶段：{current_stage}
+    用户输入：{user_input}
+
+    评分规则：
+    - 正面行为（友好、感谢、分享、信任）：+1 到 +5
+    - 中性行为（普通对话、提问）：0
+    - 负面行为（冒犯、不礼貌、威胁）：-1 到 -5
+
+    输出要求：
+    仅输出一个整数（如：2、0、-3），不要添加任何其他文字！
+    """.format(user_input=user_input, current_stage=current_stage)
 
 
 def get_agent_response_prompt(

@@ -23,10 +23,10 @@ def stream_print(response_generator) -> str:
 
 def get_current_buffer_status(memory_builder: MemoryBuilder) -> str:
     """获取当前对话buffer状态"""
-    if not memory_builder.对话_buffer:
+    if not memory_builder.buffer:
         return "当前无对话内容"
-    
-    return f"当前话题：{memory_builder.current_topic}\n对话轮次：{len(memory_builder.对话_buffer)}"
+
+    return f"当前话题：{memory_builder.current_topic}\n对话轮次：{len(memory_builder.buffer)}"
 
 def main():
     # 初始化核心组件
@@ -124,6 +124,7 @@ def main():
 
             # 7. 【回复后更新】根据本轮输入计算并更新信任值
             # 这一步放在回复之后，为下一轮对话做准备
+            current_stage = trust_manager.get_relationship_stage()
             score_prompt = prompt.get_trust_scoring_prompt(user_input, current_stage)
             try:
                 # 获取 LLM 的原始输出
