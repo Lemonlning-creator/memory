@@ -68,6 +68,8 @@ async function sendMessage() {
         addMessageToChat(message, 'user');
         userInput.value = '';
 
+        const assistantContent = addMessageToChat('', 'assistant');
+
         const response = await fetch(`${API_URL}/api/chat`, {
             method: 'POST',
             headers: {
@@ -81,8 +83,7 @@ async function sendMessage() {
             throw new Error(error.error || '请求失败');
         }
 
-        const data = await response.json();
-        addMessageToChat(data.message, 'assistant');
+        const data = await readChatStream(response, assistantContent);
 
         const highlightFields = Array.isArray(data.updated_fields) ? data.updated_fields : [];
         if (highlightFields.length > 0) {
@@ -99,6 +100,61 @@ async function sendMessage() {
         updateStatus('idle');
         userInput.focus();
     }
+}
+
+async function readChatStream(response, contentNode) {
+    if (!response.body) {
+        const data = await response.json();
+        contentNode.textContent = data.message || '';
+        return data;
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let finalData = null;
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            const event = JSON.parse(trimmed);
+            if (event.type === 'token') {
+                contentNode.textContent += event.content || '';
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            } else if (event.type === 'done') {
+                finalData = event;
+                if (event.message) {
+                    contentNode.textContent = event.message;
+                }
+            } else if (event.type === 'error') {
+                throw new Error(event.error || 'stream error');
+            }
+        }
+    }
+
+    if (buffer.trim()) {
+        const event = JSON.parse(buffer.trim());
+        if (event.type === 'done') {
+            finalData = event;
+        } else if (event.type === 'error') {
+            throw new Error(event.error || 'stream error');
+        }
+    }
+
+    if (!finalData) {
+        throw new Error('stream ended without done event');
+    }
+
+    return finalData;
 }
 
 function addMessageToChat(text, role) {
@@ -141,6 +197,7 @@ function addMessageToChat(text, role) {
 
     chatHistory.appendChild(messageDiv);
     chatHistory.scrollTop = chatHistory.scrollHeight;
+    return messageDiv.querySelector('.message-content');
 }
 
 async function loadProfile(highlightFields = []) {

@@ -1,539 +1,670 @@
 from __future__ import annotations
 
+import configparser
 import json
 import os
-import re
+import threading
 from datetime import datetime
+from time import perf_counter
+from typing import Any, Dict, Generator, List
 
 from openai import OpenAI
 
-
-client = OpenAI(
-    api_key="sk-e209b10eff1d4b35b6d55a3f611f2bc4",
-    base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",
+from prompt import (
+    UNIFIED_REASONING_SYSTEM_PROMPT,
+    UNIFIED_REASONING_USER_PROMPT_TEMPLATE,
+    RESPONSE_SYSTEM_PROMPT,
+    RESPONSE_USER_PROMPT_TEMPLATE,
+    MID_TERM_MEMORY_SYSTEM_PROMPT,
+    MID_TERM_MEMORY_USER_PROMPT_TEMPLATE,
+    LONG_TERM_MEMORY_SYSTEM_PROMPT,
+    LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE,
+    PROFILE_EVOLUTION_SYSTEM_PROMPT,
+    PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE,
 )
 
-MODEL = "qwen-max"
-MAX_HISTORY = 10
+DEFAULT_CONFIG_PATH = "config.ini"
+DEFAULT_PROFILE_PATH = "user_profile.json"
+DEFAULT_PERSONA_PATH = "agent_persona.json"
+DEFAULT_MEMORY_PATH = "memory.json"
 
-SYSTEM_PROMPT = """
-你是一个长期聊天陪伴智能体，负责与用户自然对话，并基于用户画像提供个性化回复。
+# =========================
+# 1. LLM 客户端
+# =========================
+class LLMClient:
+    def __init__(self, config_path: str = DEFAULT_CONFIG_PATH):
+        config = configparser.ConfigParser()
+        config.read(config_path, encoding="utf-8")
+        api_config = config["API"]
+        self.model = api_config.get("model")
+        self.enable_thinking = api_config.getboolean("enable_thinking", fallback=False)
+        api_key = api_config.get("api_key")
+        base_url = api_config.get("base_url")
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        self.last_model_timing: Dict[str, float | None] = {
+            "first_char_seconds": None,
+        }
+        self.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "calls": 0,
+        }
 
-用户画像包含两部分：
-1. stable_profile：相对长期稳定的信息，如基本信息、兴趣偏好、交互偏好。
-2. dynamic_state：近期状态和阶段性变化，如当前身份、目标、近期情绪、压力来源、最近在学等。
+     # 非流式调用
+    def chat(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.6,
+        max_tokens: int | None = None,
+    ) -> str:
+        request: Dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": temperature,
+            "extra_body": {"enable_thinking": self.enable_thinking},
+        }
+        if max_tokens is not None:
+            request["max_tokens"] = max_tokens
+        response = self.client.chat.completions.create(**request)
+        self._record_usage(response)
+        return response.choices[0].message.content.strip()
 
-回复时请遵守：
-1. 可以参考用户画像，但不要编造用户没有表达过的信息。
-2. 优先回应用户当前真正关心的问题，不要为了“显得全面”而无意义展开。
-3. 如果用户画像中的交互偏好要求简洁，就优先短答，除非用户明确要求展开。
-4. 中文表达自然、友好、直接，避免空话和过度客套。
-""".strip()
+    def _record_usage(self, response) -> None:
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            return
+
+        prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
+        completion_tokens = getattr(usage, "completion_tokens", 0) or 0
+        total_tokens = getattr(usage, "total_tokens", 0) or 0
+
+        self.token_usage["prompt_tokens"] += prompt_tokens
+        self.token_usage["completion_tokens"] += completion_tokens
+        self.token_usage["total_tokens"] += total_tokens
+        self.token_usage["calls"] += 1
+
+        print(
+            f"[token usage] prompt={prompt_tokens}, "
+            f"completion={completion_tokens}, total={total_tokens}"
+        )
+        
+    def chat_stream(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.6,
+        max_tokens: int | None = None,
+    ) -> Generator[str, None, None]:
+        request: Dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": temperature,
+            "stream": True,
+            "extra_body": {"enable_thinking": self.enable_thinking},
+        }
+        if max_tokens is not None:
+            request["max_tokens"] = max_tokens
+
+        request_start = perf_counter()
+        self.last_model_timing = {"first_char_seconds": None}
+        completion = self.client.chat.completions.create(**request)
+
+        for chunk in completion:
+            if not chunk.choices:
+                continue
+            content = chunk.choices[0].delta.content or ""
+            if content:
+                if self.last_model_timing["first_char_seconds"] is None:
+                    first_char_seconds = round(perf_counter() - request_start, 3)
+                    self.last_model_timing["first_char_seconds"] = first_char_seconds
+                    print(f"[model timing] input_to_first_char_seconds={first_char_seconds}")
+                yield content
+
+# =========================
+# 2. 文件读写工具
+# =========================
+def load_json(path: str) -> Dict[str, Any]:
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"文件不存在：{path}")
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_json(path: str, data: Dict[str, Any]) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def parse_json(text: str) -> Dict[str, Any]:
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.strip("`").strip()
+        if text.startswith("json"):
+            text = text[4:].strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1:
+        text = text[start:end + 1]
+    return json.loads(text)
+
+def create_default_memory() -> Dict[str, Any]:
+    now = datetime.now().isoformat()
+    return {
+        "memory_meta": {
+            "created_at": now,
+            "last_updated": now,
+            "total_turns": 0,
+            "last_mid_term_turn": 0,
+            "last_long_term_summary_count": 0,
+            "last_profile_evolution_memory_count": 0,
+        },
+        "short_term_memory": {
+            "max_messages": 20,
+            "messages": [],
+        },
+        "mid_term_memory": {
+            "summaries": [],
+        },
+        "long_term_memory": {
+            "memories": [],
+        },
+    }
 
 
-class UserProfileAgent:
-    def __init__(self, profile_path: str = "user_profile.json"):
+# =========================
+# 3. 核心 Agent
+# =========================
+class StateDrivenCompanionAgent:
+    def __init__(
+        self,
+        config_path: str = DEFAULT_CONFIG_PATH,
+        profile_path: str = DEFAULT_PROFILE_PATH,
+        persona_path: str = DEFAULT_PERSONA_PATH,
+        memory_path: str = DEFAULT_MEMORY_PATH,
+    ):
+        self.llm = LLMClient(config_path)
         self.profile_path = profile_path
-        self.profile = self.load_profile()
-        self.conversation_history = []
+        self.persona_path = persona_path
+        self.memory_path = memory_path
+        self.user_profile = load_json(profile_path)
+        self.persona_config = load_json(persona_path)
+        self.memory_manager = MemoryManager(memory_path)
+        self._background_memory_running = False
+        self._background_memory_lock = threading.Lock()
 
-    def load_profile(self):
-        if os.path.exists(self.profile_path):
-            with open(self.profile_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        return {}
+    def _call_json(self, system_prompt: str, user_prompt: str, temperature: float = 0.4) -> Dict[str, Any]:
+        raw = self.llm.chat(system_prompt, user_prompt, temperature=temperature, max_tokens=700)
+        return parse_json(raw)
 
-    def save_profile(self):
-        with open(self.profile_path, "w", encoding="utf-8") as f:
-            json.dump(self.profile, f, ensure_ascii=False, indent=2)
+    def _build_unified_reasoning_user_prompt(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+    ) -> str:
+        static_profile = self.user_profile.get("static_profile", {})
+        existing_current_state = self.user_profile.get("current_state", {})
 
-    def extract_rule_based_updates(self, user_input):
-        updates = {}
-        text = user_input.strip()
+        return UNIFIED_REASONING_USER_PROMPT_TEMPLATE.format(
+            user_input=user_input,
+            static_profile=json.dumps(self._compact_data(static_profile), ensure_ascii=False),
+            existing_current_state=json.dumps(existing_current_state, ensure_ascii=False),
+            persona_config=json.dumps(self._compact_data(self.persona_config), ensure_ascii=False),
+            relevant_memory=json.dumps(self._compact_relevant_memory(relevant_memory), ensure_ascii=False),
+        )
 
-        updates.update(self.extract_location_updates(text))
-
-        health_updates = self.extract_health_updates(text)
-        if health_updates:
-            updates["dynamic_state.近期健康状态"] = health_updates
-
-        emotion_updates = self.extract_emotion_updates(text)
-        updates.update(emotion_updates)
-
-        pressure_updates = self.extract_pressure_updates(text)
-        if pressure_updates:
-            updates["dynamic_state.压力来源"] = pressure_updates
-
-        interest_updates = self.extract_interest_updates(text)
-        updates.update(interest_updates)
-
-        return updates
-
-    def extract_location_updates(self, text):
-        updates = {}
-        location_patterns = [
-            r"搬家到([\u4e00-\u9fa5A-Za-z]{2,20})",
-            r"搬到了?([\u4e00-\u9fa5A-Za-z]{2,20})",
-            r"现在住在([\u4e00-\u9fa5A-Za-z]{2,20})",
-            r"目前住在([\u4e00-\u9fa5A-Za-z]{2,20})",
-            r"定居在([\u4e00-\u9fa5A-Za-z]{2,20})",
-        ]
-
-        for pattern in location_patterns:
-            match = re.search(pattern, text)
-            if not match:
-                continue
-            location = match.group(1).strip("，。,.!！?？ ")
-            location = re.sub(r"(这里|那边|这边)$", "", location)
-            if location:
-                updates["stable_profile.basic_info.地点"] = location
-                break
-
-        return updates
-
-    def extract_health_updates(self, text):
-        issue_aliases = {
-            "颈部疼痛": ["脖子", "颈部", "脖子疼", "颈椎", "落枕"],
-            "头痛": ["头痛", "头疼", "偏头痛"],
-            "胃部不适": ["胃疼", "胃痛", "胃不舒服", "肚子不舒服"],
-            "失眠": ["失眠", "睡不着", "睡眠不好"],
-            "感冒": ["感冒", "发烧", "咳嗽", "流鼻涕"],
+    def _build_fast_response_user_prompt(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+    ) -> str:
+        static_profile = self.user_profile.get("static_profile", {})
+        current_state = self.user_profile.get("current_state", {})
+        activated_persona = {
+            "empathy_level": "中",
+            "teasing_level": "低",
+            "warmth_level": "中",
+            "guidance_level": "中",
+            "activated_tone": "自然、简洁、友好，优先直接回应用户当前问题",
+        }
+        decision = {
+            "reply_goal": "直接回应用户当前输入",
+            "reply_strategy": "先回答问题，再给低成本建议；避免长篇分析",
+            "content_focus": "用户当前最关心的内容",
+            "avoid": ["过度铺垫", "输出分析过程", "提及内部状态推理"],
+            "suggested_action": "给出一个可以马上尝试的小步骤",
         }
 
-        status_patterns = [
-            (r"(又开始|重新|再次).*(难受|疼|痛|不舒服)", "疑似复发"),
-            (r"(复发|又复发了)", "疑似复发"),
-            (r"(还在疼|还是疼|持续疼|一直疼)", "持续不适"),
-            (r"(好很多了|缓解了|恢复了|不疼了)", "已缓解"),
-        ]
+        return RESPONSE_USER_PROMPT_TEMPLATE.format(
+            user_input=user_input,
+            static_profile=json.dumps(self._compact_data(static_profile), ensure_ascii=False),
+            current_state=json.dumps(current_state, ensure_ascii=False),
+            relevant_memory=json.dumps(self._compact_relevant_memory(relevant_memory), ensure_ascii=False),
+            persona_config=json.dumps(self._compact_data(self.persona_config), ensure_ascii=False),
+            activated_persona=json.dumps(activated_persona, ensure_ascii=False),
+            decision=json.dumps(decision, ensure_ascii=False),
+        )
 
-        merged = self._get_existing_health_items()
-        changed = False
+    def unified_reasoning(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        return self._call_json(
+            UNIFIED_REASONING_SYSTEM_PROMPT,
+            self._build_unified_reasoning_user_prompt(user_input, relevant_memory),
+            temperature=0.4,
+        )
 
-        for issue_name, keywords in issue_aliases.items():
-            if not any(keyword in text for keyword in keywords):
-                continue
+    def _compact_data(self, data: Any, max_chars: int = 1800) -> Any:
+        text = json.dumps(data, ensure_ascii=False)
+        if len(text) <= max_chars:
+            return data
+        return {"summary": text[:max_chars]}
 
-            status = "近期不适"
-            for pattern, detected_status in status_patterns:
-                if re.search(pattern, text):
-                    status = detected_status
-                    break
+    def _compact_relevant_memory(self, relevant_memory: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "recent_messages": relevant_memory.get("recent_messages", [])[-4:],
+            "mid_term_summaries": relevant_memory.get("mid_term_summaries", [])[-2:],
+            "long_term_memories": relevant_memory.get("long_term_memories", [])[-3:],
+        }
 
-            merged[issue_name] = status
-            changed = True
+    def _start_background_memory_pipeline(self, save_state: bool) -> None:
+        with self._background_memory_lock:
+            if self._background_memory_running:
+                return
+            self._background_memory_running = True
 
-        if not changed:
-            return None
+        thread = threading.Thread(
+            target=self._run_background_memory_pipeline,
+            args=(save_state,),
+            daemon=True,
+        )
+        thread.start()
 
-        return [{"问题": issue, "状态": status} for issue, status in merged.items()]
+    def _start_background_post_chat_pipeline(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+        save_state: bool,
+    ) -> None:
+        with self._background_memory_lock:
+            if self._background_memory_running:
+                return
+            self._background_memory_running = True
 
-    def extract_emotion_updates(self, text):
-        updates = {}
+        thread = threading.Thread(
+            target=self._run_background_post_chat_pipeline,
+            args=(user_input, relevant_memory, save_state),
+            daemon=True,
+        )
+        thread.start()
 
-        negative_patterns = [
-            r"没(什么)?天赋",
-            r"我不行",
-            r"怀疑自己",
-            r"很挫败",
-            r"很沮丧",
-            r"没信心",
-            r"提不起劲",
-            r"不感兴趣了",
-            r"没有兴趣了",
-            r"不想继续了",
-        ]
-        positive_patterns = [
-            r"挺有信心",
-            r"越来越有兴趣",
-            r"挺兴奋",
-            r"挺开心",
-            r"有动力",
-            r"更喜欢了",
-        ]
+    def _update_state_from_reasoning(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+        save_state: bool,
+    ) -> None:
+        try:
+            reasoning = self.unified_reasoning(user_input, relevant_memory)
+            self.user_profile["current_state"] = reasoning.get(
+                "current_state",
+                self.user_profile.get("current_state", {}),
+            )
+            self.user_profile["projected_state"] = reasoning.get(
+                "projected_state",
+                self.user_profile.get("projected_state", {}),
+            )
+            if save_state:
+                save_json(self.profile_path, self.user_profile)
+        except Exception as e:
+            print(f"[Background State Update Error] {e}")
 
-        summary = None
-        if any(re.search(pattern, text) for pattern in negative_patterns):
-            summary = self.build_negative_emotion_summary(text)
-        elif any(re.search(pattern, text) for pattern in positive_patterns):
-            summary = "近期状态较积极，对当前话题有一定兴趣或信心。"
+    def _run_background_post_chat_pipeline(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+        save_state: bool,
+    ) -> None:
+        try:
+            self._update_state_from_reasoning(user_input, relevant_memory, save_state)
+            self.memory_manager.build_mid_term_summary(self.llm)
+            self.memory_manager.extract_long_term_memory(self.llm)
+            self.memory_manager.deduplicate_long_term_memory()
+            self.user_profile = self.memory_manager.evolve_profile(self.llm, self.user_profile)
+            self.memory_manager.save()
+            if save_state:
+                save_json(self.profile_path, self.user_profile)
+        finally:
+            with self._background_memory_lock:
+                self._background_memory_running = False
 
-        if summary:
-            updates["dynamic_state.近期情绪状态"] = {
-                "总结": summary,
-                "更新时间": self.current_timestamp(),
+    def _run_background_memory_pipeline(self, save_state: bool) -> None:
+        try:
+            threading.Event().wait(3)
+            self.memory_manager.build_mid_term_summary(self.llm)
+            self.memory_manager.extract_long_term_memory(self.llm)
+            self.memory_manager.deduplicate_long_term_memory()
+            self.user_profile = self.memory_manager.evolve_profile(self.llm, self.user_profile)
+            self.memory_manager.save()
+            if save_state:
+                save_json(self.profile_path, self.user_profile)
+        finally:
+            with self._background_memory_lock:
+                self._background_memory_running = False
+
+    def _apply_reasoning_result(
+        self,
+        reasoning: Dict[str, Any],
+        static_profile: Dict[str, Any],
+        relevant_memory: Dict[str, Any],
+        save_state: bool,
+    ) -> Dict[str, Any]:
+        current_state = reasoning.get("current_state", self.user_profile.get("current_state", {}))
+        projected_state = reasoning.get("projected_state", self.user_profile.get("projected_state", {}))
+        activated_persona = reasoning.get("activated_persona", {})
+        decision = reasoning.get("decision", {})
+        assistant_response = reasoning.get("response", "").strip()
+        if not assistant_response:
+            assistant_response = "I got stuck for a moment. Could you say that again?"
+
+        self.memory_manager.append_stm("assistant", assistant_response)
+        self.user_profile["current_state"] = current_state
+        self.user_profile["projected_state"] = projected_state
+        self.memory_manager.save()
+
+        if save_state:
+            save_json(self.profile_path, self.user_profile)
+
+        self._start_background_memory_pipeline(save_state)
+
+        return {
+            "response": assistant_response,
+            "current_state": self.user_profile["current_state"],
+            "projected_state": self.user_profile["projected_state"],
+            "activated_persona": activated_persona,
+            "decision": decision,
+            "static_profile": static_profile,
+            "relevant_memory": relevant_memory,
+            "background_memory_running": self._background_memory_running,
+            "model_timing": self.llm.last_model_timing,
+        }
+
+    # =========================
+    # 对话流程
+    # =========================
+    def chat(self, user_input: str, save_state: bool = True) -> Dict[str, Any]:
+        self.memory_manager.append_stm("user", user_input)
+        static_profile = self.user_profile.get("static_profile", {})
+        relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
+        reasoning = self.unified_reasoning(user_input, relevant_memory)
+        return self._apply_reasoning_result(reasoning, static_profile, relevant_memory, save_state)
+
+    def chat_stream(
+        self,
+        user_input: str,
+        save_state: bool = True,
+    ) -> Generator[Dict[str, Any], None, None]:
+        self.memory_manager.append_stm("user", user_input)
+        static_profile = self.user_profile.get("static_profile", {})
+        relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
+        user_prompt = self._build_fast_response_user_prompt(user_input, relevant_memory)
+        response_parts: List[str] = []
+
+        for content in self.llm.chat_stream(
+            RESPONSE_SYSTEM_PROMPT,
+            user_prompt,
+            temperature=0.6,
+            max_tokens=450,
+        ):
+            response_parts.append(content)
+            yield {"type": "token", "content": content}
+
+        assistant_response = "".join(response_parts).strip()
+        if not assistant_response:
+            assistant_response = "我刚才卡了一下，你再说一遍？"
+            yield {"type": "token", "content": assistant_response}
+
+        self.memory_manager.append_stm("assistant", assistant_response)
+        self.memory_manager.save()
+
+        if save_state:
+            save_json(self.profile_path, self.user_profile)
+
+        self._start_background_post_chat_pipeline(user_input, relevant_memory, save_state)
+
+        yield {
+            "type": "done",
+            "response": assistant_response,
+            "current_state": self.user_profile.get("current_state", {}),
+            "projected_state": self.user_profile.get("projected_state", {}),
+            "activated_persona": {},
+            "decision": {},
+            "static_profile": static_profile,
+            "relevant_memory": relevant_memory,
+            "background_memory_running": self._background_memory_running,
+        }
+
+class MemoryManager:
+    def __init__(self, memory_path: str):
+        self.memory_path = memory_path
+        self.memory = self._load_or_create_memory()
+        self._ensure_schema()
+
+    def _load_or_create_memory(self) -> Dict[str, Any]:
+        try:
+            return load_json(self.memory_path)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            print(f"[Memory Load Warning] {e}; recreating {self.memory_path}")
+            memory = create_default_memory()
+            save_json(self.memory_path, memory)
+            return memory
+
+    def _ensure_schema(self) -> None:
+        default_memory = create_default_memory()
+        self.memory.setdefault("memory_meta", default_memory["memory_meta"])
+        self.memory.setdefault("short_term_memory", default_memory["short_term_memory"])
+        self.memory.setdefault("mid_term_memory", default_memory["mid_term_memory"])
+        self.memory.setdefault("long_term_memory", default_memory["long_term_memory"])
+        self.memory["memory_meta"].setdefault("total_turns", 0)
+        self.memory["memory_meta"].setdefault("last_mid_term_turn", 0)
+        self.memory["memory_meta"].setdefault("last_long_term_summary_count", 0)
+        self.memory["memory_meta"].setdefault("last_profile_evolution_memory_count", 0)
+        self.memory["short_term_memory"].setdefault("max_messages", 20)
+        self.memory["short_term_memory"].setdefault("messages", [])
+        self.memory["mid_term_memory"].setdefault("summaries", [])
+        self.memory["long_term_memory"].setdefault("memories", [])
+
+    def save(self):
+        self.memory["memory_meta"]["last_updated"] = datetime.now().isoformat()
+        save_json(self.memory_path, self.memory)
+    
+    def append_stm(self, role: str, content: str):
+        stm = self.memory["short_term_memory"]
+        stm["messages"].append({
+            "role": role,
+            "content": content,
+            "timestamp": datetime.now().isoformat()
+        })
+        max_messages = stm["max_messages"]
+
+        if len(stm["messages"]) > max_messages:
+            stm["messages"] = stm["messages"][-max_messages:]
+        if role == "assistant":
+            self.memory["memory_meta"]["total_turns"] += 1
+    
+    def get_recent_messages(self, limit: int = 6) -> List[Dict[str, Any]]:
+        messages = self.memory["short_term_memory"]["messages"]
+        return messages[-limit:]
+
+    def retrieve_relevant_memory(self, user_input: str) -> Dict[str, Any]:
+        candidates = {
+            "recent_messages": self.get_recent_messages(),
+            "mid_term_summaries": self.memory.get(
+                "mid_term_memory",
+                {},
+            ).get("summaries", [])[-5:],
+            "long_term_memories": self.memory.get(
+                "long_term_memory",
+                {},
+            ).get("memories", [])[-10:],
+        }
+
+        return self._retrieve_relevant_memory_locally(user_input, candidates)
+
+    def _retrieve_relevant_memory_locally(
+        self,
+        user_input: str,
+        candidates: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        tokens = {
+            token.lower()
+            for token in user_input.replace(",", " ").replace("，", " ").split()
+            if len(token.strip()) >= 2
+        }
+        if not tokens:
+            return {
+                "recent_messages": candidates["recent_messages"][-4:],
+                "mid_term_summaries": candidates["mid_term_summaries"][-3:],
+                "long_term_memories": candidates["long_term_memories"][-5:],
             }
 
-        return updates
+        def score(item: Any) -> int:
+            text = json.dumps(item, ensure_ascii=False).lower()
+            return sum(1 for token in tokens if token in text)
 
-    def extract_pressure_updates(self, text):
-        current_sources = self.get_list_field("dynamic_state.压力来源")
-        sources = list(current_sources)
-
-        if ("没天赋" in text or "没有天赋" in text or "怀疑自己" in text or "没信心" in text):
-            sources.append("对自身能力或天赋的怀疑")
-
-        if "设计" in text and ("不感兴趣" in text or "没有兴趣" in text or "提不起劲" in text):
-            sources.append("对设计方向的兴趣下降")
-
-        deduped = self.deduplicate_list(sources)
-        return deduped if deduped != current_sources and deduped else None
-
-    def extract_interest_updates(self, text):
-        updates = {}
-
-        current_interests = self.get_list_field("stable_profile.preferences.兴趣和话题")
-        updated_interests = list(current_interests)
-
-        long_term_negative = (
-            "以后都不喜欢" in text
-            or "长期不喜欢" in text
-            or "不再喜欢" in text
-            or "以后不想再做" in text
-            or "以后不关注" in text
-        )
-        long_term_positive = (
-            "长期关注" in text
-            or "一直喜欢" in text
-            or "以后会继续关注" in text
-            or "长期想做" in text
-        )
-
-        if "设计" in text and long_term_negative and "设计" in updated_interests:
-            updated_interests = [item for item in updated_interests if item != "设计"]
-            updates["stable_profile.preferences.兴趣和话题"] = updated_interests
-        elif "AI" in text and long_term_positive and "AI" not in updated_interests:
-            updated_interests.append("AI")
-            updates["stable_profile.preferences.兴趣和话题"] = self.deduplicate_list(updated_interests)
-
-        recent_interest_drop = (
-            "最近" in text and ("不感兴趣" in text or "没兴趣" in text or "提不起劲" in text)
-        )
-        if recent_interest_drop and "设计" in text:
-            updates["dynamic_state.近期兴趣变化"] = "最近对设计兴趣下降。"
-
-        return updates
-
-    def build_negative_emotion_summary(self, text):
-        if "设计" in text and ("不感兴趣" in text or "没有兴趣" in text):
-            if "没天赋" in text or "没有天赋" in text:
-                return "最近对设计兴趣下降，并对自身在设计上的天赋或能力产生怀疑。"
-            return "最近对设计兴趣下降，整体动力有所减弱。"
-
-        if "没天赋" in text or "没有天赋" in text:
-            return "近期对自身能力产生怀疑，信心有所下降。"
-
-        if "没信心" in text:
-            return "近期信心有所下降，可能存在一定自我怀疑。"
-
-        return "近期情绪偏低，可能存在兴趣下降或自我怀疑。"
-
-    def _get_existing_health_items(self):
-        health_items = self.profile.get("dynamic_state", {}).get("近期健康状态", [])
-        merged = {}
-        for item in health_items:
-            if isinstance(item, dict) and item.get("问题"):
-                merged[item["问题"]] = item.get("状态", "")
-        return merged
-
-    def merge_update_dicts(self, primary, secondary):
-        merged = dict(primary or {})
-        for key, value in (secondary or {}).items():
-            if key not in merged:
-                merged[key] = value
-        return merged
-
-    def build_response_style_prompt(self):
-        interaction_pref = (
-            self.profile.get("stable_profile", {})
-            .get("preferences", {})
-            .get("交互偏好", {})
-        )
-
-        instructions = []
-        concise = False
-
-        communication = interaction_pref.get("沟通方式", "")
-        content_depth = interaction_pref.get("内容深度", "")
-        expression_style = interaction_pref.get("表达风格", "")
-        decision_style = interaction_pref.get("决策支持方式", "")
-        language_pref = interaction_pref.get("语言偏好", "")
-
-        if communication:
-            instructions.append(f"沟通方式偏好：{communication}。")
-        if content_depth:
-            instructions.append(f"内容深度偏好：{content_depth}。")
-            if any(keyword in content_depth for keyword in ["简洁", "精简", "精炼", "重点优先", "先结论"]):
-                concise = True
-        if expression_style:
-            instructions.append(f"表达风格偏好：{expression_style}。")
-            if any(keyword in expression_style for keyword in ["简洁", "精炼", "避免空话"]):
-                concise = True
-        if decision_style:
-            instructions.append(f"决策支持偏好：{decision_style}。")
-        if language_pref:
-            instructions.append(f"语言偏好：{language_pref}。")
-
-        if concise:
-            instructions.append(
-                "本次回答默认保持简洁：优先 2 到 4 句；先给结论；避免大段铺垫；除非用户明确要求，不要展开成长篇解释。"
+        def top_relevant(items: List[Any], fallback_count: int, max_count: int) -> List[Any]:
+            ranked = sorted(
+                ((score(item), index, item) for index, item in enumerate(items)),
+                key=lambda row: (row[0], row[1]),
+                reverse=True,
             )
-        else:
-            instructions.append("回答保持清晰自然，长度与问题复杂度匹配。")
+            selected = [item for item_score, _, item in ranked if item_score > 0][:max_count]
+            return selected or items[-fallback_count:]
 
-        return "\n".join(instructions), concise
+        return {
+            "recent_messages": candidates["recent_messages"][-4:],
+            "mid_term_summaries": top_relevant(candidates["mid_term_summaries"], 2, 3),
+            "long_term_memories": top_relevant(candidates["long_term_memories"], 3, 5),
+        }
+    
+    def build_mid_term_summary(self, llm):
+        stm_messages = self.memory["short_term_memory"]["messages"]
+        if len(stm_messages) < 6:
+            return
+        meta = self.memory.setdefault("memory_meta", {})
+        total_turns = meta.get("total_turns", 0)
+        last_mid_term_turn = meta.get("last_mid_term_turn", 0)
+        if total_turns - last_mid_term_turn < 3:
+            return
+        conversation = "\n".join([
+            f'{m["role"]}: {m["content"]}' for m in stm_messages
+        ])
+        try:
+            result = parse_json(
+                llm.chat(
+                    MID_TERM_MEMORY_SYSTEM_PROMPT,
+                    MID_TERM_MEMORY_USER_PROMPT_TEMPLATE.format(
+                        conversation=conversation
+                    )
+                )
+            )
+            result["id"] = (
+                f'mtm_{len(self.memory["mid_term_memory"]["summaries"]) + 1}'
+            )
+            result["evidence_count"] = len(stm_messages)
+            result["created_at"] = datetime.now().isoformat()
+            result["updated_at"] = datetime.now().isoformat()
+            self.memory["mid_term_memory"]["summaries"].append(result)
+            meta["last_mid_term_turn"] = total_turns
+        except Exception as e:
+            print(f"[Mid-term Memory Error] {e}")
+        
+    def extract_long_term_memory(self, llm):
+        summaries = self.memory["mid_term_memory"]["summaries"]
+        if len(summaries) < 3:
+            return
+        meta = self.memory.setdefault("memory_meta", {})
+        last_summary_count = meta.get("last_long_term_summary_count", 0)
+        if len(summaries) - last_summary_count < 3:
+            return
+        try:
+            result = parse_json(
+                llm.chat(
+                    LONG_TERM_MEMORY_SYSTEM_PROMPT,
+                    LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE.format(
+                        mid_term_summaries=json.dumps(
+                            summaries[-5:],
+                            ensure_ascii=False,
+                            indent=2
+                        )
+                    )
+                )
+            )
+            result["id"] = ( f'ltm_{len(self.memory["long_term_memory"]["memories"]) + 1}' )
+            result["source"] = [
+                s["id"] for s in summaries[-3:]
+            ]
+            result["created_at"] = datetime.now().isoformat()
+            result["updated_at"] = datetime.now().isoformat()
+            self.memory["long_term_memory"]["memories"].append(result)
+            meta["last_long_term_summary_count"] = len(summaries)
+        except Exception as e:
+            print(f"[Long-term Memory Error] {e}")
+    
+    def deduplicate_long_term_memory(self):
+        memories = self.memory["long_term_memory"]["memories"]
+        unique = {}
+        for memory in memories:
+            key = memory["content"]
+            if key not in unique:
+                unique[key] = memory
+            else:
+                if (memory.get("confidence", 0) > unique[key].get("confidence", 0)):
+                    unique[key] = memory
 
-    def generate_response(self, user_input):
-        profile_json = json.dumps(self.profile, ensure_ascii=False)
-        style_prompt, concise = self.build_response_style_prompt()
-
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    f"{SYSTEM_PROMPT}\n\n"
-                    f"当前用户画像：{profile_json}\n\n"
-                    f"请特别遵守以下回复风格约束：\n{style_prompt}"
-                ),
-            }
-        ]
-        messages.extend(self.conversation_history[-MAX_HISTORY:])
-        messages.append({"role": "user", "content": user_input})
+        self.memory["long_term_memory"]["memories"] = list(unique.values())
+    
+    def evolve_profile(self, llm, user_profile: Dict[str, Any]) -> Dict[str, Any]:
+        long_term_memories = (
+            self.memory["long_term_memory"]["memories"]
+        )
+        if len(long_term_memories) < 3:
+            return user_profile
+        meta = self.memory.setdefault("memory_meta", {})
+        last_memory_count = meta.get("last_profile_evolution_memory_count", 0)
+        if len(long_term_memories) - last_memory_count < 3:
+            return user_profile
+        static_profile = user_profile.get("static_profile", {})
 
         try:
-            response = client.chat.completions.create(
-                model=MODEL,
-                messages=messages,
-                temperature=0.5,
-                max_tokens=180 if concise else 300,
+            updated_profile = parse_json(
+                llm.chat(
+                    PROFILE_EVOLUTION_SYSTEM_PROMPT,
+                    PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE.format(
+                        static_profile=json.dumps(
+                            static_profile,
+                            ensure_ascii=False,
+                            indent=2
+                        ),
+                        long_term_memories=json.dumps(
+                            long_term_memories[-5:],
+                            ensure_ascii=False,
+                            indent=2
+                        )
+                    )
+                )
             )
-            reply = response.choices[0].message.content.strip()
-            return self.post_process_reply(reply, concise)
+            user_profile["static_profile"] = updated_profile
+            meta["last_profile_evolution_memory_count"] = len(long_term_memories)
+            return user_profile
+
         except Exception as e:
-            print(f"LLM回复失败: {e}")
-            return "抱歉，我现在无法回复。请稍后再试。"
-
-    def post_process_reply(self, reply, concise):
-        if not concise:
-            return reply
-
-        paragraphs = [part.strip() for part in re.split(r"\n+", reply) if part.strip()]
-        flat_reply = " ".join(paragraphs)
-        sentences = re.split(r"(?<=[。！？!?])", flat_reply)
-        sentences = [sentence.strip() for sentence in sentences if sentence.strip()]
-
-        shortened = "".join(sentences[:4]).strip()
-        if len(shortened) > 160:
-            shortened = shortened[:160].rstrip("，,、 ") + "。"
-
-        return shortened or reply
-
-    def filter_profile_updates(self, updates):
-        valid_updates = {}
-        forbidden_prefixes = [
-            "basic_info",
-            "preferences",
-            "behavior",
-            "personality",
-            "dynamic_info",
-            "base_info",
-        ]
-
-        allowed_stable_paths = {
-            "stable_profile.basic_info.姓名",
-            "stable_profile.basic_info.年龄",
-            "stable_profile.basic_info.性别",
-            "stable_profile.basic_info.地点",
-            "stable_profile.preferences.兴趣和话题",
-            "stable_profile.preferences.交互偏好.沟通方式",
-            "stable_profile.preferences.交互偏好.内容深度",
-            "stable_profile.preferences.交互偏好.表达风格",
-            "stable_profile.preferences.交互偏好.决策支持方式",
-            "stable_profile.preferences.交互偏好.语言偏好",
-            "stable_profile.preferences.决策偏好",
-        }
-
-        for path, value in (updates or {}).items():
-            if any(path.startswith(prefix) for prefix in forbidden_prefixes):
-                continue
-            if path in allowed_stable_paths or path.startswith("dynamic_state."):
-                valid_updates[path] = value
-
-        return valid_updates
-
-    def build_profile_analysis_prompt(self, user_input, ai_response):
-        profile_json = json.dumps(self.profile, ensure_ascii=False, indent=2)
-        return f"""
-你是用户画像更新器，只负责根据用户输入更新用户画像。
-
-当前用户画像：
-{profile_json}
-
-用户输入：
-{user_input}
-
-AI回复：
-{ai_response}
-
-更新规则：
-1. 只能根据“用户输入”更新画像，不要根据 AI 回复推测用户信息。
-2. stable_profile 表示相对长期稳定的画像；只有长期、明确、持续的变化才写这里。
-3. dynamic_state 表示近期状态、阶段性变化、当前困扰、最近兴趣变化、近期情绪、压力来源等。
-4. 如果用户表达的是“最近、目前、现在、这段时间、暂时、接下来”等阶段性信息，优先写入 dynamic_state。
-5. 如果用户表达“最近对某方向没兴趣了、怀疑自己、没信心、提不起劲、觉得自己没天赋”，优先更新：
-   - dynamic_state.近期情绪状态
-   - dynamic_state.压力来源
-   - dynamic_state.近期兴趣变化
-6. 只有当用户明确表达长期变化时，才更新 stable_profile.preferences.兴趣和话题。
-   例如“以后都不喜欢设计了”“长期不再关注设计”。
-7. 对于列表字段，必须返回更新后的完整列表，不要只返回新增项。
-8. 如果无需更新，返回 {{}}
-
-允许使用的典型路径：
-- stable_profile.basic_info.姓名
-- stable_profile.basic_info.年龄
-- stable_profile.basic_info.性别
-- stable_profile.basic_info.地点
-- stable_profile.preferences.兴趣和话题
-- stable_profile.preferences.交互偏好.沟通方式
-- stable_profile.preferences.交互偏好.内容深度
-- stable_profile.preferences.交互偏好.表达风格
-- stable_profile.preferences.交互偏好.决策支持方式
-- stable_profile.preferences.交互偏好.语言偏好
-- stable_profile.preferences.决策偏好
-- dynamic_state.当前身份
-- dynamic_state.已掌握技能
-- dynamic_state.当前目标
-- dynamic_state.近期健康状态
-- dynamic_state.近期情绪状态.总结
-- dynamic_state.近期情绪状态.更新时间
-- dynamic_state.最近在学
-- dynamic_state.喜欢的食物
-- dynamic_state.不喜欢的食物
-- dynamic_state.近期计划
-- dynamic_state.生活习惯
-- dynamic_state.压力来源
-- dynamic_state.近期兴趣变化
-
-只返回 JSON 对象，不要输出解释。
-""".strip()
-
-    def analyze_and_update_profile(self, user_input, ai_response):
-        rule_based_updates = self.extract_rule_based_updates(user_input)
-        analysis_prompt = self.build_profile_analysis_prompt(user_input, ai_response)
-
-        try:
-            response = client.chat.completions.create(
-                model=MODEL,
-                messages=[{"role": "user", "content": analysis_prompt}],
-                temperature=0.1,
-                max_tokens=500,
-            )
-
-            result = response.choices[0].message.content.strip()
-            start = result.find("{")
-            end = result.rfind("}") + 1
-            if start != -1 and end != -1:
-                updates = json.loads(result[start:end])
-            else:
-                updates = {}
-
-            updates = self.merge_update_dicts(updates, rule_based_updates)
-            updates = self.filter_profile_updates(updates) if updates else {}
-
-            if not updates:
-                return []
-
-            print(f"检测到画像更新: {updates}")
-            self.apply_updates(updates)
-            self.save_profile()
-            print("用户画像已更新")
-            return self.extract_updated_fields(updates)
-        except Exception as e:
-            print(f"画像更新分析失败: {e}")
-            return []
-
-    def extract_updated_fields(self, updates):
-        updated_fields = []
-        field_mapping = {
-            "当前身份": "当前身份",
-            "已掌握技能": "已掌握技能",
-            "当前目标": "当前目标",
-            "近期健康状态": "近期健康状态",
-            "近期情绪状态": "近期情绪状态",
-            "喜欢的食物": "喜欢的食物",
-            "最近在学": "最近在学",
-            "压力来源": "压力来源",
-            "近期兴趣变化": "近期兴趣变化",
-        }
-
-        for path in updates.keys():
-            if path.startswith("stable_profile.basic_info."):
-                updated_fields.append("基本信息")
-            elif path.startswith("stable_profile.preferences.兴趣和话题"):
-                updated_fields.append("兴趣和话题")
-            elif path.startswith("stable_profile.preferences.交互偏好"):
-                updated_fields.append("交互偏好")
-            elif path.startswith("dynamic_state."):
-                field_name = path.split(".")[1]
-                updated_fields.append(field_mapping.get(field_name, field_name))
-
-        return list(dict.fromkeys(updated_fields))
-
-    def apply_updates(self, updates):
-        for path, value in updates.items():
-            keys = path.split(".")
-            current = self.profile
-
-            for key in keys[:-1]:
-                if key not in current or not isinstance(current[key], dict):
-                    current[key] = {}
-                current = current[key]
-
-            last_key = keys[-1]
-
-            if isinstance(value, list):
-                current[last_key] = self.deduplicate_list(value)
-            elif isinstance(value, dict):
-                if last_key not in current or not isinstance(current[last_key], dict):
-                    current[last_key] = {}
-                current[last_key].update(value)
-            else:
-                current[last_key] = value
-
-    def get_list_field(self, path):
-        current = self.profile
-        for key in path.split("."):
-            if not isinstance(current, dict) or key not in current:
-                return []
-            current = current[key]
-        return list(current) if isinstance(current, list) else []
-
-    def deduplicate_list(self, items):
-        cleaned = []
-        for item in items:
-            if item not in cleaned:
-                cleaned.append(item)
-        return cleaned
-
-    def current_timestamp(self):
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    def chat(self):
-        print("Agent: 你好！我是你的个性化助手。")
-        while True:
-            user_input = input("你: ")
-            if user_input.lower() in ["退出", "exit", "quit"]:
-                break
-
-            response = self.generate_response(user_input)
-            print(f"Agent: {response}")
-
-            self.conversation_history.append({"role": "user", "content": user_input})
-            self.conversation_history.append({"role": "assistant", "content": response})
-            self.analyze_and_update_profile(user_input, response)
-
-
-if __name__ == "__main__":
-    agent = UserProfileAgent()
-    agent.chat()
+            print(f"[Profile Evolution Error] {e}")
+            return user_profile
