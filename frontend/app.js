@@ -15,18 +15,15 @@ const STATUS = {
 };
 const PROFILE_HIGHLIGHT_DURATION = 30000;
 const TOAST_DURATION = 30000;
-const PROFILE_LABELS = {
-    stable_profile: '稳定画像',
-    dynamic_state: '近期状态',
-    basic_info: '基本信息',
-    preferences: '偏好设置'
-};
-const ROOT_PROFILE_ORDER = ['stable_profile', 'dynamic_state'];
+const PROFILE_LABELS = {};
+const ROOT_PROFILE_ORDER = ['state_axis', 'context_axis'];
+const STATIC_PROFILE_LAYER_ORDER = ['core', 'regulation', 'cognitive_style', 'behavior_preference', 'social_physical'];
 const DEFAULT_EXPANDED_PATHS = [
-    'stable_profile',
-    'stable_profile.basic_info',
-    'stable_profile.preferences',
-    'dynamic_state'
+    'state_axis',
+    'state_axis.static_profile',
+    'state_axis.current_state',
+    'state_axis.static_profile.core',
+    'state_axis.static_profile.social_physical',
 ];
 
 const userInput = document.getElementById('userInput');
@@ -237,9 +234,18 @@ function renderProfile(profile, highlightFields = []) {
     sections.forEach((section) => profileContent.appendChild(section));
 }
 
+function isProfileLeaf(value) {
+    return isPlainObject(value) && 'value' in value && 'memory_ids' in value;
+}
+
 function createProfileNode(label, value, path, highlightFields = []) {
     if (!hasDisplayableContent(value)) {
         return null;
+    }
+
+    // 新结构叶子节点：{ value, memory_ids }
+    if (isProfileLeaf(value)) {
+        return createLeafNode(label, value.value, path, highlightFields, value.memory_ids);
     }
 
     if (Array.isArray(value) && value.every(isPrimitiveValue)) {
@@ -250,7 +256,7 @@ function createProfileNode(label, value, path, highlightFields = []) {
         return createBranchNode(label, value, path, highlightFields, false);
     }
 
-    return createLeafNode(label, value, path, highlightFields);
+    return createLeafNode(label, value, path, highlightFields, []);
 }
 
 function createBranchNode(label, value, path, highlightFields = [], isSection = false) {
@@ -318,7 +324,7 @@ function createBranchNode(label, value, path, highlightFields = [], isSection = 
     return node;
 }
 
-function createLeafNode(label, value, path, highlightFields = []) {
+function createLeafNode(label, value, path, highlightFields = [], memoryIds = []) {
     const node = document.createElement('div');
     node.className = 'profile-tree-node profile-tree-leaf';
     node.dataset.path = path;
@@ -329,9 +335,6 @@ function createLeafNode(label, value, path, highlightFields = []) {
 
     const row = document.createElement('div');
     row.className = 'profile-tree-row';
-    if (path.startsWith('stable_profile.basic_info.')) {
-        row.classList.add('profile-tree-row-inline');
-    }
 
     const labelEl = document.createElement('span');
     labelEl.className = 'profile-tree-key';
@@ -339,10 +342,32 @@ function createLeafNode(label, value, path, highlightFields = []) {
 
     const valueEl = document.createElement('div');
     valueEl.className = 'profile-tree-value';
-    valueEl.textContent = formatLeafValue(value);
+
+    if (Array.isArray(value)) {
+        const tagList = document.createElement('div');
+        tagList.className = 'tag-list';
+        value.forEach((v) => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = formatLeafValue(v);
+            tagList.appendChild(tag);
+        });
+        valueEl.appendChild(tagList);
+    } else {
+        valueEl.textContent = formatLeafValue(value);
+    }
 
     row.appendChild(labelEl);
     row.appendChild(valueEl);
+
+    if (memoryIds && memoryIds.length > 0) {
+        const badge = document.createElement('span');
+        badge.className = 'memory-badge';
+        badge.title = memoryIds.join(', ');
+        badge.textContent = `${memoryIds.length}`;
+        row.appendChild(badge);
+    }
+
     node.appendChild(row);
     return node;
 }
@@ -384,9 +409,14 @@ function getNodeEntries(value, parentPath) {
         }));
     }
 
-    return Object.entries(value).map(([key, itemValue]) => ({
+    const order = parentPath === 'state_axis.static_profile' ? STATIC_PROFILE_LAYER_ORDER : null;
+    const keys = order
+        ? [...order.filter((k) => k in value), ...Object.keys(value).filter((k) => !order.includes(k))]
+        : Object.keys(value);
+
+    return keys.map((key) => ({
         label: getLabelForKey(key),
-        value: itemValue,
+        value: value[key],
         path: joinPath(parentPath, key)
     }));
 }
@@ -424,6 +454,10 @@ function getNodeMeta(value) {
 function hasDisplayableContent(value) {
     if (value === null || value === undefined || value === '') {
         return false;
+    }
+
+    if (isProfileLeaf(value)) {
+        return hasDisplayableContent(value.value);
     }
 
     if (Array.isArray(value)) {

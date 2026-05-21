@@ -91,6 +91,7 @@ RESPONSE_USER_PROMPT_TEMPLATE = """
 用户输入：{user_input}
 用户长期画像 static_profile：{static_profile}
 用户当前状态 current_state：{current_state}
+当前语境 current_context：{current_context}
 相关记忆 relevant_memory：{relevant_memory}
 智能体人设 persona_config：{persona_config}
 激活后人设 activated_persona：{activated_persona}
@@ -206,19 +207,18 @@ LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE = """
 # Memory Prompt：用户画像演化
 # =========================
 PROFILE_EVOLUTION_SYSTEM_PROMPT = """
-你是用户画像演化模块。你的任务是根据长期记忆判断是否需要更新用户static_profile。
+你是用户画像演化模块。你的任务是根据长期记忆判断是否需要更新用户 static_profile。
+static_profile 包含5层：core、regulation、cognitive_style、behavior_preference、social_physical。
 要求：
-    1. 只能基于长期记忆更新用户画像。
-    2. 只更新长期稳定特征，不更新短期情绪。
-    3. 不要编造用户没有表达过的信息。
-    4. 尽量保留原有 static_profile 结构。
-    5. 如果没有必要更新，则原样返回 static_profile。
-    6. 输出必须是完整 static_profile JSON，不要输出解释文字。
+    1. 只能基于长期记忆更新用户画像，只更新长期稳定特征，不更新短期情绪。
+    2. 不要编造用户没有表达过的信息，尽量保留原有结构，没有必要更新则原样返回。
+    3. 所有叶子属性必须使用格式：{"value": ..., "memory_ids": [...]}，memory_ids 填写支撑该属性的长期记忆 id。
+    4. 输出必须是完整 static_profile JSON，不要输出解释文字。
 """
 PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE = """
 当前 static_profile：{static_profile}
-长期记忆：{long_term_memories}
-请输出更新后的完整static_profile：
+长期记忆（含 id）：{long_term_memories}
+请输出更新后的完整 static_profile，所有叶子属性格式为 {{"value": ..., "memory_ids": [...]}}：
 """
 
 # =========================
@@ -226,8 +226,9 @@ PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE = """
 # =========================
 UNIFIED_REASONING_SYSTEM_PROMPT = """
 你是一个基于状态驱动的陪伴智能体中的实时推理模块。你需要完成原本由以下多个模块分别完成的工作：
+- 语境推断（Context Inference）：判断用户当前所处的聊天语境
 - 用户状态感知（State Perception）
-- 人设激活（Persona Activation）
+- 人设激活（Persona Activation）：结合语境和状态激活共情人设
 - 决策生成（Decision Making）
 - 用户未来状态预测（State Prediction）
 只返回 JSON，不要输出解释、分析过程或额外文字。
@@ -236,10 +237,15 @@ UNIFIED_REASONING_USER_PROMPT_TEMPLATE = """
 用户输入：{user_input}
 用户长期画像 Static Profile：{static_profile}
 已有当前状态 Existing Current State：{existing_current_state}
+上一轮语境 Existing Context：{existing_context}
 智能体人设 Persona Config：{persona_config}
 相关记忆 Relevant Memory：{relevant_memory}
 请返回如下 JSON 结构：
 {{
+  "context": {{
+    "current_context": "工作/游戏/休息/学习/社交/其他",
+    "context_detail": "一句话描述当前语境特征"
+  }},
   "current_state": {{
     "emotion": "当前情绪",
     "stress_level": "低/中/高",
@@ -259,7 +265,7 @@ UNIFIED_REASONING_USER_PROMPT_TEMPLATE = """
     "teasing_level": "低/中/高",
     "warmth_level": "低/中/高",
     "guidance_level": "低/中/高",
-    "activated_tone": "当前激活后的语气风格"
+    "activated_tone": "当前激活后的语气风格，需结合语境调整"
   }},
   "decision": {{
     "reply_goal": "本轮回复目标",
@@ -267,7 +273,6 @@ UNIFIED_REASONING_USER_PROMPT_TEMPLATE = """
     "content_focus": "本轮重点关注内容",
     "avoid": [],
     "suggested_action": "建议用户采取的低成本行动"
-  }},
-  "response": "直接给用户的最终回复。要自然、简洁，通常 2-4 句，不要输出分析过程。"
+  }}
 }}
 """

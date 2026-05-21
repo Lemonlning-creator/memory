@@ -3,7 +3,8 @@ import json
 from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
 
-from agent import StateDrivenCompanionAgent, save_json
+from src.agent import StateDrivenCompanionAgent
+from src.utils import save_json
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
 CORS(app)
