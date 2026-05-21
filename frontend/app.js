@@ -16,7 +16,7 @@ const STATUS = {
 const PROFILE_HIGHLIGHT_DURATION = 30000;
 const TOAST_DURATION = 30000;
 const PROFILE_LABELS = {};
-const ROOT_PROFILE_ORDER = ['state_axis', 'context_axis'];
+const HIDDEN_PROFILE_KEYS = new Set(['persona_type', 'persona_name']);
 const STATIC_PROFILE_LAYER_ORDER = ['core', 'regulation', 'cognitive_style', 'behavior_preference', 'social_physical'];
 const DEFAULT_EXPANDED_PATHS = [
     'state_axis',
@@ -423,10 +423,10 @@ function getNodeEntries(value, parentPath) {
 
 function getOrderedRootEntries(profile) {
     const priority = ROOT_PROFILE_ORDER
-        .filter((key) => Object.hasOwn(profile, key))
+        .filter((key) => Object.hasOwn(profile, key) && !HIDDEN_PROFILE_KEYS.has(key))
         .map((key) => [key, profile[key]]);
     const remainder = Object.entries(profile)
-        .filter(([key]) => !ROOT_PROFILE_ORDER.includes(key));
+        .filter(([key]) => !ROOT_PROFILE_ORDER.includes(key) && !HIDDEN_PROFILE_KEYS.has(key));
 
     return [...priority, ...remainder];
 }
