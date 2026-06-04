@@ -22,6 +22,7 @@ def index():
 def chat():
     data = request.json or {}
     user_input = data.get("message", "").strip()
+    ablate_dimension = data.get("ablate_dimension")
 
     if not user_input:
         return jsonify({"error": "message is required"}), 400
@@ -32,7 +33,7 @@ def chat():
     @stream_with_context
     def generate():
         try:
-            for event in agent.chat_stream(user_input):
+            for event in agent.chat_stream(user_input, ablate_dimension=ablate_dimension):
                 event_type = event.get("type")
 
                 if event_type == "token":
@@ -50,10 +51,13 @@ def chat():
                         "message": response,
                         "profile": agent.user_profile,
                         "conversation_length": len(conversation_history),
-                        "updated_fields": ["current_state", "projected_state"],
+                        "updated_fields": event.get("updated_fields", ["state_axis.current_state", "state_axis.projected_state"]),
                         "background_memory_running": event.get("background_memory_running", False),
                         "model_timing": event.get("model_timing"),
                         "usage": event.get("usage"),
+                        "ablate_dimension": event.get("ablate_dimension"),
+                        "activated_persona": event.get("activated_persona", {}),
+                        "decision": event.get("decision", {}),
                     })
         except Exception as e:
             yield encode_event({"type": "error", "error": str(e)})
@@ -87,7 +91,15 @@ def get_history():
 
 @app.route("/api/reset", methods=["POST"])
 def reset_chat():
+    data = request.json or {}
+    scope = data.get("scope", "chat")
+
     conversation_history.clear()
+
+    if scope == "experiment":
+        profile = agent.reset_to_initial_state()
+        return jsonify({"message": "experiment reset", "profile": profile}), 200
+
     return jsonify({"message": "history reset"}), 200
 
 

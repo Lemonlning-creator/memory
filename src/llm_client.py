@@ -3,7 +3,7 @@ from __future__ import annotations
 import configparser
 from time import perf_counter
 from typing import Any, Dict, Generator
-
+from openai import OpenAI
 
 class LLMClient:
     def __init__(self, config_path: str = "config.ini"):
@@ -12,16 +12,15 @@ class LLMClient:
         api_config = config["API"]
         self.model = api_config.get("model")
         self.enable_thinking = api_config.getboolean("enable_thinking", fallback=False)
-        from openai import OpenAI
+        
         self.client = OpenAI(
-            api_key=api_config.get("api_key"),
-            base_url=api_config.get("base_url"),
+            api_key = api_config.get("api_key"),
+            base_url = api_config.get("base_url"),
         )
         self.last_model_timing: Dict[str, float | None] = {"first_char_seconds": None}
         self.token_usage = {
             "prompt_tokens": 0,
             "completion_tokens": 0,
-            "total_tokens": 0,
             "calls": 0,
         }
 
@@ -88,9 +87,7 @@ class LLMClient:
             return
         prompt_tokens = getattr(usage, "prompt_tokens", 0) or 0
         completion_tokens = getattr(usage, "completion_tokens", 0) or 0
-        total_tokens = getattr(usage, "total_tokens", 0) or 0
         self.token_usage["prompt_tokens"] += prompt_tokens
         self.token_usage["completion_tokens"] += completion_tokens
-        self.token_usage["total_tokens"] += total_tokens
         self.token_usage["calls"] += 1
-        print(f"[token usage] prompt={prompt_tokens}, completion={completion_tokens}, total={total_tokens}")
+        print(f"[token usage] prompt={prompt_tokens}, completion={completion_tokens}")

@@ -16,6 +16,7 @@ const STATUS = {
 const PROFILE_HIGHLIGHT_DURATION = 30000;
 const TOAST_DURATION = 30000;
 const PROFILE_LABELS = {};
+const ROOT_PROFILE_ORDER = ['state_axis', 'context_axis'];
 const HIDDEN_PROFILE_KEYS = new Set(['persona_type', 'persona_name']);
 const STATIC_PROFILE_LAYER_ORDER = ['core', 'regulation', 'cognitive_style', 'behavior_preference', 'social_physical'];
 const DEFAULT_EXPANDED_PATHS = [
@@ -25,23 +26,31 @@ const DEFAULT_EXPANDED_PATHS = [
     'state_axis.static_profile.core',
     'state_axis.static_profile.social_physical',
 ];
+const DEFAULT_SYSTEM_MESSAGE = '对话已准备好。你好！我是你的个性化助手，请尽情聊天吧！';
 
 const userInput = document.getElementById('userInput');
 const sendBtn = document.getElementById('sendBtn');
 const chatHistory = document.getElementById('chatHistory');
 const profileContent = document.getElementById('profileContent');
-const resetBtn = document.getElementById('resetBtn');
 const statusIndicator = document.getElementById('statusIndicator');
 const statusText = document.getElementById('statusText');
+const experimentPanel = document.getElementById('experimentPanel');
+const experimentResetBtn = document.getElementById('experimentResetBtn');
+const clearAblationBtn = document.getElementById('clearAblationBtn');
+const ablationStatusText = document.getElementById('ablationStatusText');
+const ablationInputs = Array.from(document.querySelectorAll('input[name="ablateDimension"]'));
 
 let isLoading = false;
 let hasInitializedProfileTree = false;
 let profileHighlightTimer = null;
+let ablationSelectionUnlocked = false;
+let ablationSelectionLocked = false;
 const expandedProfilePaths = new Set(DEFAULT_EXPANDED_PATHS);
 
 document.addEventListener('DOMContentLoaded', () => {
     loadProfile();
     updateStatus('idle');
+    syncExperimentToggleIcon();
 
     sendBtn.addEventListener('click', sendMessage);
     userInput.addEventListener('keypress', (event) => {
@@ -49,12 +58,27 @@ document.addEventListener('DOMContentLoaded', () => {
             sendMessage();
         }
     });
-    resetBtn.addEventListener('click', resetChat);
+
+    if (experimentResetBtn) {
+        experimentResetBtn.addEventListener('click', resetExperimentBaseline);
+    }
+    if (clearAblationBtn) {
+        clearAblationBtn.addEventListener('click', clearAblationSelection);
+    }
+    if (experimentPanel) {
+        experimentPanel.addEventListener('toggle', syncExperimentToggleIcon);
+    }
+    ablationInputs.forEach((input) => {
+        input.addEventListener('change', updateAblationStatus);
+    });
+    syncAblationControls();
 });
 
 async function sendMessage() {
     const message = userInput.value.trim();
     if (!message || isLoading) return;
+
+    const ablateDimension = getSelectedAblationDimension();
 
     isLoading = true;
     sendBtn.disabled = true;
@@ -72,7 +96,10 @@ async function sendMessage() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({
+                message,
+                ablate_dimension: ablateDimension
+            })
         });
 
         if (!response.ok) {
@@ -81,22 +108,38 @@ async function sendMessage() {
         }
 
         const data = await readChatStream(response, assistantContent);
-
         const highlightFields = Array.isArray(data.updated_fields) ? data.updated_fields : [];
+        await loadProfile(highlightFields);
         if (highlightFields.length > 0) {
-            await loadProfile(highlightFields);
             showUpdateNotification(highlightFields);
         }
     } catch (error) {
         console.error('错误:', error);
         addMessageToChat(`错误: ${error.message}`, 'system');
     } finally {
+        if (ablateDimension) {
+            ablationSelectionLocked = true;
+            syncAblationControls();
+        }
         isLoading = false;
         sendBtn.disabled = false;
         userInput.disabled = false;
         updateStatus('idle');
         userInput.focus();
     }
+}
+
+function getSelectedAblationDimension() {
+    const selected = ablationInputs.find((input) => input.checked);
+    return selected ? selected.value : null;
+}
+
+function clearAblationSelection() {
+    if (ablationSelectionLocked) return;
+    ablationInputs.forEach((input) => {
+        input.checked = false;
+    });
+    updateAblationStatus();
 }
 
 async function readChatStream(response, contentNode) {
@@ -243,7 +286,6 @@ function createProfileNode(label, value, path, highlightFields = []) {
         return null;
     }
 
-    // 新结构叶子节点：{ value, memory_ids }
     if (isProfileLeaf(value)) {
         return createLeafNode(label, value.value, path, highlightFields, value.memory_ids);
     }
@@ -281,7 +323,7 @@ function createBranchNode(label, value, path, highlightFields = [], isSection = 
 
     const arrow = document.createElement('span');
     arrow.className = 'profile-tree-arrow';
-    arrow.textContent = expanded ? '⌄' : '›';
+    arrow.textContent = expanded ? '▾' : '▸';
 
     const titleEl = document.createElement('span');
     titleEl.className = isSection ? 'profile-item-title' : 'profile-tree-label';
@@ -308,7 +350,7 @@ function createBranchNode(label, value, path, highlightFields = [], isSection = 
 
     node.addEventListener('toggle', () => {
         const nextExpanded = node.open;
-        arrow.textContent = nextExpanded ? '⌄' : '›';
+        arrow.textContent = nextExpanded ? '▾' : '▸';
         node.classList.toggle('is-expanded', nextExpanded);
         node.classList.toggle('is-collapsed', !nextExpanded);
 
@@ -346,10 +388,10 @@ function createLeafNode(label, value, path, highlightFields = [], memoryIds = []
     if (Array.isArray(value)) {
         const tagList = document.createElement('div');
         tagList.className = 'tag-list';
-        value.forEach((v) => {
+        value.forEach((item) => {
             const tag = document.createElement('span');
             tag.className = 'tag';
-            tag.textContent = formatLeafValue(v);
+            tag.textContent = formatLeafValue(item);
             tagList.appendChild(tag);
         });
         valueEl.appendChild(tagList);
@@ -411,7 +453,7 @@ function getNodeEntries(value, parentPath) {
 
     const order = parentPath === 'state_axis.static_profile' ? STATIC_PROFILE_LAYER_ORDER : null;
     const keys = order
-        ? [...order.filter((k) => k in value), ...Object.keys(value).filter((k) => !order.includes(k))]
+        ? [...order.filter((key) => key in value), ...Object.keys(value).filter((key) => !order.includes(key))]
         : Object.keys(value);
 
     return keys.map((key) => ({
@@ -542,21 +584,108 @@ function scheduleHighlightCleanup() {
 }
 
 async function resetChat() {
-    if (!confirm('确定要重置对话历史吗？')) return;
+    if (!confirm('确定要清空当前对话记录吗？')) return;
 
     try {
         const response = await fetch(`${API_URL}/api/reset`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ scope: 'chat' })
         });
 
         if (!response.ok) throw new Error('重置失败');
 
-        chatHistory.innerHTML = '';
-        addMessageToChat('对话已重置。你好！我是你的个性化助手，请尽情聊天吧！', 'system');
+        clearConversationView();
         showUpdateNotification([], '对话已重置');
     } catch (error) {
         console.error('重置失败:', error);
         alert(`重置失败: ${error.message}`);
+    }
+}
+
+async function resetExperimentBaseline() {
+    if (isLoading) return;
+    if (!confirm('确定要恢复到应用启动时的初始画像和初始记忆吗？')) return;
+
+    try {
+        const response = await fetch(`${API_URL}/api/reset`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ scope: 'experiment' })
+        });
+
+        if (!response.ok) throw new Error('实验复位失败');
+
+        clearConversationView();
+        ablationSelectionUnlocked = true;
+        ablationSelectionLocked = false;
+        ablationInputs.forEach((input) => {
+            input.checked = false;
+        });
+        syncAblationControls();
+        await loadProfile();
+        showUpdateNotification([], '已恢复到启动基线，可以重新选择消融维度');
+    } catch (error) {
+        console.error('实验复位失败:', error);
+        alert(`实验复位失败: ${error.message}`);
+    }
+}
+
+function clearConversationView() {
+    chatHistory.innerHTML = '';
+    addMessageToChat(DEFAULT_SYSTEM_MESSAGE, 'system');
+}
+
+function syncAblationControls() {
+    const disableSelection = !ablationSelectionUnlocked || ablationSelectionLocked;
+    ablationInputs.forEach((input) => {
+        input.disabled = disableSelection;
+    });
+
+    if (clearAblationBtn) {
+        clearAblationBtn.disabled = disableSelection;
+    }
+
+    updateAblationStatus();
+}
+
+function updateAblationStatus() {
+    if (!ablationStatusText) return;
+
+    if (!ablationSelectionUnlocked) {
+        ablationStatusText.textContent = '先点击实验复位，再选择一个维度开始测试';
+        return;
+    }
+
+    const selected = getSelectedAblationDimension();
+    if (ablationSelectionLocked) {
+        ablationStatusText.textContent = selected
+            ? `当前实验维度：${getAblationLabel(selected)}。如需切换，请先重新复位。`
+            : '当前实验配置已锁定，如需切换请先重新复位。';
+        return;
+    }
+
+    ablationStatusText.textContent = selected
+        ? `已选择${getAblationLabel(selected)}，发送后会锁定本轮实验配置。`
+        : '已恢复到启动基线，现在可以选择一个维度开始测试。';
+}
+
+function getAblationLabel(value) {
+    if (value === 'state') return '状态轴';
+    if (value === 'context') return '语境轴';
+    if (value === 'memory') return '时间轴';
+    return '全量模式';
+}
+
+function syncExperimentToggleIcon() {
+    if (!experimentPanel) return;
+    const icon = experimentPanel.querySelector('.experiment-toggle-icon');
+    if (icon) {
+        icon.textContent = experimentPanel.open ? '−' : '+';
     }
 }
 

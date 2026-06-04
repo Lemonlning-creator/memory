@@ -30,8 +30,6 @@
                         <div class="loading">加载中...</div>
                     </div>
                 </section>
-
-                <button id="resetBtn" class="btn btn-danger">重置对话</button>
             </aside>
 
             <section class="chat-panel">
@@ -63,6 +61,37 @@
 
                 <footer class="chat-input-area">
                     <div class="input-panel">
+                        <details id="experimentPanel" class="experiment-panel">
+                            <summary class="experiment-toggle">
+                                <span class="experiment-toggle-copy">
+                                    <span class="ablation-label">消融实验</span>
+                                    <span class="ablation-hint">展开后可复位到启动基线，再选择屏蔽维度</span>
+                                </span>
+                                <span class="experiment-toggle-icon" aria-hidden="true">+</span>
+                            </summary>
+                            <div class="ablation-toolbar">
+                                <div class="ablation-copy">
+                                    <span class="ablation-label">实验模式</span>
+                                    <span id="ablationStatusText" class="ablation-hint">先点击实验复位，再选择一个维度开始测试</span>
+                                </div>
+                                <div class="ablation-controls">
+                                    <button id="experimentResetBtn" type="button" class="btn btn-secondary">实验复位</button>
+                                    <label class="ablation-option">
+                                        <input type="radio" name="ablateDimension" value="state" disabled>
+                                        <span>状态轴</span>
+                                    </label>
+                                    <label class="ablation-option">
+                                        <input type="radio" name="ablateDimension" value="context" disabled>
+                                        <span>语境轴</span>
+                                    </label>
+                                    <label class="ablation-option">
+                                        <input type="radio" name="ablateDimension" value="memory" disabled>
+                                        <span>时间轴</span>
+                                    </label>
+                                    <button id="clearAblationBtn" type="button" class="btn btn-secondary" disabled>清除选择</button>
+                                </div>
+                            </div>
+                        </details>
                         <div class="input-wrapper">
                             <input
                                 type="text"

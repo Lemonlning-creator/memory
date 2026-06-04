@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
 from typing import Any, Dict
 
 
@@ -29,20 +28,3 @@ def parse_json(text: str) -> Dict[str, Any]:
     if start != -1 and end != -1:
         text = text[start:end + 1]
     return json.loads(text)
-
-
-def create_default_memory() -> Dict[str, Any]:
-    now = datetime.now().isoformat()
-    return {
-        "memory_meta": {
-            "created_at": now,
-            "last_updated": now,
-            "total_turns": 0,
-            "last_mid_term_turn": 0,
-            "last_long_term_summary_count": 0,
-            "last_profile_evolution_memory_count": 0,
-        },
-        "short_term_memory": {"max_messages": 20, "messages": []},
-        "mid_term_memory": {"summaries": []},
-        "long_term_memory": {"memories": []},
-    }
