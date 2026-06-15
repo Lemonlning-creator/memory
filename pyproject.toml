@@ -1,0 +1,23 @@
+[project]
+name = "memory"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "flask==2.3.2",
+    "flask-cors==4.0.0",
+    "werkzeug==2.3.7",
+    "openai==1.3.0",
+    "httpx==0.27.2",
+    "requests==2.31.0",
+    "python-dotenv>=1.0.1",
+    "chromadb==1.5.5",
+    "pymilvus[milvus-lite]>=2.5.0",
+    "setuptools>=82.0.1",
+    "openpyxl>=3.1.5",
+    "matplotlib>=3.10.9",
+]
+
+[dependency-groups]
+dev = [
+    "setuptools>=82.0.1",
+]

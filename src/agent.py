@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import threading
+from time import perf_counter
 from typing import Any, Dict, Generator, Optional, List
 
 from .llm_client import LLMClient
@@ -136,24 +137,25 @@ class StateDrivenCompanionAgent:
                     self._background_memory_running = False
 
     def _run_memory_steps(self, save_state: bool, generation: Optional[int] = None) -> None:
-        if generation is not None and self._is_generation_stale(generation):
-            return
+        def _step(name: str, fn):
+            if generation is not None and self._is_generation_stale(generation):
+                return
+            t0 = perf_counter()
+            result = fn()
+            print(f"[pipeline] {name} done in {perf_counter() - t0:.3f}s")
+            return result
+
         if len(self.memory_manager.short_term_memory) >= 20:
-            self.memory_manager.build_mid_term_summary(self.llm, MID_TERM_SOURCE_MESSAGES)
+            _step("build_mid_term_summary",
+                  lambda: self.memory_manager.build_mid_term_summary(self.llm, MID_TERM_SOURCE_MESSAGES))
 
-        if generation is not None and self._is_generation_stale(generation):
-            return
-        long_term_memory_id = self.memory_manager.extract_long_term_memory(self.llm)
+        long_term_memory_id = _step("extract_long_term_memory",
+                                    lambda: self.memory_manager.extract_long_term_memory(self.llm))
 
-        if generation is not None and self._is_generation_stale(generation):
-            return
         if long_term_memory_id:
-            self._evolve_profile_from_long_term(long_term_memory_id)
-
-        if generation is not None and self._is_generation_stale(generation):
-            return
-        if long_term_memory_id and save_state:
-            save_json(self.profile_path, self.user_profile)
+            _step("evolve_profile", lambda: self._evolve_profile_from_long_term(long_term_memory_id))
+            if save_state:
+                save_json(self.profile_path, self.user_profile)
 
     def _evolve_profile_from_long_term(self, long_term_memory_id: str) -> None:
         long_term_memories = self.memory_manager.get_memories_by_ids([long_term_memory_id])
@@ -179,10 +181,17 @@ class StateDrivenCompanionAgent:
         user_input: str,
         ablate_dimension: Optional[str] = None,
     ) -> Generator[Dict[str, Any], None, None]:
+        t_start = perf_counter()
+        print(f"\n[chat] === new interaction ===")
+        print(f"[chat] user_input: {user_input!r}")
+
+        t0 = perf_counter()
         self.memory_manager.append_stm("user", user_input)
         relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
-        
+        print(f"[chat] retrieve_memory done in {perf_counter() - t0:.3f}s | result: {json.dumps(relevant_memory, ensure_ascii=False)[:200]}")
+
         parts: List[str] = []
+        first_token_logged = False
         try:
             for content in self.llm.chat_stream(
                 DIRECT_RESPONSE_SYSTEM_PROMPT,
@@ -190,6 +199,9 @@ class StateDrivenCompanionAgent:
                 temperature=0.4,
                 max_tokens=450,
             ):
+                if not first_token_logged:
+                    print(f"[chat] first_token in {perf_counter() - t_start:.3f}s from interaction start")
+                    first_token_logged = True
                 parts.append(content)
                 yield {"type": "token", "content": content}
         except Exception as e:
@@ -198,13 +210,14 @@ class StateDrivenCompanionAgent:
                 parts.append(FALLBACK_RESPONSE)
                 yield {"type": "token", "content": FALLBACK_RESPONSE}
         finally:
-            print("LLM response finished, starting background memory processing...")
+            print(f"[chat] stream_response done in {perf_counter() - t_start:.3f}s from interaction start")
 
         response = "".join(parts).strip() or FALLBACK_RESPONSE
+        print(f"[chat] assistant_response: {response!r}")
 
         self.memory_manager.append_stm("assistant", response)
         self._start_background(self._memory_pipeline, (user_input, response, relevant_memory, True))
-        
+
         yield {
             "type": "done",
             "response": response,

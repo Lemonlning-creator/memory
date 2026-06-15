@@ -3,54 +3,83 @@ from __future__ import annotations
 import configparser
 import json
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import chromadb
 from openai import OpenAI
+from pymilvus import MilvusClient
 
-from .prompts.templates import MID_TERM_MEMORY_SYSTEM_PROMPT, MID_TERM_MEMORY_USER_PROMPT_TEMPLATE, LONG_TERM_MEMORY_SYSTEM_PROMPT, LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE
+from .prompts.templates import (
+    MID_TERM_MEMORY_SYSTEM_PROMPT,
+    MID_TERM_MEMORY_USER_PROMPT_TEMPLATE,
+    LONG_TERM_MEMORY_SYSTEM_PROMPT,
+    LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE,
+)
 from .utils import parse_json
+
+_EMBEDDING_DIM = 1536  # text-embedding-v4 default dim
+
 
 class MemoryOSLocal:
 
     def __init__(
         self,
         collection_name: str = "memoryos_local",
-        persist_path: str = "./data/chroma_memory_data",
+        persist_path: str = "./data/milvus_memory.db",
         config_path: str = "config.ini",
         embedding_model_name: Optional[str] = None,
     ):
         self.collection_name = collection_name
-        self.persist_path = Path(persist_path)
         config = configparser.ConfigParser()
         config.read(config_path, encoding="utf-8")
+
         api_config = config["API"]
-        self.embedding_model_name = embedding_model_name or api_config.get("embedding_model", fallback="text-embedding-v4")
+        self.embedding_model_name = embedding_model_name or api_config.get(
+            "embedding_model", fallback="text-embedding-v4"
+        )
         self.embedding_client = OpenAI(
             api_key=api_config.get("api_key"),
             base_url=api_config.get("base_url"),
         )
+
+        milvus_config = config["Milvus"] if config.has_section("Milvus") else {}
+        uri = milvus_config.get("uri", "").strip() or str(persist_path)
+        token = milvus_config.get("token", "").strip()
+        self.client = MilvusClient(uri=uri, token=token or None)
+
+        self._ensure_collection()
+
         self.short_term_memory: List[Dict[str, Any]] = []
         self.summary_prune_messages = 10
         self.long_term_trigger_summaries = 3
         self.long_term_source_summaries = 5
-        
-        self.client = chromadb.PersistentClient(path=str(self.persist_path))
-        self.collection = self.client.get_or_create_collection(
-            name=collection_name,
-            metadata={
-                "description": "Local memory store for dialogue memories",
-                "created_at": datetime.now().isoformat(),
-            },
-        )
         self.last_long_term_count = self._get_last_long_term_count()
 
-    # ---------- API 嵌入模型，文本向量化 ----------
+    def _ensure_collection(self) -> None:
+        if not self.client.has_collection(self.collection_name):
+            from pymilvus import DataType
+            schema = self.client.create_schema(auto_id=False)
+            schema.add_field("id", DataType.VARCHAR, is_primary=True, max_length=128)
+            schema.add_field("vector", DataType.FLOAT_VECTOR, dim=_EMBEDDING_DIM)
+            schema.add_field("content", DataType.VARCHAR, max_length=65535, nullable=True)
+            schema.add_field("memory_type", DataType.VARCHAR, max_length=32, nullable=True)
+            schema.add_field("topic", DataType.VARCHAR, max_length=256, nullable=True)
+            schema.add_field("importance", DataType.VARCHAR, max_length=32, nullable=True)
+            schema.add_field("created_at", DataType.VARCHAR, max_length=64, nullable=True)
+            schema.add_field("kind", DataType.VARCHAR, max_length=64, nullable=True)
+            schema.add_field("confidence", DataType.FLOAT, nullable=True)
+            schema.add_field("mid_term_count", DataType.INT64, nullable=True)
+            index_params = self.client.prepare_index_params()
+            index_params.add_index("vector", index_type="FLAT", metric_type="COSINE")
+            self.client.create_collection(
+                collection_name=self.collection_name,
+                schema=schema,
+                index_params=index_params,
+            )
+
+    # ---------- 嵌入 ----------
     def _embed_text(self, text: str) -> List[float]:
         response = self.embedding_client.embeddings.create(
-            model=self.embedding_model_name,
-            input=text,
+            model=self.embedding_model_name, input=text
         )
         return list(response.data[0].embedding)
 
@@ -61,17 +90,19 @@ class MemoryOSLocal:
         metadata: Dict[str, Any],
         embedding_text: Optional[str] = None,
     ) -> None:
-        existing = self.collection.get(ids=[doc_id], include=[])
-        if existing.get("ids"):
-            self.collection.delete(ids=[doc_id])
-        self.collection.add(
-            ids=[doc_id],
-            documents=[content],
-            metadatas=[metadata],
-            embeddings=[self._embed_text(embedding_text or content)],
+        self.client.upsert(
+            collection_name=self.collection_name,
+            data=[
+                {
+                    "id": doc_id,
+                    "vector": self._embed_text(embedding_text or content),
+                    "content": content,
+                    **metadata,
+                }
+            ],
         )
 
-    # ---------- 短期记忆：仅存内存 ----------
+    # ---------- 短期记忆（内存） ----------
     def append_stm(self, role: str, content: str) -> Dict[str, Any]:
         entry = {
             "id": f"stm_{len(self.short_term_memory) + 1}_{role}_{datetime.now().timestamp()}",
@@ -88,90 +119,89 @@ class MemoryOSLocal:
     def clear_stm(self) -> None:
         self.short_term_memory.clear()
 
-    # ---------- 提炼中期记忆、长期记忆到向量数据库 ----------    
+    # ---------- 中期记忆 ----------
     def add_mid_term_summary(
         self,
         topic: str,
         summary: str,
         related_states: Optional[List[str]] = None,
         related_messages: Optional[List[str]] = None,
-        importance: str = ""
+        importance: str = "",
     ) -> str:
-        timestamp = datetime.now().isoformat()
         memory_id = f"mtm_{datetime.now().timestamp()}"
-        summary_record = json.dumps(
-            {
-                "summary": summary,
-                "related_states": list(related_states or []),
-                "related_messages": list(related_messages or []),
-            },
-            ensure_ascii=False,
-        )
         self._upsert_document(
             memory_id,
-            summary_record,
+            json.dumps(
+                {
+                    "summary": summary,
+                    "related_states": list(related_states or []),
+                    "related_messages": list(related_messages or []),
+                },
+                ensure_ascii=False,
+            ),
             {
                 "memory_type": "mid_term",
                 "topic": topic,
                 "importance": importance,
-                "created_at": timestamp,
+                "created_at": datetime.now().isoformat(),
             },
             embedding_text=summary,
         )
         return memory_id
 
     def build_mid_term_summary(self, llm, summary_source_messages: int) -> str:
-        source_messages = self.short_term_memory[: summary_source_messages]
-        source_message_map = {message["id"]: f'{message["role"]}: {message["content"]}' for message in source_messages}
-
+        source_messages = self.short_term_memory[:summary_source_messages]
+        source_message_map = {
+            m["id"]: f'{m["role"]}: {m["content"]}' for m in source_messages
+        }
         summary_result = parse_json(
             llm.chat(
                 MID_TERM_MEMORY_SYSTEM_PROMPT,
-                MID_TERM_MEMORY_USER_PROMPT_TEMPLATE.format(source_message_map=source_message_map),
+                MID_TERM_MEMORY_USER_PROMPT_TEMPLATE.format(
+                    source_message_map=source_message_map
+                ),
             )
         )
-        related_message_ids = summary_result.get("related_message_ids", [])
         related_messages = [
-            source_message_map[message_id]
-            for message_id in related_message_ids
-            if message_id in source_message_map
+            source_message_map[mid]
+            for mid in summary_result.get("related_message_ids", [])
+            if mid in source_message_map
         ]
         memory_id = self.add_mid_term_summary(
-            topic = summary_result.get("topic", ""),
-            summary = summary_result.get("summary", ""),
-            related_states = summary_result.get("related_states", []),
-            related_messages = related_messages,
-            importance = summary_result.get("importance", "medium")
+            topic=summary_result.get("topic", ""),
+            summary=summary_result.get("summary", ""),
+            related_states=summary_result.get("related_states", []),
+            related_messages=related_messages,
+            importance=summary_result.get("importance", "medium"),
         )
         self.short_term_memory = self.short_term_memory[self.summary_prune_messages:]
         return memory_id
 
+    # ---------- 长期记忆 ----------
     def add_long_term_memory(
         self,
         content: str,
         memory_kind: str,
         confidence: float = 0.0,
         source_summary_ids: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
-        timestamp = datetime.now().isoformat()
         memory_id = f"ltm_{datetime.now().timestamp()}"
-        long_term_record = json.dumps(
-            {
-                "type": memory_kind,
-                "content": content,
-                "source_summary_ids": list(source_summary_ids or []),
-            },
-            ensure_ascii=False
-        )
         self._upsert_document(
             memory_id,
-            long_term_record,
+            json.dumps(
+                {
+                    "type": memory_kind,
+                    "content": content,
+                    "source_summary_ids": list(source_summary_ids or []),
+                },
+                ensure_ascii=False,
+            ),
             {
                 "memory_type": "long_term",
                 "kind": memory_kind,
                 "confidence": float(confidence),
-                "created_at": timestamp,
+                "created_at": datetime.now().isoformat(),
                 **dict(metadata or {}),
             },
         )
@@ -184,19 +214,21 @@ class MemoryOSLocal:
             return None
 
         source_mid_terms = mid_terms[-self.long_term_source_summaries:]
-        print("采用当前中期记忆去生成长期记忆" + source_mid_terms)
-        result = parse_json(llm.chat(
-            LONG_TERM_MEMORY_SYSTEM_PROMPT,
-            LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE.format(
-                mid_term_summaries=json.dumps(source_mid_terms, ensure_ascii=False, indent=2)
-            ),
-        ))
+        print("采用当前中期记忆去生成长期记忆" + str(source_mid_terms))
+        result = parse_json(
+            llm.chat(
+                LONG_TERM_MEMORY_SYSTEM_PROMPT,
+                LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE.format(
+                    mid_term_summaries=json.dumps(
+                        source_mid_terms, ensure_ascii=False, indent=2
+                    )
+                ),
+            )
+        )
         print("生成的长期记忆结果" + str(result))
-
         self.last_long_term_count = len(mid_terms)
         if not result.get("content"):
             return None
-
         return self.add_long_term_memory(
             content=result.get("content", ""),
             memory_kind=result.get("type", ""),
@@ -204,35 +236,33 @@ class MemoryOSLocal:
             source_summary_ids=[m["id"] for m in source_mid_terms],
             metadata={"mid_term_count": self.last_long_term_count},
         )
-    
-    # ---------- 智能检索相关记忆 ----------
+
+    # ---------- 检索 ----------
     def search_memories(
         self,
         query: str,
         top_k: int = 5,
         memory_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
-        where = {"memory_type": memory_type} if memory_type else None
-        results = self.collection.query(
-            query_embeddings=[self._embed_text(query)],
-            n_results=top_k,
-            where=where,
-            include=["documents", "metadatas", "distances"],
+        filter_expr = f'memory_type == "{memory_type}"' if memory_type else ""
+        results = self.client.search(
+            collection_name=self.collection_name,
+            data=[self._embed_text(query)],
+            limit=top_k,
+            filter=filter_expr or None,
+            output_fields=["content", "memory_type", "topic", "importance",
+                           "created_at", "kind", "confidence"],
         )
-
-        memories: List[Dict[str, Any]] = []
-        ids = results.get("ids", [[]])
-        if ids and ids[0]:
-            for i, memory_id in enumerate(ids[0]):
-                distance = results["distances"][0][i]
-                memories.append(
-                    {
-                        "id": memory_id,
-                        "content": results["documents"][0][i],
-                        "metadata": results["metadatas"][0][i],
-                        "similarity_score": 1 - distance,
-                    }
-                )
+        memories = []
+        for hit in results[0]:
+            memories.append(
+                {
+                    "id": hit["id"],
+                    "content": hit["entity"].get("content", ""),
+                    "metadata": {k: v for k, v in hit["entity"].items() if k != "content"},
+                    "similarity_score": hit["distance"],
+                }
+            )
         return memories
 
     def retrieve_relevant_memory(
@@ -243,75 +273,78 @@ class MemoryOSLocal:
     ) -> Dict[str, Any]:
         return {
             "recent_messages": self.get_recent_messages(limit=recent_limit),
-            "mid_term_summaries": self.search_memories(user_input, top_k=mid_term_limit, memory_type="mid_term"),
+            "mid_term_summaries": self.search_memories(
+                user_input, top_k=mid_term_limit, memory_type="mid_term"
+            ),
         }
 
     def get_memories_by_ids(self, memory_ids: List[str]) -> List[Dict[str, Any]]:
         if not memory_ids:
             return []
 
-        seen_ids = set()
+        stm_map = {m["id"]: m for m in self.short_term_memory}
         results: List[Dict[str, Any]] = []
+        seen: set = set()
 
-        stm_map = {message["id"]: message for message in self.short_term_memory}
-        for memory_id in memory_ids:
-            if memory_id in stm_map and memory_id not in seen_ids:
-                message = stm_map[memory_id]
+        for mid in memory_ids:
+            if mid in stm_map:
+                m = stm_map[mid]
                 results.append(
                     {
-                        "id": memory_id,
-                        "content": message.get("content", ""),
+                        "id": mid,
+                        "content": m.get("content", ""),
                         "metadata": {
                             "memory_type": "short_term",
-                            "role": message.get("role", ""),
-                            "timestamp": message.get("timestamp", ""),
-                            **message.get("metadata", {}),
+                            "role": m.get("role", ""),
+                            "timestamp": m.get("timestamp", ""),
                         },
                     }
                 )
-                seen_ids.add(memory_id)
+                seen.add(mid)
 
-        vector_ids = [memory_id for memory_id in memory_ids if memory_id not in seen_ids]
+        vector_ids = [mid for mid in memory_ids if mid not in seen]
         if vector_ids:
-            query_result = self.collection.get(
+            rows = self.client.get(
+                collection_name=self.collection_name,
                 ids=vector_ids,
-                include=["documents", "metadatas"],
+                output_fields=["content", "memory_type", "kind", "confidence",
+                               "created_at", "mid_term_count"],
             )
-            for i, memory_id in enumerate(query_result.get("ids", [])):
-                if memory_id in seen_ids:
-                    continue
+            for row in rows:
+                rid = row["id"]
                 results.append(
                     {
-                        "id": memory_id,
-                        "content": query_result["documents"][i],
-                        "metadata": query_result["metadatas"][i],
+                        "id": rid,
+                        "content": row.get("content", ""),
+                        "metadata": {k: v for k, v in row.items() if k not in ("id", "content")},
                     }
                 )
-                seen_ids.add(memory_id)
 
         result_map = {item["id"]: item for item in results}
-        return [result_map[memory_id] for memory_id in memory_ids if memory_id in result_map]
+        return [result_map[mid] for mid in memory_ids if mid in result_map]
 
     def _get_memories_by_type(self, memory_type: str) -> List[Dict[str, Any]]:
-        query_result = self.collection.get(
-            where={"memory_type": memory_type},
-            include=["documents", "metadatas"],
+        rows = self.client.query(
+            collection_name=self.collection_name,
+            filter=f'memory_type == "{memory_type}"',
+            output_fields=["content", "memory_type", "topic", "importance",
+                           "created_at", "kind", "confidence", "mid_term_count"],
         )
         memories = [
             {
-                "id": memory_id,
-                "content": query_result["documents"][i],
-                "metadata": query_result["metadatas"][i],
+                "id": row["id"],
+                "content": row.get("content", ""),
+                "metadata": {k: v for k, v in row.items() if k not in ("id", "content")},
             }
-            for i, memory_id in enumerate(query_result.get("ids", []))
+            for row in rows
         ]
-        return sorted(memories, key=lambda item: item["metadata"].get("created_at", ""))
-    
+        return sorted(memories, key=lambda x: x["metadata"].get("created_at", ""))
+
     def _get_last_long_term_count(self) -> int:
-        long_term_memories = self._get_memories_by_type("long_term")
+        long_terms = self._get_memories_by_type("long_term")
         counts = [
-            int(memory["metadata"].get("mid_term_count", 0))
-            for memory in long_term_memories
-            if memory["metadata"].get("mid_term_count") is not None
+            int(m["metadata"].get("mid_term_count", 0))
+            for m in long_terms
+            if m["metadata"].get("mid_term_count") is not None
         ]
         return max(counts, default=0)
