@@ -504,6 +504,132 @@ body {
     min-height: 0;
 }
 
+.character-strip {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 18px 22px;
+    background: rgba(255, 252, 247, 0.9);
+    border-bottom: 1px solid rgba(20, 108, 120, 0.08);
+}
+
+.character-strip-title {
+    min-width: 160px;
+}
+
+.character-strip-title h2 {
+    margin-top: 4px;
+    font-size: 17px;
+}
+
+.character-cards {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    min-width: 0;
+}
+
+.character-card {
+    width: min(100%, 300px);
+    border: 1px solid rgba(20, 108, 120, 0.12);
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.72);
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.character-card:hover,
+.character-card.active {
+    transform: translateY(-1px);
+    border-color: rgba(20, 108, 120, 0.38);
+    box-shadow: 0 12px 26px rgba(20, 108, 120, 0.12);
+}
+
+.character-card.active {
+    background: linear-gradient(135deg, rgba(20, 108, 120, 0.12), rgba(239, 143, 82, 0.12));
+}
+
+.character-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand);
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.character-copy {
+    min-width: 0;
+    display: grid;
+    gap: 4px;
+}
+
+.character-name {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.character-desc {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.character-picking .container {
+    grid-template-columns: minmax(320px, 720px);
+    align-content: center;
+    justify-content: center;
+}
+
+.character-picking .profile-panel,
+.character-picking .chat-header,
+.character-picking .chat-stage,
+.character-picking .chat-input-area {
+    display: none;
+}
+
+.character-picking .chat-panel {
+    min-height: auto;
+}
+
+.character-picking .character-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 28px;
+    border-bottom: 0;
+}
+
+.character-picking .character-strip-title {
+    min-width: 0;
+}
+
+.character-picking .character-strip-title h2 {
+    font-size: 24px;
+}
+
+.character-picking .character-cards {
+    justify-content: flex-start;
+}
+
+.character-picking .character-card {
+    width: 100%;
+}
+
 .chat-header {
     display: flex;
     justify-content: space-between;
@@ -988,6 +1114,19 @@ body {
         flex-direction: column;
         align-items: stretch;
         padding: 20px;
+    }
+
+    .character-strip {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .character-cards {
+        justify-content: flex-start;
+    }
+
+    .character-card {
+        width: 100%;
     }
 
     .assistant-identity {

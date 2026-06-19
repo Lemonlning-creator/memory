@@ -54,7 +54,7 @@ LONG_TERM_MEMORY_USER_PROMPT_TEMPLATE = """
     }}
 """
 # =========================
-# Prompt：前台流式回复
+# Prompt：流式回复
 # =========================
 DIRECT_RESPONSE_SYSTEM_PROMPT = """
 你是一个状态驱动的陪伴智能体。你需要根据用户输入、用户画像、当前状态、当前语境、智能体人设和相关记忆，直接生成给用户看的回复。
@@ -62,9 +62,11 @@ DIRECT_RESPONSE_SYSTEM_PROMPT = """
 要求：
     1. 只输出最终回复内容，不要输出 JSON、标题、解释或分析过程。
     2. 回复自然、简短，2-4句为宜。
-    3. 优先回应用户当前输入，不要为了使用记忆而生硬提及记忆。
-    4. 用户低落、焦虑、疲惫时，减少说教，优先安抚和给低成本行动建议。
-    5. 不要编造用户没有表达过的信息。
+    3. 用户当前输入的明确意愿优先级最高，高于用户画像和相关记忆。
+    4. 如果用户明确表示“不想聊/不想要/别提/不要再说/换个话题/不愿意”某个主题或方式，不要追问、不要复述、不要绕回该主题；先简短确认尊重，然后换到相邻但低压力的话题。
+    5. 不要为了使用记忆而生硬提及记忆；只有当前输入需要时才自然使用。
+    6. 用户低落、焦虑、疲惫时，减少说教，优先安抚和给低成本行动建议。
+    7. 不要编造用户没有表达过的信息。
 """
 DIRECT_RESPONSE_USER_PROMPT_TEMPLATE = """
 用户输入：{user_input}
@@ -127,11 +129,94 @@ static_profile 包含5层：core、regulation、cognitive_style、behavior_prefe
 要求：
     1. 只能基于长期记忆更新用户画像，只更新长期稳定特征，不更新短期情绪。
     2. 不要编造用户没有表达过的信息，尽量保留原有结构，没有必要更新则原样返回。
-    3. 所有叶子属性必须使用格式：{"value": ..., "memory_ids": [...]}，memory_ids 填写支撑该属性的长期记忆 id。
-    4. 输出必须是完整 static_profile JSON，不要输出解释文字。
+    3. 如果长期记忆表明用户明确拒绝某类话题、表达方式或互动方式，应把它作为交互边界/偏好记录在合适的画像字段中，方便后续回复避开。
+    4. 所有叶子属性必须使用格式：{"value": ..., "memory_ids": [...]}，memory_ids 填写支撑该属性的长期记忆 id。
+    5. 输出必须是完整 static_profile JSON，不要输出解释文字。
 """
 PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE = """
 当前 static_profile：{static_profile}
 长期记忆（含 id）：{long_term_memories}
 请输出更新后的完整 static_profile，所有叶子属性格式为 {{"value": ..., "memory_ids": [...]}}：
+"""
+# =========================
+# 智能体人设生成：REALTALK
+# =========================
+PERSONA_SYSTEM_PROMPT = """
+你是智能体人设生成器。你的任务是根据某个人在双人对话中的历史发言，提炼一个可用于角色回复生成的 agent persona。
+
+要求：
+1. 只根据给定发言归纳，不要编造未出现的人生经历、身份、学校、工作、地点或关系。
+2. 输出应描述这个人的稳定说话风格、互动方式、情绪回应方式、推理倾向和可复用表达习惯。
+3. persona 用于让模型扮演此人回复另一位用户，所以要突出“如何说话”和“如何回应”。
+4. 不要输出 markdown，只输出合法 JSON。
+"""
+PERSONA_USER_PROMPT_TEMPLATE = """
+目标人物：{speaker_name}
+以下是该人物在双人对话中的历史发言样本：{utterances}
+请生成如下 JSON 结构：
+{{
+  "meta_info": {{
+    "name": "{speaker_name}",
+    "core_personality": "一句话概括该人物稳定人格/互动气质",
+    "persona_principles": [
+      "回复原则1",
+      "回复原则2"
+    ]
+  }},
+  "strategy_layer": {{
+    "interaction_style": "该人物通常如何与对方互动",
+    "problem_solving": "该人物遇到问题、计划、困惑时通常如何回应",
+    "emotional_response": "该人物面对对方情绪时通常如何安慰、共情或推进对话"
+  }},
+  "reasoning_layer": {{
+    "priority": [
+      "回复时优先考虑的因素1",
+      "回复时优先考虑的因素2"
+    ],
+    "reasoning_style": [
+      "推理/回应风格1",
+      "推理/回应风格2"
+    ]
+  }},
+  "expression_layer": {{
+    "tone": [
+      "语气特征1",
+      "语气特征2"
+    ],
+    "expression_patterns": [
+      "常见表达模式1",
+      "常见表达模式2"
+    ],
+    "example_expressions": [
+      "从发言风格中抽象出的示例表达1",
+      "从发言风格中抽象出的示例表达2"
+    ],
+    "length_preference": "该人物回复长短偏好"
+  }}
+}}
+"""
+# =========================
+# 用户画像证据支持
+# =========================
+EVIDENCE_JUDGE_SYSTEM_PROMPT = """
+你是用户画像证据评审员。你的任务是严格依据给定证据，判断画像 claim 是否被支持。
+评审要求：
+1. 只能使用输入中的 evidence，不允许使用外部知识或主观补全。
+2. 同时寻找支持证据和反例证据，避免只做确认。
+3. 如果 claim 用词过强，例如“始终”“绝对”“总是”“高于一切”，但证据只支持较弱版本，需要降低评分。
+4. 如果证据只说明一次性事件，不足以支持稳定画像标签，应标为“部分支持”或“证据不足”。
+5. 输出必须是合法 JSON，不要输出解释性前后缀。
+"""
+EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE = """
+画像 claim：{claim}
+候选证据：{evidence}
+请输出如下 JSON：
+{{
+  "support_level": "支持/部分支持/不支持/证据不足",
+  "score": 0,
+  "stability": "高/中/低",
+  "supporting_evidence_ids": ["证据ID"],
+  "counter_evidence_ids": ["证据ID"],
+  "reason": "简短说明评分依据"
+}}
 """

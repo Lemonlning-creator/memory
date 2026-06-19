@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import configparser
+import time
 from time import perf_counter
 from typing import Any, Dict, Generator
 from openai import OpenAI
@@ -42,7 +43,20 @@ class LLMClient:
         }
         if max_tokens is not None:
             request["max_tokens"] = max_tokens
-        response = self.client.chat.completions.create(**request)
+        response = None
+        last_error: Exception | None = None
+        for attempt in range(1, 4):
+            try:
+                response = self.client.chat.completions.create(**request)
+                break
+            except Exception as exc:
+                last_error = exc
+                wait_seconds = attempt * 5
+                print(f"[LLM Chat Error] attempt={attempt}/3 wait={wait_seconds}s error={exc}")
+                if attempt < 3:
+                    time.sleep(wait_seconds)
+        if response is None:
+            raise last_error
         self._record_usage(response)
         return response.choices[0].message.content.strip()
 

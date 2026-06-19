@@ -3,6 +3,7 @@ from __future__ import annotations
 import configparser
 import json
 from datetime import datetime
+from time import perf_counter
 from typing import Any, Dict, List, Optional
 
 from openai import OpenAI
@@ -52,7 +53,7 @@ class MemoryOSLocal:
         self.summary_prune_messages = 10
         self.long_term_trigger_summaries = 3
         self.long_term_source_summaries = 5
-        self.last_long_term_count = self._get_last_long_term_count()
+        self.last_mid_count = self._get_memory_count()
 
     def _ensure_collection(self) -> None:
         if not self.client.has_collection(self.collection_name):
@@ -111,10 +112,22 @@ class MemoryOSLocal:
             "timestamp": datetime.now().isoformat(),
         }
         self.short_term_memory.append(entry)
+        print(f"[STM] append id={entry['id']} role={role} count={len(self.short_term_memory)} content={content[:80]!r}")
         return entry
 
     def get_recent_messages(self, limit: int = 14) -> List[Dict[str, Any]]:
         return self.short_term_memory[-limit:]
+
+    def flush_short_term_memory(self, llm, min_messages: int = 2) -> List[str]:
+        if len(self.short_term_memory) < min_messages:
+            return []
+
+        print(f"[MTM] flush start stm_count={len(self.short_term_memory)}")
+        memory_id = self.build_mid_term_summary(
+            llm,
+            summary_source_messages=len(self.short_term_memory)
+        )
+        return [memory_id]
 
     def clear_stm(self) -> None:
         self.short_term_memory.clear()
@@ -175,6 +188,7 @@ class MemoryOSLocal:
             importance=summary_result.get("importance", "medium"),
         )
         self.short_term_memory = self.short_term_memory[self.summary_prune_messages:]
+        print(f"[MTM] build done id={memory_id} pruned={self.summary_prune_messages} remaining_stm={len(self.short_term_memory)}")
         return memory_id
 
     # ---------- 长期记忆 ----------
@@ -209,7 +223,7 @@ class MemoryOSLocal:
 
     def extract_long_term_memory(self, llm) -> Optional[str]:
         mid_terms = self._get_memories_by_type("mid_term")
-        new_count = len(mid_terms) - self.last_long_term_count
+        new_count = len(mid_terms) - self.last_mid_count
         if len(mid_terms) < 3 or new_count < self.long_term_trigger_summaries:
             return None
 
@@ -226,7 +240,7 @@ class MemoryOSLocal:
             )
         )
         print("生成的长期记忆结果" + str(result))
-        self.last_long_term_count = len(mid_terms)
+        self.last_mid_count = len(mid_terms)
         if not result.get("content"):
             return None
         return self.add_long_term_memory(
@@ -234,7 +248,7 @@ class MemoryOSLocal:
             memory_kind=result.get("type", ""),
             confidence=result.get("confidence", 0.0),
             source_summary_ids=[m["id"] for m in source_mid_terms],
-            metadata={"mid_term_count": self.last_long_term_count},
+            metadata={"mid_term_count": self.last_mid_count},
         )
 
     # ---------- 检索 ----------
@@ -245,6 +259,8 @@ class MemoryOSLocal:
         memory_type: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
         filter_expr = f'memory_type == "{memory_type}"' if memory_type else ""
+
+        mid_term_search_start = perf_counter()
         results = self.client.search(
             collection_name=self.collection_name,
             data=[self._embed_text(query)],
@@ -253,6 +269,13 @@ class MemoryOSLocal:
             output_fields=["content", "memory_type", "topic", "importance",
                            "created_at", "kind", "confidence"],
         )
+        mid_term_search_ms = round((perf_counter() - mid_term_search_start) * 1000, 2)
+        print(
+            "[Memory Retrieval Timing] "
+            f"mid_term_search_ms={mid_term_search_ms} s "
+            f"result={results}"
+        )
+        
         memories = []
         for hit in results[0]:
             memories.append(
@@ -271,54 +294,32 @@ class MemoryOSLocal:
         recent_limit: int = 6,
         mid_term_limit: int = 3,
     ) -> Dict[str, Any]:
+        mid_term_summaries = self.search_memories(user_input, top_k=mid_term_limit, memory_type="mid_term")
         return {
             "recent_messages": self.get_recent_messages(limit=recent_limit),
-            "mid_term_summaries": self.search_memories(
-                user_input, top_k=mid_term_limit, memory_type="mid_term"
-            ),
+            "mid_term_summaries": mid_term_summaries
         }
 
     def get_memories_by_ids(self, memory_ids: List[str]) -> List[Dict[str, Any]]:
         if not memory_ids:
             return []
 
-        stm_map = {m["id"]: m for m in self.short_term_memory}
         results: List[Dict[str, Any]] = []
-        seen: set = set()
-
-        for mid in memory_ids:
-            if mid in stm_map:
-                m = stm_map[mid]
-                results.append(
-                    {
-                        "id": mid,
-                        "content": m.get("content", ""),
-                        "metadata": {
-                            "memory_type": "short_term",
-                            "role": m.get("role", ""),
-                            "timestamp": m.get("timestamp", ""),
-                        },
-                    }
-                )
-                seen.add(mid)
-
-        vector_ids = [mid for mid in memory_ids if mid not in seen]
-        if vector_ids:
-            rows = self.client.get(
-                collection_name=self.collection_name,
-                ids=vector_ids,
-                output_fields=["content", "memory_type", "kind", "confidence",
-                               "created_at", "mid_term_count"],
+        rows = self.client.get(
+            collection_name=self.collection_name,
+            ids=memory_ids,
+            output_fields=["content", "memory_type", "kind", "confidence",
+                            "created_at", "mid_term_count"],
+        )
+        for row in rows:
+            rid = row["id"]
+            results.append(
+                {
+                    "id": rid,
+                    "content": row.get("content", ""),
+                    "metadata": {k: v for k, v in row.items() if k not in ("id", "content")},
+                }
             )
-            for row in rows:
-                rid = row["id"]
-                results.append(
-                    {
-                        "id": rid,
-                        "content": row.get("content", ""),
-                        "metadata": {k: v for k, v in row.items() if k not in ("id", "content")},
-                    }
-                )
 
         result_map = {item["id"]: item for item in results}
         return [result_map[mid] for mid in memory_ids if mid in result_map]
@@ -340,8 +341,8 @@ class MemoryOSLocal:
         ]
         return sorted(memories, key=lambda x: x["metadata"].get("created_at", ""))
 
-    def _get_last_long_term_count(self) -> int:
-        long_terms = self._get_memories_by_type("long_term")
+    def _get_memory_count(self) -> int:
+        long_terms = self._get_memories_by_type("mid_term")
         counts = [
             int(m["metadata"].get("mid_term_count", 0))
             for m in long_terms

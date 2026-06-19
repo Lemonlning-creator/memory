@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
+import re
 import threading
 from time import perf_counter
 from typing import Any, Dict, Generator, Optional, List
 
 from .llm_client import LLMClient
 from .memory_os_local import MemoryOSLocal
-from .profile_utils import state_axis, context_axis, migrate_profile
+from .profile_utils import state_axis, context_axis, create_empty_profile, migrate_profile
 from .utils import load_json, save_json, parse_json
 from .prompts.templates import (
-    BACKGROUND_REASONING_USER_PROMPT_TEMPLATE,
     DIRECT_RESPONSE_SYSTEM_PROMPT,
     DIRECT_RESPONSE_USER_PROMPT_TEMPLATE,
     PROFILE_EVOLUTION_SYSTEM_PROMPT,
@@ -18,8 +19,9 @@ from .prompts.templates import (
 )
 
 DEFAULT_CONFIG_PATH = "config.ini"
-DEFAULT_PROFILE_PATH = "user_profile.json"
 DEFAULT_PERSONA_PATH = "agent_persona.json"
+DEFAULT_USER_DIR = "user"
+DEFAULT_USER_NAME = "default_user"
 
 FALLBACK_RESPONSE = "我刚才卡了一下，你再说一遍？"
 MID_TERM_SOURCE_MESSAGES = 14
@@ -29,25 +31,39 @@ class StateDrivenCompanionAgent:
     def __init__(
         self,
         config_path: str = DEFAULT_CONFIG_PATH,
-        profile_path: str = DEFAULT_PROFILE_PATH,
-        persona_path: str = DEFAULT_PERSONA_PATH,
+        profile_path: Optional[str] = None,
+        persona_path: Optional[str] = None,
+        user_name: str = DEFAULT_USER_NAME,
     ):
         self.llm = LLMClient(config_path)
-        self.profile_path = profile_path
-        self.persona_path = persona_path
+        self.user_name = user_name
+        self.profile_path = profile_path or self._profile_path_for_user(user_name)
+        self.user_profile = self._load_or_create_user_profile(self.profile_path)
+        self.persona_path = persona_path or DEFAULT_PERSONA_PATH
+        self.persona_config = load_json(self.persona_path)
 
-        raw_profile = load_json(profile_path)
-        if "static_profile" in raw_profile:
-            self.user_profile = migrate_profile(raw_profile)
-            save_json(profile_path, self.user_profile)
-        else:
-            self.user_profile = raw_profile
-        self.persona_config = load_json(persona_path)
         self.memory_manager = MemoryOSLocal()
-
         self._background_memory_running = False
         self._background_memory_lock = threading.Lock()
         self._background_generation = 0
+
+    def _profile_path_for_user(self, user_name: str) -> str:
+        name = re.sub(r"[^0-9A-Za-z_\-\u4e00-\u9fff]+", "_", user_name).strip("_")
+        return str(Path(DEFAULT_USER_DIR) / f"{name}_profile.json")
+
+    def _load_or_create_user_profile(self, profile_path: str) -> Dict[str, Any]:
+        path = Path(profile_path)
+
+        if path.exists():
+            profile = load_json(str(path))
+            if "static_profile" in profile:
+                profile = migrate_profile(profile)
+                save_json(str(path), profile)
+            return profile
+
+        profile = create_empty_profile()
+        save_json(str(path), profile)
+        return profile
     # ---------- prompt builders ----------
     def _prompt_context(
         self,
@@ -72,27 +88,6 @@ class StateDrivenCompanionAgent:
     ) -> str:
         return DIRECT_RESPONSE_USER_PROMPT_TEMPLATE.format(**self._prompt_context(user_input, relevant_memory))
 
-    def _background_reasoning_prompt(
-        self,
-        user_input: str,
-        assistant_response: str,
-        relevant_memory: Dict[str, Any],
-    ) -> str:
-        return BACKGROUND_REASONING_USER_PROMPT_TEMPLATE.format(
-            **self._prompt_context(user_input, relevant_memory),
-            assistant_response=assistant_response,
-        )
-
-    def _apply_background_reasoning(self, reasoning: Dict[str, Any]) -> None:
-        state = state_axis(self.user_profile)
-        if "current_state" in reasoning:
-            state["current_state"] = reasoning["current_state"]
-        if "projected_state" in reasoning:
-            state["projected_state"] = reasoning["projected_state"]
-        if "context" in reasoning:
-            context = context_axis(self.user_profile)
-            context.update(reasoning["context"])
-
     # ---------- memory background pipelines ----------
     def _start_background(self, target, args: tuple) -> None:
         with self._background_memory_lock:
@@ -107,42 +102,25 @@ class StateDrivenCompanionAgent:
     
     def _memory_pipeline(
         self,
-        user_input: str,
-        assistant_response: str,
-        relevant_memory: Dict[str, Any],
-        save_state: bool,
         generation: int,
     ) -> None:
         try:
             threading.Event().wait(3)
             if self._is_generation_stale(generation):
                 return
-            # try: # 获取推理过程中的状态更新和人设激活，当前版本不直接用这些信息，但保留接口
-            #     reasoning = parse_json(self.llm.chat(
-            #         BACKGROUND_REASONING_SYSTEM_PROMPT,
-            #         self._background_reasoning_prompt(user_input, assistant_response, relevant_memory),
-            #         temperature=0.4,
-            #     ))
-            #     self._apply_background_reasoning(reasoning)
-            #     if save_state:
-            #         save_json(self.profile_path, self.user_profile)
-            # except Exception as e:
-            #     print(f"[Background Reasoning Error] {e}")
-            if self._is_generation_stale(generation):
-                return
-            self._run_memory_steps(save_state, generation)
+            self._run_memory_steps(generation)
         finally:
             with self._background_memory_lock:
                 if not self._is_generation_stale(generation):
                     self._background_memory_running = False
 
-    def _run_memory_steps(self, save_state: bool, generation: Optional[int] = None) -> None:
+    def _run_memory_steps(self, generation: Optional[int] = None) -> None:
         def _step(name: str, fn):
-            if generation is not None and self._is_generation_stale(generation):
+            if self._is_generation_stale(generation):
                 return
-            t0 = perf_counter()
+            start = perf_counter()
             result = fn()
-            print(f"[pipeline] {name} done in {perf_counter() - t0:.3f}s")
+            print(f"[pipeline] {name} done in {perf_counter() - start:.3f}s")
             return result
 
         if len(self.memory_manager.short_term_memory) >= 20:
@@ -153,14 +131,16 @@ class StateDrivenCompanionAgent:
                                     lambda: self.memory_manager.extract_long_term_memory(self.llm))
 
         if long_term_memory_id:
-            _step("evolve_profile", lambda: self._evolve_profile_from_long_term(long_term_memory_id))
-            if save_state:
+            profile_updated = _step("evolve_profile", lambda: self._evolve_profile_from_long_term(long_term_memory_id))
+            if profile_updated:
                 save_json(self.profile_path, self.user_profile)
 
-    def _evolve_profile_from_long_term(self, long_term_memory_id: str) -> None:
+    def _evolve_profile_from_long_term(self, long_term_memory_id: str) -> bool:
         long_term_memories = self.memory_manager.get_memories_by_ids([long_term_memory_id])
         if not long_term_memories:
-            return
+            print(f"[Profile Evolution] missing long-term memory id={long_term_memory_id}")
+            return False
+        
         state = state_axis(self.user_profile)
         try:
             updated_static_profile = parse_json(self.llm.chat(
@@ -173,25 +153,46 @@ class StateDrivenCompanionAgent:
             ))
             if isinstance(updated_static_profile, dict):
                 state["static_profile"] = updated_static_profile
+                print(f"[Profile Evolution] static_profile updated from memory_id={long_term_memory_id}")
+                return True
         except Exception as e:
             print(f"[Profile Evolution Error] {e}")
+            return False
+
+    def finalize_session(self) -> Dict[str, Any]:
+        with self._background_memory_lock:
+            self._background_generation += 1
+            self._background_memory_running = False
+
+        flushed_mid_term_ids = self.memory_manager.flush_short_term_memory(self.llm)
+        long_term_memory_id = self.memory_manager.extract_long_term_memory(self.llm)
+        if long_term_memory_id:
+            print(f"[Agent Profile] final evolve from long_term_memory_id={long_term_memory_id}")
+            self._evolve_profile_from_long_term(long_term_memory_id)
+            print(f"[Agent Profile] final save profile path={self.profile_path}")
+            save_json(self.profile_path, self.user_profile)
+
+        return {
+            "flushed_mid_term_ids": flushed_mid_term_ids,
+            "long_term_memory_id": long_term_memory_id
+        }
+
+    def observe_dialogue_turn(self, role: str, content: str) -> None:
+        self.memory_manager.append_stm(role, content)
+        self._run_memory_steps()
 
     def chat_stream(
         self,
         user_input: str,
         ablate_dimension: Optional[str] = None,
     ) -> Generator[Dict[str, Any], None, None]:
-        t_start = perf_counter()
-        print(f"\n[chat] === new interaction ===")
-        print(f"[chat] user_input: {user_input!r}")
 
-        t0 = perf_counter()
         self.memory_manager.append_stm("user", user_input)
         relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
-        print(f"[chat] retrieve_memory done in {perf_counter() - t0:.3f}s | result: {json.dumps(relevant_memory, ensure_ascii=False)[:200]}")
 
         parts: List[str] = []
         first_token_logged = False
+        t_start = perf_counter()
         try:
             for content in self.llm.chat_stream(
                 DIRECT_RESPONSE_SYSTEM_PROMPT,
@@ -209,11 +210,8 @@ class StateDrivenCompanionAgent:
             if not parts:
                 parts.append(FALLBACK_RESPONSE)
                 yield {"type": "token", "content": FALLBACK_RESPONSE}
-        finally:
-            print(f"[chat] stream_response done in {perf_counter() - t_start:.3f}s from interaction start")
 
         response = "".join(parts).strip() or FALLBACK_RESPONSE
-        print(f"[chat] assistant_response: {response!r}")
 
         self.memory_manager.append_stm("assistant", response)
         self._start_background(self._memory_pipeline, (user_input, response, relevant_memory, True))

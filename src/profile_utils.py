@@ -52,3 +52,18 @@ def migrate_profile(old: Dict[str, Any]) -> Dict[str, Any]:
             "inferred_at_turn": 0,
         },
     }
+
+
+def create_empty_profile() -> Dict[str, Any]:
+    return {
+        "state_axis": {
+            "static_profile": {},
+            "current_state": {},
+            "projected_state": {},
+        },
+        "context_axis": {
+            "current_context": "",
+            "context_detail": "",
+            "inferred_at_turn": 0,
+        },
+    }

@@ -39,8 +39,10 @@ const experimentResetBtn = document.getElementById('experimentResetBtn');
 const clearAblationBtn = document.getElementById('clearAblationBtn');
 const ablationStatusText = document.getElementById('ablationStatusText');
 const ablationInputs = Array.from(document.querySelectorAll('input[name="ablateDimension"]'));
+const characterCards = document.getElementById('characterCards');
 
 let isLoading = false;
+let selectedCharacterId = null;
 let hasInitializedProfileTree = false;
 let profileHighlightTimer = null;
 let ablationSelectionUnlocked = false;
@@ -48,7 +50,9 @@ let ablationSelectionLocked = false;
 const expandedProfilePaths = new Set(DEFAULT_EXPANDED_PATHS);
 
 document.addEventListener('DOMContentLoaded', () => {
-    loadProfile();
+    document.body.classList.add('character-picking');
+    setChatEnabled(false);
+    initializeCharacterCards();
     updateStatus('idle');
     syncExperimentToggleIcon();
 
@@ -71,12 +75,32 @@ document.addEventListener('DOMContentLoaded', () => {
     ablationInputs.forEach((input) => {
         input.addEventListener('change', updateAblationStatus);
     });
+    window.addEventListener('pagehide', finalizeSessionOnUnload);
+    window.addEventListener('beforeunload', finalizeSessionOnUnload);
     syncAblationControls();
 });
+
+function finalizeSessionOnUnload() {
+    const url = `${API_URL}/api/finalize-session`;
+    if (navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob(['{}'], { type: 'application/json' }));
+        return;
+    }
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+        keepalive: true
+    }).catch(() => {});
+}
 
 async function sendMessage() {
     const message = userInput.value.trim();
     if (!message || isLoading) return;
+    if (!selectedCharacterId) {
+        showUpdateNotification([], 'Please select a character first.');
+        return;
+    }
 
     const ablateDimension = getSelectedAblationDimension();
 
@@ -98,6 +122,7 @@ async function sendMessage() {
             },
             body: JSON.stringify({
                 message,
+                character_id: selectedCharacterId,
                 ablate_dimension: ablateDimension
             })
         });
@@ -126,6 +151,106 @@ async function sendMessage() {
         userInput.disabled = false;
         updateStatus('idle');
         userInput.focus();
+    }
+}
+
+async function initializeCharacterCards() {
+    try {
+        const response = await fetch(`${API_URL}/api/characters`);
+        if (!response.ok) throw new Error('failed to load characters');
+
+        const data = await response.json();
+        renderCharacterCards(data.characters || [], data.active_character_id || null);
+    } catch (error) {
+        console.error('load characters failed:', error);
+        if (characterCards) {
+            characterCards.innerHTML = '<div class="loading" style="color:#d85d59;">Failed to load characters</div>';
+        }
+    }
+}
+
+function renderCharacterCards(characters, activeCharacterId) {
+    if (!characterCards) return;
+    characterCards.innerHTML = '';
+
+    if (!characters.length) {
+        characterCards.innerHTML = '<div class="loading">No characters available</div>';
+        return;
+    }
+
+    characters.forEach((character) => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'character-card';
+        card.dataset.characterId = character.id;
+
+        const initial = document.createElement('span');
+        initial.className = 'character-avatar';
+        initial.textContent = (character.display_name || character.name || '?').slice(0, 1).toUpperCase();
+
+        const copy = document.createElement('span');
+        copy.className = 'character-copy';
+
+        const name = document.createElement('span');
+        name.className = 'character-name';
+        name.textContent = character.display_name || character.name;
+
+        const desc = document.createElement('span');
+        desc.className = 'character-desc';
+        desc.textContent = character.description || '';
+
+        copy.appendChild(name);
+        copy.appendChild(desc);
+        card.appendChild(initial);
+        card.appendChild(copy);
+        card.addEventListener('click', () => selectCharacter(character.id));
+        characterCards.appendChild(card);
+    });
+
+    if (activeCharacterId) {
+        selectCharacter(activeCharacterId);
+    }
+}
+
+async function selectCharacter(characterId) {
+    if (!characterId || isLoading) return;
+
+    try {
+        setChatEnabled(false);
+        const response = await fetch(`${API_URL}/api/characters/select`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ character_id: characterId })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'failed to select character');
+        }
+
+        selectedCharacterId = characterId;
+        document.body.classList.remove('character-picking');
+        document.querySelectorAll('.character-card').forEach((card) => {
+            card.classList.toggle('active', card.dataset.characterId === characterId);
+        });
+
+        clearConversationView();
+        renderProfile(data.profile || {}, []);
+        setChatEnabled(true);
+        showUpdateNotification([], `${data.character.display_name || data.character.name} is ready.`);
+    } catch (error) {
+        console.error('select character failed:', error);
+        showUpdateNotification([], `Character load failed: ${error.message}`);
+    }
+}
+
+function setChatEnabled(enabled) {
+    userInput.disabled = !enabled;
+    sendBtn.disabled = !enabled;
+    if (!enabled && !selectedCharacterId) {
+        userInput.placeholder = 'Select a character card first';
+    } else {
+        userInput.placeholder = 'Type a message and press Enter';
     }
 }
 
