@@ -67,13 +67,13 @@ def run_profile_pipeline(
     user_name = detect_user_speaker(chat)
     agent_name = detect_agent_speaker(chat)
     persona_path = f"agent/{agent_name}_persona.json"
-
+    profile_name = user_name + "_" + agent_name
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     print("[Profile Generation] start", f"source={source_path}", f"speaker={user_name}")
-    agent = StateDrivenCompanionAgent(profile_path=profile_path, persona_path=persona_path, user_name=user_name)
+    agent = StateDrivenCompanionAgent(profile_path=profile_path, persona_path=persona_path, user_name=profile_name)
 
-    memory_path = Path("data") / "realtalk_memory_runs" / f"{user_name}_{run_id}"
+    memory_path = Path("data") / "realtalk_memory_runs" / f"{profile_name}_{run_id}"
 
     checkpoint = load_checkpoint(memory_path) if resume else None
     if start_turn is not None:
@@ -135,7 +135,7 @@ def run_profile_pipeline(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a user profile from a REALTALK chat file.")
     parser.add_argument("--realtalk", required=True, help="Path to a REALTALK chat JSON file.")
-    parser.add_argument("--profile-path", default="user", help="Defaults to {user_name}_profile.json.")
+    parser.add_argument("--profile-path", default="user", help="Defaults to {user_name}_{agent_name}_profile.json.")
     parser.add_argument("--start-turn", type=int, default=None, help="Replay from this 1-based dialogue turn.")
     parser.add_argument("--replay-window", type=int, default=20, help="When resuming from checkpoint, replay this many previous turns.")
     args = parser.parse_args()

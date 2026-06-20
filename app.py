@@ -1,10 +1,8 @@
 import json
 import atexit
 from pathlib import Path
-
 from flask import Flask, Response, jsonify, request, stream_with_context
 from flask_cors import CORS
-
 from src.agent import StateDrivenCompanionAgent
 from src.utils import save_json
 
@@ -25,7 +23,6 @@ agent = None
 active_character_id = None
 conversation_history = []
 
-
 def finalize_agent_session() -> dict:
     if agent is None:
         return {
@@ -35,21 +32,18 @@ def finalize_agent_session() -> dict:
         }
     return agent.finalize_session()
 
-
 def public_character_card(card: dict) -> dict:
     return {
         "id": card["id"],
-        "name": card["name"],
-        "display_name": card.get("display_name", card["name"]),
+        "file_name": card["user_name"],
+        "display_name": card.get("display_name", card["display_name"]),
         "description": card.get("description", ""),
     }
-
 
 def require_agent():
     if agent is None:
         return jsonify({"error": "character is required"}), 409
     return None
-
 
 def build_agent_for_character(character_id: str) -> StateDrivenCompanionAgent:
     card = CHARACTER_CARDS.get(character_id)
