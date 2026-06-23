@@ -1004,6 +1004,32 @@ body {
     box-shadow: 0 10px 22px rgba(20, 108, 120, 0.08);
 }
 
+.btn-voice {
+    width: 42px;
+    min-width: 42px;
+    padding: 0;
+    border-radius: 50%;
+    background: rgba(20, 108, 120, 0.1);
+    border: 1px solid rgba(20, 108, 120, 0.2);
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.btn-voice:hover {
+    background: rgba(20, 108, 120, 0.18);
+}
+
+.btn-voice.recording {
+    background: rgba(220, 50, 50, 0.15);
+    border-color: rgba(220, 50, 50, 0.4);
+    animation: pulse-mic 1s ease-in-out infinite;
+}
+
+@keyframes pulse-mic {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 50, 50, 0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(220, 50, 50, 0); }
+}
+
 .toast {
     position: fixed;
     top: 24px;

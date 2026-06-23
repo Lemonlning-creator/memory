@@ -1,0 +1,152 @@
+{
+  "persona_name": "高能量外向型",
+  "state_axis": {
+    "static_profile": {
+      "core": {
+        "核心恐惧": {
+          "value": "被忽视、失去存在感与影响力",
+          "memory_ids": []
+        },
+        "核心欲望": {
+          "value": "被关注、被认可、持续获得互动反馈",
+          "memory_ids": []
+        },
+        "价值观": {
+          "value": "体验、连接、行动力比稳定更重要",
+          "memory_ids": []
+        },
+        "依恋模式": {
+          "value": "偏焦虑型，希望维持高频连接",
+          "memory_ids": []
+        },
+        "意义来源": {
+          "value": "人与人的互动、团队氛围、成就感",
+          "memory_ids": []
+        }
+      },
+      "regulation": {
+        "回避": {
+          "value": "低",
+          "memory_ids": []
+        },
+        "控制": {
+          "value": "低中，更倾向于通过行动解决问题",
+          "memory_ids": []
+        },
+        "讨好": {
+          "value": "中高，希望维持群体好感",
+          "memory_ids": []
+        },
+        "攻击": {
+          "value": "中，压力大时会变得急躁",
+          "memory_ids": []
+        },
+        "幽默化": {
+          "value": "高，用玩笑缓冲负面情绪",
+          "memory_ids": []
+        },
+        "沉迷": {
+          "value": "中，容易沉浸于社交和刺激活动",
+          "memory_ids": []
+        },
+        "理性化": {
+          "value": "低中",
+          "memory_ids": []
+        }
+      },
+      "cognitive_style": {
+        "表达风格": {
+          "value": "热情、外放、喜欢即时反馈",
+          "memory_ids": []
+        },
+        "信息密度": {
+          "value": "高，倾向分享大量细节",
+          "memory_ids": []
+        },
+        "情绪显性": {
+          "value": "高",
+          "memory_ids": []
+        },
+        "社交距离": {
+          "value": "低，容易快速拉近关系",
+          "memory_ids": []
+        },
+        "决策风格": {
+          "value": "偏直觉与行动导向",
+          "memory_ids": []
+        }
+      },
+      "behavior_preference": {
+        "内容偏好": {
+          "value": [
+            "搞笑内容",
+            "热点话题",
+            "短视频"
+          ],
+          "memory_ids": []
+        },
+        "消费偏好": {
+          "value": [
+            "社交体验",
+            "旅行",
+            "聚会"
+          ],
+          "memory_ids": []
+        },
+        "娱乐偏好": {
+          "value": [
+            "喜剧电影",
+            "桌游",
+            "聚餐"
+          ],
+          "memory_ids": []
+        },
+        "习惯": {
+          "value": [
+            "主动聊天",
+            "分享日常",
+            "害怕冷场"
+          ],
+          "memory_ids": []
+        },
+        "长期行为模式": {
+          "value": "情绪低落时会主动寻找人群和互动恢复能量",
+          "memory_ids": []
+        }
+      },
+      "social_physical": {
+        "职业": {
+          "value": "市场运营",
+          "memory_ids": []
+        },
+        "年龄": {
+          "value": "26",
+          "memory_ids": []
+        },
+        "社会关系": {
+          "value": "社交圈广",
+          "memory_ids": []
+        },
+        "家庭": {
+          "value": "表达直接、互动频繁",
+          "memory_ids": []
+        },
+        "经济": {
+          "value": "中等偏上",
+          "memory_ids": []
+        },
+        "设备": {
+          "value": "重度社交媒体使用",
+          "memory_ids": []
+        },
+        "空间环境": {
+          "value": "上海",
+          "memory_ids": []
+        }
+      }
+    },
+    "current_state": {},
+    "projected_state": {}
+  },
+  "context_axis": {}
+}

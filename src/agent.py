@@ -40,6 +40,11 @@ class StateDrivenCompanionAgent:
         self.profile_path = profile_path or self._profile_path_for_user(user_name)
         self.user_profile = self._load_or_create_user_profile(self.profile_path)
         self.persona_path = persona_path or DEFAULT_PERSONA_PATH
+        state_axis_obj = self.user_profile.setdefault("state_axis", {})
+        state_axis_obj["current_state"] = {}
+        state_axis_obj["projected_state"] = {}
+        self.user_profile["context_axis"] = {}
+        save_json(profile_path, self.user_profile)
         self.persona_config = load_json(self.persona_path)
 
         self.memory_manager = MemoryOSLocal()

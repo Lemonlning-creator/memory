@@ -96,11 +96,12 @@ function finalizeSessionOnUnload() {
 
 async function sendMessage() {
     const message = userInput.value.trim();
-    if (!message || isLoading) return;
+    if (!message || isLoading) { voiceMode = false; return; }
     if (!selectedCharacterId) {
         showUpdateNotification([], 'Please select a character first.');
         return;
     }
+    if (!voiceMode) systemStartTime = Date.now();
 
     const ablateDimension = getSelectedAblationDimension();
 
@@ -118,7 +119,8 @@ async function sendMessage() {
         const response = await fetch(`${API_URL}/api/chat`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-System-Start': String(systemStartTime || Date.now()),
             },
             body: JSON.stringify({
                 message,
@@ -132,7 +134,9 @@ async function sendMessage() {
             throw new Error(error.error || '请求失败');
         }
 
-        const data = await readChatStream(response, assistantContent);
+        const onToken = voiceMode ? feedTTSToken : null;
+        const data = await readChatStream(response, assistantContent, onToken);
+        if (voiceMode) { finalizeTTS(); voiceMode = false; }
         const highlightFields = Array.isArray(data.updated_fields) ? data.updated_fields : [];
         await loadProfile(highlightFields);
         if (highlightFields.length > 0) {
@@ -267,7 +271,7 @@ function clearAblationSelection() {
     updateAblationStatus();
 }
 
-async function readChatStream(response, contentNode) {
+async function readChatStream(response, contentNode, onToken) {
     if (!response.body) {
         const data = await response.json();
         contentNode.textContent = data.message || '';
@@ -294,6 +298,7 @@ async function readChatStream(response, contentNode) {
             const event = JSON.parse(trimmed);
             if (event.type === 'token') {
                 contentNode.textContent += event.content || '';
+                if (onToken) onToken(event.content || '');
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             } else if (event.type === 'done') {
                 finalData = event;
@@ -864,3 +869,283 @@ function hexToRgba(hex, alpha) {
 
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
 }
+
+// ===== Voice =====
+let voiceMode = false;
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let currentAudio = null;
+let ttsSentenceBuffer = '';
+let voiceStartTime = null;
+let voiceStopTime = null;
+let firstAudioLogged = false;
+let systemStartTime = null;
+const SENTENCE_END_RE = /[。！？!?\n]/;
+
+// Pipeline state: synthesis runs in parallel up to MAX_CONCURRENT_SYNTH,
+// playback consumes audioBuffer entries in seq order.
+let synthEpoch = 0;
+let synthSeq = 0;
+let playSeq = 0;
+let synthInFlight = 0;
+let isPlaying = false;
+const audioBuffer = new Map();
+const MAX_CONCURRENT_SYNTH = 3;
+
+function stopAudio() {
+    synthEpoch++;
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    audioBuffer.clear();
+    synthSeq = playSeq = synthInFlight = 0;
+    isPlaying = false;
+    ttsSentenceBuffer = '';
+    firstAudioLogged = false;
+}
+
+function clientLog(event, data) {
+    fetch(`${API_URL}/api/log`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event, ...data }),
+    }).catch(() => {});
+}
+
+// ===== WebSocket voice client =====
+let voiceWS = null;
+let wsSeqCounter = 0;
+const wsPending = new Map();
+
+function ensureWS() {
+    if (voiceWS && voiceWS.readyState === WebSocket.OPEN) return Promise.resolve(voiceWS);
+    return new Promise((resolve, reject) => {
+        const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url = `${proto}//${location.host}/ws/voice`;
+        voiceWS = new WebSocket(url);
+        voiceWS.binaryType = 'arraybuffer';
+        voiceWS._reopen = null;
+        voiceWS.onopen = () => resolve(voiceWS);
+        voiceWS.onerror = (e) => { reject(e); };
+        voiceWS.onclose = () => {
+            voiceWS = null;
+            for (const [, p] of wsPending) p.reject(new Error('ws closed'));
+            wsPending.clear();
+        };
+        voiceWS.onmessage = (e) => {
+            if (typeof e.data === 'string') {
+                let msg;
+                try { msg = JSON.parse(e.data); } catch { return; }
+                const p = wsPending.get(msg.seq);
+                if (!p) return;
+                if (msg.type === 'asr_result') {
+                    wsPending.delete(msg.seq);
+                    p.resolve(msg.text);
+                }
+            } else {
+                const dv = new DataView(e.data);
+                const seq = dv.getUint32(0);
+                const audio = e.data.slice(4);
+                const p = wsPending.get(seq);
+                if (!p) return;
+                wsPending.delete(seq);
+                p.resolve(new Blob([audio], { type: 'audio/mpeg' }));
+            }
+        };
+    });
+}
+
+function blobToBase64(blob) {
+    return new Promise((resolve) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result.split(',')[1]);
+        r.readAsDataURL(blob);
+    });
+}
+
+async function wsASR(blob) {
+    const ws = await ensureWS();
+    const seq = ++wsSeqCounter;
+    const audio = await blobToBase64(blob);
+    return new Promise((resolve, reject) => {
+        wsPending.set(seq, { resolve, reject });
+        ws.send(JSON.stringify({ type: 'asr', seq, audio, system_start_ms: systemStartTime }));
+    });
+}
+
+async function wsTTS(text, ttsSeq) {
+    const ws = await ensureWS();
+    const seq = ++wsSeqCounter;
+    return new Promise((resolve, reject) => {
+        wsPending.set(seq, { resolve, reject });
+        ws.send(JSON.stringify({ type: 'tts', seq, text, system_start_ms: systemStartTime }));
+    });
+}
+
+function scheduleSynthesis(text) {
+    const seq = synthSeq++;
+    const epoch = synthEpoch;
+    synthInFlight++;
+    const t0 = performance.now();
+    wsTTS(text, seq)
+        .then(blob => {
+            clientLog('tts_fetch', { chars: text.length, fetch_ms: Math.round(performance.now() - t0), seq });
+            synthInFlight--;
+            if (epoch !== synthEpoch) return;
+            audioBuffer.set(seq, { blob, text });
+            tryPlayNext();
+            pumpSynthesis();
+        })
+        .catch(() => {
+            synthInFlight--;
+            if (epoch !== synthEpoch) return;
+            audioBuffer.set(seq, null);
+            tryPlayNext();
+            pumpSynthesis();
+        });
+}
+
+function pumpSynthesis() {
+    // placeholder for future pre-fetch logic; concurrency is enforced at scheduling time
+}
+
+function tryPlayNext() {
+    if (isPlaying) return;
+    if (!audioBuffer.has(playSeq)) return;
+    const item = audioBuffer.get(playSeq);
+    audioBuffer.delete(playSeq);
+    if (!item) {
+        playSeq++;
+        tryPlayNext();
+        return;
+    }
+    isPlaying = true;
+    const url = URL.createObjectURL(item.blob);
+    const tPlay = performance.now();
+    const curSeq = playSeq;
+    currentAudio = new Audio(url);
+    currentAudio.onplay = () => {
+        if (curSeq === 0 && !firstAudioLogged) {
+            firstAudioLogged = true;
+            const now = performance.now();
+            const cum_ms = systemStartTime ? Math.round(now - systemStartTime) : null;
+            clientLog('tts_play_start', { cum_ms, seq: curSeq });
+            if (voiceStartTime) {
+                clientLog('voice_round_trip', {
+                    total_ms: Math.round(now - voiceStartTime),
+                    record_ms: voiceStopTime ? Math.round(voiceStopTime - voiceStartTime) : null,
+                    post_record_ms: voiceStopTime ? Math.round(now - voiceStopTime) : null,
+                });
+            }
+        }
+    };
+    currentAudio.onended = () => {
+        clientLog('tts_play', { chars: item.text.length, play_ms: Math.round(performance.now() - tPlay), seq: curSeq });
+        URL.revokeObjectURL(url);
+        currentAudio = null;
+        playSeq++;
+        isPlaying = false;
+        tryPlayNext();
+    };
+    currentAudio.onerror = currentAudio.onended;
+    currentAudio.play();
+}
+
+function feedTTSToken(token) {
+    ttsSentenceBuffer += token;
+    const idx = ttsSentenceBuffer.search(SENTENCE_END_RE);
+    if (idx !== -1) {
+        const sentence = ttsSentenceBuffer.slice(0, idx + 1).trim();
+        if (sentence && synthInFlight < MAX_CONCURRENT_SYNTH) scheduleSynthesis(sentence);
+        else if (sentence) {
+            // backpressure: hold in buffer, retry on next pump
+            ttsSentenceBuffer = sentence + ttsSentenceBuffer.slice(idx + 1);
+            return;
+        }
+        ttsSentenceBuffer = ttsSentenceBuffer.slice(idx + 1);
+    }
+}
+
+function finalizeTTS() {
+    const remaining = ttsSentenceBuffer.trim();
+    if (remaining && synthInFlight < MAX_CONCURRENT_SYNTH) scheduleSynthesis(remaining);
+    ttsSentenceBuffer = '';
+}
+
+const micBtn = document.getElementById('micBtn');
+
+let audioCtx = null;
+let audioProcessor = null;
+let pcmSamples = [];
+
+function encodeWAV(samples, sampleRate) {
+    const buf = new ArrayBuffer(44 + samples.length * 2);
+    const v = new DataView(buf);
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); v.setUint32(4, 36 + samples.length * 2, true);
+    str(8, 'WAVE'); str(12, 'fmt '); v.setUint32(16, 16, true);
+    v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, sampleRate, true); v.setUint32(28, sampleRate * 2, true);
+    v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    str(36, 'data'); v.setUint32(40, samples.length * 2, true);
+    let off = 44;
+    for (const s of samples) {
+        const c = Math.max(-1, Math.min(1, s));
+        v.setInt16(off, c < 0 ? c * 0x8000 : c * 0x7FFF, true);
+        off += 2;
+    }
+    return buf;
+}
+
+micBtn.addEventListener('click', async () => {
+    if (isRecording) {
+        audioProcessor.disconnect();
+        audioCtx.close();
+        isRecording = false;
+        micBtn.classList.remove('recording');
+        micBtn.textContent = '⏳';
+        voiceStopTime = performance.now();
+        systemStartTime = Date.now();
+
+        const wav = encodeWAV(pcmSamples, 16000);
+        try {
+            const text = await wsASR(new Blob([wav], { type: 'audio/wav' }));
+            if (!text) {
+                addMessageToChat('未识别到语音，请重试', 'system');
+                return;
+            }
+            userInput.value = text;
+            voiceMode = true;
+            if (isLoading) { voiceMode = false; addMessageToChat('当前正在响应中，请稍候再发', 'system'); return; }
+            sendMessage();
+        } catch (e) {
+            addMessageToChat(`语音识别出错: ${e.message}`, 'system');
+        } finally {
+            micBtn.textContent = '🎤';
+        }
+        return;
+    }
+
+    stopAudio();
+    let stream;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1 } });
+    } catch {
+        alert('无法访问麦克风，请检查权限设置。');
+        return;
+    }
+    pcmSamples = [];
+    audioCtx = new AudioContext({ sampleRate: 16000 });
+    const source = audioCtx.createMediaStreamSource(stream);
+    audioProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+    audioProcessor.onaudioprocess = (e) => {
+        pcmSamples.push(...e.inputBuffer.getChannelData(0));
+    };
+    source.connect(audioProcessor);
+    audioProcessor.connect(audioCtx.destination);
+    stream.getTracks().forEach((t) => { t.onended = () => { if (isRecording) micBtn.click(); }; });
+    isRecording = true;
+    micBtn.classList.add('recording');
+    micBtn.textContent = '⏹';
+    voiceStartTime = performance.now();
+    voiceStopTime = null;
+});

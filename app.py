@@ -1,13 +1,22 @@
+import base64
 import json
+
 import atexit
 from pathlib import Path
-from flask import Flask, Response, jsonify, request, stream_with_context
+
+import threading
+import time
+from flask import Flask, Response, g, jsonify, request, stream_with_context
 from flask_cors import CORS
+from flask_sock import Sock
+
 from src.agent import StateDrivenCompanionAgent
+from src.logger import logger
 from src.utils import save_json
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
 CORS(app)
+sock = Sock(app)
 
 CHARACTER_CARDS = {
     "emi": {
@@ -65,6 +74,26 @@ def build_agent_for_character(character_id: str) -> StateDrivenCompanionAgent:
 
 
 atexit.register(finalize_agent_session)
+
+
+@app.before_request
+def _capture_system_start():
+    val = request.headers.get("X-System-Start")
+    try:
+        g.system_start_ms = float(val) if val else None
+    except (TypeError, ValueError):
+        g.system_start_ms = None
+
+
+def _cum_s():
+    if g.system_start_ms:
+        return (time.time() * 1000 - g.system_start_ms) / 1000
+    return None
+
+
+def _cum_str():
+    c = _cum_s()
+    return f" cumulative={c:.3f}s" if c is not None else ""
 
 
 @app.route("/")
@@ -126,21 +155,29 @@ def chat():
     if not user_input:
         return jsonify({"error": "message is required"}), 400
 
+    t_start = time.perf_counter()
+
     def encode_event(payload):
         return json.dumps(payload, ensure_ascii=False) + "\n"
 
     @stream_with_context
     def generate():
+        first_token_time = None
         try:
             for event in agent.chat_stream(user_input, ablate_dimension=ablate_dimension):
                 event_type = event.get("type")
 
                 if event_type == "token":
+                    if first_token_time is None:
+                        first_token_time = time.perf_counter() - t_start
+                        logger.info(f"[CHAT] first_token={first_token_time:.3f}s{_cum_str()} input={user_input!r:.50}")
                     yield encode_event(event)
                     continue
 
                 if event_type == "done":
                     response = event["response"]
+                    total = time.perf_counter() - t_start
+                    logger.info(f"[CHAT] chat_duration={total:.3f}s{_cum_str()} response_chars={len(response)}")
 
                     conversation_history.append({"role": "user", "content": user_input})
                     conversation_history.append({"role": "assistant", "content": response})
@@ -162,6 +199,61 @@ def chat():
             yield encode_event({"type": "error", "error": str(e)})
 
     return Response(generate(), mimetype="application/x-ndjson")
+
+
+def _handle_voice_msg(ws, data):
+    msg_type = data.get("type")
+    try:
+        seq = int(data.get("seq", 0))
+    except (TypeError, ValueError):
+        seq = 0
+    system_start_ms = data.get("system_start_ms")
+
+    if msg_type == "asr":
+        audio_b64 = data.get("audio", "")
+        try:
+            audio_bytes = base64.b64decode(audio_b64)
+        except Exception:
+            audio_bytes = b""
+        from voice.asr import transcribe
+        text = transcribe(audio_bytes, "audio.wav", system_start_ms=system_start_ms)
+        try:
+            ws.send(json.dumps({"type": "asr_result", "seq": seq, "text": text}))
+        except Exception as e:
+            logger.error(f"[WS] asr send failed: {e}")
+    elif msg_type == "tts":
+        text = data.get("text", "")
+        from voice.tts import stream_tts
+        audio = b"".join(stream_tts(text, system_start_ms=system_start_ms))
+        try:
+            ws.send(seq.to_bytes(4, "big") + audio)
+        except Exception as e:
+            logger.error(f"[WS] tts send failed: {e}")
+
+
+@sock.route("/ws/voice")
+def voice_ws(ws):
+    threads = []
+    while True:
+        msg = ws.receive()
+        if msg is None:
+            break
+        try:
+            data = json.loads(msg)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        t = threading.Thread(target=_handle_voice_msg, args=(ws, data), daemon=True)
+        t.start()
+        threads.append(t)
+    for t in threads:
+        t.join(timeout=30)
+
+
+@app.route("/api/log", methods=["POST"])
+def client_log():
+    data = request.json or {}
+    logger.info(f"[CLIENT] {data.get('event','?')} {json.dumps({k:v for k,v in data.items() if k!='event'}, ensure_ascii=False)}")
+    return jsonify({"ok": True})
 
 
 @app.route("/api/profile", methods=["GET"])
@@ -189,18 +281,20 @@ def update_profile():
 
 @app.route("/api/history", methods=["GET"])
 def get_history():
-    return jsonify({
-        "history": conversation_history,
-        "total": len(conversation_history),
-    }), 200
+    return jsonify({"history": conversation_history, "total": len(conversation_history)}), 200
 
 
 @app.route("/api/reset", methods=["POST"])
 def reset_chat():
-    agent_error = require_agent()
-    if agent_error:
-        return agent_error
+    data = request.json or {}
+    scope = data.get("scope", "chat")
+
     conversation_history.clear()
+
+    if scope == "experiment":
+        profile = agent.reset_to_initial_state()
+        return jsonify({"message": "experiment reset", "profile": profile}), 200
+
     return jsonify({"message": "history reset"}), 200
 
 

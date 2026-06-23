@@ -186,9 +186,5 @@
     "current_state": {},
     "projected_state": {}
   },
-  "context_axis": {
-    "current_context": "",
-    "context_detail": "",
-    "inferred_at_turn": 0
-  }
+  "context_axis": {}
 }
