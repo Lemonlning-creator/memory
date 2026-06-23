@@ -24,6 +24,13 @@ from .utils import parse_json
 _EMBEDDING_DIM = 1536  # text-embedding-v4 default dim
 
 
+def _safe_log_text(value: Any, limit: int = 160) -> str:
+    text = str(value)
+    if len(text) > limit:
+        text = text[:limit] + "..."
+    return text.encode("ascii", errors="backslashreplace").decode("ascii")
+
+
 class MemoryOSLocal:
 
     def __init__(
@@ -116,7 +123,11 @@ class MemoryOSLocal:
             "timestamp": datetime.now().isoformat(),
         }
         self.short_term_memory.append(entry)
-        print(f"[STM] append id={entry['id']} role={role} count={len(self.short_term_memory)} content={content[:80]!r}")
+        print(
+            "[STM] append "
+            f"id={entry['id']} role={role} count={len(self.short_term_memory)} "
+            f"content_preview={_safe_log_text(content, 80)!r}"
+        )
         return entry
 
     def get_recent_messages(self, limit: int = 14) -> List[Dict[str, Any]]:
@@ -232,7 +243,7 @@ class MemoryOSLocal:
             return None
 
         source_mid_terms = mid_terms[-self.long_term_source_summaries:]
-        print("采用当前中期记忆去生成长期记忆" + str(source_mid_terms))
+        print("[LTM] source_mid_terms=" + _safe_log_text(source_mid_terms, 500))
         result = parse_json(
             llm.chat(
                 LONG_TERM_MEMORY_SYSTEM_PROMPT,
@@ -243,7 +254,7 @@ class MemoryOSLocal:
                 ),
             )
         )
-        print("生成的长期记忆结果" + str(result))
+        print("[LTM] result=" + _safe_log_text(result, 500))
         self.last_mid_count = len(mid_terms)
         if not result.get("content"):
             return None
@@ -277,7 +288,7 @@ class MemoryOSLocal:
         print(
             "[Memory Retrieval Timing] "
             f"mid_term_search_ms={mid_term_search_ms} s "
-            f"result={results}"
+            f"result={_safe_log_text(results, 500)}"
         )
         
         memories = []

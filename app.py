@@ -2,21 +2,30 @@ import base64
 import json
 
 import atexit
+import os
 from pathlib import Path
-
 import threading
 import time
+from uuid import uuid4
 from flask import Flask, Response, g, jsonify, request, stream_with_context
 from flask_cors import CORS
 from flask_sock import Sock
+from dotenv import load_dotenv
 
 from src.agent import StateDrivenCompanionAgent
 from src.logger import logger
 from src.utils import save_json
 
+load_dotenv()
+
 app = Flask(__name__, static_folder="frontend", static_url_path="")
 CORS(app)
 sock = Sock(app)
+
+DEFAULT_CHARACTER_ID = os.getenv("ALGORITHM_DEFAULT_CHARACTER_ID", "emi")
+ALGORITHM_API_KEY = os.getenv("ALGORITHM_API_KEY", "").strip()
+ALGORITHM_HOST = os.getenv("ALGORITHM_HOST", "0.0.0.0")
+ALGORITHM_PORT = int(os.getenv("ALGORITHM_PORT", "5000"))
 
 CHARACTER_CARDS = {
     "emi": {
@@ -54,6 +63,16 @@ def require_agent():
         return jsonify({"error": "character is required"}), 409
     return None
 
+def require_algorithm_auth():
+    if not ALGORITHM_API_KEY:
+        return jsonify({"error": "ALGORITHM_API_KEY is not configured"}), 503
+
+    expected = f"Bearer {ALGORITHM_API_KEY}"
+    if request.headers.get("Authorization", "") != expected:
+        return jsonify({"error": "unauthorized"}), 401
+
+    return None
+
 def build_agent_for_character(character_id: str) -> StateDrivenCompanionAgent:
     card = CHARACTER_CARDS.get(character_id)
     if not card:
@@ -71,6 +90,16 @@ def build_agent_for_character(character_id: str) -> StateDrivenCompanionAgent:
         persona_path=str(persona_path),
         user_name=card.get("user_name", card["id"]),
     )
+
+def ensure_default_agent() -> None:
+    global agent, active_character_id
+
+    if agent is not None:
+        return
+
+    agent = build_agent_for_character(DEFAULT_CHARACTER_ID)
+    active_character_id = DEFAULT_CHARACTER_ID
+    conversation_history.clear()
 
 
 atexit.register(finalize_agent_session)
@@ -256,6 +285,103 @@ def client_log():
     return jsonify({"ok": True})
 
 
+@app.route("/stream", methods=["POST"])
+def stream_reply():
+    auth_error = require_algorithm_auth()
+    if auth_error:
+        return auth_error
+
+    data = request.json or {}
+    user_text = data.get("user_text", "").strip()
+    device_id = str(data.get("device_id", ""))
+    session_id = str(data.get("session_id", ""))
+    request_id = uuid4().hex[:12]
+
+    if not user_text:
+        return jsonify({"error": "user_text is required", "request_id": request_id}), 400
+
+    try:
+        ensure_default_agent()
+    except Exception as exc:
+        logger.exception(
+            "algorithm_stream_init_failed request_id=%s device_id=%s session_id=%s",
+            request_id,
+            device_id,
+            session_id,
+        )
+        return jsonify({"error": str(exc), "request_id": request_id}), 500
+
+    def encode_data(payload):
+        return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+    @stream_with_context
+    def generate():
+        start = time.perf_counter()
+        first_delta_logged = False
+        token_count = 0
+        logger.info(
+            "algorithm_stream_start request_id=%s device_id=%s session_id=%s user_text_len=%s",
+            request_id,
+            device_id,
+            session_id,
+            len(user_text),
+        )
+
+        try:
+            for event in agent.chat_stream(user_text):
+                event_type = event.get("type")
+
+                if event_type == "token":
+                    content = event.get("content", "")
+                    if isinstance(content, str) and content:
+                        token_count += 1
+                        if not first_delta_logged:
+                            first_delta_logged = True
+                            logger.info(
+                                "algorithm_stream_first_delta request_id=%s elapsed_ms=%.2f",
+                                request_id,
+                                (time.perf_counter() - start) * 1000,
+                            )
+                        yield encode_data({"delta": content, "request_id": request_id})
+                    continue
+
+                if event_type == "done":
+                    conversation_history.append({"role": "user", "content": user_text})
+                    conversation_history.append({"role": "assistant", "content": event.get("response", "")})
+                    logger.info(
+                        "algorithm_stream_done request_id=%s elapsed_ms=%.2f token_events=%s",
+                        request_id,
+                        (time.perf_counter() - start) * 1000,
+                        token_count,
+                    )
+                    yield "data: [DONE]\n\n"
+                    return
+
+                if event_type == "error":
+                    logger.error(
+                        "algorithm_stream_agent_error request_id=%s error=%s",
+                        request_id,
+                        event.get("error", ""),
+                    )
+                    yield encode_data({"error": event.get("error", "unknown error"), "request_id": request_id})
+                    yield "data: [DONE]\n\n"
+                    return
+
+            logger.warning("algorithm_stream_ended_without_done request_id=%s", request_id)
+            yield "data: [DONE]\n\n"
+        except Exception as exc:
+            logger.exception(
+                "algorithm_stream_failed request_id=%s device_id=%s session_id=%s",
+                request_id,
+                device_id,
+                session_id,
+            )
+            yield encode_data({"error": str(exc), "request_id": request_id})
+            yield "data: [DONE]\n\n"
+
+    return Response(generate(), mimetype="text/event-stream")
+
+
 @app.route("/api/profile", methods=["GET"])
 def get_profile():
     agent_error = require_agent()
@@ -312,4 +438,4 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=False)
+    app.run(debug=True, host=ALGORITHM_HOST, port=ALGORITHM_PORT, use_reloader=False)
