@@ -62,3 +62,17 @@
 2026-06-17 18:09:19,215 [ERROR] [WS] tts send failed: Base.send() got an unexpected keyword argument 'binary'
 2026-06-17 18:09:19,785 [INFO] [TTS] model=cosyvoice-v1 voice=longxiaochun chars=28 duration=1.684s cumulative=5.769s bytes=72769
 2026-06-17 18:09:19,786 [ERROR] [WS] tts send failed: Base.send() got an unexpected keyword argument 'binary'
+2026-06-23 19:56:44,930 [INFO] [ASR] model=paraformer-realtime-v2 status=200 duration=1.034s vad=NA cumulative=1.230s text='Yay. 哒哒哒哒哒哒哒哒哒哒哒哒。'
+2026-06-23 19:56:46,016 [INFO] [CHAT] first_token=1.074s cumulative=2.315s input='Yay. 哒哒哒哒哒哒哒哒哒哒哒哒。'
+2026-06-23 19:56:46,537 [INFO] [CHAT] chat_duration=1.596s cumulative=2.837s response_chars=104
+2026-06-23 19:56:46,693 [INFO] [TTS] model=cosyvoice-v1 voice=longxiaochun chars=4 duration=0.669s cumulative=2.992s bytes=5896
+2026-06-23 19:56:46,698 [INFO] [CLIENT] tts_fetch {"chars": 4, "fetch_ms": 675, "seq": 0}
+2026-06-23 19:56:46,700 [INFO] [CLIENT] tts_play_start {"cum_ms": -1782215791979, "seq": 0}
+2026-06-23 19:56:46,703 [INFO] [CLIENT] voice_round_trip {"total_ms": 7905, "record_ms": 4909, "post_record_ms": 2995}
+2026-06-23 19:56:47,103 [INFO] [CLIENT] tts_play {"chars": 4, "play_ms": 403, "seq": 0}
+2026-06-23 19:56:47,190 [INFO] [TTS] model=cosyvoice-v1 voice=longxiaochun chars=40 duration=0.954s cumulative=3.490s bytes=34317
+2026-06-23 19:56:47,198 [INFO] [CLIENT] tts_fetch {"chars": 41, "fetch_ms": 961, "seq": 1}
+2026-06-23 19:56:47,200 [INFO] [TTS] model=cosyvoice-v1 voice=longxiaochun chars=20 duration=0.814s cumulative=3.500s bytes=18853
+2026-06-23 19:56:47,208 [INFO] [CLIENT] tts_fetch {"chars": 20, "fetch_ms": 822, "seq": 2}
+2026-06-23 19:56:49,385 [INFO] [CLIENT] tts_play {"chars": 41, "play_ms": 2186, "seq": 1}
+2026-06-23 19:56:50,622 [INFO] [CLIENT] tts_play {"chars": 20, "play_ms": 1235, "seq": 2}

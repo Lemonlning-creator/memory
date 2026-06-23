@@ -4,15 +4,19 @@ import argparse
 import configparser
 import json
 import math
+import os
 import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence
+from dotenv import load_dotenv
 from openai import OpenAI
 
 from ..llm_client import LLMClient
 from ..utils import parse_json, load_json, save_json
+
+load_dotenv()
 from .agent_persona_generation import detect_agent_speaker
 from .user_profile_generation import detect_user_speaker
 from ..prompts.templates import (
@@ -318,8 +322,8 @@ class ProfileEvidenceEvaluator:
         api_config = config["API"]
         self.embedding_model_name = api_config.get("embedding_model", fallback="text-embedding-v4")
         self.embedding_client = OpenAI(
-            api_key=api_config.get("api_key"),
-            base_url=api_config.get("base_url"),
+            api_key=os.getenv("API_KEY"),
+            base_url=os.getenv("BASE_URL"),
         )
 
     def retrieve(self, claim: Dict[str, Any], evidence_pool: Sequence[Dict[str, Any]]) -> List[RetrievedEvidence]:

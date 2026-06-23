@@ -5,8 +5,11 @@ import time
 
 import dashscope
 from dashscope.audio.asr import Recognition, RecognitionCallback
+from dotenv import load_dotenv
 
 from src.logger import logger
+
+load_dotenv()
 
 
 class _VADTiming(RecognitionCallback):
@@ -36,7 +39,7 @@ class _VADTiming(RecognitionCallback):
 def transcribe(audio_bytes: bytes, filename: str = "audio.wav", config_path: str = "config.ini", system_start_ms: float = None) -> str:
     config = configparser.ConfigParser()
     config.read(config_path, encoding="utf-8")
-    dashscope.api_key = config["API"]["api_key"]
+    dashscope.api_key = os.getenv("API_KEY")
     model = config.get("Voice", "asr_model", fallback="paraformer-realtime-v2")
 
     suffix = (os.path.splitext(filename)[1] or ".wav").lstrip(".")

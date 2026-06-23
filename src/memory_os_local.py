@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import configparser
 import json
+import os
 from datetime import datetime
 from time import perf_counter
 from typing import Any, Dict, List, Optional
 
+from dotenv import load_dotenv
 from openai import OpenAI
 from pymilvus import MilvusClient
+
+load_dotenv()
 
 from .prompts.templates import (
     MID_TERM_MEMORY_SYSTEM_PROMPT,
@@ -38,8 +42,8 @@ class MemoryOSLocal:
             "embedding_model", fallback="text-embedding-v4"
         )
         self.embedding_client = OpenAI(
-            api_key=api_config.get("api_key"),
-            base_url=api_config.get("base_url"),
+            api_key=os.getenv("API_KEY"),
+            base_url=os.getenv("BASE_URL"),
         )
 
         milvus_config = config["Milvus"] if config.has_section("Milvus") else {}

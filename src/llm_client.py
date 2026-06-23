@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import configparser
+import os
 import time
 from time import perf_counter
 from typing import Any, Dict, Generator
+from dotenv import load_dotenv
 from openai import OpenAI
+
+load_dotenv()
 
 class LLMClient:
     def __init__(self, config_path: str = "config.ini"):
@@ -13,10 +17,10 @@ class LLMClient:
         api_config = config["API"]
         self.model = api_config.get("model")
         self.enable_thinking = api_config.getboolean("enable_thinking", fallback=False)
-        
+
         self.client = OpenAI(
-            api_key = api_config.get("api_key"),
-            base_url = api_config.get("base_url"),
+            api_key = os.getenv("API_KEY"),
+            base_url = os.getenv("BASE_URL"),
         )
         self.last_model_timing: Dict[str, float | None] = {"first_char_seconds": None}
         self.token_usage = {
