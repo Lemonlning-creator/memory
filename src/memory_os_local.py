@@ -80,6 +80,15 @@ class MemoryOSLocal:
                 schema=schema,
                 index_params=index_params,
             )
+        # Preload collection into memory so first search isn't slow (lazy load otherwise)
+        try:
+            from src.logger import logger
+            t0 = perf_counter()
+            self.client.load_collection(collection_name=self.collection_name)
+            logger.info(f"[MILVUS] collection '{self.collection_name}' loaded in {perf_counter()-t0:.3f}s")
+        except Exception as e:
+            from src.logger import logger
+            logger.warning(f"[MILVUS] load_collection failed: {e}")
 
     # ---------- 嵌入 ----------
     def _embed_text(self, text: str) -> List[float]:

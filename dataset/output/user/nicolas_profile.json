@@ -1,0 +1,128 @@
+{
+  "core": {
+    "fears": {
+      "value": "Fear of being a burden to others, fear of illness spreading to others, fear of failure in social situations",
+      "evidence": "Nicolas expresses concern about spreading COVID to others, mentions feeling like a burden when he's sick, and shows anxiety during interviews."
+    },
+    "desires": {
+      "value": "Desire for connection, desire for personal growth, desire for creative expression through cooking",
+      "evidence": "Nicolas talks about wanting relationships, mentions his cooking as a form of self-expression, and discusses his aspirations to become a chef."
+    },
+    "values": {
+      "value": "Value of health, value of authenticity, value of independence",
+      "evidence": "Nicolas is concerned about his health, expresses frustration with societal norms, and values his independence in decision-making."
+    },
+    "attachment style": {
+      "value": "Anxious attachment",
+      "evidence": "Nicolas shows concern about being rejected or not being understood, especially in social situations and relationships."
+    },
+    "sources_of_meaning": {
+      "value": "Cooking, personal achievements, helping others",
+      "evidence": "Nicolas finds meaning in cooking, shares stories of his achievements, and expresses a desire to help others through his work."
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "Avoids social interactions when feeling unwell or anxious",
+      "evidence": "Nicolas cancels plans due to feeling sick and expresses anxiety about interviews."
+    },
+    "control": {
+      "value": "Seeks control over his environment and health",
+      "evidence": "Nicolas takes precautions to avoid spreading illness, manages his health with medication, and tries to maintain a routine."
+    },
+    "people-pleasing": {
+      "value": "Tends to prioritize others' needs over his own",
+      "evidence": "Nicolas mentions making food for others even when he doesn't feel like it and expresses concern for others' well-being."
+    },
+    "aggression": {
+      "value": "Not evident",
+      "evidence": "No signs of aggression in the conversation."
+    },
+    "humor": {
+      "value": "Uses humor to cope with stress",
+      "evidence": "Nicolas makes jokes about his situation, such as joking about his appearance and using lighthearted banter."
+    },
+    "obsession": {
+      "value": "Obsessed with personal health and routines",
+      "evidence": "Nicolas frequently discusses his health, medications, and skincare routine."
+    },
+    "rationalization": {
+      "value": "Rationalizes his actions and decisions",
+      "evidence": "Nicolas rationalizes his behavior, such as justifying his choice to eat certain foods despite health concerns."
+    }
+  },
+  "cognitive_style": {
+    "expression_style": {
+      "value": "Expresses thoughts openly and candidly",
+      "evidence": "Nicolas freely shares his feelings, fears, and experiences with Vanessa."
+    },
+    "information_density": {
+      "value": "Moderate information density",
+      "evidence": "Nicolas provides enough detail in his conversations without overwhelming the listener."
+    },
+    "emotional_visibility": {
+      "value": "Emotionally visible",
+      "evidence": "Nicolas openly expresses his emotions, including sadness, frustration, and excitement."
+    },
+    "social_distance": {
+      "value": "Comfortable with close social distance",
+      "evidence": "Nicolas shares personal stories and feelings with Vanessa, indicating a level of trust."
+    },
+    "decision_style": {
+      "value": "Impulsive decision-making",
+      "evidence": "Nicolas makes spontaneous decisions, such as deciding to eat cake for breakfast or canceling plans on a whim."
+    }
+  },
+  "behavior_preference": {
+    "content_preferences": {
+      "value": "Enjoys cooking, watching TV shows, and discussing personal topics",
+      "evidence": "Nicolas frequently talks about cooking, watches shows like The Great British Bake Off, and discusses personal experiences."
+    },
+    "consumption_preferences": {
+      "value": "Prefers simple, comforting foods and drinks",
+      "evidence": "Nicolas enjoys foods like soup, grilled cheese, and juice, and prefers warm drinks."
+    },
+    "entertainment_preferences": {
+      "value": "Enjoys cooking shows, comedy, and hypothetical scenarios",
+      "evidence": "Nicolas mentions watching cooking shows, enjoys comedy, and engages in hypothetical discussions."
+    },
+    "habits": {
+      "value": "Has inconsistent habits, especially around health and routines",
+      "evidence": "Nicolas has irregular sleep patterns, skips skincare routines, and often makes impulsive decisions."
+    },
+    "long_term_behavior_patterns": {
+      "value": "Struggles with consistency in health and lifestyle choices",
+      "evidence": "Nicolas frequently mentions skipping routines and making unhealthy choices despite knowing they're not ideal."
+    }
+  },
+  "social_physical": {
+    "occupation": {
+      "value": "Healthcare worker (previously)",
+      "evidence": "Nicolas mentions working in healthcare to help people get benefits."
+    },
+    "age": {
+      "value": "Young adult",
+      "evidence": "Nicolas references childhood memories and discusses life stages, suggesting he is in his 20s or 30s."
+    },
+    "social_relationships": {
+      "value": "Limited close relationships, struggles with social anxiety",
+      "evidence": "Nicolas mentions having few close friends, feels anxious in social situations, and expresses loneliness."
+    },
+    "family": {
+      "value": "Unclear, but may have strained relationships",
+      "evidence": "Nicolas mentions family issues, including being ghosted and feeling misunderstood."
+    },
+    "economy": {
+      "value": "Financial struggles",
+      "evidence": "Nicolas mentions being unable to afford delivery, expensive medications, and living paycheck to paycheck."
+    },
+    "devices": {
+      "value": "Uses smartphones and social media",
+      "evidence": "Nicolas mentions being blocked by Gordon Ramsay on Twitter and uses messaging apps."
+    },
+    "physical_environment": {
+      "value": "Urban environment",
+      "evidence": "Nicolas mentions living in a city and discusses driving to the airport."
+    }
+  }
+}

@@ -219,7 +219,7 @@ class StateDrivenCompanionAgent:
         response = "".join(parts).strip() or FALLBACK_RESPONSE
 
         self.memory_manager.append_stm("assistant", response)
-        self._start_background(self._memory_pipeline, (user_input, response, relevant_memory, True))
+        self._start_background(self._memory_pipeline, ())
 
         yield {
             "type": "done",

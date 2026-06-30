@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 
 import atexit
 from pathlib import Path
@@ -9,6 +10,9 @@ import time
 from flask import Flask, Response, g, jsonify, request, stream_with_context
 from flask_cors import CORS
 from flask_sock import Sock
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from src.agent import StateDrivenCompanionAgent
 from src.logger import logger
@@ -170,14 +174,13 @@ def chat():
                 if event_type == "token":
                     if first_token_time is None:
                         first_token_time = time.perf_counter() - t_start
-                        logger.info(f"[CHAT] first_token={first_token_time:.3f}s{_cum_str()} input={user_input!r:.50}")
                     yield encode_event(event)
                     continue
 
                 if event_type == "done":
                     response = event["response"]
                     total = time.perf_counter() - t_start
-                    logger.info(f"[CHAT] chat_duration={total:.3f}s{_cum_str()} response_chars={len(response)}")
+                    logger.info(f"[CHAT] first_token={first_token_time:.3f}s total={total:.3f}s chars={len(response)}")
 
                     conversation_history.append({"role": "user", "content": user_input})
                     conversation_history.append({"role": "assistant", "content": response})
@@ -223,28 +226,289 @@ def _handle_voice_msg(ws, data):
             logger.error(f"[WS] asr send failed: {e}")
     elif msg_type == "tts":
         text = data.get("text", "")
-        from voice.tts import stream_tts
-        audio = b"".join(stream_tts(text, system_start_ms=system_start_ms))
+        from voice.tts import stream_tts_chunks
         try:
-            ws.send(seq.to_bytes(4, "big") + audio)
+            stream_tts_chunks(text, ws, seq)
         except Exception as e:
-            logger.error(f"[WS] tts send failed: {e}")
+            logger.error(f"[WS] tts failed seq={seq}: {e}")
+        finally:
+            try:
+                ws.send(json.dumps({"type": "tts_end", "seq": seq}))
+            except Exception as e:
+                logger.error(f"[WS] tts_end send failed seq={seq}: {e}")
+
+
+def _run_chat_via_ws(ws, message, system_start_ms, ablate_dimension):
+    """Run agent chat and stream tokens back to the client over the voice WS.
+    Eliminates the frontend round-trip after ASR completes."""
+    agent_error = require_agent()
+    if agent_error is not None:
+        try:
+            ws.send(json.dumps({"type": "chat_error", "error": "agent not ready"}, ensure_ascii=False))
+        except Exception:
+            pass
+        return
+    t_start = time.perf_counter()
+    first_token_time = None
+    try:
+        ws.send(json.dumps({"type": "chat_start", "system_start_ms": system_start_ms}, ensure_ascii=False))
+        for event in agent.chat_stream(message, ablate_dimension=ablate_dimension):
+            event_type = event.get("type")
+            if event_type == "token":
+                if first_token_time is None:
+                    first_token_time = time.perf_counter() - t_start
+                    logger.info(f"[CHAT] first_token={first_token_time:.3f}s input={message!r:.50}")
+                try:
+                    ws.send(json.dumps({"type": "chat_token", "content": event.get("content", "")}, ensure_ascii=False))
+                except Exception as e:
+                    logger.error(f"[WS] chat_token send failed: {e}")
+                    return
+            elif event_type == "done":
+                response = event["response"]
+                total = time.perf_counter() - t_start
+                logger.info(f"[CHAT] total={total:.3f}s chars={len(response)}")
+                ws.send(json.dumps({
+                    "type": "chat_done",
+                    "response": response,
+                    "profile": agent.user_profile,
+                    "updated_fields": event.get("updated_fields", []),
+                    "background_memory_running": event.get("background_memory_running", False),
+                }, ensure_ascii=False))
+    except Exception as e:
+        logger.error(f"[WS] chat stream error: {e}")
+        try:
+            ws.send(json.dumps({"type": "chat_error", "error": str(e)}, ensure_ascii=False))
+        except Exception:
+            pass
+
+
+class _StreamASRSession:
+    """Manages a dashscope streaming ASR session, forwarding events to the WS client."""
+
+    def __init__(self, ws, sid, system_start_ms, ablate_dimension=None):
+        import dashscope
+        from dashscope.audio.asr import Recognition, RecognitionCallback
+        from threading import Timer, Lock
+        dashscope.api_key = os.getenv("API_KEY")
+        self.ws = ws
+        self.sid = sid
+        self.system_start_ms = system_start_ms
+        self.ablate_dimension = ablate_dimension
+        self.accumulated = ""
+        self.t_start = time.perf_counter()
+        self.first_event_at = None
+        self.last_event_at = None
+        self._auto_end_timer = None
+        self._end_lock = Lock()
+        self._ended = False
+        self.AUTO_END_DELAY_S = 1.5
+        self.user_speech_start_ms = None
+        self.user_speech_end_ms = None
+        self.first_audio_received_ms = None  # wall clock when first audio chunk arrived
+        self.acoustic_end_ms = None  # wall clock of actual speech end (via end_time field)
+
+        session = self
+
+        def _send(obj):
+            try:
+                session.ws.send(json.dumps(obj, ensure_ascii=False))
+            except Exception as e:
+                logger.error(f"[WS] asr stream send failed: {e}")
+
+        def _schedule_auto_end():
+            with session._end_lock:
+                if session._ended:
+                    return
+                if session._auto_end_timer is not None:
+                    session._auto_end_timer.cancel()
+                session._auto_end_timer = Timer(session.AUTO_END_DELAY_S, session._do_auto_end)
+                session._auto_end_timer.start()
+
+        def _cancel_auto_end():
+            with session._end_lock:
+                if session._auto_end_timer is not None:
+                    session._auto_end_timer.cancel()
+                    session._auto_end_timer = None
+
+        class CB(RecognitionCallback):
+            def on_event(self, result):
+                now = time.perf_counter()
+                now_wall_ms = time.time() * 1000
+                if session.first_event_at is None:
+                    session.first_event_at = now
+                session.last_event_at = now
+                sentence = result.get_sentence() if hasattr(result, "get_sentence") else None
+                if not sentence:
+                    return
+                if isinstance(sentence, list):
+                    sentence = sentence[-1] if sentence else {}
+                text = sentence.get("text", "") if isinstance(sentence, dict) else ""
+                is_begin = sentence.get("sentence_begin", False) if isinstance(sentence, dict) else False
+                is_end = sentence.get("sentence_end", False) if isinstance(sentence, dict) else False
+                begin_time_ms = sentence.get("begin_time") if isinstance(sentence, dict) else None
+                end_time_ms = sentence.get("end_time") if isinstance(sentence, dict) else None
+                if is_begin:
+                    if session.user_speech_start_ms is None:
+                        session.user_speech_start_ms = now_wall_ms
+                    if begin_time_ms is not None and session.first_audio_received_ms is None:
+                        session.first_audio_received_ms = now_wall_ms - begin_time_ms
+                if is_end:
+                    session.user_speech_end_ms = now_wall_ms
+                    if end_time_ms is not None and session.first_audio_received_ms is not None:
+                        session.acoustic_end_ms = session.first_audio_received_ms + end_time_ms
+                if is_end:
+                    if text:
+                        session.accumulated += text
+                    _send({
+                        "type": "asr_partial",
+                        "session_id": session.sid,
+                        "text": session.accumulated,
+                    })
+                    _schedule_auto_end()
+                else:
+                    _cancel_auto_end()
+                    if text:
+                        _send({
+                            "type": "asr_partial",
+                            "session_id": session.sid,
+                            "text": session.accumulated + text,
+                        })
+
+            def on_complete(self):
+                now_wall_ms = time.time() * 1000
+                # Prefer acoustic_end (real mouth-close time); fall back to sentence_end arrival
+                speech_end_value = session.acoustic_end_ms or session.user_speech_end_ms
+                # acoustic_end is an estimate and can slightly exceed asr_complete; clamp it
+                if speech_end_value and speech_end_value > now_wall_ms:
+                    speech_end_value = now_wall_ms
+                _send({
+                    "type": "asr_final",
+                    "session_id": session.sid,
+                    "text": session.accumulated,
+                    "speech_start_ms": int(session.user_speech_start_ms) if session.user_speech_start_ms else None,
+                    "speech_end_ms": int(speech_end_value) if speech_end_value else None,
+                    "asr_complete_ms": int(now_wall_ms),
+                })
+                # Only kick off chat if ASR produced non-empty text
+                if not session.accumulated or not session.accumulated.strip():
+                    _send({"type": "asr_empty", "session_id": session.sid})
+                    return
+                # Kick off chat immediately on the backend — no frontend round-trip
+                threading.Thread(
+                    target=_run_chat_via_ws,
+                    args=(session.ws, session.accumulated, session.system_start_ms, session.ablate_dimension),
+                    daemon=True,
+                ).start()
+
+            def on_error(self, result):
+                logger.error(f"[ASR-STREAM] sid={session.sid} error: {result}")
+                try:
+                    session.ws.send(json.dumps({
+                        "type": "asr_error",
+                        "session_id": session.sid,
+                        "error": str(result),
+                    }))
+                except Exception:
+                    pass
+
+        self.rec = Recognition(
+            model="paraformer-realtime-v2",
+            callback=CB(),
+            format="pcm",
+            sample_rate=16000,
+            vad_silence_duration=400,
+        )
+        self.rec.start()
+        logger.info(f"[ASR-STREAM] sid={sid} started")
+
+    def feed(self, audio_chunk: bytes):
+        try:
+            self.rec.send_audio_frame(audio_chunk)
+        except Exception as e:
+            logger.error(f"[ASR-STREAM] feed error: {e}")
+
+    def _do_auto_end(self):
+        with self._end_lock:
+            if self._ended:
+                return
+            self._ended = True
+        logger.info(f"[ASR-STREAM-AUTO-END] sid={self.sid} triggered (no speech for {self.AUTO_END_DELAY_S}s after sentence_end)")
+        try:
+            self.rec.stop()
+        except Exception as e:
+            logger.error(f"[ASR-STREAM] auto-end stop error: {e}")
+
+    def stop(self):
+        with self._end_lock:
+            if self._ended:
+                return
+            self._ended = True
+            if self._auto_end_timer is not None:
+                self._auto_end_timer.cancel()
+                self._auto_end_timer = None
+        try:
+            self.rec.stop()
+        except Exception as e:
+            logger.error(f"[ASR-STREAM] stop error: {e}")
 
 
 @sock.route("/ws/voice")
 def voice_ws(ws):
     threads = []
+    asr_session = {"session": None}
+    session_lock = threading.Lock()
+
+    def _cleanup_asr():
+        with session_lock:
+            sess = asr_session["session"]
+            asr_session["session"] = None
+        if sess:
+            try:
+                sess.stop()
+            except Exception:
+                pass
+
     while True:
         msg = ws.receive()
         if msg is None:
             break
+
+        # Binary frame = raw PCM audio chunk
+        if isinstance(msg, bytes):
+            with session_lock:
+                sess = asr_session["session"]
+            if sess:
+                sess.feed(msg)
+            continue
+
         try:
             data = json.loads(msg)
         except (json.JSONDecodeError, TypeError):
             continue
+
+        msg_type = data.get("type")
+
+        if msg_type == "asr_stream_start":
+            _cleanup_asr()
+            sid = data.get("session_id") or f"asr_{int(time.time() * 1000)}"
+            with session_lock:
+                asr_session["session"] = _StreamASRSession(
+                    ws=ws, sid=sid,
+                    system_start_ms=data.get("system_start_ms"),
+                    ablate_dimension=data.get("ablate_dimension"),
+                )
+            continue
+
+        if msg_type == "asr_stream_end":
+            _cleanup_asr()
+            continue
+
+        # TTS and legacy ASR run in worker threads
         t = threading.Thread(target=_handle_voice_msg, args=(ws, data), daemon=True)
         t.start()
         threads.append(t)
+
+    _cleanup_asr()
     for t in threads:
         t.join(timeout=30)
 

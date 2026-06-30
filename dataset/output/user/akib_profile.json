@@ -1,0 +1,128 @@
+{
+  "core": {
+    "fears": {
+      "value": "Fear of being sick or unwell, as seen in Akib's concern about an ear infection and his previous illness.",
+      "evidence": "Akib: 'I'm hoping over a few days the swelling goes down and I can hear again... If not I'm gonna have to see a doctor but it's possible that a doctor would just tell me to go home and sleep or something until it stops swelling'"
+    },
+    "desires": {
+      "value": "Desire for experiences and exploration, such as traveling to Japan and colonizing Jupiter.",
+      "evidence": "Akib: 'I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about.'"
+    },
+    "values": {
+      "value": "Value of personal growth, learning, and intellectual curiosity, as shown through discussions on time travel, science, and literature.",
+      "evidence": "Akib: 'I think it's interesting at first but I dont think I could read almost a thousand pages of it'"
+    },
+    "attachment_style": {
+      "value": "Secure attachment, as Akib shows interest in others' well-being and engages in meaningful conversations.",
+      "evidence": "Akib: 'Ah, sorry to hear that, did you know the person well?'"
+    },
+    "sources_of_meaning": {
+      "value": "Meaning derived from personal projects, relationships, and exploring new ideas.",
+      "evidence": "Akib: 'I need a project or something to work on... Something that doesn't involve uranium or Jupiter or time travel'"
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "Avoids dealing with health issues directly, preferring to wait and see if they resolve themselves.",
+      "evidence": "Akib: 'If not I'm gonna have to see a doctor but it's possible that a doctor would just tell me to go home and sleep or something until it stops swelling'"
+    },
+    "control": {
+      "value": "Seeks control through planning and preparation, such as grocery lists and future plans.",
+      "evidence": "Akib: 'Here's my list of groceries to get for the next few days... I don't know if I missed anything important'"
+    },
+    "people-pleasing": {
+      "value": "Not explicitly evident, but shows consideration for others' opinions and feelings.",
+      "evidence": "Akib: 'I think how people answer that question says a lot about them'"
+    },
+    "aggression": {
+      "value": "Not evident in the conversation.",
+      "evidence": "N/A"
+    },
+    "humor": {
+      "value": "Uses humor to lighten the mood, such as joking about time travel and disintegration.",
+      "evidence": "Akib: 'If it goes poorly I will disintegrate entirely and it's going to hurt the whole time'"
+    },
+    "obsession": {
+      "value": "Shows obsession with ideas like time travel and space colonization.",
+      "evidence": "Akib: 'I think it's just not feasible at this point in time... Maybe I should just scrap that and go with my Jupiter colonization mission instead'"
+    },
+    "rationalization": {
+      "value": "Rationalizes his actions and decisions, such as not going to the doctor for his ear infection.",
+      "evidence": "Akib: 'If not I'm gonna have to see a doctor but it's possible that a doctor would just tell me to go home and sleep or something until it stops swelling'"
+    }
+  },
+  "cognitive_style": {
+    "expression_style": {
+      "value": "Expresses thoughts in a detailed and reflective manner, often contemplating philosophical or scientific topics.",
+      "evidence": "Akib: 'It's weird how our bodies work... Humans are made up of cells and all that but like do our cells know anything about us other than the fact that they're alive?'"
+    },
+    "information_density": {
+      "value": "High information density, discussing complex topics like time travel and science.",
+      "evidence": "Akib: 'I'm gonna use the radiation through a funnel and send the radiation current through some photons to relegate the positronic ionic reaction to a state of physical solubility'"
+    },
+    "emotional_visibility": {
+      "value": "Emotional visibility is moderate, showing concern for health and relationships.",
+      "evidence": "Akib: 'Ah, sorry to hear that, did you know the person well?'"
+    },
+    "social_distance": {
+      "value": "Maintains a moderate social distance, engaging in conversations without overly revealing personal details.",
+      "evidence": "Akib: 'I don't have any pets myself... But I would like to get a cat or a dog eventually'"
+    },
+    "decision_style": {
+      "value": "Decisive, making plans and decisions about future projects and activities.",
+      "evidence": "Akib: 'I need a project or something to work on... Something that doesn't involve uranium or Jupiter or time travel'"
+    }
+  },
+  "behavior_preference": {
+    "content_preferences": {
+      "value": "Prefers content related to science, technology, and literature.",
+      "evidence": "Akib: 'I think it's interesting at first but I dont think I could read almost a thousand pages of it'"
+    },
+    "consumption_preferences": {
+      "value": "Consumes media such as movies, books, and video games.",
+      "evidence": "Akib: 'I was really wanting to visit Monaco because I had a friend move there after selling a few of his companies, he said he'd pay for everything when we were there which is really nice of him.'"
+    },
+    "entertainment_preferences": {
+      "value": "Enjoys video games, movies, and reading.",
+      "evidence": "Akib: 'I've spent a lot of hours this week playing a lot of video games'"
+    },
+    "habits": {
+      "value": "Has habits of eating, exercising, and planning for future events.",
+      "evidence": "Akib: 'I have some tasks and errands to run'"
+    },
+    "long_term_behavior_patterns": {
+      "value": "Engages in long-term planning, such as travel and career goals.",
+      "evidence": "Akib: 'I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about.'"
+    }
+  },
+  "social_physical": {
+    "occupation": {
+      "value": "Works in a comic book publishing company, previously worked at a barbecue restaurant.",
+      "evidence": "Akib: 'I work for a comic book publishing company... Before that I worked at a barbecue restaurant'"
+    },
+    "age": {
+      "value": "Not explicitly stated, but based on context, likely in his 20s or 30s.",
+      "evidence": "Akib: 'I think I'm more in the middle of the road... I've had a lot of bad things happen to me but also a lot of good'"
+    },
+    "social_relationships": {
+      "value": "Maintains relationships with friends and family, showing interest in their well-being.",
+      "evidence": "Akib: 'I think the amount of people at your wake kind of shows how many lives you touched or affected'"
+    },
+    "family": {
+      "value": "Has a wife and mentions family friends, indicating a family life.",
+      "evidence": "Akib: 'My wife is half Japanese but she's never been there so it could be nice to kind of see the motherland'"
+    },
+    "economy": {
+      "value": "Financially stable enough to plan trips and make purchases, but also concerned about costs.",
+      "evidence": "Akib: 'International flights usually aren't this much but I guess this time of year it's even more. I'm gonna have to plan for it around summer or maybe fall of next year'"
+    },
+    "devices": {
+      "value": "Uses a phone and computer for communication and daily activities.",
+      "evidence": "Akib: 'I left my phone running over night on that video Playlist so now I'm almost at 0 charge'"
+    },
+    "physical_environment": {
+      "value": "Lives in an area with cold weather, has a room that gets cold, and mentions a neighborhood with cats.",
+      "evidence": "Akib: 'Man my room is freezing right now, I should put on a sweater or something'"
+    }
+  }
+}

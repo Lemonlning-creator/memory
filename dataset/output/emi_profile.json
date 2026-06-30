@@ -1,0 +1,128 @@
+{
+  "core": {
+    "core_fear": {
+      "value": "Fear of being unable to maintain personal growth and self-improvement",
+      "evidence": "I need meaningful connections with others. (conversations, hanging out, friends, etc) build up my self worth (i dont need them), remind yourself why your not with them anymore."
+    },
+    "core_desire": {
+      "value": "Desire for personal growth, self-improvement, and maintaining a sense of self-worth through commitments and actions.",
+      "evidence": "Keeping my word to myself. I can almost guarantee that the way you are feeling now is because you are not keeping your promises to yourself."
+    },
+    "values": {
+      "value": "Self-improvement, authenticity, and meaningful connections.",
+      "evidence": "I need meaningful connections with others. (conversations, hanging out, friends, etc) build up my self worth (i dont need them), remind yourself why your not with them anymore."
+    },
+    "attachment_style": {
+      "value": "Secure with a tendency to seek validation and support from others.",
+      "evidence": "It’s great having a friend like you to always be able to talk too."
+    },
+    "meaning_source": {
+      "value": "Personal achievements, self-growth, and meaningful relationships.",
+      "evidence": "Keeping my word to myself. I can almost guarantee that the way you are feeling now is because you are not keeping your promises to yourself."
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "Avoiding emotional distress by focusing on practical solutions and self-improvement.",
+      "evidence": "I cried, but even though the pain wasn’t much different, I’m stronger now, so I picked my self up and stopped crying."
+    },
+    "control": {
+      "value": "Controlling emotions through structured routines and commitments.",
+      "evidence": "Keeping my word to myself. I can almost guarantee that the way you are feeling now is because you are not keeping your promises to yourself."
+    },
+    "compromise": {
+      "value": "Willingness to compromise in relationships and personal goals for the sake of harmony.",
+      "evidence": "I’m not a proponent of distracting yourself by meeting someone right away. That can lead to the same mistakes you may have made in the last relationship."
+    },
+    "aggression": {
+      "value": "Not evident in the conversation.",
+      "evidence": "None"
+    },
+    "humor": {
+      "value": "Using humor to cope with difficult situations.",
+      "evidence": "Haha, totally forgot to introduce myself, I'm Kate. What's your name?"
+    },
+    "addiction": {
+      "value": "Not evident in the conversation.",
+      "evidence": "None"
+    },
+    "rationalization": {
+      "value": "Rationalizing emotions and experiences to maintain a sense of control.",
+      "evidence": "It takes time, some advice my friends gave me is that you should do everything you can to be active and constructive without them."
+    }
+  },
+  "cognitive_style": {
+    "expression_style": {
+      "value": "Open and expressive, with a focus on personal growth and emotional well-being.",
+      "evidence": "I need meaningful connections with others. (conversations, hanging out, friends, etc) build up my self worth (i don't need them), remind yourself why your not with them anymore."
+    },
+    "information_density": {
+      "value": "Moderate, with a balance between detailed information and conversational flow.",
+      "evidence": "I love planes but I prefer wide bodies especially. I think the best looking plane out there is the 777. It’s huge and the fuselage rounds out really well whereas planes like the 787/a350 are a bit pointier."
+    },
+    "emotional_expressiveness": {
+      "value": "High, with openness about feelings and emotional experiences.",
+      "evidence": "I cried, but even though the pain wasn’t much different, I’m stronger now, so I picked my self up and stopped crying."
+    },
+    "social_distance": {
+      "value": "Comfortable with close and meaningful conversations.",
+      "evidence": "It’s great having a friend like you to always be able to talk too."
+    },
+    "decision_style": {
+      "value": "Reflective and thoughtful, with an emphasis on long-term goals and self-improvement.",
+      "evidence": "I need meaningful connections with others. (conversations, hanging out, friends, etc) build up my self worth (i don't need them), remind yourself why your not with them anymore."
+    }
+  },
+  "behavior_preference": {
+    "content_preference": {
+      "value": "Interest in personal development, travel, and aviation.",
+      "evidence": "I’ve been studying different types of planes and how they work so I was able to come to a conclusion about my favorite plane."
+    },
+    "consumption_preference": {
+      "value": "Practical and informative content, with a focus on self-improvement and learning.",
+      "evidence": "I’ve been studying different types of planes and how they work so I was able to come to a conclusion about my favorite plane."
+    },
+    "entertainment_preference": {
+      "value": "Interest in aviation, travel, and engaging conversations.",
+      "evidence": "I love planes but I prefer wide bodies especially. I think the best looking plane out there is the 777."
+    },
+    "habits": {
+      "value": "Regular exercise, hair care routines, and self-reflection.",
+      "evidence": "I’ve been starting getting into shape. It's a great hobby and, obviously, really good for me."
+    },
+    "long_term_behavior": {
+      "value": "Focus on personal growth, maintaining relationships, and continuous learning.",
+      "evidence": "Keeping my word to myself. I can almost guarantee that the way you are feeling now is because you are not keeping your promises to yourself."
+    }
+  },
+  "social_physical": {
+    "occupation": {
+      "value": "Student with a part-time on-campus job as a teacher assistant.",
+      "evidence": "Currently I have a small on campus job as a teacher assistance."
+    },
+    "age": {
+      "value": "Young adult, likely in her early 20s.",
+      "evidence": "I’m going to try to make it this weekend. I made a cheesecake last week and it turned out a success..."
+    },
+    "social_relations": {
+      "value": "Close friendships, family connections, and a supportive social network.",
+      "evidence": "I’m going to talk to you tomorrow! Have a lovely day!"
+    },
+    "family": {
+      "value": "Family is important, but not the central focus of her life.",
+      "evidence": "My mom always makes a huge pot of sauce with meatballs and sausage that simmered for hours."
+    },
+    "economic": {
+      "value": "Middle-class, with a focus on practical spending and self-care.",
+      "evidence": "I’m going to give Emsibeth a try as well sounds amazing!"
+    },
+    "devices": {
+      "value": "Uses smartphones and social media for communication and entertainment.",
+      "evidence": "Here’s a photo from last Sundays brunch in Miami!"
+    },
+    "physical_environment": {
+      "value": "Lives in a city environment, with access to diverse cultural and recreational activities.",
+      "evidence": "I’m in between Aspen and Vail both in Colorado"
+    }
+  }
+}

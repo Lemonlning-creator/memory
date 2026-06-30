@@ -1,0 +1,33 @@
+{
+  "num_cases": 0,
+  "emotion_breakdown": {
+    "negative": 4,
+    "positive": 0
+  },
+  "aligned_response": {
+    "avg_total_empathy": 0.0,
+    "avg_emotional_reaction": 0.0,
+    "avg_interpretation": 0.0,
+    "avg_exploration": 0.0,
+    "appropriateness": {
+      "appropriate": 0,
+      "excessive": 0,
+      "insufficient": 0
+    }
+  },
+  "direct_response": {
+    "avg_total_empathy": 0.0,
+    "avg_emotional_reaction": 0.0,
+    "avg_interpretation": 0.0,
+    "avg_exploration": 0.0,
+    "appropriateness": {
+      "appropriate": 0,
+      "excessive": 0,
+      "insufficient": 0
+    }
+  },
+  "improvement": {
+    "total_empathy_delta": 0.0,
+    "total_empathy_pct": 0
+  }
+}

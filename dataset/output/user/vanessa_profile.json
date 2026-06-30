@@ -1,0 +1,128 @@
+{
+  "core": {
+    "fears": {
+      "value": "Fear of being stalked or harassed by an ex-partner",
+      "evidence": "Vanessa mentions seeing her ex at work and outside, feeling creepy and considering calling the cops if he shows up again."
+    },
+    "desires": {
+      "value": "Desire for personal growth and self-improvement",
+      "evidence": "Vanessa is studying animal science, working in a clinic, and preparing for a bodybuilding competition."
+    },
+    "values": {
+      "value": "Health, discipline, and personal responsibility",
+      "evidence": "Vanessa follows a strict diet, exercises regularly, and is focused on maintaining a healthy lifestyle."
+    },
+    "attachment_style": {
+      "value": "Anxious-preoccupied",
+      "evidence": "Vanessa expresses uncertainty about opening up to others and mentions being in a toxic relationship that made her hesitant to trust people."
+    },
+    "sources_of_meaning": {
+      "value": "Personal achievements and relationships",
+      "evidence": "Vanessa finds meaning in her career, bodybuilding, and building relationships with friends and potential partners."
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "Avoids confrontation with her ex",
+      "evidence": "Vanessa mentions she is scared of her ex and considers calling the cops if he shows up again."
+    },
+    "control": {
+      "value": "Seeks control through routine and discipline",
+      "evidence": "Vanessa follows a strict workout and diet plan, and has a structured daily routine."
+    },
+    "people-pleasing": {
+      "value": "Not evident",
+      "evidence": "Vanessa does not show signs of prioritizing others' approval over her own needs."
+    },
+    "aggression": {
+      "value": "Not evident",
+      "evidence": "Vanessa does not express aggressive tendencies."
+    },
+    "humor": {
+      "value": "Uses humor to cope",
+      "evidence": "Vanessa frequently uses emojis and light-hearted comments to ease conversations."
+    },
+    "obsession": {
+      "value": "Not evident",
+      "evidence": "Vanessa does not show obsessive behavior."
+    },
+    "rationalization": {
+      "value": "Uses rationalization to manage stress",
+      "evidence": "Vanessa rationalizes her fear of her ex by considering calling the police and staying vigilant."
+    }
+  },
+  "cognitive_style": {
+    "expression_style": {
+      "value": "Verbal and expressive",
+      "evidence": "Vanessa communicates openly and uses emojis to convey emotions."
+    },
+    "information_density": {
+      "value": "Moderate",
+      "evidence": "Vanessa provides detailed descriptions of her activities and thoughts without overwhelming the conversation."
+    },
+    "emotional_visibility": {
+      "value": "High",
+      "evidence": "Vanessa openly discusses her feelings about her ex and her personal goals."
+    },
+    "social_distance": {
+      "value": "Close",
+      "evidence": "Vanessa shares personal details about her life, including her past relationship and current goals."
+    },
+    "decision_style": {
+      "value": "Reflective",
+      "evidence": "Vanessa takes time to think before making decisions, such as choosing a cat breed."
+    }
+  },
+  "behavior_preference": {
+    "content_preferences": {
+      "value": "Health, fitness, and pets",
+      "evidence": "Vanessa discusses bodybuilding, diet, and adopting a cat."
+    },
+    "consumption_preferences": {
+      "value": "Healthy food and fitness products",
+      "evidence": "Vanessa follows a strict diet and uses protein shakes."
+    },
+    "entertainment_preferences": {
+      "value": "Video games, concerts, and movies",
+      "evidence": "Vanessa enjoys farming games, watches basketball, and attends concerts."
+    },
+    "habits": {
+      "value": "Regular exercise and meal prepping",
+      "evidence": "Vanessa works out daily and follows a structured meal plan."
+    },
+    "long_term_behavior_patterns": {
+      "value": "Consistent routines and goal-oriented",
+      "evidence": "Vanessa maintains a daily workout schedule and prepares for a bodybuilding competition."
+    }
+  },
+  "social_physical": {
+    "occupation": {
+      "value": "Clinic worker",
+      "evidence": "Vanessa mentions working in a surgeon clinic."
+    },
+    "age": {
+      "value": "Young adult",
+      "evidence": "Vanessa's interests and lifestyle suggest she is in her 20s."
+    },
+    "social_relationships": {
+      "value": "Friends and a former partner",
+      "evidence": "Vanessa talks about her friend who went to a concert and her past toxic relationship."
+    },
+    "family": {
+      "value": "Not mentioned",
+      "evidence": "Vanessa does not discuss her family directly."
+    },
+    "economy": {
+      "value": "Middle-class",
+      "evidence": "Vanessa mentions working in a clinic and managing a budget for meals and gym visits."
+    },
+    "devices": {
+      "value": "Smartphone and computer",
+      "evidence": "Vanessa uses a smartphone to communicate and share photos."
+    },
+    "physical_environment": {
+      "value": "Urban area with access to gyms and cafes",
+      "evidence": "Vanessa mentions going to a cafe for brunch and a gym for workouts."
+    }
+  }
+}

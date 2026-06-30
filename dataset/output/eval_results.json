@@ -1,0 +1,338 @@
+[
+  {
+    "turn_id": "D12:32",
+    "system_response": "Hey Emi! Thanks for saying that! I'm really happy things worked out too. It's always such a relief when things go smoothly, isn't it? How have you been lately? I'd love to hear what's been going on in your world! 😊",
+    "reference_response": "Looking better than ever!",
+    "scores": {
+      "tone": 0.0,
+      "relevance": 0.0,
+      "emotion": 0.0,
+      "naturalness": 0.0
+    },
+    "overall": 0.0,
+    "analysis": "The system response is significantly different from the reference response. The system response is a long, friendly message that asks about the user's well-being and expresses happiness about the previous interaction. In contrast, the reference response is a short, direct statement that simply says 'Looking better than ever!' which is a much more concise and specific reply. The tone of the system response is overly enthusiastic and not matching the brevity of the reference response. The content is not relevant to the reference response, as it introduces new topics and questions rather than responding to the specific statement about hair improvement. The emotion expressed in the system response is not aligned with the reference response, which is more of a straightforward positive statement. The naturalness is low because the system response doesn't match the style or length of the reference response.",
+    "session": 16
+  },
+  {
+    "turn_id": "D12:35",
+    "system_response": "I actually really enjoy skincare, Emi! It's one of those things that feels like a small but meaningful ritual for me. I love trying new products and figuring out what works best for my skin. Right now, I'm really into moisturizers and serums — they make such a difference in how my skin feels throughout the day. What about you? Do you have a favorite skincare routine or product? 😊",
+    "reference_response": "Yeah I love the hydro boost moisturizers. I switched to the gel cream from the water gel when I started suffering from super dry skin in the winter and it was tremendous for me. I just started using the Hydro Boost SPF and am loving it so far. It feels like an extra boost of hydration and goes on clear for me (though I'm super pale), with a subdued finish. It's like $10 a bottle and can be found at most stores you'd expect to find it.",
+    "scores": {
+      "tone": 4.5,
+      "relevance": 4.0,
+      "emotion": 4.0,
+      "naturalness": 4.5
+    },
+    "overall": 4.25,
+    "analysis": "The system response is friendly and engaging, matching the tone of the reference response. It is relevant to the topic of skincare and shows interest in the user's preferences. The emotion expressed is positive and enthusiastic, similar to the reference response. The naturalness is high, as the language flows naturally and is conversational. However, the system response is more general, while the reference response provides specific details about the product, which could have made it more aligned in content depth.",
+    "session": 16
+  },
+  {
+    "turn_id": "D12:38",
+    "system_response": "That's so great to hear, Emi! It's amazing how discovering the right products can really open up a whole new world of self-care. I'm always experimenting too — there's just so much out there to explore! One tip I love is to always patch test new products, even if they're from a trusted brand. And don't forget to cleanse your skin thoroughly before applying anything, it makes such a difference. \n\nAs for recommendations, I'm really into the The Ordinary range — their Niacinamide 10% + Zinc 1% serum is a game-changer for balancing oil and improving texture. Also, if you're into natural ingredients, trying a rosewater toner can be super soothing. \n\nWhat kind of skin are you dealing with? Maybe I can suggest something more tailored! 😊",
+    "reference_response": "These are my tips and tricks I have been using for a while now:\nCold, cool, or lukewarm showers are the best; they don't dry out your skin and actually can leave it refreshed. Also, this is great for your hair to make it shiny and silky.\nIf you wear makeup, WASH IT OFF EVERY NIGHT. No exceptions to this one.\nInstead of lotion, I use liquid coconut oil to moisturize after a shower. It has helped my KP more than any dermatologist, keeps it silky smooth and touchable, moisturizes like mad, and leaves a light sweet scent. If you can't find coconut oil, look for tubs of Eucerin. It is sent from the skin gods, though expensive.\nFor a face scrub since I have dry skin, I mix raw sugar with coconut oil and a bit of honey. Rinse and pat dry with a clean towel. I don't know if I'd suggest this for someone with oily skin, though.\nSomething a lot of people don't do because of the extra time it takes is PAT DRY with a dry towel after you step out of the shower. Rubbing can scrape your skin in ways it shouldn't be. Within 3 minutes of patting dry, apply moisturizer all over. The moisturizer locks in the water on the outer layers of your skin; it doesn't normally put more in. After about three minutes, all that good ole' H2O evaporates.",
+    "scores": {
+      "tone": 6.0,
+      "relevance": 7.0,
+      "emotion": 5.0,
+      "naturalness": 6.0
+    },
+    "overall": 6.0,
+    "analysis": "The system response has a friendly and encouraging tone, which is similar to the reference response. However, it lacks the personal, detailed, and practical nature of the reference response. The system response focuses more on product recommendations and general skincare advice, while the reference response provides specific, actionable tips with personal experience. In terms of relevance, both responses are relevant to the topic of skincare, but the reference response is more detailed and directly addresses the user's questions. The emotional tone of the system response is positive and supportive, but it doesn't convey the same level of personal experience and enthusiasm as the reference response. The system response is natural and well-structured, but it feels slightly more formal and less conversational compared to the reference response.",
+    "session": 16
+  },
+  {
+    "turn_id": "D12:39",
+    "system_response": "That's so great to hear, Emi! It's amazing how discovering the right products can really open up a whole new world of self-care. I'm always experimenting too — there's just so much out there to explore! One tip I love is to always patch test new products, even if they're from a trusted brand. And don't forget to cleanse your skin thoroughly before applying anything, it makes such a difference. \n\nAs for recommendations, I'm really into the The Ordinary range — their Niacinamide 10% + Zinc 1% serum is a game-changer for balancing oil and improving texture. Also, if you're into natural ingredients, trying a rosewater toner can be super soothing. \n\nWhat kind of skin are you dealing with? Maybe I can suggest something more tailored! 😊",
+    "reference_response": "And the most important step of all:",
+    "scores": {
+      "tone": 0.0,
+      "relevance": 0.0,
+      "emotion": 0.0,
+      "naturalness": 0.0
+    },
+    "overall": 0.0,
+    "analysis": "The system response and reference response are not comparable as they do not address the same question or topic. The system response focuses on skincare recommendations and tips, while the reference response appears to be an incomplete sentence that does not provide any meaningful information. As a result, no valid assessment can be made on the four evaluation dimensions.",
+    "session": 16
+  },
+  {
+    "turn_id": "D12:40",
+    "system_response": "That's so great to hear, Emi! It's amazing how discovering the right products can really open up a whole new world of self-care. I'm always experimenting too — there's just so much out there to explore! One tip I love is to always patch test new products, even if they're from a trusted brand. And don't forget to cleanse your skin thoroughly before applying anything, it makes such a difference. \n\nAs for recommendations, I'm really into the The Ordinary range — their Niacinamide 10% + Zinc 1% serum is a game-changer for balancing oil and improving texture. Also, if you're into natural ingredients, trying a rosewater toner can be super soothing. \n\nWhat kind of skin are you dealing with? Maybe I can suggest something more tailored! 😊",
+    "reference_response": "Drink lots of water. And wear a light sunscreen at all times. I cover my skin as best I can when possible.",
+    "scores": {
+      "tone": 0.3,
+      "relevance": 0.2,
+      "emotion": 0.1,
+      "naturalness": 0.2
+    },
+    "overall": 0.2,
+    "analysis": "The system response has a friendly and informative tone, but it doesn't match the reference response in terms of content relevance or emotional tone. The reference response is very brief and practical, while the system response is more detailed and conversational. The system response also introduces new topics like skincare products and patch testing, which are not mentioned in the reference response. The naturalness is low because the system response is significantly longer and more elaborate than the reference response.",
+    "session": 16
+  },
+  {
+    "turn_id": "D12:42",
+    "system_response": "That all sounds so thoughtful and effective, Emi! It's amazing how much of an impact a consistent routine can have on your skin and overall well-being. I love that you're incorporating serums and sheet masks — they really do feel like a little luxury for your skin. And practicing meditation and yoga is such a great way to manage stress, which I know can be so tricky to balance. \n\nI'm really inspired by how intentional you're being with your self-care. It's not just about the products, but the whole mindset behind it. Have you found any particular routines or practices that help you stay consistent? I'd love to hear more! 😊",
+    "reference_response": "Have you been doing Yoga for a while. I’m interested in getting into it. Any tips for a beginner getting into Yoga. The only thing I have been looking at is yoga mats haha!",
+    "scores": {
+      "tone": 1.0,
+      "relevance": 0.3,
+      "emotion": 0.5,
+      "naturalness": 0.6
+    },
+    "overall": 0.6,
+    "analysis": "The system response has a similar tone to the reference response, as both are friendly and conversational. However, the content is not relevant to the reference response, which focuses on yoga tips for beginners. The system response discusses skincare routines and self-care, which is unrelated to the question asked. The emotion is somewhat matched, as both responses are positive and engaging, but the naturalness is lower because the system response doesn't directly address the question about yoga tips.",
+    "session": 16
+  },
+  {
+    "turn_id": "D12:44",
+    "system_response": "That's such a great list of tips, Emi! I love how comprehensive and encouraging it is. Starting slow and being kind to yourself is so important — yoga is definitely a journey, not a race. I can totally see how it would help with both physical and mental well-being. \n\nI've been meaning to get back into yoga myself, but I always seem to find an excuse to put it off. Your tips are a great reminder to take that first step. Have you found any specific styles or instructors that you really enjoy? I'd love to hear more about your experience! 😊",
+    "reference_response": "Thank you so much Kate. I’m going to sign up for a lesson right now and hopefully get started sometime soon. Thanks so much for the tips your the best!",
+    "scores": {
+      "tone": 0.3,
+      "relevance": 0.6,
+      "emotion": 0.4,
+      "naturalness": 0.5
+    },
+    "overall": 0.45,
+    "analysis": "The system response has a friendly and encouraging tone, which aligns somewhat with the reference response, but it is significantly more detailed and less direct. The content is relevant to the topic of yoga tips, but it doesn't directly address the question posed by the user in the reference response. The emotional tone is positive and supportive, but it lacks the enthusiasm and personal touch present in the reference response. The naturalness is moderate, as the system response is more formal and structured compared to the casual, conversational style of the reference response.",
+    "session": 16
+  },
+  {
+    "turn_id": "D13:2",
+    "system_response": "Hey Emi! I'm doing great, thanks for asking! 😊 Actually, I did sign up for the yoga lesson—finally took the plunge! It's something I've been meaning to try for a while, and I felt it was the right time to commit. How about you? Any new goals or activities you're diving into lately? I'd love to hear about them! 🌟",
+    "reference_response": "Hey Kate! Yes, I did end up signing up for a Yoga class. My first class is today at 5:00pm! I’m super excited. I went and got myself a new yoga set and a yoga mat to be prepared. Any other tips for my first day?",
+    "scores": {
+      "tone": 0.8,
+      "relevance": 0.9,
+      "emotion": 0.7,
+      "naturalness": 0.8
+    },
+    "overall": 0.8,
+    "analysis": "The system response has a similar tone to the reference response, with an upbeat and friendly style. The content is relevant to the topic of signing up for a yoga class. However, the emotion expressed in the system response is slightly less specific compared to the reference response, which shows more excitement and personal details. The naturalness is good, but the system response includes more general questions rather than focusing on the specific context of the first yoga class.",
+    "session": 17
+  },
+  {
+    "turn_id": "D13:4",
+    "system_response": "Thanks so much for the tips, Emi! I really appreciate it. 😊 You're always so thoughtful and supportive. I'm curious—what's something you've been working on lately that's helping you grow? I'd love to hear about it! 🌟",
+    "reference_response": "I just had my first yoga class and it went amazing!",
+    "scores": {
+      "tone": 0.4,
+      "relevance": 0.6,
+      "emotion": 0.3,
+      "naturalness": 0.5
+    },
+    "overall": 0.45,
+    "analysis": "The system response is not relevant to the conversation context, as it asks about what Emi has been working on, while the user's last message was about their own experience with a yoga class. The tone is overly enthusiastic and not aligned with the user's casual and excited tone. The response lacks natural flow and does not match the user's intent to share their personal experience.",
+    "session": 17
+  },
+  {
+    "turn_id": "D13:5",
+    "system_response": "Thanks so much for the tips, Emi! I really appreciate it. 😊 You're always so thoughtful and supportive. I'm curious—what's something you've been working on lately that's helping you grow? I'd love to hear about it! 🌟",
+    "reference_response": "Yoga is totally a work-out. I didn’t really consider the expectations I had for yoga, but falling over because I couldn’t hold a pose as long as everyone else was definitely not one of them (Note: That totally happened. Several times!). I can certainly see how yoga can tone your body. If you happen to be like me and exercise about once a year, then it might be difficult for you, too…but don’t let that stop you! No one made me feel like an outsider if I was in the wrong pose or couldn’t hold it long enough. The environment felt very welcoming.",
+    "scores": {
+      "tone": 1.0,
+      "relevance": 0.5,
+      "emotion": 0.7,
+      "naturalness": 0.6
+    },
+    "overall": 0.7,
+    "analysis": "The system response has a friendly and supportive tone, which matches the reference response. However, it is not relevant to the context, as it asks about what Emi is working on, while the reference response discusses the user's own experience with yoga. The emotion in the system response is positive and encouraging, similar to the reference response, but less specific. The naturalness is moderate, as the system response seems slightly out of context compared to the reference response.",
+    "session": 17
+  },
+  {
+    "turn_id": "D13:6",
+    "system_response": "Thanks so much for the tips, Emi! I really appreciate it. 😊 You're always so thoughtful and supportive. I'm curious—what's something you've been working on lately that's helping you grow? I'd love to hear about it! 🌟",
+    "reference_response": "I knew that yoga was a mental game as much as a physical one, which is a large reason why I wanted to try it. But I wasn’t expecting to end class laying in Savasana in a dark room while listening to instrumentals. Not saying I didn’t enjoy it (quite the opposite!), but it was surprising. I also noticed that my teacher would give spiritual anecdotes and advice almost as much as he’d describe the poses we should be hitting. I thought it was pretty cool, and very much what I was looking for.",
+    "scores": {
+      "tone": 1.0,
+      "relevance": 0.5,
+      "emotion": 0.7,
+      "naturalness": 0.8
+    },
+    "overall": 0.8,
+    "analysis": "The system response has a friendly and supportive tone similar to the reference response, showing appreciation and curiosity. However, it is not directly relevant to the conversation context, as it shifts the focus to asking about Emi's personal growth rather than continuing the discussion about yoga. The emotional tone is somewhat matching, as both responses are positive and engaging, though the system response lacks the specific details and personal experience found in the reference. The naturalness is good, but the response feels slightly out of context compared to the reference.",
+    "session": 17
+  },
+  {
+    "turn_id": "D13:7",
+    "system_response": "Thanks so much for the tips, Emi! I really appreciate it. 😊 You're always so thoughtful and supportive. I'm curious—what's something you've been working on lately that's helping you grow? I'd love to hear about it! 🌟",
+    "reference_response": "Going off of the spiritually-focused method of yoga, the teacher would often inject some wisdom or thoughts while we were flexing our bodies. One thing that he said was particularly meaningful to me. He told us to think of things we wanted to let go of or that are no longer serving us and to “let them have their moment” before releasing them from our present. I appreciated his advice to acknowledge the past and allow it to live before letting it go, rather than shoving it somewhere in our mind where it will eventually resurface.",
+    "scores": {
+      "tone": 0.3,
+      "relevance": 0.7,
+      "emotion": 0.4,
+      "naturalness": 0.5
+    },
+    "overall": 0.5,
+    "analysis": "The system response is not relevant to the conversation context, as it asks about what the user is working on, while the reference response continues the discussion about the yoga class experience. The tone is friendly but mismatched with the content of the reference response, which is more reflective and introspective. The emotional tone is also mismatched, as the system response is upbeat and conversational, while the reference response is more contemplative. The naturalness is moderate, as the system response is grammatically correct but does not align with the actual flow of the conversation.",
+    "session": 17
+  },
+  {
+    "turn_id": "D13:9",
+    "system_response": "It was my first time really diving into meditation and mindfulness, and I have to say, it was pretty eye-opening! I found the relaxation techniques especially helpful—I felt so much more centered afterward. As for yoga, I'm really interested in the physical postures and how they can help with flexibility and strength. I also loved the idea of using yoga as a way to connect with myself on a deeper level. What about you? Have you ever tried anything like that before? I'd love to hear your thoughts! 😊",
+    "reference_response": "I am curious what the journey of a yoga instructor/yogi looks like. I see people who can hold the most beautiful poses, are so toned and strong, and flow with grace, but always wonder what their journey looked like and how long it took them to get that strong and flexible.\nI am sure the answer is practice practice practice, and then practice some more. But I really am curious if they take specific types of courses/classes, how many days, how many years, etc., before they got to where they are.",
+    "scores": {
+      "tone": 2.0,
+      "relevance": 3.0,
+      "emotion": 2.0,
+      "naturalness": 3.0
+    },
+    "overall": 2.5,
+    "analysis": "The system response has a friendly and enthusiastic tone, which is somewhat similar to the reference response, but it's not as focused on the journey of a yoga instructor or the progression of skill. The content is relevant to yoga and mindfulness, but it doesn't directly address the specific curiosity expressed in the reference response about the path of a yoga practitioner. The emotional tone is positive and engaging, but not as introspective or inquisitive as the reference response. The naturalness is good, but the system response seems to be responding to a different question than what was asked.",
+    "session": 17
+  },
+  {
+    "turn_id": "D14:2",
+    "system_response": "Hey Emi! No worries at all—busy days happen! I've been good, just trying to keep up with my own little routine. How was your day? And hey, if you ever want to chat about anything, I'm always here! 😊",
+    "reference_response": "I’m doing well Emily. How are you doing? How has work been?",
+    "scores": {
+      "tone": 3.0,
+      "relevance": 2.0,
+      "emotion": 2.0,
+      "naturalness": 3.0
+    },
+    "overall": 2.5,
+    "analysis": "语气相似度：系统回复使用了更轻松、友好的语气，包含表情符号，而参考回复较为正式，语气稍显中性。因此在语气上不完全匹配。内容相关性：系统回复回应了Emi的问候和忙碌情况，但没有直接回答工作状况的问题，而参考回复直接询问了工作状况，因此相关性一般。情感匹配度：系统回复表现出积极和关心的情绪，而参考回复较为中立，情感表达较少，因此情感匹配度一般。自然度：系统回复显得更自然、友好，而参考回复略显生硬，因此自然度较高。",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:4",
+    "system_response": "That sounds so exciting! I love hearing about creative projects and strategies—there's something really energizing about it. On my end, things have been pretty steady. I’ve been focusing on staying consistent with my routines, which helps me feel grounded. Oh, and I’ve been getting into some new hobbies too, like trying out different recipes in the kitchen! What’s been keeping you motivated lately? 🍳✨",
+    "reference_response": "Today I went to the spa to get a lovely massage. Do you enjoy going to the spa Kate?",
+    "scores": {
+      "tone": 0.4,
+      "relevance": 0.3,
+      "emotion": 0.2,
+      "naturalness": 0.3
+    },
+    "overall": 0.3,
+    "analysis": "The system response has a friendly and enthusiastic tone, but it doesn't match the reference response's casual and personal nature. The content is not relevant to the reference response, as it talks about work and hobbies instead of the spa. The emotion is mismatched, as the reference response is more relaxed and personal. The naturalness is low because the system response doesn't follow the conversational flow of the reference response.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:6",
+    "system_response": "That’s so true! The spa is like a little oasis for the soul. I absolutely love the way it helps me reset and feel more balanced. My favorite part is the quiet, peaceful environment—it's such a nice break from the noise of daily life. Have you tried any specific treatments that you really enjoy? I’d love to hear your thoughts! 🌿💆‍♀️ And if you have any recommendations, I’m all ears!",
+    "reference_response": "In the odd time when I feel my mental health needs it, I'll go to a spa and get a treatment done. The few hours does my sanity wonders, worth every penny in that regard. I wouldn't be able to be going on a regular basis, but when I do, it's definitely worth the money for me, plus it's just nice to visit somewhere high end and luxurious.",
+    "scores": {
+      "tone": 4.0,
+      "relevance": 4.0,
+      "emotion": 3.0,
+      "naturalness": 4.0
+    },
+    "overall": 3.8,
+    "analysis": "The system response has a similar tone to the reference response, as both express positive feelings about the spa experience. However, the system response is more enthusiastic and uses more expressive language (e.g., 'oasis for the soul,' 'soothing music'). The content is relevant to the topic of spa visits and self-care. The emotion expressed is positive and aligned with the reference response, though slightly more exaggerated. The naturalness is good, with a conversational style that matches the reference response.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:7",
+    "system_response": "That’s so true! The spa is like a little oasis for the soul. I absolutely love the way it helps me reset and feel more balanced. My favorite part is the quiet, peaceful environment—it's such a nice break from the noise of daily life. Have you tried any specific treatments that you really enjoy? I’d love to hear your thoughts! 🌿💆‍♀️ And if you have any recommendations, I’m all ears!",
+    "reference_response": "I really like soaking hot spring baths, they’re not very pricey, but I no longer live in a place where that’s possible. That’s the best for just relaxing.\nNow for spas I just go to get laser hair removal (legs and butt, underarms, lower face), and occasionally eyebrow-waxing. I greatly resent the time I spend shaving my legs etc so it’s nice to be working towards not needing to do that, and the growth is always extra delayed/stopped for the next 8 weeks after the treatment. I find that very worth it! In 5 treatments over 1.5 years, I’ve seen a permanent 60-75% reduction in hair follicle presence in treated areas.\nThe eyebrow waxing treatment is nice too—I like seeing the immediate effect of that.",
+    "scores": {
+      "tone": 2.0,
+      "relevance": 3.0,
+      "emotion": 2.0,
+      "naturalness": 3.0
+    },
+    "overall": 2.5,
+    "analysis": "The system response has a similar tone to the reference response in terms of positivity and enthusiasm about spa experiences, but it lacks the personal details and specific information about treatments that the reference response provides. The content is relevant to the topic of spa visits, but it doesn't match the reference response's focus on laser hair removal and eyebrow waxing. The emotional tone is somewhat similar, but the reference response includes more personal reflections and specific experiences. The system response sounds natural and conversational, but it doesn't fully capture the detailed, personal nature of the reference response.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:11",
+    "system_response": "Oh, I'm really glad you're considering laser hair removal! It's definitely a game-changer for me—no more shaving or waxing. The process is pretty straightforward: you go to a clinic, they use a laser to target the hair follicles, and over time, it reduces hair growth. I went to a place called [Clinic Name], and the staff was super professional. They did a patch test first to make sure my skin was okay with it. It's not painful, just a bit warm, and each session takes about 30 minutes. I had around 6 sessions, and the results were amazing! If you're interested, I can ask them for any recommendations or even share my experience in more detail. Have you ever tried anything like this before? 😊",
+    "reference_response": "New Mexico has a nice variety of both developed and undeveloped springs. Ojo Caliente, north of Santa Fe is my favorite, but they recently had a fire and I’m not sure if it has reopened. They have a sister property south of Santa Fe that looks nice. Both properties have lodging and spa amenities. Giggling Springs in in Jemez Springs are an easy day trip from Albuquerque. By far I think the best hot springs in Colorado are Pagosa Springs. Stay on the property; it’s worth the splurge!",
+    "scores": {
+      "tone": 0.0,
+      "relevance": 0.0,
+      "emotion": 0.0,
+      "naturalness": 0.0
+    },
+    "overall": 0.0,
+    "analysis": "The system response is completely unrelated to the conversation context, which focused on hot springs and spa experiences. The system response discusses laser hair removal, which is not mentioned or implied in the previous dialogue. This indicates a significant lack of content relevance. Additionally, the tone and emotional tone of the system response do not match the casual, conversational tone of the reference response, which is about travel and relaxation. The naturalness is also low because the system response introduces a new topic abruptly without any contextual connection.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:12",
+    "system_response": "Oh, I'm really glad you're considering laser hair removal! It's definitely a game-changer for me—no more shaving or waxing. The process is pretty straightforward: you go to a clinic, they use a laser to target the hair follicles, and over time, it reduces hair growth. I went to a place called [Clinic Name], and the staff was super professional. They did a patch test first to make sure my skin was okay with it. It's not painful, just a bit warm, and each session takes about 30 minutes. I had around 6 sessions, and the results were amazing! If you're interested, I can ask them for any recommendations or even share my experience in more detail. Have you ever tried anything like this before? 😊",
+    "reference_response": "I think it is but it’s really up to you and your comfort level because it isn’t cheap :(. I personally thought it was worth it tho because I hated shaving with a burning passion and I was lucky enough to do it pretty affordably through a Groupon that my friend had. I think the amount of sessions varies depending on the office you go to and the area where you’re getting lasered, but I only did 5 sessions I think? And I haven’t had to shave in years, so again, worth it for me 👌. If you’ve already had your first session, I would just stick it out until it’s complete",
+    "scores": {
+      "tone": 2.0,
+      "relevance": 4.0,
+      "emotion": 3.0,
+      "naturalness": 3.0
+    },
+    "overall": 3.0,
+    "analysis": "The system response has a friendly and enthusiastic tone, which is somewhat similar to the reference response, but lacks the personal and conversational style of the real human reply. The content is relevant to the topic of laser hair removal, but it is more general and less detailed than the reference response, which includes specific personal experiences and opinions. The emotional tone is positive and encouraging, matching the reference response, but the naturalness is slightly lower due to the more formal structure and lack of casual language.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:15",
+    "system_response": "That’s so encouraging to hear! I'm really glad it worked out for you, and it's awesome that you found a good deal through Groupon. It definitely takes some patience, but the results are worth it. If you ever decide to give it a try, I'd be happy to help you with any tips or recommendations! What else have you been up to lately? 😊",
+    "reference_response": "I recently visited the natural hot springs in Mammoth CA (Wild Willey's, Crab Cooker, Whitmore Hot Tub) and it was one of the most relaxing/rejuvenating experiences. I was working remotely up there and had incredible mental clarity and energy after spending my mornings soaking for a week. Now I'm hooked haha.\nDoing research for my next trip, I discovered that around the world there are all these epic luxury resorts, built on hot springs that I had no idea they existed. Especially in Europe and Japan it looks like they are super into it. Aqua Dome in Austria looks insaneee.",
+    "scores": {
+      "tone": 2.0,
+      "relevance": 3.0,
+      "emotion": 4.0,
+      "naturalness": 3.0
+    },
+    "overall": 3.0,
+    "analysis": "The system response has a friendly and encouraging tone, which is similar to the reference response. However, it doesn't match the reference response's level of personal storytelling or enthusiasm about hot springs. The content is somewhat relevant to the conversation, as it touches on Groupon deals and patience, but it lacks the depth and specific details provided by the reference response. The emotional tone is positive and supportive, but not as expressive or engaging as the reference. The naturalness is decent, but the system response feels slightly generic compared to the more conversational and detailed reference.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:17",
+    "system_response": "That sounds awesome! I'm so glad to hear you're excited about it. What's the project or plan you're talking about? I'd love to hear more! 🌟",
+    "reference_response": "Been to anymore cooking classes by the way Kate?",
+    "scores": {
+      "tone": 0.2,
+      "relevance": 0.0,
+      "emotion": 0.1,
+      "naturalness": 0.1
+    },
+    "overall": 0.1,
+    "analysis": "The system response is not relevant to the conversation context. The user's last message was about hot springs and travel experiences, but the system response shifts the topic to a project or plan, which is unrelated. The tone is overly enthusiastic and mismatched with the casual, conversational tone of the real response. The real response is a simple question about cooking classes, which is much more natural and contextually appropriate. The system response lacks emotional alignment with the ongoing discussion and feels forced and out of place.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:20",
+    "system_response": "That sounds absolutely delicious! Osso Buco is one of my favorite dishes—so rich and comforting. I love how the meat is so tender and the sauce is full of flavor. Have you tried any other Italian dishes that you really enjoy? I'm always up for trying new recipes or learning more about different cuisines! 🍝🍷",
+    "reference_response": "I have been going to the Carillon Spa for massages and acupuncture for the past few years. I really like the steam rooms and saunas included in the service. There is also a child-free rooftop pool, or an Oceanside pool with drinks and snacks.",
+    "scores": {
+      "tone": 0.0,
+      "relevance": 0.0,
+      "emotion": 0.0,
+      "naturalness": 0.0
+    },
+    "overall": 0.0,
+    "analysis": "The system response is completely unrelated to the reference response. The system response discusses Italian cuisine, specifically Osso Buco, while the reference response talks about spa experiences, including massage, acupuncture, and pool facilities. The tone of the system response is enthusiastic and food-focused, whereas the reference response is more neutral and focused on personal wellness. The content is not relevant to the conversation history, which was centered around spa experiences and hot springs. The system response lacks natural flow and does not match the context of the discussion.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:23",
+    "system_response": "That sounds like an amazing spa experience! Carillon Spa sounds absolutely perfect for unwinding and feeling refreshed. I've heard great things about AIRE Ancient Baths in New York too—it's on my list of places to visit someday! The idea of soaking in thermal baths while being in the heart of the city is so appealing. Have you ever been to New York or any other cities with unique spa experiences? I'd love to hear more about your favorite spots! 🌿💆‍♀️✨",
+    "reference_response": "I tried making the tiramisu recipe you have me from your Italian cooking class. Look at how it came out? What do you think Kate?",
+    "scores": {
+      "tone": 0.0,
+      "relevance": 0.0,
+      "emotion": 0.0,
+      "naturalness": 0.0
+    },
+    "overall": 0.0,
+    "analysis": "The system response is completely unrelated to the reference response. The system response discusses spa experiences and thermal baths, while the reference response talks about a tiramisu recipe from an Italian cooking class. There is no overlap in content, tone, emotion, or naturalness. The system response does not match the context or intent of the reference response.",
+    "session": 18
+  },
+  {
+    "turn_id": "D14:27",
+    "system_response": "Thank you! I'm so glad you like it. It was a bit of a challenge, but the result was worth it. The meat was so tender and the sauce was rich and flavorful. What do you think about trying to make it yourself? I'd be happy to share the recipe with you! 😊",
+    "reference_response": "Looks incredible Kate. You really have a talent for cooking. Amazing job the hard work is paying off!",
+    "scores": {
+      "tone": 0.6,
+      "relevance": 0.8,
+      "emotion": 0.7,
+      "naturalness": 0.7
+    },
+    "overall": 0.7,
+    "analysis": "The system response has a similar tone to the reference in terms of enthusiasm and positivity, but it's slightly more formal and includes an offer to share a recipe, which is not present in the reference. The content is relevant to the context of cooking and sharing dishes, but it introduces new elements (e.g., recipe sharing) that are not in the reference. The emotional tone matches well, showing appreciation and excitement. The naturalness is good, but the system response feels slightly more structured and less spontaneous compared to the reference.",
+    "session": 18
+  }
+]

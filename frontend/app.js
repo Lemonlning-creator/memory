@@ -103,6 +103,17 @@ async function sendMessage() {
     }
     if (!voiceMode) systemStartTime = Date.now();
 
+    addMessageToChat(message, 'user');
+    userInput.value = '';
+    await runAIResponse(message);
+}
+
+async function runAIResponse(message) {
+    if (!selectedCharacterId) {
+        showUpdateNotification([], 'Please select a character first.');
+        voiceMode = false;
+        return;
+    }
     const ablateDimension = getSelectedAblationDimension();
 
     isLoading = true;
@@ -111,9 +122,6 @@ async function sendMessage() {
     updateStatus('loading');
 
     try {
-        addMessageToChat(message, 'user');
-        userInput.value = '';
-
         const assistantContent = addMessageToChat('', 'assistant');
 
         const response = await fetch(`${API_URL}/api/chat`, {
@@ -282,6 +290,7 @@ async function readChatStream(response, contentNode, onToken) {
     const decoder = new TextDecoder('utf-8');
     let buffer = '';
     let finalData = null;
+    let firstTokenAt = null;
 
     while (true) {
         const { value, done } = await reader.read();
@@ -297,6 +306,12 @@ async function readChatStream(response, contentNode, onToken) {
 
             const event = JSON.parse(trimmed);
             if (event.type === 'token') {
+                if (firstTokenAt === null) {
+                    firstTokenAt = performance.now();
+                    if (pipeAsrCompleteMs && !pipeFirstTokenMs) {
+                        pipeFirstTokenMs = Date.now();
+                    }
+                }
                 contentNode.textContent += event.content || '';
                 if (onToken) onToken(event.content || '');
                 chatHistory.scrollTop = chatHistory.scrollHeight;
@@ -882,6 +897,8 @@ let voiceStopTime = null;
 let firstAudioLogged = false;
 let systemStartTime = null;
 const SENTENCE_END_RE = /[。！？!?\n]/;
+const SOFT_BREAK_RE = /[，,、；;]/;
+const SOFT_BREAK_MIN_CHARS = 15;
 
 // Pipeline state: synthesis runs in parallel up to MAX_CONCURRENT_SYNTH,
 // playback consumes audioBuffer entries in seq order.
@@ -890,13 +907,13 @@ let synthSeq = 0;
 let playSeq = 0;
 let synthInFlight = 0;
 let isPlaying = false;
-const audioBuffer = new Map();
+const ttsStreams = new Map();
 const MAX_CONCURRENT_SYNTH = 3;
 
 function stopAudio() {
     synthEpoch++;
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-    audioBuffer.clear();
+    ttsStreams.clear();
     synthSeq = playSeq = synthInFlight = 0;
     isPlaying = false;
     ttsSentenceBuffer = '';
@@ -935,6 +952,16 @@ function ensureWS() {
             if (typeof e.data === 'string') {
                 let msg;
                 try { msg = JSON.parse(e.data); } catch { return; }
+                if (msg.type === 'asr_partial') { handleASRPartial(msg); return; }
+                if (msg.type === 'asr_final') { handleASRFinal(msg); return; }
+                if (msg.type === 'asr_empty') { handleASREmpty(msg); return; }
+                if (msg.type === 'asr_end_signal') { return; }
+                if (msg.type === 'asr_error') { handleASRError(msg); return; }
+                if (msg.type === 'chat_start') { handleChatStart(msg); return; }
+                if (msg.type === 'chat_token') { handleChatToken(msg); return; }
+                if (msg.type === 'chat_done') { handleChatDone(msg); return; }
+                if (msg.type === 'chat_error') { handleChatError(msg); return; }
+                if (msg.type === 'tts_end') { handleTTSEnd(msg); return; }
                 const p = wsPending.get(msg.seq);
                 if (!p) return;
                 if (msg.type === 'asr_result') {
@@ -942,13 +969,7 @@ function ensureWS() {
                     p.resolve(msg.text);
                 }
             } else {
-                const dv = new DataView(e.data);
-                const seq = dv.getUint32(0);
-                const audio = e.data.slice(4);
-                const p = wsPending.get(seq);
-                if (!p) return;
-                wsPending.delete(seq);
-                p.resolve(new Blob([audio], { type: 'audio/mpeg' }));
+                handleTTSBinaryFrame(e.data);
             }
         };
     });
@@ -985,74 +1006,142 @@ function scheduleSynthesis(text) {
     const seq = synthSeq++;
     const epoch = synthEpoch;
     synthInFlight++;
-    const t0 = performance.now();
-    wsTTS(text, seq)
-        .then(blob => {
-            clientLog('tts_fetch', { chars: text.length, fetch_ms: Math.round(performance.now() - t0), seq });
-            synthInFlight--;
-            if (epoch !== synthEpoch) return;
-            audioBuffer.set(seq, { blob, text });
-            tryPlayNext();
-            pumpSynthesis();
-        })
-        .catch(() => {
-            synthInFlight--;
-            if (epoch !== synthEpoch) return;
-            audioBuffer.set(seq, null);
-            tryPlayNext();
-            pumpSynthesis();
-        });
+    if (!pipeFirstTtsTriggerMs) pipeFirstTtsTriggerMs = Date.now();
+    // Initialize streaming state for this seq
+    if (!ttsStreams.has(seq)) ttsStreams.set(seq, { chunks: [], ended: false, epoch });
+    ensureWS().then(ws => {
+        if (epoch !== synthEpoch) return;
+        ws.send(JSON.stringify({
+            type: 'tts', seq, text,
+            system_start_ms: systemStartTime,
+        }));
+    }).catch(() => {
+        synthInFlight--;
+        if (ttsStreams.has(seq)) ttsStreams.get(seq).ended = true;
+        tryPlayNextStream();
+    });
 }
 
-function pumpSynthesis() {
-    // placeholder for future pre-fetch logic; concurrency is enforced at scheduling time
+function handleTTSBinaryFrame(data) {
+    const dv = new DataView(data);
+    const seq = dv.getUint32(0);
+    const chunk = new Uint8Array(data.slice(4));
+    if (!ttsStreams.has(seq)) ttsStreams.set(seq, { chunks: [], ended: false, epoch: synthEpoch });
+    const stream = ttsStreams.get(seq);
+    stream.chunks.push(chunk);
+    // If this seq is already playing, feed directly into the source buffer
+    if (seq === playSeq && stream._flush) {
+        stream._flush();
+    } else {
+        tryPlayNextStream();
+    }
 }
 
-function tryPlayNext() {
+function handleTTSEnd(msg) {
+    const seq = msg.seq;
+    if (ttsStreams.has(seq)) {
+        ttsStreams.get(seq).ended = true;
+    } else {
+        ttsStreams.set(seq, { chunks: [], ended: true, epoch: synthEpoch });
+    }
+    synthInFlight = Math.max(0, synthInFlight - 1);
+    const stream = ttsStreams.get(seq);
+    if (seq === playSeq && stream && stream._flush) {
+        stream._flush();
+    } else {
+        tryPlayNextStream();
+    }
+}
+
+function tryPlayNextStream() {
     if (isPlaying) return;
-    if (!audioBuffer.has(playSeq)) return;
-    const item = audioBuffer.get(playSeq);
-    audioBuffer.delete(playSeq);
-    if (!item) {
-        playSeq++;
-        tryPlayNext();
+    if (!ttsStreams.has(playSeq)) {
+        if (synthInFlight === 0 && playSeq > 0) {
+            stopBargeInWatcher();
+        }
         return;
     }
+    const stream = ttsStreams.get(playSeq);
+    if (stream.epoch !== synthEpoch) {
+        ttsStreams.delete(playSeq);
+        playSeq++;
+        tryPlayNextStream();
+        return;
+    }
+    if (stream.chunks.length === 0) {
+        if (stream.ended) {
+            ttsStreams.delete(playSeq);
+            playSeq++;
+            tryPlayNextStream();
+        }
+        return;
+    }
+
     isPlaying = true;
-    const url = URL.createObjectURL(item.blob);
-    const tPlay = performance.now();
     const curSeq = playSeq;
+    const mediaSource = new MediaSource();
+    const url = URL.createObjectURL(mediaSource);
     currentAudio = new Audio(url);
-    currentAudio.onplay = () => {
+    let sourceBuffer = null;
+    let endedLocally = false;
+
+    const flushQueue = () => {
+        if (!sourceBuffer || sourceBuffer.updating) return;
+        if (stream.chunks.length > 0) {
+            try {
+                sourceBuffer.appendBuffer(stream.chunks.shift());
+            } catch (e) {
+                console.error('appendBuffer failed', e);
+            }
+        } else if (stream.ended && !endedLocally) {
+            endedLocally = true;
+            try { mediaSource.endOfStream(); } catch (e) {}
+        }
+    };
+
+    mediaSource.addEventListener('sourceopen', () => {
+        try {
+            sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
+            sourceBuffer.addEventListener('updateend', flushQueue);
+            stream._flush = flushQueue;  // expose so incoming chunks can feed directly
+            flushQueue();
+        } catch (e) {
+            console.error('addSourceBuffer failed', e);
+        }
+    });
+
+    currentAudio.onplaying = () => {
+        startBargeInWatcher();
         if (curSeq === 0 && !firstAudioLogged) {
             firstAudioLogged = true;
-            const now = performance.now();
-            const cum_ms = systemStartTime ? Math.round(now - systemStartTime) : null;
-            clientLog('tts_play_start', { cum_ms, seq: curSeq });
-            if (voiceStartTime) {
-                clientLog('voice_round_trip', {
-                    total_ms: Math.round(now - voiceStartTime),
-                    record_ms: voiceStopTime ? Math.round(voiceStopTime - voiceStartTime) : null,
-                    post_record_ms: voiceStopTime ? Math.round(now - voiceStopTime) : null,
-                });
-            }
+            pipeFirstAudioPlayMs = Date.now();
+            emitPipelineLog();
         }
     };
     currentAudio.onended = () => {
-        clientLog('tts_play', { chars: item.text.length, play_ms: Math.round(performance.now() - tPlay), seq: curSeq });
+        stream._flush = null;
         URL.revokeObjectURL(url);
+        ttsStreams.delete(curSeq);
         currentAudio = null;
         playSeq++;
         isPlaying = false;
-        tryPlayNext();
+        tryPlayNextStream();
     };
     currentAudio.onerror = currentAudio.onended;
-    currentAudio.play();
+    currentAudio.play().catch(e => {
+        console.error('audio play failed', e);
+        if (currentAudio.onended) currentAudio.onended();
+    });
 }
 
 function feedTTSToken(token) {
     ttsSentenceBuffer += token;
-    const idx = ttsSentenceBuffer.search(SENTENCE_END_RE);
+    // Hard stop: always break immediately
+    let idx = ttsSentenceBuffer.search(SENTENCE_END_RE);
+    // Soft stop: break at comma/semicolon once buffer is long enough
+    if (idx === -1 && ttsSentenceBuffer.length >= SOFT_BREAK_MIN_CHARS) {
+        idx = ttsSentenceBuffer.search(SOFT_BREAK_RE);
+    }
     if (idx !== -1) {
         const sentence = ttsSentenceBuffer.slice(0, idx + 1).trim();
         if (sentence && synthInFlight < MAX_CONCURRENT_SYNTH) scheduleSynthesis(sentence);
@@ -1075,77 +1164,345 @@ const micBtn = document.getElementById('micBtn');
 
 let audioCtx = null;
 let audioProcessor = null;
-let pcmSamples = [];
+let currentStream = null;
+let activeASRSessionId = null;
+let silenceStart = null;
+let voiceUserBubbleContent = null;
+let asrEndSignalAt = null;
+// Pipeline timing collectors (reset on each voice interaction)
+let pipeSpeechStartMs = null;
+let pipeSpeechEndMs = null;
+let pipeAsrCompleteMs = null;
+let pipeFirstTokenMs = null;
+let pipeFirstTtsTriggerMs = null;
+let pipeFirstAudioPlayMs = null;
+const SILENCE_THRESHOLD = 0.012;
+const SILENCE_DURATION_MS = 1500;
 
-function encodeWAV(samples, sampleRate) {
-    const buf = new ArrayBuffer(44 + samples.length * 2);
-    const v = new DataView(buf);
-    const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
-    str(0, 'RIFF'); v.setUint32(4, 36 + samples.length * 2, true);
-    str(8, 'WAVE'); str(12, 'fmt '); v.setUint32(16, 16, true);
-    v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, sampleRate, true); v.setUint32(28, sampleRate * 2, true);
-    v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-    str(36, 'data'); v.setUint32(40, samples.length * 2, true);
-    let off = 44;
-    for (const s of samples) {
-        const c = Math.max(-1, Math.min(1, s));
-        v.setInt16(off, c < 0 ? c * 0x8000 : c * 0x7FFF, true);
-        off += 2;
-    }
-    return buf;
+function resetPipeline() {
+    pipeSpeechStartMs = null;
+    pipeSpeechEndMs = null;
+    pipeAsrCompleteMs = null;
+    pipeFirstTokenMs = null;
+    pipeFirstTtsTriggerMs = null;
+    pipeFirstAudioPlayMs = null;
 }
 
-micBtn.addEventListener('click', async () => {
-    if (isRecording) {
-        audioProcessor.disconnect();
-        audioCtx.close();
-        isRecording = false;
-        micBtn.classList.remove('recording');
-        micBtn.textContent = '⏳';
-        voiceStopTime = performance.now();
-        systemStartTime = Date.now();
+function emitPipelineLog() {
+    const fmt = (a, b) => (a && b) ? Math.round(b - a) : null;
+    const speech_start = pipeSpeechStartMs;
+    const speech_end = pipeSpeechEndMs;
+    const asr_complete = pipeAsrCompleteMs;
+    const first_token = pipeFirstTokenMs;
+    const tts_trigger = pipeFirstTtsTriggerMs;
+    const first_audio = pipeFirstAudioPlayMs;
+    clientLog('pipeline', {
+        // 1. 用户开始说话
+        speech_start_ms: speech_start,
+        // 2. 用户说话完成
+        speech_end_ms: speech_end,
+        // 3. 说完 → ASR 完成
+        speech_end_to_asr_complete_ms: fmt(speech_end, asr_complete),
+        // 4. ASR 完成 → LLM 首 token
+        asr_to_first_token_ms: fmt(asr_complete, first_token),
+        // 5. LLM 首 token → TTS 触发
+        first_token_to_tts_trigger_ms: fmt(first_token, tts_trigger),
+        // 6. TTS 触发 → 首音播放
+        tts_trigger_to_first_audio_ms: fmt(tts_trigger, first_audio),
+        // 7. 总：说完 → 首音播放
+        total_speech_end_to_first_audio_ms: fmt(speech_end, first_audio),
+        // 辅助绝对时间戳
+        asr_complete_ms: asr_complete,
+        first_token_ms: first_token,
+        tts_trigger_ms: tts_trigger,
+        first_audio_play_ms: first_audio,
+    });
+}
 
-        const wav = encodeWAV(pcmSamples, 16000);
-        try {
-            const text = await wsASR(new Blob([wav], { type: 'audio/wav' }));
-            if (!text) {
-                addMessageToChat('未识别到语音，请重试', 'system');
-                return;
-            }
-            userInput.value = text;
-            voiceMode = true;
-            if (isLoading) { voiceMode = false; addMessageToChat('当前正在响应中，请稍候再发', 'system'); return; }
-            sendMessage();
-        } catch (e) {
-            addMessageToChat(`语音识别出错: ${e.message}`, 'system');
-        } finally {
-            micBtn.textContent = '🎤';
-        }
-        return;
+function float32ToInt16(float32) {
+    const out = new Int16Array(float32.length);
+    for (let i = 0; i < float32.length; i++) {
+        const s = Math.max(-1, Math.min(1, float32[i]));
+        out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
     }
+    return out;
+}
 
+function computeRMS(float32) {
+    let sum = 0;
+    for (let i = 0; i < float32.length; i++) sum += float32[i] * float32[i];
+    return Math.sqrt(sum / float32.length);
+}
+
+function handleASRPartial(msg) {
+    if (msg.session_id !== activeASRSessionId) return;
+    const text = msg.text || '';
+    userInput.value = text;
+    if (!text) return;
+    if (!voiceUserBubbleContent) {
+        voiceUserBubbleContent = addMessageToChat(text, 'user');
+    } else {
+        voiceUserBubbleContent.textContent = text;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+}
+
+function handleASRFinal(msg) {
+    if (msg.session_id !== activeASRSessionId) return;
+    const text = msg.text || '';
+    userInput.value = text;
+    if (voiceUserBubbleContent && text) {
+        voiceUserBubbleContent.textContent = text;
+    }
+    if (msg.speech_start_ms) pipeSpeechStartMs = msg.speech_start_ms;
+    if (msg.speech_end_ms) pipeSpeechEndMs = msg.speech_end_ms;
+    if (msg.asr_complete_ms) pipeAsrCompleteMs = msg.asr_complete_ms;
+}
+
+function handleASREndSignal(msg) {
+    // Deprecated: chat is now triggered from backend on ASR completion.
+    // Kept for compatibility; no-op.
+}
+
+let voiceAssistantContent = null;
+
+function handleChatStart(msg) {
+    if (isRecording) stopStreamingRecording(true);
+    voiceUserBubbleContent = null;
+    userInput.value = '';
+    micBtn.textContent = '🎤';
+    voiceMode = true;
+    isLoading = true;
+    sendBtn.disabled = true;
+    userInput.disabled = true;
+    updateStatus('loading');
+    firstAudioLogged = false;
+    voiceAssistantContent = addMessageToChat('', 'assistant');
+}
+
+function handleChatToken(msg) {
+    const content = msg.content || '';
+    if (voiceAssistantContent) {
+        voiceAssistantContent.textContent += content;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+    if (voiceMode) feedTTSToken(content);
+    if (!pipeFirstTokenMs) pipeFirstTokenMs = Date.now();
+}
+
+function handleChatDone(msg) {
+    if (voiceMode) { finalizeTTS(); voiceMode = false; }
+    if (msg.response && voiceAssistantContent) {
+        voiceAssistantContent.textContent = msg.response;
+    }
+    voiceAssistantContent = null;
+    isLoading = false;
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    updateStatus('idle');
+    const highlightFields = Array.isArray(msg.updated_fields) ? msg.updated_fields : [];
+    loadProfile(highlightFields).then(() => {
+        if (highlightFields.length > 0) showUpdateNotification(highlightFields);
+    });
+}
+
+function handleChatError(msg) {
+    addMessageToChat(`错误: ${msg.error || '未知错误'}`, 'system');
+    if (voiceMode) { voiceMode = false; }
+    isLoading = false;
+    sendBtn.disabled = false;
+    userInput.disabled = false;
+    updateStatus('idle');
+    voiceAssistantContent = null;
+}
+
+function handleASRError(msg) {
+    addMessageToChat(`语音识别出错: ${msg.error || '未知错误'}`, 'system');
+    activeASRSessionId = null;
+    if (isRecording) stopStreamingRecording(true);
+    micBtn.textContent = '🎤';
+}
+
+function handleASREmpty(msg) {
+    if (msg.session_id !== activeASRSessionId) return;
+    activeASRSessionId = null;
+    if (isRecording) stopStreamingRecording(true);
+    voiceUserBubbleContent = null;
+    userInput.value = '';
+    micBtn.textContent = '🎤';
+    addMessageToChat('未识别到语音，请重试', 'system');
+}
+
+function onAudioProcess(e) {
+    if (!isRecording) return;
+    const float32 = e.inputBuffer.getChannelData(0);
+    const int16 = float32ToInt16(float32);
+    if (voiceWS && voiceWS.readyState === WebSocket.OPEN) {
+        voiceWS.send(int16.buffer);
+    }
+    const rms = computeRMS(float32);
+    if (rms < SILENCE_THRESHOLD) {
+        if (silenceStart === null) silenceStart = performance.now();
+        else if (performance.now() - silenceStart > SILENCE_DURATION_MS) {
+            silenceStart = null;
+            stopStreamingRecording(false);
+        }
+    } else {
+        silenceStart = null;
+    }
+}
+
+function stopStreamingRecording(silent) {
+    if (!isRecording) return;
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    if (!silent) micBtn.textContent = '⏳';
+    voiceStopTime = performance.now();
+    systemStartTime = voiceStopTime ? Date.now() : systemStartTime;
+    if (audioProcessor) { try { audioProcessor.disconnect(); } catch {} audioProcessor = null; }
+    if (audioCtx) { try { audioCtx.close(); } catch {} audioCtx = null; }
+    if (currentStream) {
+        currentStream.getTracks().forEach((t) => t.stop());
+        currentStream = null;
+    }
+    if (voiceWS && voiceWS.readyState === WebSocket.OPEN && activeASRSessionId) {
+        voiceWS.send(JSON.stringify({ type: 'asr_stream_end', session_id: activeASRSessionId }));
+    }
+}
+
+async function startRecordingSession() {
+    if (isRecording) return;
+    stopBargeInWatcher();
     stopAudio();
     let stream;
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1 } });
+        stream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+                sampleRate: 16000,
+                channelCount: 1,
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true,
+            }
+        });
     } catch {
         alert('无法访问麦克风，请检查权限设置。');
         return;
     }
-    pcmSamples = [];
+    voiceStartTime = performance.now();
+    voiceStopTime = null;
+    systemStartTime = Date.now();
+    resetPipeline();
+    try {
+        const ws = await ensureWS();
+        activeASRSessionId = `asr_${Date.now()}`;
+        ws.send(JSON.stringify({
+            type: 'asr_stream_start',
+            session_id: activeASRSessionId,
+            system_start_ms: systemStartTime,
+            ablate_dimension: getSelectedAblationDimension(),
+        }));
+    } catch (e) {
+        addMessageToChat(`WebSocket 连接失败: ${e.message}`, 'system');
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+    }
+    currentStream = stream;
     audioCtx = new AudioContext({ sampleRate: 16000 });
     const source = audioCtx.createMediaStreamSource(stream);
     audioProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
-    audioProcessor.onaudioprocess = (e) => {
-        pcmSamples.push(...e.inputBuffer.getChannelData(0));
-    };
+    silenceStart = null;
+    audioProcessor.onaudioprocess = onAudioProcess;
     source.connect(audioProcessor);
     audioProcessor.connect(audioCtx.destination);
-    stream.getTracks().forEach((t) => { t.onended = () => { if (isRecording) micBtn.click(); }; });
     isRecording = true;
     micBtn.classList.add('recording');
     micBtn.textContent = '⏹';
-    voiceStartTime = performance.now();
-    voiceStopTime = null;
+}
+
+micBtn.addEventListener('click', async () => {
+    if (isRecording) {
+        stopStreamingRecording(false);
+        return;
+    }
+    await startRecordingSession();
 });
+
+// ===== Barge-in watcher (full-duplex) =====
+let bargeInStream = null;
+let bargeInAudioCtx = null;
+let bargeInAnalyser = null;
+let bargeInRAF = null;
+let bargeInActive = false;
+let bargeInConsecutive = 0;
+const BARGE_IN_THRESHOLD = 0.15;
+const BARGE_IN_TRIGGER_CHUNKS = 3;
+
+function startBargeInWatcher() {
+    if (bargeInActive || isRecording) return;
+    navigator.mediaDevices.getUserMedia({
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+        }
+    }).then(stream => {
+        if (isRecording) { stream.getTracks().forEach(t => t.stop()); return; }
+        bargeInStream = stream;
+        bargeInAudioCtx = new AudioContext();
+        const source = bargeInAudioCtx.createMediaStreamSource(stream);
+        bargeInAnalyser = bargeInAudioCtx.createAnalyser();
+        bargeInAnalyser.fftSize = 1024;
+        source.connect(bargeInAnalyser);
+        bargeInActive = true;
+        bargeInConsecutive = 0;
+        const buffer = new Uint8Array(bargeInAnalyser.fftSize);
+        const tick = () => {
+            if (!bargeInActive) return;
+            bargeInAnalyser.getByteTimeDomainData(buffer);
+            let sum = 0;
+            for (let i = 0; i < buffer.length; i++) {
+                const v = (buffer[i] - 128) / 128;
+                sum += v * v;
+            }
+            const rms = Math.sqrt(sum / buffer.length);
+            if (rms > BARGE_IN_THRESHOLD) {
+                bargeInConsecutive++;
+                if (bargeInConsecutive >= BARGE_IN_TRIGGER_CHUNKS) {
+                    clientLog('barge_in', { rms: rms.toFixed(3) });
+                    triggerBargeIn();
+                    return;
+                }
+            } else {
+                bargeInConsecutive = 0;
+            }
+            bargeInRAF = requestAnimationFrame(tick);
+        };
+        tick();
+    }).catch(e => {
+        console.warn('Barge-in mic unavailable:', e);
+    });
+}
+
+function stopBargeInWatcher() {
+    bargeInActive = false;
+    if (bargeInRAF) { cancelAnimationFrame(bargeInRAF); bargeInRAF = null; }
+    if (bargeInStream) {
+        bargeInStream.getTracks().forEach(t => t.stop());
+        bargeInStream = null;
+    }
+    if (bargeInAudioCtx) {
+        try { bargeInAudioCtx.close(); } catch {}
+        bargeInAudioCtx = null;
+    }
+    bargeInAnalyser = null;
+    bargeInConsecutive = 0;
+}
+
+async function triggerBargeIn() {
+    stopBargeInWatcher();
+    stopAudio();
+    if (currentAudio) { try { currentAudio.pause(); } catch {} currentAudio = null; }
+    addMessageToChat('-- 已打断 --', 'system');
+    await startRecordingSession();
+}

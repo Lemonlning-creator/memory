@@ -1,0 +1,35 @@
+{
+  "baseline_llm": {
+    "num_evaluations": 30,
+    "average_scores": {
+      "reflectiveness": 0.6,
+      "grounding": 0.067,
+      "sentiment_score": 1.367,
+      "emotion_score": 1.433,
+      "intimacy_score": 1.233,
+      "empathy_score": 1.067
+    }
+  },
+  "profile_only": {
+    "num_evaluations": 24,
+    "average_scores": {
+      "reflectiveness": 0.833,
+      "grounding": 0.042,
+      "sentiment_score": 1.583,
+      "emotion_score": 1.5,
+      "intimacy_score": 1.458,
+      "empathy_score": 1.458
+    }
+  },
+  "full_agent": {
+    "num_evaluations": 24,
+    "average_scores": {
+      "reflectiveness": 0.958,
+      "grounding": 0.083,
+      "sentiment_score": 1.542,
+      "emotion_score": 1.625,
+      "intimacy_score": 1.333,
+      "empathy_score": 1.542
+    }
+  }
+}
