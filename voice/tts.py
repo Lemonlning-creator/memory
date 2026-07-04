@@ -15,7 +15,7 @@ load_dotenv()
 def stream_tts(text: str, config_path: str = "config.ini", system_start_ms: float = None) -> Iterator[bytes]:
     config = configparser.ConfigParser()
     config.read(config_path, encoding="utf-8")
-    dashscope.api_key = os.getenv("API_KEY")
+    dashscope.api_key = os.getenv("DASHSCOPE_API_KEY") or os.getenv("API_KEY")
     voice_cfg = config["Voice"] if config.has_section("Voice") else {}
     model = voice_cfg.get("tts_model", "cosyvoice-v1")
     voice = voice_cfg.get("tts_voice", "longxiaochun")

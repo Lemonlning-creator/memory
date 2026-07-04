@@ -11,6 +11,11 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from pymilvus import MilvusClient
 
+try:
+    from volcenginesdkarkruntime import Ark
+except ImportError:
+    Ark = None
+
 load_dotenv()
 
 from .prompts.templates import (
@@ -21,7 +26,7 @@ from .prompts.templates import (
 )
 from .utils import parse_json
 
-_EMBEDDING_DIM = 1536  # text-embedding-v4 default dim
+_DEFAULT_EMBEDDING_DIM = 1536
 
 
 def _safe_log_text(value: Any, limit: int = 160) -> str:
@@ -48,10 +53,22 @@ class MemoryOSLocal:
         self.embedding_model_name = embedding_model_name or api_config.get(
             "embedding_model", fallback="text-embedding-v4"
         )
-        self.embedding_client = OpenAI(
-            api_key=os.getenv("API_KEY"),
-            base_url=os.getenv("BASE_URL"),
+        self.embedding_dim = api_config.getint(
+            "embedding_dim", fallback=_DEFAULT_EMBEDDING_DIM
         )
+        if self.embedding_dim <= 0:
+            raise ValueError("API.embedding_dim 需确认配置")
+        self.embedding_api = api_config.get("embedding_api", fallback="openai").lower()
+        if self.embedding_api == "multimodal":
+            if Ark is None:
+                raise ImportError("volcenginesdkarkruntime is required for multimodal embeddings")
+            self.embedding_client = Ark(api_key=os.getenv("ARK_API_KEY") or os.getenv("API_KEY"))
+        else:
+            self.embedding_client = OpenAI(
+                api_key=os.getenv("API_KEY"),
+                base_url=os.getenv("BASE_URL"),
+                max_retries=0,
+            )
 
         milvus_config = config["Milvus"] if config.has_section("Milvus") else {}
         uri = milvus_config.get("uri", "").strip() or str(persist_path)
@@ -71,7 +88,7 @@ class MemoryOSLocal:
             from pymilvus import DataType
             schema = self.client.create_schema(auto_id=False)
             schema.add_field("id", DataType.VARCHAR, is_primary=True, max_length=128)
-            schema.add_field("vector", DataType.FLOAT_VECTOR, dim=_EMBEDDING_DIM)
+            schema.add_field("vector", DataType.FLOAT_VECTOR, dim=self.embedding_dim)
             schema.add_field("content", DataType.VARCHAR, max_length=65535, nullable=True)
             schema.add_field("memory_type", DataType.VARCHAR, max_length=32, nullable=True)
             schema.add_field("topic", DataType.VARCHAR, max_length=256, nullable=True)
@@ -87,13 +104,55 @@ class MemoryOSLocal:
                 schema=schema,
                 index_params=index_params,
             )
+        else:
+            existing_dim = self._get_existing_vector_dim()
+            if existing_dim is not None and existing_dim != self.embedding_dim:
+                raise ValueError(
+                    f"'{self.collection_name}' 向量维度为 {existing_dim}, "
+                    f"但 config.ini API.embedding_dim 为 {self.embedding_dim}. "
+                    "请使用匹配的 embedding_dim."
+                )
+
+    def _get_existing_vector_dim(self) -> Optional[int]:
+        collection = self.client.describe_collection(self.collection_name)
+        fields = collection.get("schema", {}).get("fields", [])
+        for field in fields:
+            if field.get("name") != "vector":
+                continue
+            params = field.get("params") or field.get("type_params") or {}
+            dim = params.get("dim")
+            if dim is not None:
+                return int(dim)
+        return None
 
     # ---------- 嵌入 ----------
     def _embed_text(self, text: str) -> List[float]:
+        if self.embedding_api == "multimodal":
+            response = self.embedding_client.multimodal_embeddings.create(
+                model=self.embedding_model_name,
+                input=[{"type": "text", "text": text}],
+            )
+            return self._extract_embedding(response)
+
         response = self.embedding_client.embeddings.create(
-            model=self.embedding_model_name, input=text
+            model=self.embedding_model_name,
+            input=[text],
+            encoding_format="float",
         )
-        return list(response.data[0].embedding)
+        return self._extract_embedding(response)
+
+    def _extract_embedding(self, response: Any) -> List[float]:
+        data = getattr(response, "data", None)
+        item = data[0] if isinstance(data, list) and data else data
+        if isinstance(item, dict):
+            embedding = item.get("embedding")
+        else:
+            embedding = getattr(item, "embedding", None)
+        if embedding is None:
+            raise ValueError(f"embedding response missing vector: {_safe_log_text(response, 500)}")
+        if isinstance(embedding, dict):
+            embedding = embedding.get("float") or embedding.get("data")
+        return list(embedding)
 
     def _upsert_document(
         self,
@@ -309,7 +368,15 @@ class MemoryOSLocal:
         recent_limit: int = 6,
         mid_term_limit: int = 3,
     ) -> Dict[str, Any]:
-        mid_term_summaries = self.search_memories(user_input, top_k=mid_term_limit, memory_type="mid_term")
+        try:
+            mid_term_summaries = (
+                self.search_memories(user_input, top_k=mid_term_limit, memory_type="mid_term")
+                if self._get_memories_by_type("mid_term")
+                else []
+            )
+        except Exception as exc:
+            print(f"[Memory Retrieval Error] {exc}")
+            mid_term_summaries = []
         return {
             "recent_messages": self.get_recent_messages(limit=recent_limit),
             "mid_term_summaries": mid_term_summaries
