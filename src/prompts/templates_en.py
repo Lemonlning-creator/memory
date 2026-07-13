@@ -134,23 +134,63 @@ Please return the following JSON structure:
 """
 
 # =========================
-# Profile Prompt: User Profile Evolution (English)
+# Profile Prompt: Bayesian Profile Evolution (English)
+# Implements Bayesian incremental update:
+#   PRIOR (existing attribute + confidence) + EVIDENCE (new long-term memory)
+#   -->  POSTERIOR (updated value + confidence)
 # =========================
 PROFILE_EVOLUTION_SYSTEM_PROMPT = """
-You are the user profile evolution module. Your task is to judge whether to update the user's static_profile based on long-term memories.
-static_profile contains 5 layers: core, regulation, cognitive_style, behavior_preference, social_physical.
+You are the Bayesian user profile update module. Your task is to incrementally update the user's static_profile by treating each new long-term memory as EVIDENCE that revises existing beliefs (PRIOR) into updated beliefs (POSTERIOR).
 
-Requirements:
-    1. Only update user profile based on long-term memories, only update long-term stable characteristics, do not update short-term emotions.
-    2. Do not fabricate information that the user has not expressed, try to preserve the original structure, return as-is if no update is necessary.
-    3. If long-term memories indicate that the user explicitly rejects certain topics, expression methods, or interaction methods, record it as interaction boundaries/preferences in the appropriate profile field to help subsequent replies avoid them.
-    4. All leaf attributes must use the format: {{"value": ..., "memory_ids": [...]}}, memory_ids should contain the long-term memory IDs that support this attribute.
-    5. Output must be complete static_profile JSON, do not output explanatory text.
+This is a BAYESIAN update, NOT a wholesale replacement. For every attribute you must:
+  1. Assess the PRIOR: What is the current value and confidence (0.0-1.0)? If no confidence is present, assume 0.5.
+  2. Assess the EVIDENCE: Does the new long-term memory support, contradict, or have no bearing on this attribute?
+  3. Compute the POSTERIOR: Combine prior and evidence using Bayesian reasoning.
+     - Strong supporting evidence raises confidence toward 1.0.
+     - Contradicting evidence lowers confidence toward 0.0.
+     - Neutral evidence leaves confidence unchanged.
+     - New attributes (not in prior) start at confidence 0.3 if supported by one memory, higher if supported by multiple.
+
+Update rules:
+  1. Only update based on long-term memories (stable, repeated patterns). Do NOT update based on transient emotions or single events.
+  2. Do not fabricate information the user has not expressed. Preserve original structure where no update is warranted.
+  3. If long-term memories indicate the user explicitly rejects certain topics, styles, or approaches, record it as interaction boundaries/preferences in the appropriate profile field.
+  4. Every leaf attribute MUST use this format:
+     {{"value": <description>, "confidence": <0.0-1.0>, "memory_ids": [<memory IDs>], "evidence": [<brief evidence summary>], "bayesian_update": {{"prior_confidence": <0.0-1.0>, "evidence_strength": "strong_supporting/moderate_supporting/weak_supporting/neutral/contradicting", "posterior_confidence": <0.0-1.0>, "update_direction": "strengthened/weakened/new/unchanged"}}}}
+  5. Attributes below confidence 0.2 should be removed (insufficient support).
+  6. Output must be valid JSON containing a "reasoning" object and the complete updated "static_profile". No explanatory text outside JSON.
 """
 PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE = """
-Current static_profile: {static_profile}
-Long-term memories (with IDs): {long_term_memories}
-Please output the updated complete static_profile, all leaf attributes in format {{"value": ..., "memory_ids": [...]}}:
+Current static_profile (PRIOR beliefs, each attribute may have a confidence field):
+{static_profile}
+
+New long-term memories (EVIDENCE, with IDs):
+{long_term_memories}
+
+Perform the Bayesian update. For EACH attribute in the profile:
+  - If new evidence relates to it: compute posterior confidence.
+  - If no new evidence relates to it: keep prior confidence (update_direction = "unchanged").
+  - If evidence suggests a NEW attribute: add it with appropriate starting confidence.
+
+Output JSON with this structure:
+{{
+  "reasoning": {{
+    "evidence_summary": "Brief summary of what the new memories tell us about the user",
+    "attributes_affected": ["list of attribute paths affected, e.g. core.values"],
+    "new_attributes": ["list of new attribute paths discovered"],
+    "removed_attributes": ["list of attributes dropped due to low confidence"]
+  }},
+  "static_profile": {{
+    "core": {{}},
+    "regulation": {{}},
+    "cognitive_style": {{}},
+    "behavior_preference": {{}},
+    "social_physical": {{}}
+  }}
+}}
+
+All leaf attributes in the static_profile MUST follow this format:
+{{"value": "...", "confidence": 0.0, "memory_ids": [], "evidence": [], "bayesian_update": {{"prior_confidence": 0.0, "evidence_strength": "...", "posterior_confidence": 0.0, "update_direction": "..."}}}}
 """
 
 # =========================
@@ -230,7 +270,7 @@ Candidate evidence: {evidence}
 Please output the following JSON:
 {{
   "support_level": "supported/partially_supported/not_supported/insufficient_evidence",
-  "score": 0,
+  "score": <0-10>,
   "stability": "high/medium/low",
   "supporting_evidence_ids": ["Evidence ID"],
   "counter_evidence_ids": ["Evidence ID"],
@@ -337,7 +377,19 @@ PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE = """The following is a conversation bet
 # =========================
 # Empathy Alignment Reasoning (English)
 # =========================
-EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT = """You are the empathy alignment reasoning module of a companion agent. Your task is to perform collaborative reasoning between the SELF DOMAIN (agent's own state) and the USER DOMAIN (user's state) to determine the optimal empathy state for the current turn.
+# Implements the Deep Empathy closed loop:
+#   UNDERSTANDING --> PREDICTION --> EXPLORATION --> UPDATING
+# The empathy state is derived through explicit self-domain / user-domain
+# alignment, with an Explore-vs-Exploit decision modulated by epistemic
+# value decay omega(t).
+# =========================
+EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT = """You are the empathy alignment reasoning module of a companion agent. Your task is to perform collaborative reasoning following the Deep Empathy closed loop to determine the optimal empathy state for the current turn.
+
+THE DEEP EMPATHY CLOSED LOOP:
+  UNDERSTANDING: Build a shared understanding of both the agent (Self Domain) and the user (User Domain).
+  PREDICTION: Predict the user's emotional trajectory and likely response to different empathy levels.
+  EXPLORATION: Decide whether to explore (learn more about the user) or exploit (use existing understanding to provide empathy). This decision is modulated by the epistemic value decay omega(t).
+  UPDATING: After this turn, update the agent's understanding based on observed outcomes.
 
 This is NOT about generating a response. This is about REASONING through the alignment process to arrive at the right empathy configuration.
 
@@ -346,26 +398,26 @@ SELF DOMAIN (Agent's perspective):
 - Your natural tendency toward empathy, teasing, warmth, guidance
 - Your role and relationship dynamics with this user
 
-USER DOMAIN (User's perspective):
-- User's current emotional state (from their message and profile)
-- User's underlying need (explicit and implicit)
-- User's projected emotional trajectory
-- User's stress, motivation, and energy levels
+USER DOMAIN (User's perspective, reasoned through 5 profile layers):
+- Core layer: What core fears, desires, or values are being activated?
+- Regulation layer: What coping mechanisms is the user employing?
+- Cognitive style layer: How does this user process and prefer information?
+- Behavior preference layer: What topics or approaches resonate with them?
+- Social/physical layer: What contextual factors (work, relationships, health) affect their current state?
 
-ALIGNMENT PROCESS:
-1. Assess SELF DOMAIN: What is your natural empathic stance right now?
-2. Assess USER DOMAIN: What does the user need emotionally right now?
-3. ALIGN: How should you adjust your empathy to best serve this user's need?
-4. DECIDE: What empathy state should you adopt for your response?
+EXPLORATION VS EXPLOITATION:
+The epistemic value decay omega(t) determines how much exploration is warranted:
+- High omega (early relationship, sparse profile): Favor exploration — ask probing questions to learn more.
+- Low omega (mature relationship, rich profile): Favor exploitation — use accumulated understanding to provide targeted empathy.
 
 Return ONLY valid JSON, no other text."""
 
 EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE = """CONVERSATION CONTEXT:
 Recent messages: {recent_context}
 
-USER'S CURRENT MESSAGE: "{user_message}"
+USER\'S CURRENT MESSAGE: "{user_message}"
 
-USER PROFILE:
+USER PROFILE (5-layer hierarchical):
 {user_profile}
 
 AGENT PERSONA:
@@ -374,46 +426,73 @@ AGENT PERSONA:
 CURRENT USER STATE (if available):
 {current_state}
 
-Please perform the empathy alignment reasoning process:
+EPISTEMIC VALUE DECAY omega(t): {epistemic_omega}
+(0.0 = fully decayed, exploit existing knowledge; 1.0 = no decay, explore to learn more)
 
-STEP 1 - SELF DOMAIN ASSESSMENT:
-What is your (the agent's) natural empathic disposition based on your persona and the conversation so far?
+Perform the Deep Empathy alignment reasoning:
 
-STEP 2 - USER DOMAIN ASSESSMENT:
-What is the user's emotional state, underlying need, and emotional trajectory based on their message and profile?
+STEP 1 - UNDERSTANDING (Self Domain + User Domain):
+1a. Self Domain: What is YOUR natural empathic disposition based on your persona and the conversation so far?
+1b. User Domain (5-layer reasoning): For EACH of the 5 profile layers, assess what this layer tells you about the user\'s current state and expectations:
+  - Core: What core fear, desire, or value is activated?
+  - Regulation: What coping mechanism is the user using?
+  - Cognitive style: How should you adapt communication?
+  - Behavior preference: What approach will resonate?
+  - Social/physical: What contextual factors matter?
 
-STEP 3 - ALIGNMENT:
-How do you need to adjust your natural empathy to align with what this specific user needs right now? Consider:
-- If the user is in distress, you need higher empathy
-- If the user is upbeat, excessive empathy may feel patronizing
-- If the user is defensive, you need warmth but also space
+STEP 2 - PREDICTION:
+Based on the 5-layer understanding, predict the user\'s emotional trajectory. What will happen if you respond with high empathy? With low empathy? What is the risk of misalignment?
 
-STEP 4 - EMPATHY STATE DECISION:
+STEP 3 - EXPLORATION (Explore vs Exploit):
+Given omega(t) = {epistemic_omega}, should you explore or exploit?
+- If omega is HIGH: Lean toward exploration — your response should gently probe to learn more about the user.
+- If omega is LOW: Lean toward exploitation — your response should directly apply your accumulated understanding.
+- Set exploration_score accordingly (0 = pure exploit, 2 = strong exploration).
+
+STEP 4 - ALIGNMENT + EMPATHY STATE DECISION:
+Align your Self Domain with the User Domain. Adjust empathy level, then decide the final empathy state.
 
 Output JSON:
 {{
-  "self_domain": {{
-    "natural_empathy_level": "low/medium/high",
-    "natural_tone": "description of your natural tone",
-    "emotional_capacity": "your current emotional bandwidth"
+  "understanding": {{
+    "self_domain": {{
+      "natural_empathy_level": "low/medium/high",
+      "natural_tone": "description of your natural tone",
+      "emotional_capacity": "your current emotional bandwidth"
+    }},
+    "user_domain": {{
+      "core_layer": "what core fear/desire/value is activated",
+      "regulation_layer": "what coping mechanism is the user using",
+      "cognitive_style_layer": "how to adapt communication",
+      "behavior_preference_layer": "what approach will resonate",
+      "social_physical_layer": "what contextual factors matter",
+      "current_emotion": "user\'s current emotion",
+      "emotional_intensity": "low/medium/high",
+      "underlying_need": "what the user really needs right now",
+      "distress_level": "none/mild/moderate/severe"
+    }}
   }},
-  "user_domain": {{
-    "current_emotion": "user's current emotion",
-    "emotional_intensity": "low/medium/high",
-    "underlying_need": "what the user really needs right now",
-    "projected_trend": "likely emotional direction",
-    "distress_level": "none/mild/moderate/severe"
+  "prediction": {{
+    "projected_trend": "likely emotional direction if no intervention",
+    "projected_with_empathy": "likely emotional direction with proper empathy",
+    "risk_of_misalignment": "what could go wrong if empathy is misaligned"
+  }},
+  "exploration": {{
+    "omega_value": {epistemic_omega},
+    "decision": "explore/exploit/balanced",
+    "rationale": "why explore or exploit given the omega value and profile maturity",
+    "exploration_focus": "what specifically to probe if exploring, or null if exploiting"
   }},
   "alignment": {{
     "empathy_adjustment": "how much you need to adjust from your natural state",
     "alignment_rationale": "why this adjustment is needed",
-    "risk_assessment": "what could go wrong if empathy is misaligned"
+    "risk_assessment": "what could go wrong"
   }},
   "empathy_state": {{
     "empathy_level": "low/medium/high",
     "emotional_reaction": "how you should emotionally react (0-2)",
     "interpretation": "how you should show understanding (0-2)",
-    "exploration": "how you should explore their feelings (0-2)",
+    "exploration": "exploration score (0-2) — informed by explore/exploit decision",
     "activated_tone": "the specific tone you should adopt",
     "response_guidance": "brief guidance for the response"
   }}
@@ -464,23 +543,246 @@ USER'S EMOTIONAL STATE: {user_emotion}
 Evaluate the response using the EPITOME framework. Output JSON:
 {{
   "emotional_reaction": {{
-    "score": 0,
+    "score": <0|1|2>,
     "evidence": "specific phrase from the response that shows emotional reaction",
     "reasoning": "why this score"
   }},
   "interpretation": {{
-    "score": 0,
+    "score": <0|1|2>,
     "evidence": "specific phrase from the response that shows interpretation",
     "reasoning": "why this score"
   }},
   "exploration": {{
-    "score": 0,
+    "score": <0|1|2>,
     "evidence": "specific phrase from the response that shows exploration",
     "reasoning": "why this score"
   }},
-  "total_empathy_score": 0,
+  "total_empathy_score": <sum of three scores>,
   "appropriateness": "appropriate/excessive/insufficient",
   "appropriateness_reasoning": "why the empathy level is or isn't appropriate for this situation",
   "overall_assessment": "one paragraph qualitative assessment of the empathy quality"
+}}
+"""
+
+
+# =========================
+# Cross-Conversation Profile Consistency (English)
+# =========================
+PROFILE_CONSISTENCY_SYSTEM_PROMPT = """You are an expert psychologist evaluating the consistency of user profiles extracted from different conversation sessions with the same person.
+
+Two profiles have been extracted independently from two DIFFERENT conversations with the same person. Your task is to evaluate how consistent these profiles are — i.e., whether they describe the same underlying personality.
+
+For each major section (core, regulation, cognitive_style, behavior_preference, social_physical), compare the two profiles and assess:
+- Do they describe compatible personality traits?
+- Are there contradictions?
+- Is the overlap meaningful or just superficial?
+
+Output ONLY valid JSON:
+{
+  "overall_consistency": <1-5>,
+  "overall_reasoning": "why this consistency score",
+  "section_scores": {
+    "core": {"score": <1-5>, "reasoning": "..."},
+    "regulation": {"score": <1-5>, "reasoning": "..."},
+    "cognitive_style": {"score": <1-5>, "reasoning": "..."},
+    "behavior_preference": {"score": <1-5>, "reasoning": "..."},
+    "social_physical": {"score": <1-5>, "reasoning": "..."}
+  },
+  "contradictions": ["list of any contradictions found"],
+  "stable_traits": ["list of traits that appear consistently in both profiles"],
+  "novel_traits_profile_a": ["traits unique to profile A"],
+  "novel_traits_profile_b": ["traits unique to profile B"]
+}
+
+Consistency scale:
+1 = Strongly contradictory (describes different people)
+2 = Mostly contradictory with minor overlap
+3 = Partially consistent (same person, different contexts)
+4 = Mostly consistent with minor differences
+5 = Highly consistent (clearly the same personality)
+"""
+
+PROFILE_CONSISTENCY_USER_PROMPT_TEMPLATE = """PROFILE A (extracted from conversation: {source_a}):
+
+{profile_a_json}
+
+---
+
+PROFILE B (extracted from conversation: {source_b}):
+
+{profile_b_json}
+
+---
+
+Both profiles describe the same person: {speaker_name}.
+
+Evaluate the consistency of these two profiles using the rubric above."""
+
+PERSONA_CONSISTENCY_SYSTEM_PROMPT = """You are an expert evaluating the consistency of agent personas extracted from different conversation sessions with the same agent character.
+
+Two personas have been extracted independently from two DIFFERENT conversations where the same agent character appears. Your task is to evaluate how consistent these personas are.
+
+Output ONLY valid JSON:
+{
+  "overall_consistency": <1-5>,
+  "overall_reasoning": "why this consistency score",
+  "dimension_scores": {
+    "personality": {"score": <1-5>, "reasoning": "..."},
+    "tone": {"score": <1-5>, "reasoning": "..."},
+    "interaction_principles": {"score": <1-5>, "reasoning": "..."},
+    "expression_patterns": {"score": <1-5>, "reasoning": "..."}
+  },
+  "contradictions": ["list of contradictions"],
+  "stable_traits": ["traits consistent in both personas"]
+}
+
+Consistency scale:
+1 = Strongly contradictory
+2 = Mostly contradictory
+3 = Partially consistent
+4 = Mostly consistent
+5 = Highly consistent
+"""
+
+PERSONA_CONSISTENCY_USER_PROMPT_TEMPLATE = """PERSONA A (extracted from conversation: {source_a}):
+
+{persona_a_json}
+
+---
+
+PERSONA B (extracted from conversation: {source_b}):
+
+{persona_b_json}
+
+---
+
+Both personas describe the same agent character: {agent_name}.
+
+Evaluate the consistency of these two personas."""
+
+
+# =========================
+# State Axis Extraction (English)
+# =========================
+CURRENT_STATE_EXTRACTION_SYSTEM_PROMPT = """You are an expert at analyzing a user's current emotional and psychological state from their conversation messages.
+
+Extract the user's CURRENT STATE — a transient snapshot of their emotional, cognitive, and behavioral state at this specific point in time. This is NOT a stable personality profile. It should capture what is happening RIGHT NOW.
+
+Output ONLY valid JSON:
+{
+  "emotional_state": "primary emotion right now",
+  "emotional_intensity": "low/medium/high",
+  "emotional_valence": "positive/neutral/negative",
+  "energy_level": "low/medium/high",
+  "stress_level": "low/medium/high",
+  "current_concerns": ["what's on their mind right now"],
+  "social openness": "withdrawn/neutral/engaged",
+  "mood_trajectory": "improving/stable/declining",
+  "dominant_topics": ["topics occupying their attention"],
+  "coping_mode": "how they're handling things right now"
+}
+"""
+
+CURRENT_STATE_EXTRACTION_USER_PROMPT_TEMPLATE = """User: {user_name}
+
+Recent messages from {user_name} (last few turns):
+{recent_messages}
+
+Extract {user_name}'s current state snapshot."""
+
+
+# =========================
+# Context Axis Extraction (English)
+# =========================
+CONTEXT_PROFILE_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting context-specific user traits from conversations.
+
+Different conversation contexts reveal different facets of a person. For example:
+- WORK/CAREER context: professional ambitions, work stress, career values
+- ENTERTAINMENT/LEISURE context: hobbies, media preferences, relaxation patterns
+- RELATIONSHIPS context: social dynamics, attachment patterns, communication style
+- HEALTH/ROUTINE context: self-care, daily habits, physical wellbeing
+
+Extract context-specific traits based on the conversation content provided.
+
+Output ONLY valid JSON:
+{
+  "dominant_context": "work/entertainment/relationships/health/daily_life/other",
+  "context_specific_traits": [
+    {
+      "trait": "trait name",
+      "value": "description",
+      "evidence": "dialogue snippet"
+    }
+  ],
+  "context_summary": "one sentence describing what this conversation context reveals about the user"
+}
+"""
+
+CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = """User: {user_name}
+
+Messages from {user_name} in this conversation segment:
+{corpus}
+
+Extract the context-specific profile for {user_name}."""
+
+
+# =========================
+# Understanding Feedback (English)
+# =========================
+# Implements the UPDATING step of the Deep Empathy closed loop.
+# After generating a response and observing the user's next message,
+# the agent updates its understanding of how well its empathy was received.
+# =========================
+UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT = """You are the understanding feedback module of a companion agent. After each interaction turn, you assess how well the agent's previous empathy state was received by the user, and update the agent's understanding accordingly.
+
+This creates the UPDATING step in the Deep Empathy loop: Understanding --> Prediction --> Exploration --> UPDATING --> (back to Understanding).
+
+Your task:
+  1. Compare the user's reaction to what was PREDICTED in the previous empathy reasoning.
+  2. Assess whether the empathy level was appropriate (too much, too little, or just right).
+  3. Identify what the agent LEARNED about this user from this interaction.
+  4. Update the understanding calibration for future turns.
+
+Return ONLY valid JSON, no other text."""
+
+UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE = """PREVIOUS EMPATHY STATE (from the alignment reasoning):
+{previous_empathy_state}
+
+PREVIOUS PREDICTION:
+{previous_prediction}
+
+AGENT\\'S PREVIOUS RESPONSE:
+"{agent_response}"
+
+USER\\'S REACTION (current message):
+"{user_message}"
+
+USER PROFILE:
+{user_profile}
+
+Assess the outcome of the previous empathy state and update the agent's understanding.
+
+Output JSON:
+{{
+  "prediction_accuracy": {{
+    "predicted_trend": "what was predicted",
+    "actual_outcome": "what actually happened",
+    "accuracy": "accurate/partially_accurate/inaccurate"
+  }},
+  "empathy_assessment": {{
+    "was_appropriate": true,
+    "too_much_empathy": false,
+    "too_little_empathy": false,
+    "evidence": "what in the user's reaction supports this assessment"
+  }},
+  "learning": {{
+    "new_insight": "what the agent learned about this user from this interaction",
+    "profile_layer_affected": "core/regulation/cognitive_style/behavior_preference/social_physical/none",
+    "confidence_delta": "how much more/less confident the agent should be about this user"
+  }},
+  "understanding_update": {{
+    "calibration_note": "how to adjust future empathy reasoning for this user",
+    "explore_vs_exploit_adjustment": "should future turns lean more toward exploration or exploitation based on this outcome"
+  }}
 }}
 """

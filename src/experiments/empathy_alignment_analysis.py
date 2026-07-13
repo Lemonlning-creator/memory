@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import string
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -21,6 +22,7 @@ from typing import Any, Dict, List, Optional
 
 from ..llm_client import LLMClient
 from ..utils import load_json, save_json, parse_json
+from ..epistemic_decay import EpistemicDecayTracker, get_exploration_label
 from ..prompts.prompt_loader import (
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
@@ -94,11 +96,20 @@ POSITIVE_INDICATORS = [
 ]
 
 
+# Strip punctuation so word boundaries are clean
+_PUNCT_TABLE = str.maketrans(string.punctuation, " " * len(string.punctuation))
+
+
+def _tokenize(text: str) -> set:
+    """Lowercase, strip punctuation, split into a set of words for O(1) lookup."""
+    return set(text.lower().translate(_PUNCT_TABLE).split())
+
+
 def detect_emotion_type(content: str) -> str:
     """Detect if a message contains negative, positive, or neutral emotional content."""
-    content_lower = content.lower()
-    neg_count = sum(1 for kw in NEGATIVE_INDICATORS if kw in content_lower)
-    pos_count = sum(1 for kw in POSITIVE_INDICATORS if kw in content_lower)
+    words = _tokenize(content)
+    neg_count = sum(1 for kw in NEGATIVE_INDICATORS if kw in words)
+    pos_count = sum(1 for kw in POSITIVE_INDICATORS if kw in words)
     if neg_count > pos_count and neg_count > 0:
         return "negative"
     if pos_count > neg_count and pos_count > 0:
@@ -175,8 +186,9 @@ def select_emotional_cases(
 class EmpathyAlignmentReasoner:
     """Performs self-domain + user-domain alignment reasoning."""
 
-    def __init__(self, llm: LLMClient):
+    def __init__(self, llm: LLMClient, interaction_count: int = 0):
         self.llm = llm
+        self.epistemic_tracker = EpistemicDecayTracker(initial_count=interaction_count)
 
     def reason(
         self,
@@ -191,12 +203,18 @@ class EmpathyAlignmentReasoner:
         persona_text = condense_persona(persona)
         state_text = json.dumps(current_state or {}, ensure_ascii=False)
 
+        # Compute omega(t) based on profile maturity and interaction count
+        static_profile = profile.get("state_axis", {}).get("static_profile", {})
+        omega = self.epistemic_tracker.compute(static_profile)
+        omega_label = get_exploration_label(omega)
+
         user_prompt = EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE.format(
             recent_context=recent_context,
             user_message=user_message,
             user_profile=profile_text,
             agent_persona=persona_text,
             current_state=state_text,
+            epistemic_omega=omega,
         )
 
         try:
@@ -204,8 +222,9 @@ class EmpathyAlignmentReasoner:
                 EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
                 user_prompt,
                 temperature=0.3,
-                max_tokens=800,
+                max_tokens=1200,
             ))
+            self.epistemic_tracker.increment()
             return result
         except Exception as e:
             print(f"[Empathy Reasoning Error] {e}")

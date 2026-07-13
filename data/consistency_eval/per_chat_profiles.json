@@ -1,0 +1,1298 @@
+{
+  "Akib": {
+    "Chat_8_Akib_Muhhamed": {
+      "core": {
+        "fears": {
+          "value": "Fear of AI going out of control and causing harm",
+          "evidence": "I'm sure there's gonna be some way or shape that someone is gonna build an AI that engineers itself and it's gonna go horribly wrong. That's not something I'm looking forward to."
+        },
+        "desires": {
+          "value": "Desire for meaningful experiences and understanding of the world",
+          "evidence": "I want to see the northern lights in my lifetime... I think the world is too big for me to just spend all my time confined to one house in one city."
+        },
+        "values": {
+          "value": "Importance of authenticity, fairness, and environmental awareness",
+          "evidence": "I don't want management to give me any hassle for other employees faults... I think it's about time for me to go to bed... I think the world is too big for me to just spend all my time confined to one house in one city."
+        },
+        "attachment_style": {
+          "value": "Independent but values social connections",
+          "evidence": "I met some great people when I was there... I'd like to visit again maybe next year... I think the world is too big for me to just spend all my time confined to one house in one city."
+        },
+        "sources_of_meaning": {
+          "value": "Exploration, nature, and personal growth",
+          "evidence": "I want to see everything there is... I think the world is too big for me to just spend all my time confined to one house in one city."
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "Avoids conflict and negative situations",
+          "evidence": "I don't mind covering for people a few times but if it feels like it's becoming too one-sided I'll just keep them at an arms length..."
+        },
+        "control": {
+          "value": "Seeks control over situations and outcomes",
+          "evidence": "I think that it's about time for me to go to bed... I think it'll get fixed. I just need to not keep supporting my bad habits."
+        },
+        "people_pleasing": {
+          "value": "Not a primary trait, prefers independence",
+          "evidence": "I don't want management to give me any hassle for other employees faults... I'm not the type of person to run to the teacher or management for it."
+        },
+        "aggression": {
+          "value": "Not evident in the conversation",
+          "evidence": "N/A"
+        },
+        "humor": {
+          "value": "Uses humor to cope with situations",
+          "evidence": "Money can't buy happiness lol"
+        },
+        "obsession": {
+          "value": "Obsessive about certain topics like AI and travel",
+          "evidence": "I'm glad that there are taskforces in place to make sure that things like that don't happen... I want to see the northern lights in my lifetime."
+        },
+        "rationalization": {
+          "value": "Rationalizes situations to maintain perspective",
+          "evidence": "If all you do when you go somewhere is focus on the negatives you just wasted your time and your money."
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Verbal and detailed",
+          "evidence": "I think one of the biggest offenders of this recently has been Nintendo... It's just easier to make a lot of remakes than to make whole new games."
+        },
+        "information_density": {
+          "value": "High information density with specific examples",
+          "evidence": "I went to the beach today... My friends truck got stuck in the sand which was pretty unlucky... I had a coworker lose his car to a high tide before..."
+        },
+        "emotional_visibility": {
+          "value": "Emotions are expressed but not overly dramatic",
+          "evidence": "It's fine though... I don't mind covering for people a few times..."
+        },
+        "social_distance": {
+          "value": "Comfortable with close conversations but maintains boundaries",
+          "evidence": "I don't want management to give me any hassle for other employees faults... I'm not the type of person to run to the teacher or management for it."
+        },
+        "decision_style": {
+          "value": "Practical and thoughtful",
+          "evidence": "I think it'll get fixed. I just need to not keep supporting my bad habits... I'll just keep them at an arms length and make future projects in smaller groups..."
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Prefers deep and meaningful content",
+          "evidence": "I think the world is too big for me to just spend all my time confined to one house in one city... I want to see the northern lights in my lifetime."
+        },
+        "consumption_preferences": {
+          "value": "Values quality over quantity",
+          "evidence": "I think if the game came out like this the first time people would have absolutely loved it to bits... It's just easier to make a lot of remakes than to make whole new games."
+        },
+        "entertainment_preferences": {
+          "value": "Enjoys games, movies, and nature",
+          "evidence": "I watched Selma which was the movie about his marches... I went to the beach today... I think the world is too big for me to just spend all my time confined to one house in one city."
+        },
+        "habits": {
+          "value": "Has inconsistent sleep patterns and tends to stay up late",
+          "evidence": "I've been working from home for a while now so it's easy to slip into a bad sleep schedule... I think it'll get fixed. I just need to not keep supporting my bad habits."
+        },
+        "long_term_behavior_patterns": {
+          "value": "Tends to avoid repeating mistakes and seeks improvement",
+          "evidence": "After that though I'll just be better equipped to work within certain groups... I'll just keep them at an arms length and make future projects in smaller groups..."
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not explicitly stated, but likely works in a field that allows remote work",
+          "evidence": "I've been working from home for a while now... I had a group project at work today..."
+        },
+        "age": {
+          "value": "Not explicitly stated, but likely young adult",
+          "evidence": "I think the world is too big for me to just spend all my time confined to one house in one city... I think I wanna just travel more in general."
+        },
+        "social_relationships": {
+          "value": "Values friendships and social interactions",
+          "evidence": "I met some great people when I was there... I think the world is too big for me to just spend all my time confined to one house in one city."
+        },
+        "family": {
+          "value": "Has family members but not deeply involved in their lives",
+          "evidence": "I even woke up some of my family members at 4 in the morning to come out and see it... I think only my brother came out to see it."
+        },
+        "economy": {
+          "value": "Concerned about financial limitations",
+          "evidence": "Man, it always comes back to money... If I had more I'd be a lot better off."
+        },
+        "devices": {
+          "value": "Uses a phone and camera for capturing moments",
+          "evidence": "I realized I have a lot more photos of animals than I do of people on my phone... I took that photo around the same time last year."
+        },
+        "physical_environment": {
+          "value": "Lives in an area with access to nature and water",
+          "evidence": "I live in a very old town... I think the world is too big for me to just spend all my time confined to one house in one city... I went to the beach today..."
+        }
+      }
+    },
+    "Chat_9_Fahim_Akib": {
+      "core": {
+        "fears": {
+          "value": "Fear of being left behind by technological advancements",
+          "evidence": "I wonder how people from 150 years ago would react to how our technology is today... The only limits on it are the limits we place"
+        },
+        "desires": {
+          "value": "Desire for understanding and connection with technology",
+          "evidence": "Technology is developing so quick... I think it's because most fish just have no personality"
+        },
+        "values": {
+          "value": "Value of technological progress and personal autonomy",
+          "evidence": "Brands have no customer loyalty so it makes no sense for customers to have brand loyalty"
+        },
+        "attachment_style": {
+          "value": "Secure, but with a tendency to reflect on past experiences",
+          "evidence": "It feels like things kind of Snapped... And now we're blazing ahead"
+        },
+        "sources_of_meaning": {
+          "value": "Understanding technological evolution and human behavior",
+          "evidence": "I think it's because most fish just have no personality... I think it's because most fish just have no personality"
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "Avoids deep emotional discussions",
+          "evidence": "Sorry if that took a morbid turn."
+        },
+        "control": {
+          "value": "Seeks control over technology and information",
+          "evidence": "I think Xbox and Playstation are the biggest offenders for that... There's no way I could be that loyal to one brand or company"
+        },
+        "people-pleasing": {
+          "value": "Not evident in the conversation",
+          "evidence": "No evidence of people-pleasing behavior"
+        },
+        "aggression": {
+          "value": "Not evident in the conversation",
+          "evidence": "No evidence of aggression"
+        },
+        "humor": {
+          "value": "Uses humor to discuss serious topics",
+          "evidence": "Just took and Uber or drove here with it's own car lol"
+        },
+        "obsession": {
+          "value": "Obsessed with technology and its evolution",
+          "evidence": "Technology is developing so quick... I think it's because most fish just have no personality"
+        },
+        "rationalization": {
+          "value": "Rationalizes brand loyalty and technology compatibility",
+          "evidence": "Brands have no customer loyalty so it makes no sense for customers to have brand loyalty"
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Verbose and reflective",
+          "evidence": "I remember last year I was at the library and I saw some people playing checkers... It feels like things kind of Snapped"
+        },
+        "information_density": {
+          "value": "High information density with tangents",
+          "evidence": "I think it's because most fish just have no personality... I think it's because most fish just have no personality"
+        },
+        "emotional_visibility": {
+          "value": "Emotions are expressed indirectly",
+          "evidence": "Sorry if that took a morbid turn."
+        },
+        "social_distance": {
+          "value": "Comfortable with casual and informal conversations",
+          "evidence": "Hey mate it’s been a while, sorry I’ve been away recently and it’s been busy."
+        },
+        "decision_style": {
+          "value": "Decisive and pragmatic",
+          "evidence": "If they make something bad then I'm not gonna buy it, it's as simple as that."
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Prefers technology, science, and cultural references",
+          "evidence": "I think it's because most fish just have no personality... I think it's because most fish just have no personality"
+        },
+        "consumption_preferences": {
+          "value": "Consumes media related to technology and culture",
+          "evidence": "I would highly recommend the book btw, Outliers. Its a fascinating read."
+        },
+        "entertainment_preferences": {
+          "value": "Enjoys movies, games, and art",
+          "evidence": "Over the hedge is an animated movie... I also don’t know if you’ve heard of it. I also didn’t know that the game was this creepy."
+        },
+        "habits": {
+          "value": "Regularly engages with technology and reflects on its impact",
+          "evidence": "Technology is developing so quick... I think it's because most fish just have no personality"
+        },
+        "long_term_behavior_patterns": {
+          "value": "Consistently interested in technology and its implications",
+          "evidence": "I think it's because most fish just have no personality... I think it's because most fish just have no personality"
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No explicit mention of occupation"
+        },
+        "age": {
+          "value": "Young adult",
+          "evidence": "It feels like things kind of Snapped... And now we're blazing ahead"
+        },
+        "social_relationships": {
+          "value": "Has friends and family, interacts with neighbors",
+          "evidence": "I was visiting some friends who had moved here from another country... They just watch my house while I'm away"
+        },
+        "family": {
+          "value": "Has parents and possibly siblings",
+          "evidence": "The fish that were in there had babies and now there's more fish... It's like a life cycle in there"
+        },
+        "economy": {
+          "value": "Middle-class, able to afford travel and technology",
+          "evidence": "I was getting some updates on my place from my neighbors... They even bought over their iguana"
+        },
+        "devices": {
+          "value": "Uses modern technology including smartphones and gaming consoles",
+          "evidence": "I think that with like a false window and a self driving car you can trick people into think that a dog or a cat is actually driving the car you're in... I think Xbox and Playstation are the biggest offenders for that"
+        },
+        "physical_environment": {
+          "value": "Lives in a residential area with access to nature",
+          "evidence": "I saw that black cat from a while ago on my front deck again which was nice... There's no predators for big lizards here"
+        }
+      }
+    }
+  },
+  "Emi": {
+    "Chat_1_Emi_Elise": {
+      "core": {
+        "fears": {
+          "value": "Fear of being alone or not being able to move on from past relationships",
+          "evidence": "Partner: It takes time, some advice my friends gave me is that you should do everything you can to be active and constructive without them. Having a part of your mind not want to move on is a drag but undoing that is not easy for some of us."
+        },
+        "desires": {
+          "value": "Desire for personal growth, self-improvement, and meaningful connections",
+          "evidence": "Partner: Keeping my word to myself. I can almost guarantee that the way you are feeling now is because you are not keeping your promises to yourself."
+        },
+        "values": {
+          "value": "Values self-care, authenticity, and emotional honesty",
+          "evidence": "Partner: Fashion was what got me to be myself. I've always been an introvert by nature and pretty much lacked passion in everything that I did. It wasn't until after HS that I started to put my wardrobe together piece by piece and making clothes for myself & friends that I started to feel like I had a passion/sense of purpose."
+        },
+        "attachment_style": {
+          "value": "Secure with some anxiety about past relationships",
+          "evidence": "Partner: I saw my ex today driving somewhere near my house. Thankfully, he didn’t see me. ... But again, I know deep down it isn’t the same anymore."
+        },
+        "sources_of_meaning": {
+          "value": "Meaning comes from personal growth, self-expression, and meaningful interactions",
+          "evidence": "Partner: Fashion was what got me to be myself. ... I think fashion is a way of expressing in ones beliefs and how they feel."
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "Avoids confrontation and emotional pain",
+          "evidence": "Partner: I left and made my way home."
+        },
+        "control": {
+          "value": "Seeks control through routines and self-discipline",
+          "evidence": "Partner: Keeping my word to myself."
+        },
+        "people-pleasing": {
+          "value": "Willing to offer advice and support to others",
+          "evidence": "Emi: Here are some tips for getting through a breakup that have helped me in the past."
+        },
+        "aggression": {
+          "value": "Not evident in the conversation",
+          "evidence": "No evidence of aggression in the dialogue."
+        },
+        "humor": {
+          "value": "Uses humor to cope with difficult situations",
+          "evidence": "Partner: The funniest scene that comes to mind is when he yelled at Susan's parents, thinking they were opposing lawyers."
+        },
+        "obsession": {
+          "value": "Obsessed with self-improvement and personal development",
+          "evidence": "Partner: I’ve been studying different types of planes and how they work so I was able to come to a conclusion about my favorite plane."
+        },
+        "rationalization": {
+          "value": "Tends to rationalize emotions and experiences",
+          "evidence": "Partner: I knew that yoga was a mental game as much as a physical one, which is a large reason why I wanted to try it."
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Expressive and detailed in communication",
+          "evidence": "Emi: It's no wonder 'Casa de Papel' has become such a global sensation! I highly recommend it."
+        },
+        "information_density": {
+          "value": "Provides detailed information and insights",
+          "evidence": "Partner: These are my two favorite recipes!"
+        },
+        "emotional_visibility": {
+          "value": "Open about emotions and experiences",
+          "evidence": "Partner: I cried, but even though the pain wasn’t much different, I’m stronger now, so I picked my self up and stopped crying."
+        },
+        "social_distance": {
+          "value": "Maintains a warm and friendly social distance",
+          "evidence": "Partner: It’s great having a friend like you to always be able to talk too."
+        },
+        "decision_style": {
+          "value": "Decisive and thoughtful in decision-making",
+          "evidence": "Partner: I decided to change the color from platinum blonde to a deep honey blonde."
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Enjoys cooking, fashion, and self-care",
+          "evidence": "Emi: I really enjoy it, and it's a great way to unwind after work."
+        },
+        "consumption_preferences": {
+          "value": "Prefers high-quality products and experiences",
+          "evidence": "Partner: I found this channel a couple of weeks ago and I've been enjoying the videos."
+        },
+        "entertainment_preferences": {
+          "value": "Enjoys TV shows, movies, and travel",
+          "evidence": "Emi: I recently started watching a Spanish tv show called 'Casa de Papel', known as 'Money Heist' in English."
+        },
+        "habits": {
+          "value": "Has consistent routines for hair care and self-care",
+          "evidence": "Partner: I’ve been using this for a while and I don’t know if I should keep doing it or not."
+        },
+        "long_term_behavior_patterns": {
+          "value": "Consistently engages in self-improvement and personal development",
+          "evidence": "Partner: I’ve been studying different types of planes and how they work so I was able to come to a conclusion about my favorite plane."
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct mention of occupation."
+        },
+        "age": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct mention of age."
+        },
+        "social_relationships": {
+          "value": "Maintains close friendships and has a supportive network",
+          "evidence": "Partner: I’m happy you are enjoying it so far and I will keep it in mind next time I decide to watch a new show!"
+        },
+        "family": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct mention of family."
+        },
+        "economy": {
+          "value": "Spends on self-care and personal development",
+          "evidence": "Partner: I’ve been using this for a while and I don’t know if I should keep doing it or not."
+        },
+        "devices": {
+          "value": "Uses technology for entertainment and communication",
+          "evidence": "Partner: I found this channel a couple of weeks ago and I've been enjoying the videos."
+        },
+        "physical_environment": {
+          "value": "Lives in an environment that supports self-care and relaxation",
+          "evidence": "Partner: I went to the spa to get a lovely massage."
+        }
+      }
+    },
+    "Chat_4_Emi_Paola": {
+      "core": {
+        "fears": {
+          "value": "Fear of being alone and struggling with long-distance relationships",
+          "evidence": "Emi: 'My boyfriend broke up with me due to long distance. We were having a relationship from Los Angeles to Sydney Australia and we barely saw each other.'"
+        },
+        "desires": {
+          "value": "Desire for connection, support, and emotional healing after a breakup",
+          "evidence": "Emi: 'I'm taking it one day at a time... Having friends like you who care really makes a difference, and I appreciate your support.'"
+        },
+        "values": {
+          "value": "Importance of personal growth, self-care, and maintaining a strong support system",
+          "evidence": "Emi: 'I've made an effort to acknowledge and accept my feelings... I've taken the step of unfollowing and muting my ex on social media to establish some emotional space.'"
+        },
+        "attachment_style": {
+          "value": "Secure with a need for emotional support and reassurance",
+          "evidence": "Emi: 'Having friends like you who care really makes a difference, and I appreciate your support.'"
+        },
+        "sources_of_meaning": {
+          "value": "Travel, nature, music, and personal development",
+          "evidence": "Emi: 'Idaho has some incredible hiking destinations... I've been to a few places in the Southwest... Playing the guitar... I find it quite therapeutic to strum the strings and lose myself in the melodies.'"
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "Avoids contact with ex-partner to heal emotionally",
+          "evidence": "Emi: 'I've taken the step of unfollowing and muting my ex on social media to establish some emotional space.'"
+        },
+        "control": {
+          "value": "Maintains control over her emotional state through structured routines and self-care",
+          "evidence": "Emi: 'I've made an effort to acknowledge and accept my feelings... I've been trying to stay active and maintain a healthy routine.'"
+        },
+        "people-pleasing": {
+          "value": "Willing to offer advice and support to others",
+          "evidence": "Emi: 'I'm glad you're interested! Here are some ideas to help you prepare for your trip and feel your best.'"
+        },
+        "aggression": {
+          "value": "Not evident in the conversation",
+          "evidence": "No evidence of aggressive behavior or expression."
+        },
+        "humor": {
+          "value": "Uses humor in casual conversations but not as a primary coping mechanism",
+          "evidence": "Emi: 'It's a great way to stay fit and energized.'"
+        },
+        "obsession": {
+          "value": "Not evident in the conversation",
+          "evidence": "No evidence of obsessive behavior or thoughts."
+        },
+        "rationalization": {
+          "value": "Rationalizes her emotions and actions during the breakup",
+          "evidence": "Emi: 'I've made an effort to acknowledge and accept my feelings rather than bottling them up.'"
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Expresses thoughts and feelings openly and clearly",
+          "evidence": "Emi: 'I'm taking it one day at a time... Having friends like you who care really makes a difference, and I appreciate your support.'"
+        },
+        "information_density": {
+          "value": "Provides detailed and thoughtful responses",
+          "evidence": "Emi: 'Here's a simple recipe for chocolate lava cake...' and 'Here's the recipe:...'"
+        },
+        "emotional_visibility": {
+          "value": "Openly shares emotions and vulnerabilities",
+          "evidence": "Emi: 'I'm actually having quite a hard day today... This is my first one and I don't know how to make myself feel better.'"
+        },
+        "social_distance": {
+          "value": "Maintains a warm and friendly social distance",
+          "evidence": "Emi: 'Hey Liza! How are you today?' and 'Thank you so much for your kind and thoughtful message.'"
+        },
+        "decision_style": {
+          "value": "Makes thoughtful and deliberate decisions",
+          "evidence": "Emi: 'I've taken the step of unfollowing and muting my ex on social media to establish some emotional space.'"
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Enjoys travel, nature, music, and cooking",
+          "evidence": "Emi: 'Idaho has some incredible hiking destinations... Playing the guitar... I enjoy making and indulging in various treats.'"
+        },
+        "consumption_preferences": {
+          "value": "Prefers healthy and homemade meals",
+          "evidence": "Emi: 'I'm looking forward to enjoying some homemade vegetable stir-fry... I have already prepared my ingredients for the stir-fry.'"
+        },
+        "entertainment_preferences": {
+          "value": "Enjoys movies, books, and music",
+          "evidence": "Emi: 'I'm looking forward to enjoying some homemade vegetable stir-fry and catching up on episodes of a cozy mystery series... I enjoy playing the guitar... I'm a fan of 'The Office' and 'Brooklyn Nine-Nine.'"
+        },
+        "habits": {
+          "value": "Maintains a routine of exercise, self-care, and personal development",
+          "evidence": "Emi: 'I've been trying to stay active and maintain a healthy routine... I've been working on some projects and catching up on a bit of reading.'"
+        },
+        "long_term_behavior_patterns": {
+          "value": "Consistently engages in self-improvement and maintains social connections",
+          "evidence": "Emi: 'I'm hoping to make the most of the day... I'll definitely consider seeking professional help... I'm looking forward to our next catch-up.'"
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not explicitly mentioned, but appears to be a student or someone with flexible work",
+          "evidence": "Partner: 'I'm going home from school now... I'll probably finish up some homework... I'm doing a virtual book club meeting.'"
+        },
+        "age": {
+          "value": "Young adult, likely in late teens or early twenties",
+          "evidence": "Partner: 'I'm going home from school now... I'm doing a virtual book club meeting.'"
+        },
+        "social_relationships": {
+          "value": "Maintains close friendships and has a supportive network",
+          "evidence": "Emi: 'Having friends like you who care really makes a difference... I'm glad to hear that you've taken the leap to start playing the piano again!'"
+        },
+        "family": {
+          "value": "Not explicitly mentioned, but seems to have a support system",
+          "evidence": "Emi: 'Talking to friends and family has been a great source of comfort.'"
+        },
+        "economy": {
+          "value": "Moderate, able to afford travel, hobbies, and personal development",
+          "evidence": "Emi: 'I've been to a few places in the Southwest... I've been working on some projects and catching up on a bit of reading.'"
+        },
+        "devices": {
+          "value": "Uses smartphones and computers for communication and entertainment",
+          "evidence": "Emi: 'Feel free to reach out... I'll let you know how it turns out when I make it.'"
+        },
+        "physical_environment": {
+          "value": "Lives in a place with access to nature, such as Idaho and Los Angeles",
+          "evidence": "Emi: 'I travelled from Idaho back to Los Angeles... I spent some time in the garden.'"
+        }
+      }
+    }
+  },
+  "Fahim Khan": {
+    "Chat_10_Fahim_Muhhamed": {
+      "core": {
+        "fears": {
+          "value": "Fear of being unable to maintain meaningful connections or losing touch with friends",
+          "evidence": "I also met a lot of really good friends albeit online friends through the game. Some of these friends I would say I am just as close to as some of my IRL friends."
+        },
+        "desires": {
+          "value": "Desire for deep engagement with art, literature, and creative expression",
+          "evidence": "I absolutely love the books and the movies are really great too so I might get to it sometime soon."
+        },
+        "values": {
+          "value": "Value of authenticity in art and storytelling",
+          "evidence": "I think prose is secondary unless you're going for a book that is good only for its prose."
+        },
+        "attachment_style": {
+          "value": "Secure attachment with a tendency to form deep connections with others",
+          "evidence": "I also met a lot of really good friends albeit online friends through the game. Some of these friends I would say I am just as close to as some of my IRL friends."
+        },
+        "sources_of_meaning": {
+          "value": "Meaning from creative pursuits, intellectual engagement, and personal growth",
+          "evidence": "I’m a lifelong learner and I love learning so when I get into something new I can’t help but get completely absorbed in it."
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "Avoids games with excessive monetization or addictive mechanics",
+          "evidence": "I’ve kind of fallen says drop a couple times and so I realize that I can’t handle gacha games."
+        },
+        "control": {
+          "value": "Seeks control over time and engagement with activities",
+          "evidence": "I try and learn as much as I can, and get super invested. The only thing is that eventually I burn out and stop."
+        },
+        "people_pleasing": {
+          "value": "Not explicitly evident, but shows willingness to engage with others' interests",
+          "evidence": "I’ll definitely give TMNT 2003 a shot if you recommend it."
+        },
+        "aggression": {
+          "value": "Not evident",
+          "evidence": "No evidence of aggressive behavior or tendencies."
+        },
+        "humor": {
+          "value": "Uses humor in casual conversation",
+          "evidence": "ha ha funny."
+        },
+        "obsession": {
+          "value": "Shows deep interest in specific topics like gaming, literature, and art",
+          "evidence": "I’ve been playing a lot of League of Legends recently. I got back into it, I used to play a lot when I was younger like in high school"
+        },
+        "rationalization": {
+          "value": "Rationalizes preferences and choices",
+          "evidence": "I think prose is secondary unless you're going for a book that is good only for its prose."
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Expresses thoughts clearly and with detail",
+          "evidence": "I also met a lot of really good friends albeit online friends through the game. Some of these friends I would say I am just as close to as some of my IRL friends."
+        },
+        "information_density": {
+          "value": "Provides detailed information about topics of interest",
+          "evidence": "I also recently started watching my hero academia. Have you watched it?"
+        },
+        "emotional_visibility": {
+          "value": "Emotionally expressive in discussions about interests and experiences",
+          "evidence": "I had a great day in general I had a lot of fun at work, the only bad thing was that it was really cold and I had to walk a couple blocks while it was snowing."
+        },
+        "social_distance": {
+          "value": "Maintains a moderate level of social distance",
+          "evidence": "I also met a lot of really good friends albeit online friends through the game. Some of these friends I would say I am just as close to as some of my IRL friends."
+        },
+        "decision_style": {
+          "value": "Decisive in choosing activities and interests",
+          "evidence": "I might try and do a Pixar binge, where I watch all the movies."
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Prefers complex narratives and immersive experiences",
+          "evidence": "I also met a lot of really good friends albeit online friends through the game."
+        },
+        "consumption_preferences": {
+          "value": "Prefers engaging and meaningful content",
+          "evidence": "I think prose is secondary unless you're going for a book that is good only for its prose."
+        },
+        "entertainment_preferences": {
+          "value": "Enjoys video games, literature, and visual arts",
+          "evidence": "I’ve been playing a lot of League of Legends recently."
+        },
+        "habits": {
+          "value": "Consistent habits in gaming and learning",
+          "evidence": "I’ve been playing a lot of League of Legends recently."
+        },
+        "long_term_behavior_patterns": {
+          "value": "Engages deeply in interests and then sometimes burns out",
+          "evidence": "I try and learn as much as I can, and get super invested. The only thing is that eventually I burn out and stop."
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not explicitly stated",
+          "evidence": "No direct mention of occupation."
+        },
+        "age": {
+          "value": "Young adult",
+          "evidence": "I used to play a lot when I was younger like in high school"
+        },
+        "social_relationships": {
+          "value": "Maintains both online and offline relationships",
+          "evidence": "I also met a lot of really good friends albeit online friends through the game. Some of these friends I would say I am just as close to as some of my IRL friends."
+        },
+        "family": {
+          "value": "Has a sister who is a Harry Potter fan",
+          "evidence": "My sister is a huge Harry Potter fan as well so she has all the books I might actually read the books again before I watch the movies."
+        },
+        "economy": {
+          "value": "Moderate financial situation",
+          "evidence": "I don’t have a whole ton of disposable income but even if I did I’ve come to realize that spending my money on electronic characters and gizmos is an extremely bad way to spend money."
+        },
+        "devices": {
+          "value": "Uses mobile devices and computers",
+          "evidence": "I also have come to realize that gacha games unless you have a really strong mental are really bad for you in the long run."
+        },
+        "physical_environment": {
+          "value": "Lives in an area with seasonal changes and access to cultural institutions",
+          "evidence": "Today was a great day in general I had a lot of fun at work, the only bad thing was that it was really cold and I had to walk a couple blocks while it was snowing."
+        }
+      }
+    }
+  },
+  "Kevin": {
+    "Chat_2_Kevin_Elise": {
+      "core": {
+        "fears": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct mention of fears"
+        },
+        "desires": {
+          "value": "Social connection, personal growth, and meaningful experiences",
+          "evidence": "Discusses hobbies, travel, and interactions with friends and family."
+        },
+        "values": {
+          "value": "Health, balance, and authenticity",
+          "evidence": "Focuses on healthy living, balanced diet, and genuine experiences."
+        },
+        "attachment_style": {
+          "value": "Secure",
+          "evidence": "Engages in open and detailed conversations about personal interests and experiences."
+        },
+        "sources_of_meaning": {
+          "value": "Personal development, social interaction, and exploration",
+          "evidence": "Talks about learning, relationships, and travel."
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct mention of avoidance"
+        },
+        "control": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct mention of control"
+        },
+        "people-pleasing": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct mention of people-pleasing"
+        },
+        "aggression": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct mention of aggression"
+        },
+        "humor": {
+          "value": "Light-hearted and engaging",
+          "evidence": "Uses emojis and casual language to keep conversation fun."
+        },
+        "obsession": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct mention of obsession"
+        },
+        "rationalization": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct mention of rationalization"
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Conversational and descriptive",
+          "evidence": "Uses detailed descriptions and engages in back-and-forth dialogue."
+        },
+        "information_density": {
+          "value": "Moderate",
+          "evidence": "Provides enough detail without overwhelming the conversation."
+        },
+        "emotional_visibility": {
+          "value": "Open and expressive",
+          "evidence": "Shares personal experiences and feelings openly."
+        },
+        "social_distance": {
+          "value": "Close and friendly",
+          "evidence": "Uses informal language and emojis to maintain a relaxed tone."
+        },
+        "decision_style": {
+          "value": "Reflective and thoughtful",
+          "evidence": "Considers different options before making decisions."
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Travel, food, health, and personal development",
+          "evidence": "Discusses travel experiences, cooking, and fitness routines."
+        },
+        "consumption_preferences": {
+          "value": "Healthy and quality products",
+          "evidence": "Chooses nutritious foods and high-quality skincare and hair products."
+        },
+        "entertainment_preferences": {
+          "value": "Movies, sports, and social activities",
+          "evidence": "Mentions documentaries, soccer, and social gatherings."
+        },
+        "habits": {
+          "value": "Regular exercise, balanced diet, and self-care",
+          "evidence": "Follows a structured routine for health and well-being."
+        },
+        "long_term_behavior_patterns": {
+          "value": "Consistent focus on health and personal growth",
+          "evidence": "Maintains a regular fitness and nutrition routine over time."
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Student",
+          "evidence": "Mentions university classes and academic activities."
+        },
+        "age": {
+          "value": "Young adult",
+          "evidence": "Discusses college life and social activities typical of a young adult."
+        },
+        "social_relationships": {
+          "value": "Active and engaged",
+          "evidence": "Participates in group activities and maintains social connections."
+        },
+        "family": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct reference to family life."
+        },
+        "economy": {
+          "value": "Middle-class",
+          "evidence": "Mentions budget considerations for travel and dining."
+        },
+        "devices": {
+          "value": "Smartphone and computer",
+          "evidence": "Uses digital communication and references online information."
+        },
+        "physical_environment": {
+          "value": "Urban or suburban area",
+          "evidence": "Mentions locations like Galveston and Miami, suggesting a mix of urban and coastal environments."
+        }
+      }
+    },
+    "Chat_3_Kevin_Paola": {
+      "core": {
+        "fears": {
+          "value": "None explicitly mentioned",
+          "evidence": "No direct expression of fears in the conversation."
+        },
+        "desires": {
+          "value": "Exploring new activities, learning, and connecting with others",
+          "evidence": "Kevin mentions enjoying jiu-jitsu, golf, and volleyball, and frequently engages in conversations about various topics."
+        },
+        "values": {
+          "value": "Growth, balance, and connection",
+          "evidence": "Kevin emphasizes personal growth through new experiences and values social interactions."
+        },
+        "attachment_style": {
+          "value": "Secure",
+          "evidence": "Kevin shows comfort in sharing personal experiences and engaging in deep conversations."
+        },
+        "sources_of_meaning": {
+          "value": "Learning, physical activity, and social connections",
+          "evidence": "Kevin frequently discusses his experiences in sports, academics, and social interactions."
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "None explicitly mentioned",
+          "evidence": "No signs of avoidance behavior in the conversation."
+        },
+        "control": {
+          "value": "Moderate",
+          "evidence": "Kevin takes initiative in planning activities and discussing future plans."
+        },
+        "people-pleasing": {
+          "value": "None explicitly mentioned",
+          "evidence": "No indication of Kevin prioritizing others' needs over his own."
+        },
+        "aggression": {
+          "value": "None explicitly mentioned",
+          "evidence": "No aggressive behavior or language observed."
+        },
+        "humor": {
+          "value": "Moderate",
+          "evidence": "Kevin uses light-hearted comments and engages in playful banter."
+        },
+        "obsession": {
+          "value": "None explicitly mentioned",
+          "evidence": "No signs of obsessive behavior or fixation on a single topic."
+        },
+        "rationalization": {
+          "value": "None explicitly mentioned",
+          "evidence": "No evidence of rationalizing or justifying actions in the conversation."
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Verbal and expressive",
+          "evidence": "Kevin communicates clearly and often shares detailed experiences."
+        },
+        "information_density": {
+          "value": "Moderate",
+          "evidence": "Kevin provides enough detail to convey his thoughts without being overly verbose."
+        },
+        "emotional_visibility": {
+          "value": "Moderate",
+          "evidence": "Kevin expresses emotions but does not dwell excessively on them."
+        },
+        "social_distance": {
+          "value": "Close",
+          "evidence": "Kevin engages in personal and meaningful conversations with his partner."
+        },
+        "decision_style": {
+          "value": "Reflective",
+          "evidence": "Kevin considers different options before making decisions, such as choosing activities or discussing plans."
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Sports, travel, and self-improvement",
+          "evidence": "Kevin frequently talks about sports, travel, and personal development."
+        },
+        "consumption_preferences": {
+          "value": "Diverse media including books, movies, and music",
+          "evidence": "Kevin discusses books like 'The Alchemist' and movies like 'The Grand Budapest Hotel.'"
+        },
+        "entertainment_preferences": {
+          "value": "Sports, movies, and social gatherings",
+          "evidence": "Kevin enjoys playing sports, watching movies, and spending time with friends."
+        },
+        "habits": {
+          "value": "Regular exercise, reading, and socializing",
+          "evidence": "Kevin regularly participates in sports, reads, and maintains social connections."
+        },
+        "long_term_behavior_patterns": {
+          "value": "Continuous learning and exploration",
+          "evidence": "Kevin consistently seeks new experiences and knowledge."
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Student",
+          "evidence": "Kevin mentions attending school and studying for exams."
+        },
+        "age": {
+          "value": "Young adult",
+          "evidence": "Kevin's interests and lifestyle suggest he is in his late teens or early twenties."
+        },
+        "social_relationships": {
+          "value": "Active social life",
+          "evidence": "Kevin frequently interacts with friends and engages in group activities."
+        },
+        "family": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No information about Kevin's family life."
+        },
+        "economy": {
+          "value": "Moderate",
+          "evidence": "Kevin mentions planning vacations and managing daily activities, suggesting a stable financial situation."
+        },
+        "devices": {
+          "value": "Smartphone and computer",
+          "evidence": "Kevin uses text-based communication and shares photos."
+        },
+        "physical_environment": {
+          "value": "Urban or suburban setting",
+          "evidence": "Kevin mentions living in a dorm and visiting places like Miami and Athens, suggesting an urban or suburban environment."
+        }
+      }
+    }
+  },
+  "Muhhamed": {},
+  "Nebraas": {},
+  "Nicolas": {
+    "Chat_5_Nicolas_Nebraas": {
+      "core": {
+        "fears": {
+          "value": "Fear of death and the unknown afterlife",
+          "evidence": "Nicolas: 'Dont start thinking about health related things like a heart attack and how all of the hard work you put in through the years can be completely invalidated and null if you were to simply pass away since we dont know whats gonna happen in the afterlife'"
+        },
+        "desires": {
+          "value": "Desire for a better world and hope for an afterlife",
+          "evidence": "Nicolas: 'The world would be better if there was something to look forward to after death'"
+        },
+        "values": {
+          "value": "Fairness, social justice, and environmental responsibility",
+          "evidence": "Nicolas: 'The rich are super selfish and will destroy the planet if it means they benefit from it'"
+        },
+        "attachment_style": {
+          "value": "Ambivalent/Anxious",
+          "evidence": "Nicolas: 'I don't think one can actually know until they are in that situation cause everyone thinks it won't be them but who knows'"
+        },
+        "sources_of_meaning": {
+          "value": "Personal relationships, nature, and philosophical reflection",
+          "evidence": "Nicolas: 'I love walking with my mom around the neighborhood' and 'I love the autumn leaves and the reflective water'"
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "Avoids deep emotional conversations",
+          "evidence": "Nicolas: 'Im not a good reader' and 'I like wearing masks but I hate not being able to fully breathe'"
+        },
+        "control": {
+          "value": "Seeks control over situations",
+          "evidence": "Nicolas: 'If I had to pick myself or a stranger id obviously pick myself'"
+        },
+        "people-pleasing": {
+          "value": "Not evident",
+          "evidence": "No evidence of Nicolas trying to please others"
+        },
+        "aggression": {
+          "value": "Not evident",
+          "evidence": "No evidence of Nicolas expressing aggression"
+        },
+        "humor": {
+          "value": "Uses humor to cope with difficult topics",
+          "evidence": "Nicolas: 'Reincarnation sounds sucky' and 'Imagine being a fruit fly for 6 hours'"
+        },
+        "obsession": {
+          "value": "Obsessed with philosophical and societal issues",
+          "evidence": "Nicolas: 'What do you think the age of consent should be' and 'What do you think about the advancement of AI?'"
+        },
+        "rationalization": {
+          "value": "Rationalizes complex issues",
+          "evidence": "Nicolas: 'Capitalism is an inherently flawed system but I dont know if theres a better system'"
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Verbal and expressive",
+          "evidence": "Nicolas: 'I also feel like old people who cook really well are also racist'"
+        },
+        "information_density": {
+          "value": "High",
+          "evidence": "Nicolas: 'The rich are super selfish and will destroy the planet if it means they benefit from it'"
+        },
+        "emotional_visibility": {
+          "value": "Moderate",
+          "evidence": "Nicolas: 'I was super fat and chunky like the one guy that looks like the pillsbury dough guy'"
+        },
+        "social_distance": {
+          "value": "Close",
+          "evidence": "Nicolas: 'I just loved walking with my mom around the neighborhood'"
+        },
+        "decision_style": {
+          "value": "Reflective",
+          "evidence": "Nicolas: 'I think soon we will lose all of our jobs and be replaced by robots'"
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Philosophical and societal topics",
+          "evidence": "Nicolas: 'What do you think about the advancement of AI?' and 'What do you think the age of consent should be'"
+        },
+        "consumption_preferences": {
+          "value": "Simple and practical",
+          "evidence": "Nicolas: 'I like fries'"
+        },
+        "entertainment_preferences": {
+          "value": "Nature and casual activities",
+          "evidence": "Nicolas: 'Wow thats a really pretty tree i love fall'"
+        },
+        "habits": {
+          "value": "Observant and reflective",
+          "evidence": "Nicolas: 'I've been pondering these days about how people will start a ruckus and fight over money at some point'"
+        },
+        "long_term_behavior_patterns": {
+          "value": "Consistently critical of societal structures",
+          "evidence": "Nicolas: 'Capitalism is an inherently flawed system but I dont know if theres a better system'"
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not specified",
+          "evidence": "No mention of occupation"
+        },
+        "age": {
+          "value": "Young adult",
+          "evidence": "Nicolas: 'One of my favorite memories as a kid was walking around the neighborhood'"
+        },
+        "social_relationships": {
+          "value": "Casual and open",
+          "evidence": "Nicolas: 'I just loved walking with my mom around the neighborhood'"
+        },
+        "family": {
+          "value": "Present and supportive",
+          "evidence": "Nicolas: 'My grandparents who raised me weren't racist'"
+        },
+        "economy": {
+          "value": "Struggling financially",
+          "evidence": "Nicolas: 'I was super fat and chunky like the one guy that looks like the pillsbury dough guy'"
+        },
+        "devices": {
+          "value": "Uses technology",
+          "evidence": "Nicolas: 'I think soon we will lose all of our jobs and be replaced by robots'"
+        },
+        "physical_environment": {
+          "value": "Urban or suburban",
+          "evidence": "Nicolas: 'I was super fat and chunky like the one guy that looks like the pillsbury dough guy'"
+        }
+      }
+    },
+    "Chat_6_Vanessa_Nicolas": {
+      "core": {
+        "fears": {
+          "value": "Fear of being ignored or not understood",
+          "evidence": "Partner: \"Geez its like you dont read my messages i feel kind of sad about that 😢\" Nicolas: \"Yeah the stomach pumping accident musta sucked out some of my brain too\""
+        },
+        "desires": {
+          "value": "Desire to connect and be understood",
+          "evidence": "Nicolas: \"I think i get it\" Nicolas: \"Im sorry to hear that\" Partner: \"It's hard sometimes you know\" Nicolas: \"That sucks anyways i gotta go\""
+        },
+        "values": {
+          "value": "Empathy, humor, and authenticity",
+          "evidence": "Nicolas: \"Lol what a greedy jerk\" Nicolas: \"At least they got you one\" Partner: \"Maybee but actually no i wouldnt risk it\""
+        },
+        "attachment_style": {
+          "value": "Secure with occasional anxiety about being misunderstood",
+          "evidence": "Nicolas: \"I think i get it\" Nicolas: \"Im sorry to hear that\" Partner: \"It's hard sometimes you know\" Nicolas: \"That sucks anyways i gotta go\""
+        },
+        "sources_of_meaning": {
+          "value": "Personal growth, connection with others, and small joys",
+          "evidence": "Nicolas: \"Maybe things are finally turning up for me\" Partner: \"Thats good to hear!\" Nicolas: \"I just found 50 bucks on the ground holy moley!!!\""
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "Avoids conflict and uncomfortable situations",
+          "evidence": "Partner: \"I had that happen too and it really isn't a good feeling, which is why i just changed friend groups lol\""
+        },
+        "control": {
+          "value": "Seeks control in situations, especially when feeling vulnerable",
+          "evidence": "Nicolas: \"I put up some lost and found posters across my neighborhood what do you think?\""
+        },
+        "people_pleasing": {
+          "value": "Tends to accommodate others' preferences",
+          "evidence": "Nicolas: \"I love sour food like sour patch kids theyre sour sweet then gone\" Partner: \"I tried to after but it just brings back memories that I don't want to remember sadly\""
+        },
+        "aggression": {
+          "value": "Rarely displays aggression, more likely to use humor",
+          "evidence": "Nicolas: \"Lol what a greedy jerk\""
+        },
+        "humor": {
+          "value": "Uses humor to cope with awkward or uncomfortable situations",
+          "evidence": "Nicolas: \"Lol what a greedy jerk\" Nicolas: \"I mean shes already turning up if yknow what i mean aha\""
+        },
+        "obsession": {
+          "value": "Can become fixated on certain interests or ideas",
+          "evidence": "Nicolas: \"I have a new idol his name is Joryu hes super cool\" Nicolas: \"Hes like a spiderman\""
+        },
+        "rationalization": {
+          "value": "Tends to rationalize experiences to make sense of them",
+          "evidence": "Nicolas: \"I think it was just a phase\""
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Expresses thoughts openly and casually",
+          "evidence": "Nicolas: \"I like pickled ginger tho\" Partner: \"I never liked it since i had a bad experience with it as a kid\""
+        },
+        "information_density": {
+          "value": "Provides detailed information when discussing topics of interest",
+          "evidence": "Nicolas: \"Its 2lb canned tomato 1 cup of granulated sugar and 2 big cups of ice to act as water then you blend it and microwave it\""
+        },
+        "emotional_visibility": {
+          "value": "Displays emotions openly, often through humor or sarcasm",
+          "evidence": "Partner: \"Geez its like you dont read my messages i feel kind of sad about that 😢\" Nicolas: \"Yeah the stomach pumping accident musta sucked out some of my brain too\""
+        },
+        "social_distance": {
+          "value": "Maintains a casual and friendly social distance",
+          "evidence": "Nicolas: \"Hey I just found a stray cat and shes super chill\""
+        },
+        "decision_style": {
+          "value": "Makes decisions based on personal preference and immediate feelings",
+          "evidence": "Nicolas: \"I dont wanna make eggplant soup tho i feel like id get bullied for making it\""
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Enjoys casual conversations, food, and gaming topics",
+          "evidence": "Nicolas: \"I like pickled ginger tho\" Partner: \"I never liked it since i had a bad experience with it as a kid\" Nicolas: \"I love sour food like sour patch kids theyre sour sweet then gone\""
+        },
+        "consumption_preferences": {
+          "value": "Prefers simple and comforting foods",
+          "evidence": "Nicolas: \"I ate some fatty pork belly\" Partner: \"I ate some ribs lol it was kind of plain but it was decent i guess\""
+        },
+        "entertainment_preferences": {
+          "value": "Enjoys video games, particularly Yakuza",
+          "evidence": "Nicolas: \"From a game called yakuza\" Nicolas: \"Hes like a spiderman\" Partner: \"Yakuza, ive heard of that game before\""
+        },
+        "habits": {
+          "value": "Has habits related to food, gaming, and helping animals",
+          "evidence": "Nicolas: \"I put up some lost and found posters across my neighborhood what do you think?\" Nicolas: \"I eat some fatty pork belly\""
+        },
+        "long_term_behavior_patterns": {
+          "value": "Tends to be consistent in interests and behaviors",
+          "evidence": "Nicolas: \"I have a new idol his name is Joryu hes super cool\" Nicolas: \"Hes like a spiderman\""
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not explicitly mentioned, but may be a student or someone with flexible time",
+          "evidence": "Nicolas: \"I just found 50 bucks on the ground holy moley!!!\" Nicolas: \"Im gonna buy new shoes\""
+        },
+        "age": {
+          "value": "Young adult, likely in late teens or early 20s",
+          "evidence": "Nicolas: \"Sometimes in a group ill say something then realize nobodys listening and stop\""
+        },
+        "social_relationships": {
+          "value": "Has a close friend or conversation partner, possibly with shared interests",
+          "evidence": "Partner: \"I had that happen too and it really isn't a good feeling, which is why i just changed friend groups lol\""
+        },
+        "family": {
+          "value": "Not explicitly mentioned, but may have a roommate",
+          "evidence": "Nicolas: \"It was outside my roommates door maybe he didnt notice but I did\""
+        },
+        "economy": {
+          "value": "Moderate, with occasional windfalls like finding money",
+          "evidence": "Nicolas: \"I just found 50 bucks on the ground holy moley!!!\""
+        },
+        "devices": {
+          "value": "Uses messaging or chat platforms for communication",
+          "evidence": "Partner: \"Hows the kitty?\" Nicolas: \"Shes really high up I cant reach her and if i try she hits me\""
+        },
+        "physical_environment": {
+          "value": "Possibly an apartment or house with access to outdoor areas",
+          "evidence": "Nicolas: \"I was out for a walk and all i hear is a loud meow\""
+        }
+      }
+    }
+  },
+  "Paola": {},
+  "Vanessa": {
+    "Chat_7_Nebraas_Vanessa": {
+      "core": {
+        "core_fears": {
+          "value": "Fear of the world's decline and the inability to make a meaningful impact",
+          "evidence": "Vanessa: Its just too many things going on\nVanessa: Like it makes it feel like whats the point of being on this planet smh"
+        },
+        "core_desires": {
+          "value": "Desire for personal growth and a better world",
+          "evidence": "Vanessa: I want to since it sounds nice to write in journals and just learning in generall"
+        },
+        "values": {
+          "value": "Empathy, responsibility, and care for animals",
+          "evidence": "Vanessa: I got her from someone that rescues strays/abandoned cats"
+        },
+        "attachment_style": {
+          "value": "Secure attachment with a tendency to seek support and share personal experiences",
+          "evidence": "Vanessa: How were you a bad person before if you dont mine me asking"
+        },
+        "sources_of_meaning": {
+          "value": "Caring for pets, personal development, and meaningful relationships",
+          "evidence": "Vanessa: I really love Soufflé"
+        }
+      },
+      "regulation": {
+        "avoidance": {
+          "value": "None evident",
+          "evidence": "Vanessa actively engages in conversation and seeks solutions"
+        },
+        "control": {
+          "value": "None evident",
+          "evidence": "Vanessa shows flexibility in discussing various topics"
+        },
+        "people-pleasing": {
+          "value": "Moderate",
+          "evidence": "Vanessa offers advice and support to her partner"
+        },
+        "aggression": {
+          "value": "None evident",
+          "evidence": "Vanessa maintains a positive and supportive tone"
+        },
+        "humor": {
+          "value": "Present",
+          "evidence": "Vanessa: Its random but it fitsss lol those are cute names too!"
+        },
+        "obsession": {
+          "value": "None evident",
+          "evidence": "Vanessa discusses pets and personal growth without excessive fixation"
+        },
+        "rationalization": {
+          "value": "Present",
+          "evidence": "Vanessa: I think maybe a mix and genetics? I only had her for like half her life 😅"
+        }
+      },
+      "cognitive_style": {
+        "expression_style": {
+          "value": "Casual and conversational",
+          "evidence": "Vanessa: Aw thats so cute! Im happy you have him! How did he react to steve?"
+        },
+        "information_density": {
+          "value": "Moderate",
+          "evidence": "Vanessa provides detailed accounts of her pets and experiences"
+        },
+        "emotional_visibility": {
+          "value": "High",
+          "evidence": "Vanessa openly shares feelings about the world and personal growth"
+        },
+        "social_distance": {
+          "value": "Close",
+          "evidence": "Vanessa discusses personal experiences and emotions with her partner"
+        },
+        "decision_style": {
+          "value": "Reflective",
+          "evidence": "Vanessa considers different perspectives before offering advice"
+        }
+      },
+      "behavior_preference": {
+        "content_preferences": {
+          "value": "Pets, personal development, and casual conversations",
+          "evidence": "Vanessa discusses her pets and personal goals extensively"
+        },
+        "consumption_preferences": {
+          "value": "Reading and self-improvement materials",
+          "evidence": "Vanessa: I heard of some books that help with growing as a person, ill look into it and let you know what i finddd lol"
+        },
+        "entertainment_preferences": {
+          "value": "Casual chats and pet-related content",
+          "evidence": "Vanessa: Aw mittens is a cute name! All these cats so darn cute"
+        },
+        "habits": {
+          "value": "Exercise and pet care",
+          "evidence": "Vanessa: I added walks to my daily routine and exercise/activities too"
+        },
+        "long_term_behavior_patterns": {
+          "value": "Continuous learning and self-improvement",
+          "evidence": "Vanessa: I want to since it sounds nice to write in journals and just learning in generall"
+        }
+      },
+      "social_physical": {
+        "occupation": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct information about Vanessa's occupation"
+        },
+        "age": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct information about Vanessa's age"
+        },
+        "social_relationships": {
+          "value": "Close relationship with partner and pets",
+          "evidence": "Vanessa discusses daily experiences and emotions with her partner"
+        },
+        "family": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct information about Vanessa's family"
+        },
+        "economy": {
+          "value": "Not explicitly mentioned",
+          "evidence": "No direct information about Vanessa's economic status"
+        },
+        "devices": {
+          "value": "Uses mobile devices for communication",
+          "evidence": "Vanessa sends pictures of her dog and engages in text-based conversation"
+        },
+        "physical_environment": {
+          "value": "Urban or suburban area with access to nature",
+          "evidence": "Vanessa mentions snow and a garden"
+        }
+      }
+    }
+  },
+  "elise": {}
+}

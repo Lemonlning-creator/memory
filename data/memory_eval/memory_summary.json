@@ -1,0 +1,15 @@
+{
+  "probing_3a": {
+    "num_questions": 80,
+    "profile_avg_score": 0.55,
+    "random_avg_score": 0.487,
+    "improvement_delta": 0.063,
+    "improvement_pct": 12.9,
+    "win_tie_loss": "20/46/14"
+  },
+  "evidence_chain_3b": {
+    "num_chains": 37,
+    "avg_connecting_tags": 3.919,
+    "avg_evidence_per_chain": 4.514
+  }
+}

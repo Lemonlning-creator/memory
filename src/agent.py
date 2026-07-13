@@ -11,12 +11,17 @@ from .llm_client import LLMClient
 from .memory_os_local import MemoryOSLocal
 from .profile_utils import state_axis, context_axis, create_empty_profile, migrate_profile
 from .utils import load_json, save_json, parse_json
-from .prompts.templates import (
+from .prompts.prompt_loader import (
     DIRECT_RESPONSE_SYSTEM_PROMPT,
     DIRECT_RESPONSE_USER_PROMPT_TEMPLATE,
     PROFILE_EVOLUTION_SYSTEM_PROMPT,
     PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE,
+    UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT,
+    UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE,
+    EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
+    EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
 )
+from .epistemic_decay import EpistemicDecayTracker
 
 DEFAULT_CONFIG_PATH = "config.ini"
 DEFAULT_PERSONA_PATH = "agent_persona.json"
@@ -43,6 +48,10 @@ class StateDrivenCompanionAgent:
         state_axis_obj = self.user_profile.setdefault("state_axis", {})
         state_axis_obj["current_state"] = {}
         state_axis_obj["projected_state"] = {}
+        self.epistemic_tracker = EpistemicDecayTracker()
+        self.last_empathy_state: Dict[str, Any] = {}
+        self.last_prediction: Dict[str, Any] = {}
+        self.last_agent_response: str = ""
         self.user_profile["context_axis"] = {}
         save_json(profile_path, self.user_profile)
         self.persona_config = load_json(self.persona_path)
@@ -145,10 +154,10 @@ class StateDrivenCompanionAgent:
         if not long_term_memories:
             print(f"[Profile Evolution] missing long-term memory id={long_term_memory_id}")
             return False
-        
+
         state = state_axis(self.user_profile)
         try:
-            updated_static_profile = parse_json(self.llm.chat(
+            result = parse_json(self.llm.chat(
                 PROFILE_EVOLUTION_SYSTEM_PROMPT,
                 PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE.format(
                     static_profile=json.dumps(state.get("static_profile", {}), ensure_ascii=False, indent=2),
@@ -156,13 +165,92 @@ class StateDrivenCompanionAgent:
                 ),
                 temperature=0.3,
             ))
-            if isinstance(updated_static_profile, dict):
-                state["static_profile"] = updated_static_profile
-                print(f"[Profile Evolution] static_profile updated from memory_id={long_term_memory_id}")
-                return True
+            # Bayesian update output: {"reasoning": {...}, "static_profile": {...}}
+            if isinstance(result, dict):
+                updated_profile = result.get("static_profile", result)
+                if isinstance(updated_profile, dict):
+                    state["static_profile"] = updated_profile
+                    reasoning = result.get("reasoning", {})
+                    if reasoning:
+                        print(f"[Bayesian Profile Update] {reasoning.get('evidence_summary', '')}")
+                        if reasoning.get("new_attributes"):
+                            print(f"  New attributes: {reasoning['new_attributes']}")
+                        if reasoning.get("removed_attributes"):
+                            print(f"  Removed (low confidence): {reasoning['removed_attributes']}")
+                    print(f"[Profile Evolution] Bayesian update from memory_id={long_term_memory_id}")
+                    return True
         except Exception as e:
             print(f"[Profile Evolution Error] {e}")
             return False
+
+    def _run_empathy_alignment(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Run Deep Empathy alignment reasoning with omega(t) modulation."""
+        from .profile_utils import flatten_static_profile
+
+        state = state_axis(self.user_profile)
+        static_profile = state.get("static_profile", {})
+        flattened = flatten_static_profile(static_profile)
+        omega = self.epistemic_tracker.compute(static_profile)
+
+        user_prompt = EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE.format(
+            recent_context=json.dumps(relevant_memory, ensure_ascii=False)[:2000],
+            user_message=user_input,
+            user_profile=json.dumps(flattened, ensure_ascii=False)[:2000],
+            agent_persona=json.dumps(self.persona_config, ensure_ascii=False)[:1000],
+            current_state=json.dumps(state.get("current_state", {}), ensure_ascii=False),
+            epistemic_omega=omega,
+        )
+
+        try:
+            result = parse_json(self.llm.chat(
+                EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
+                user_prompt,
+                temperature=0.3,
+            ))
+            if isinstance(result, dict):
+                self.last_empathy_state = result.get("empathy_state", {})
+                self.last_prediction = result.get("prediction", {})
+            return result
+        except Exception as e:
+            print(f"[Empathy Alignment Error] {e}")
+            return {}
+
+    def _understanding_feedback(self, user_input: str) -> None:
+        """UPDATING step: assess how previous empathy was received and update understanding."""
+        if not self.last_agent_response:
+            return
+
+        from .profile_utils import flatten_static_profile
+        state = state_axis(self.user_profile)
+        static_profile = state.get("static_profile", {})
+        flattened = flatten_static_profile(static_profile)
+
+        try:
+            feedback = parse_json(self.llm.chat(
+                UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT,
+                UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE.format(
+                    previous_empathy_state=json.dumps(self.last_empathy_state, ensure_ascii=False),
+                    previous_prediction=json.dumps(self.last_prediction, ensure_ascii=False),
+                    agent_response=self.last_agent_response,
+                    user_message=user_input,
+                    user_profile=json.dumps(flattened, ensure_ascii=False)[:2000],
+                ),
+                temperature=0.3,
+            ))
+            if isinstance(feedback, dict):
+                learning = feedback.get("learning", {})
+                if learning.get("new_insight"):
+                    print(f"[Understanding Update] {learning['new_insight']}")
+                calibration = feedback.get("understanding_update", {})
+                if calibration.get("calibration_note"):
+                    print(f"[Calibration] {calibration['calibration_note']}")
+        except Exception as e:
+            print(f"[Understanding Feedback Error] {e}")
+
 
     def finalize_session(self) -> Dict[str, Any]:
         with self._background_memory_lock:
@@ -183,7 +271,11 @@ class StateDrivenCompanionAgent:
         }
 
     def observe_dialogue_turn(self, role: str, content: str) -> None:
+        # UPDATING step runs in background so it never blocks the user's next interaction
         self.memory_manager.append_stm(role, content)
+        self.epistemic_tracker.increment()
+        if role == "user" and self.last_agent_response:
+            threading.Thread(target=self._understanding_feedback, args=(content,), daemon=True).start()
         self._run_memory_steps()
 
     def chat_stream(
@@ -194,6 +286,15 @@ class StateDrivenCompanionAgent:
 
         self.memory_manager.append_stm("user", user_input)
         relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
+
+        # Empathy alignment reasoning runs in background; does NOT block streaming.
+        # If a previous alignment result exists, use it; otherwise skip for this turn.
+        empathy_state = self.last_empathy_state if self.last_empathy_state else {}
+        threading.Thread(
+            target=self._run_empathy_alignment,
+            args=(user_input, relevant_memory),
+            daemon=True,
+        ).start()
 
         parts: List[str] = []
         first_token_logged = False
@@ -219,6 +320,8 @@ class StateDrivenCompanionAgent:
         response = "".join(parts).strip() or FALLBACK_RESPONSE
 
         self.memory_manager.append_stm("assistant", response)
+        self.last_agent_response = response
+        self.epistemic_tracker.increment()
         self._start_background(self._memory_pipeline, ())
 
         yield {

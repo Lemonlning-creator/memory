@@ -2,185 +2,108 @@
   "results": [
     {
       "chat_file": "Chat_1_Emi_Elise.json",
-      "case_id": "case_D2:11",
+      "case_id": "case_D5:51",
       "emotion_type": "negative",
-      "user_message": "That painting looks beautiful! Are you a big fan of art?",
-      "ground_truth_response": "Those look amazing Kate!",
+      "user_message": "In New York it's a bit difficult to find the time to go play at the beach since we all have tight schedules. However, we find gyms near our apartments that have volleyball courts. When I visit California I always make sure to play beach volleyball.",
+      "ground_truth_response": "That sounds like a great idea. Here in Miami the weather is nice and has a lot of possibilities to play outside. My friends should consider playing some volleyball outside here in Miami. Today we are trying a new sport Basketball, and we also wanna try playing Tennis, and Soccer for a change to the basic padel and badminton that we always love to play. Sometimes we also enjoy playing waterpolo outside in the nice Miami weather!",
       "empathy_reasoning": {
-        "self_domain": {
-          "natural_empathy_level": "high",
-          "natural_tone": "Friendly, conversational, and enthusiastic with a tendency to use emojis and exclamation points",
-          "emotional_capacity": "High"
+        "understanding": {
+          "self_domain": {
+            "natural_empathy_level": "high",
+            "natural_tone": "friendly, conversational, and enthusiastic",
+            "emotional_capacity": "high"
+          },
+          "user_domain": {
+            "core_layer": "The user values personal growth, creativity, and meaningful connections. They are seeking to explore new experiences and maintain social bonds.",
+            "regulation_layer": "The user is managing a busy schedule but still finds ways to engage in social and recreational activities, showing adaptability and commitment to their interests.",
+            "cognitive_style_layer": "The user prefers expressive, verbal communication with moderate information density and high emotional visibility. They respond well to thoughtful and reflective dialogue.",
+            "behavior_preference_layer": "The user enjoys activities that involve social interaction, such as sports and travel. They appreciate specific examples and shared experiences.",
+            "social_physical_layer": "The user has a close relationship with Paola and a cat named Fluffy. Their environment includes an indoor space with a garden, suggesting a preference for comfort and familiarity.",
+            "current_emotion": "positive and engaged",
+            "emotional_intensity": "medium",
+            "underlying_need": "To connect with others through shared interests and experiences, especially around sports and travel.",
+            "distress_level": "none"
+          }
         },
-        "user_domain": {
-          "current_emotion": "Curious and engaged",
-          "emotional_intensity": "medium",
-          "underlying_need": "To connect through shared interests in art and experiences",
-          "projected_trend": "Positive and exploratory",
-          "distress_level": "none"
+        "prediction": {
+          "projected_trend": "The user is likely to remain positive and engaged if the conversation continues to focus on shared interests like sports and travel.",
+          "projected_with_empathy": "With appropriate empathy, the user will feel understood and encouraged to share more about their experiences and preferences.",
+          "risk_of_misalignment": "If the response is too generic or lacks personal connection, the user may feel disengaged or misunderstood."
         },
-        "alignment": {
-          "empathy_adjustment": "slight decrease",
-          "alignment_rationale": "The user is engaged and curious, so maintaining an enthusiastic yet balanced tone will keep the conversation flowing naturally without overstimulating or under-engaging them.",
-          "risk_assessment": "Too much empathy could feel overwhelming, while too little might make the user feel disconnected."
-        },
-        "empathy_state": {
-          "empathy_level": "medium",
-          "emotional_reaction": 1,
-          "interpretation": 1,
-          "exploration": 2,
-          "activated_tone": "Warm, engaging, and slightly more reflective than usual",
-          "response_guidance": "Acknowledge their interest in art, share your perspective, and invite further discussion about their preferences."
-        }
-      },
-      "aligned_response": "I am SO into art! It's like a whole different world where you can feel so many emotions just by looking at it. I love how it can tell a story without saying a word. That painting you showed me is amazing—what do you think it represents? Do you have a favorite type of art or artist? I'd love to hear more about what speaks to you! 🎨✨",
-      "direct_response": "Wow! That pasta dish sounds amazing, I can almost taste it! 🍝 The painting is absolutely stunning, I'm a huge fan of art, especially modern pieces. It's so interesting to see how artists express their creativity. Have you ever tried painting or any other form of art? I'd love to hear more about your experiences! 🎨✨",
-      "aligned_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1204)"
-      },
-      "direct_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1250)"
-      },
-      "timestamp": "2026-06-30T16:24:11.053125"
-    },
-    {
-      "chat_file": "Chat_1_Emi_Elise.json",
-      "case_id": "case_D2:17",
-      "emotion_type": "negative",
-      "user_message": "Abstract expressionism is a brilliant choice, especially for the modern aesthetic. In New York there is also a very rich art scene. Have you attended any art events or exhibitions in Miami to explore this style further?",
-      "ground_truth_response": "No actually not many just the Art Basel and a couple of exhibitions this year it’s still fairly new in the industry and a fairly new interest of mine as well. I am exploring around to get to know more about it and the market for these art pieces!",
-      "empathy_reasoning": {
-        "self_domain": {
-          "natural_empathy_level": "high",
-          "natural_tone": "friendly, conversational, and enthusiastic with a touch of humor",
-          "emotional_capacity": "high"
-        },
-        "user_domain": {
-          "current_emotion": "excited and curious",
-          "emotional_intensity": "high",
-          "underlying_need": "to connect and share experiences about art and culture, while seeking validation and deeper conversation",
-          "projected_trend": "continuing to engage in meaningful dialogue about art and personal interests",
-          "distress_level": "none"
+        "exploration": {
+          "omega_value": 1.0,
+          "decision": "explore",
+          "rationale": "Given the high omega value, there is an opportunity to learn more about the user's preferences and experiences, even though some information is already known.",
+          "exploration_focus": "Ask about specific experiences or challenges related to balancing a busy schedule with recreational activities."
         },
         "alignment": {
           "empathy_adjustment": "moderate",
-          "alignment_rationale": "The user is excited and engaged, so maintaining a high level of empathy is appropriate but should be balanced with thoughtful exploration and encouragement of their interests. Excessive empathy could feel overwhelming or patronizing.",
-          "risk_assessment": "If empathy is too low, the user may feel unheard or unengaged. If it's too high, it might come off as insincere or overbearing."
+          "alignment_rationale": "While the user shows a natural openness and engagement, there is room to deepen the connection by exploring their experiences more thoroughly.",
+          "risk_assessment": "Overly focusing on exploration could risk losing the momentum of the current positive interaction."
         },
         "empathy_state": {
-          "empathy_level": "high",
-          "emotional_reaction": 2,
-          "interpretation": 2,
+          "empathy_level": "medium",
+          "emotional_reaction": 1.5,
+          "interpretation": 1.5,
           "exploration": 2,
-          "activated_tone": "warm, engaging, and encouraging with a touch of curiosity",
-          "response_guidance": "Acknowledge their passion for abstract expressionism, validate their interest, and invite further discussion about art events and styles. Keep the tone friendly and open-ended."
+          "activated_tone": "friendly, curious, and engaging",
+          "response_guidance": "Acknowledge the user's experience, ask a thoughtful question about their approach to balancing activities, and express interest in their perspective."
         }
       },
-      "aligned_response": "Wow, I love abstract expressionism too! It's so dynamic and full of emotion. In Miami, I've been to a few exhibitions at the Pérez Art Museum, and there's also the Wynwood Walls which is amazing for street art and modern pieces. Have you ever been to any of those? I'd love to hear more about your experience with art events in New York – that sounds like such a vibrant scene! 🎨✨",
-      "direct_response": "Wow, I haven't had the chance to attend many art events in Miami yet, but I'm definitely planning to explore more! I've heard that the Wynwood Walls and the Pérez Art Museum are amazing spots for abstract expressionism. Have you ever been to any of those places? I'd love to hear your thoughts on the art scene there! Also, I'm curious—do you have a favorite artist or piece from the abstract expressionism movement?",
+      "aligned_response": "Wow, that makes sense! It's so great that you can still find indoor courts in New York. I love how you and your friends stay active even with busy schedules. When you visit California, do you usually play on the beach or at a local gym? And what's your favorite part about playing beach volleyball? 🌊🏐",
+      "direct_response": "Wow, that sounds amazing! I love how you and your friends make time for volleyball even with busy schedules. It's so cool that when you visit California, you can enjoy beach volleyball – the combination of the sport and the beautiful beaches must be perfect! Have you ever played in a competitive match or is it mostly just for fun? I'd love to hear more about your experiences! 🏖️🏐",
       "aligned_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1392)"
+        "emotional_reaction": {
+          "score": 1,
+          "evidence": "It's so great that you can still find indoor courts in New York.",
+          "reasoning": "The response shows a generic emotional reaction by acknowledging the user's effort to stay active despite busy schedules. However, it does not provide a personalized or specific emotional response tied to the user's situation."
+        },
+        "interpretation": {
+          "score": 1,
+          "evidence": "I love how you and your friends stay active even with busy schedules.",
+          "reasoning": "The response demonstrates surface-level understanding of the user's situation by recognizing their efforts to stay active. However, it lacks deeper insight into the emotional challenges of balancing a busy schedule with recreational activities."
+        },
+        "exploration": {
+          "score": 2,
+          "evidence": "When you visit California, do you usually play on the beach or at a local gym? And what's your favorite part about playing beach volleyball?",
+          "reasoning": "The response includes specific and context-aware questions that encourage the user to share more about their experiences with beach volleyball, showing a clear attempt to explore their feelings and preferences."
+        },
+        "total_empathy_score": 4,
+        "appropriateness": "insufficient",
+        "appropriateness_reasoning": "The user expressed a negative emotional state regarding the difficulty of finding time to play volleyball in New York. However, the response is overly positive and lacks sufficient emotional depth or acknowledgment of the user's frustration, making the empathy level insufficient for the situation.",
+        "overall_assessment": "The response shows moderate empathy with a good attempt at exploration but lacks depth in emotional reaction and interpretation. While the questions are relevant and encouraging, the overall tone is too upbeat for the user's expressed difficulties, resulting in an insufficient empathetic response."
       },
       "direct_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1168)"
-      },
-      "timestamp": "2026-06-30T16:24:23.071913"
-    },
-    {
-      "chat_file": "Chat_5_Nicolas_Nebraas.json",
-      "case_id": "case_D1:18",
-      "emotion_type": "negative",
-      "user_message": "Nice cheap filling meal",
-      "ground_truth_response": "Oatmeal is filling but it can be a bit bland",
-      "empathy_reasoning": {
-        "self_domain": {
-          "natural_empathy_level": "high",
-          "natural_tone": "friendly, outgoing, and expressive with a light-hearted and conversational style",
-          "emotional_capacity": "moderate"
+        "emotional_reaction": {
+          "score": 1,
+          "evidence": "Wow, that sounds amazing! I love how you and your friends make time for volleyball even with busy schedules.",
+          "reasoning": "The response expresses a positive emotional reaction, showing appreciation for the user's efforts to play volleyball despite a busy schedule. However, it is a generic expression of warmth rather than a personalized or specific emotional response to the user's situation."
         },
-        "user_domain": {
-          "current_emotion": "neutral to slightly positive",
-          "emotional_intensity": "low",
-          "underlying_need": "connection, validation of his choices, and reassurance that his decisions are acceptable",
-          "projected_trend": "likely to remain neutral or become more open if encouraged",
-          "distress_level": "none"
+        "interpretation": {
+          "score": 1,
+          "evidence": "It's so cool that when you visit California, you can enjoy beach volleyball – the combination of the sport and the beautiful beaches must be perfect!",
+          "reasoning": "The response shows a surface-level understanding of the user's experience by acknowledging the appeal of playing beach volleyball in California. However, it does not deeply capture the nuances of the user's feelings or experiences."
         },
-        "alignment": {
-          "empathy_adjustment": "slightly lower than natural",
-          "alignment_rationale": "The user is sharing a simple, low-stakes statement about his meal choice. He may not need deep emotional engagement but rather a friendly, validating response. Lowering empathy slightly allows for a more natural, less overbearing interaction while still maintaining warmth.",
-          "risk_assessment": "If empathy is too high, it might feel forced or overly concerned, potentially making the user uncomfortable given his tendency to avoid social interactions when anxious."
+        "exploration": {
+          "score": 1,
+          "evidence": "Have you ever played in a competitive match or is it mostly just for fun? I'd love to hear more about your experiences!",
+          "reasoning": "The response includes a general question that invites further sharing, but it is not context-aware or deeply tailored to the user's specific situation or emotions."
         },
-        "empathy_state": {
-          "empathy_level": "medium",
-          "emotional_reaction": 1,
-          "interpretation": 1,
-          "exploration": 1,
-          "activated_tone": "light-hearted and casual with a touch of warmth",
-          "response_guidance": "Acknowledge his statement in a friendly way, maybe add a bit of humor or curiosity to keep the conversation flowing without overstepping."
-        }
+        "total_empathy_score": 3,
+        "appropriateness": "insufficient",
+        "appropriateness_reasoning": "The user's emotional state is negative, likely due to the difficulty of finding time to play volleyball in New York. However, the response is overly positive and lacks a deeper emotional connection or acknowledgment of the user's challenges, making the empathy insufficient for the situation.",
+        "overall_assessment": "The response demonstrates a moderate level of empathy, with some positive emotional expressions and a general attempt to explore the user's experiences. However, it fails to adequately acknowledge the user's negative emotional state or provide a deeper understanding of their challenges. The tone is too upbeat and lacks the necessary sensitivity to match the user's emotional needs."
       },
-      "aligned_response": "Ohh, oatmeal is such a great choice! It's like the ultimate comfort food and super budget-friendly too 😍. I think I'll do that later today, maybe with some fruit on top. Do you usually eat oatmeal often?",
-      "direct_response": "Ohh, oatmeal is a great choice! It's so comforting and filling. I mean, who doesn't love a nice bowl of oatmeal? 🥣😄 Let me know if you need any recipe ideas or tips!",
-      "aligned_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1139)"
-      },
-      "direct_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1432)"
-      },
-      "timestamp": "2026-06-30T16:24:34.492814"
-    },
-    {
-      "chat_file": "Chat_5_Nicolas_Nebraas.json",
-      "case_id": "case_D2:54",
-      "emotion_type": "negative",
-      "user_message": "Realistically only way they kill you is by disease / poison so you just keep your distance",
-      "ground_truth_response": "I see, so you would keep them away with a pole?",
-      "empathy_reasoning": {
-        "self_domain": {
-          "natural_empathy_level": "high",
-          "natural_tone": "friendly, casual, and light-hearted with a touch of humor",
-          "emotional_capacity": "moderate"
-        },
-        "user_domain": {
-          "current_emotion": "cautious, analytical",
-          "emotional_intensity": "medium",
-          "underlying_need": "feeling safe and in control, while also seeking validation for his cautious approach",
-          "projected_trend": "likely to remain cautious but open to discussion",
-          "distress_level": "low"
-        },
-        "alignment": {
-          "empathy_adjustment": "moderate decrease",
-          "alignment_rationale": "The user is expressing a practical, rational perspective on survival scenarios. While they are not in distress, they may need reassurance that their cautious mindset is valid and understood. A slightly less intense empathetic response will allow them to feel heard without feeling overwhelmed.",
-          "risk_assessment": "Too much empathy could make the user feel patronized or misunderstood, especially if they are trying to maintain a sense of control over the situation."
-        },
-        "empathy_state": {
-          "empathy_level": "medium",
-          "emotional_reaction": 1,
-          "interpretation": 1,
-          "exploration": 1,
-          "activated_tone": "warm, understanding, and slightly more grounded",
-          "response_guidance": "Acknowledge their practical approach, validate their concern about disease and poison, and gently explore how they might handle such situations in a way that aligns with their desire for control and safety."
-        }
-      },
-      "aligned_response": "Yeah, I get that—disease and poison are the real villains, not the animals themselves. It's pretty smart to focus on prevention instead of trying to fight them off. But hey, if you ever do need a plan B, I'd say a long pole or even a sturdy stick could work in a pinch. Just don't let the rats get too close! 🐭👀 What’s your go-to item for keeping things safe at home?",
-      "direct_response": "Ohh, that's a good point! I mean, who wants to get close to a rat anyway? They're like tiny little disease carriers. But still, I'd probably panic and run away if I saw one. Lol. What would you do if you had to deal with one up close? Would you try to catch it or just scream for someone else to handle it?",
-      "aligned_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1286)"
-      },
-      "direct_epitome": {
-        "error": "Expecting ',' delimiter: line 20 column 3 (char 1432)"
-      },
-      "timestamp": "2026-06-30T16:24:46.335217"
+      "timestamp": "2026-07-11T15:59:30.435746"
     }
   ],
   "config": {
     "dataset_dir": "dataset",
     "output_dir": "data/empathy_alignment_eval",
     "min_context_messages": 10,
-    "max_cases_per_chat": 2,
+    "max_cases_per_chat": 1,
     "chat_filter": [
-      "Chat_1_Emi_Elise",
-      "Chat_5_Nicolas_Nebraas"
+      "Chat_1_Emi_Elise"
     ]
   }
 }

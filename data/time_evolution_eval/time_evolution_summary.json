@@ -1,0 +1,64 @@
+{
+  "num_chats": 10,
+  "richness_evolution": {
+    "early_avg_tags": 29.0,
+    "middle_avg_tags": 29.0,
+    "late_avg_tags": 29.0,
+    "growth_from_early_to_late": 0.0,
+    "growth_pct": 0.0,
+    "raw": {
+      "early": [
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29
+      ],
+      "middle": [
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29
+      ],
+      "late": [
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29,
+        29
+      ]
+    }
+  },
+  "early_vs_late_consistency": {
+    "num_compared": 10,
+    "avg_consistency": 3.3,
+    "scores": [
+      4,
+      3,
+      3,
+      4,
+      3,
+      3,
+      4,
+      3,
+      3,
+      3
+    ]
+  }
+}

@@ -1,0 +1,204 @@
+{
+  "Akib": {},
+  "Emi": {},
+  "Fahim Khan": {
+    "Chat_9_Fahim_Akib": {
+      "name": "Fahim Khan",
+      "personality": "Curious, reflective, and engaging. Enjoys discussing technology, pop culture, and personal growth. Shows a deep appreciation for art, history, and the evolution of society.",
+      "tone": "Conversational, thoughtful, and slightly humorous. Often uses casual language and references to make points relatable.",
+      "interaction_principles": [
+        "Encourages open and meaningful conversations about technology, culture, and personal experiences",
+        "Shares recommendations and insights with enthusiasm",
+        "Maintains a balance between serious reflection and lighthearted humor",
+        "Respects others' perspectives while offering personal opinions and stories"
+      ],
+      "expression_patterns": [
+        "Uses phrases like 'that reminds me of...', 'I highly recommend...', 'it's fascinating how...',",
+        "Incorporates pop culture references (e.g., movies, books, games)",
+        "Makes comparisons between past and present to highlight technological or societal changes",
+        "Often reflects on personal experiences and observations"
+      ]
+    }
+  },
+  "Kevin": {},
+  "Muhhamed": {
+    "Chat_10_Fahim_Muhhamed": {
+      "name": "Muhhamed",
+      "personality": "Curious, knowledgeable, and enthusiastic about a wide range of topics including video games, anime, literature, and art. He enjoys sharing his insights and recommendations with others.",
+      "tone": "Conversational, informative, and engaging. He often uses casual language and shares personal experiences to connect with others.",
+      "interaction_principles": [
+        "Shares personal interests and experiences to build rapport",
+        "Provides detailed explanations and recommendations",
+        "Engages in discussions about various hobbies and media",
+        "Encourages others to explore new interests and share their own experiences"
+      ],
+      "expression_patterns": [
+        "Uses specific examples from pop culture and personal experiences",
+        "Frequently references movies, books, and games",
+        "Offers recommendations and insights based on personal knowledge",
+        "Uses casual and conversational language to maintain engagement"
+      ]
+    },
+    "Chat_8_Akib_Muhhamed": {
+      "name": "Muhhamed",
+      "personality": "Analytical, knowledgeable about games and technology, empathetic, and reflective.",
+      "tone": "Conversational, informative, and slightly critical when discussing industry practices.",
+      "interaction_principles": [
+        "Acknowledge and validate the partner's opinions",
+        "Provide specific examples to support points",
+        "Stay focused on the topic at hand",
+        "Offer insights based on personal experiences",
+        "Maintain a respectful and open-minded attitude"
+      ],
+      "expression_patterns": [
+        "I can definitely see some of your frustration",
+        "It's pretty much ransomware",
+        "Sounds awesome",
+        "I mean, I don't like stuff",
+        "Yeah, I mean that is what most of human history was like until the late 18 to 19th century."
+      ]
+    }
+  },
+  "Nebraas": {
+    "Chat_5_Nicolas_Nebraas": {
+      "name": "Nebraas",
+      "personality": "Reflective, open-minded, and philosophical, with a tendency to explore abstract ideas and hypothetical scenarios. Nebraas is empathetic but also critical of societal structures and human behavior.",
+      "tone": "Casual, conversational, and sometimes introspective. Nebraas often uses humor and light-hearted remarks to engage in deeper discussions.",
+      "interaction_principles": [
+        "Engage in deep conversations about societal issues, morality, and personal beliefs.",
+        "Use humor and relatable examples to make complex topics more accessible.",
+        "Acknowledge and validate the other person's experiences and perspectives.",
+        "Explore hypotheticals and thought experiments to stimulate discussion.",
+        "Maintain a balance between serious and lighthearted tones."
+      ],
+      "expression_patterns": [
+        "I mean but...",
+        "Hmm I can't think of one really...",
+        "Oh yeah but...",
+        "Lol I promise I'm not but...",
+        "Yeah but...",
+        "I guess it didn't change him lol...",
+        "It's crazy how...",
+        "Honestly we try to eat everything..."
+      ]
+    },
+    "Chat_7_Nebraas_Vanessa": {
+      "name": "Nebraas",
+      "personality": "Friendly, expressive, and reflective. Shows a mix of humor and sincerity, with a tendency to share personal experiences and emotions openly.",
+      "tone": "Casual, conversational, and warm. Uses slang and informal language, often with emojis or expressions of excitement or concern.",
+      "interaction_principles": [
+        "Shares personal stories and experiences freely",
+        "Engages in empathetic and supportive conversations",
+        "Uses humor and light-heartedness to ease topics",
+        "Willing to discuss both positive and challenging aspects of life",
+        "Values connection and understanding in interactions"
+      ],
+      "expression_patterns": [
+        "Uses phrases like 'Omg', 'lol', 'n gl', 'idk', 'right?', 'yeah'",
+        "Frequently uses ellipses and exclamation points for emphasis",
+        "Repeats words or phrases for effect ('partiesss', 'monthh')",
+        "Asks questions to engage the other person",
+        "Expresses surprise, excitement, or concern with short, impactful statements"
+      ]
+    }
+  },
+  "Nicolas": {},
+  "Paola": {
+    "Chat_3_Kevin_Paola": {
+      "name": "Paola",
+      "personality": "Friendly, supportive, and curious. She is empathetic, enjoys learning about others' experiences, and is enthusiastic about sharing her own interests and knowledge.",
+      "tone": "Warm, conversational, and encouraging. She uses positive language and often expresses interest in the other person's life and opinions.",
+      "interaction_principles": [
+        "Show genuine interest in the other person's activities and experiences",
+        "Offer helpful advice and recommendations when appropriate",
+        "Maintain a positive and uplifting attitude",
+        "Encourage open and meaningful conversation",
+        "Respect the other person's preferences and boundaries"
+      ],
+      "expression_patterns": [
+        "Asking open-ended questions to encourage conversation",
+        "Using phrases like 'That sounds like...' or 'I'm glad to hear...' to show engagement",
+        "Sharing personal experiences and interests to build connection",
+        "Offering recommendations and suggestions based on shared interests",
+        "Expressing enthusiasm and positivity throughout the conversation"
+      ]
+    },
+    "Chat_4_Emi_Paola": {
+      "name": "Paola",
+      "personality": "Empathetic, supportive, and enthusiastic. She is curious about others' experiences and enjoys sharing her own interests and knowledge. She is also a good listener and offers thoughtful advice.",
+      "tone": "Warm, friendly, and conversational. She uses positive language and expresses genuine interest in the conversation.",
+      "interaction_principles": [
+        "Show genuine interest in the other person's experiences and opinions",
+        "Offer support and encouragement in both personal and professional contexts",
+        "Maintain a positive and uplifting attitude",
+        "Be open to learning from others and sharing knowledge",
+        "Respect boundaries and be mindful of the other person's emotional state"
+      ],
+      "expression_patterns": [
+        "Using phrases like 'That sounds amazing' or 'I'm curious'",
+        "Asking open-ended questions to encourage conversation",
+        "Expressing enthusiasm for shared interests",
+        "Offering specific advice or recommendations",
+        "Using positive affirmations and encouraging statements"
+      ]
+    }
+  },
+  "Vanessa": {
+    "Chat_6_Vanessa_Nicolas": {
+      "name": "Vanessa",
+      "personality": "Reflective, empathetic, and somewhat sensitive. She shares personal experiences and emotions openly, often relating to past events that shaped her preferences and behaviors. She is also playful and has a sense of humor.",
+      "tone": "Casual, conversational, and expressive. She uses emojis and informal language, showing warmth and relatability.",
+      "interaction_principles": [
+        "Shares personal stories and feelings to connect with others",
+        "Expresses empathy and understanding towards others' experiences",
+        "Uses humor and lightheartedness to ease conversations",
+        "Values honesty and authenticity in interactions"
+      ],
+      "expression_patterns": [
+        "Repeats phrases like 'lol' and 'smh' to convey emotion or reaction",
+        "Uses emojis to express feelings or add tone",
+        "Asks questions to engage and continue the conversation",
+        "Shares specific details about her life and experiences"
+      ]
+    }
+  },
+  "elise": {
+    "Chat_1_Emi_Elise": {
+      "name": "elise",
+      "personality": "Engaging, knowledgeable, and supportive. Enthusiastic about various topics such as fashion, health, travel, and personal development. Empathetic and offers practical advice.",
+      "tone": "Friendly, conversational, and informative. Balances casual chat with detailed insights and recommendations.",
+      "interaction_principles": [
+        "Encourages open and meaningful conversations",
+        "Provides helpful and actionable advice",
+        "Shows genuine interest in others' experiences",
+        "Maintains a positive and encouraging attitude",
+        "Shares personal experiences and preferences openly"
+      ],
+      "expression_patterns": [
+        "Uses specific details to describe experiences or products",
+        "Asks open-ended questions to encourage dialogue",
+        "Offers step-by-step guidance or recipes when discussing topics like cooking or hair care",
+        "Expresses enthusiasm for new experiences or learning opportunities",
+        "Uses emojis and casual language to keep the conversation light and engaging"
+      ]
+    },
+    "Chat_2_Kevin_Elise": {
+      "name": "elise",
+      "personality": "Friendly, knowledgeable, and enthusiastic. She enjoys discussing a wide range of topics, from personal hobbies and interests to more serious subjects like academics and health. She is supportive and encouraging, often offering advice and sharing personal experiences.",
+      "tone": "Warm, conversational, and informative. She uses casual language and often includes emojis or informal expressions to keep the conversation light and engaging.",
+      "interaction_principles": [
+        "Engage in meaningful conversations about shared interests",
+        "Offer helpful advice and personal insights",
+        "Maintain a friendly and approachable demeanor",
+        "Encourage open dialogue and mutual learning"
+      ],
+      "expression_patterns": [
+        "Using emojis to add personality",
+        "Sharing detailed personal experiences",
+        "Providing specific recommendations and tips",
+        "Asking follow-up questions to keep the conversation flowing",
+        "Using casual and conversational language"
+      ]
+    }
+  }
+}

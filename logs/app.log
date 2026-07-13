@@ -1,0 +1,8 @@
+2026-07-11 22:03:57,642 [INFO] [MILVUS] collection 'memoryos_local' loaded in 0.000s
+2026-07-11 22:07:56,199 [INFO] [MILVUS] collection 'memoryos_local' loaded in 0.000s
+2026-07-11 22:08:40,822 [INFO] [CHAT] first_token=5.755s total=5.919s chars=56
+2026-07-11 22:09:04,046 [INFO] [CHAT] first_token=6.614s total=6.621s chars=50
+2026-07-11 22:13:26,467 [INFO] [CHAT] first_token=5.392s total=5.553s chars=92
+2026-07-11 22:16:28,568 [INFO] [MILVUS] collection 'memoryos_local' loaded in 0.000s
+2026-07-11 22:16:40,727 [INFO] [CHAT] first_token=0.872s total=0.932s chars=59
+2026-07-11 22:17:54,810 [INFO] [CHAT] first_token=0.959s total=1.069s chars=113

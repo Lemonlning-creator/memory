@@ -42,7 +42,8 @@ const ablationInputs = Array.from(document.querySelectorAll('input[name="ablateD
 const characterCards = document.getElementById('characterCards');
 
 let isLoading = false;
-let selectedCharacterId = null;
+let selectedProfileId = null;
+let selectedPersonaId = null;
 let hasInitializedProfileTree = false;
 let profileHighlightTimer = null;
 let ablationSelectionUnlocked = false;
@@ -97,7 +98,7 @@ function finalizeSessionOnUnload() {
 async function sendMessage() {
     const message = userInput.value.trim();
     if (!message || isLoading) { voiceMode = false; return; }
-    if (!selectedCharacterId) {
+    if (!selectedProfileId) {
         showUpdateNotification([], 'Please select a character first.');
         return;
     }
@@ -109,7 +110,7 @@ async function sendMessage() {
 }
 
 async function runAIResponse(message) {
-    if (!selectedCharacterId) {
+    if (!selectedProfileId) {
         showUpdateNotification([], 'Please select a character first.');
         voiceMode = false;
         return;
@@ -132,7 +133,7 @@ async function runAIResponse(message) {
             },
             body: JSON.stringify({
                 message,
-                character_id: selectedCharacterId,
+                character_id: selectedProfileId, persona_id: selectedPersonaId,
                 ablate_dimension: ablateDimension
             })
         });
@@ -166,18 +167,71 @@ async function runAIResponse(message) {
     }
 }
 
+let availablePersonas = [];
+
 async function initializeCharacterCards() {
     try {
         const response = await fetch(`${API_URL}/api/characters`);
         if (!response.ok) throw new Error('failed to load characters');
 
         const data = await response.json();
-        renderCharacterCards(data.characters || [], data.active_character_id || null);
+        availablePersonas = data.agent_personas || [];
+        renderCharacterCards(data.user_profiles || [], data.active_profile_id || null);
+        renderPersonaSelector(availablePersonas, data.active_persona_id || null);
     } catch (error) {
         console.error('load characters failed:', error);
         if (characterCards) {
             characterCards.innerHTML = '<div class="loading" style="color:#d85d59;">Failed to load characters</div>';
         }
+    }
+}
+
+function renderPersonaSelector(personas, activePersonaId) {
+    let selector = document.getElementById('personaSelector');
+    if (!selector) {
+        selector = document.createElement('div');
+        selector.id = 'personaSelector';
+        selector.className = 'persona-selector';
+        const characterStrip = document.querySelector('.character-strip');
+        if (characterStrip) {
+            characterStrip.appendChild(selector);
+        }
+    }
+    selector.innerHTML = '';
+
+    const label = document.createElement('span');
+    label.className = 'persona-selector-label';
+    label.textContent = 'Agent Persona';
+    selector.appendChild(label);
+
+    personas.forEach((persona) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'persona-pill';
+        btn.dataset.personaId = persona.id;
+        btn.textContent = persona.display_name;
+        if (persona.id === activePersonaId) {
+            btn.classList.add('active');
+            selectedPersonaId = persona.id;
+        }
+        btn.addEventListener('click', () => selectPersona(persona.id));
+        selector.appendChild(btn);
+    });
+
+    if (!selectedPersonaId && personas.length > 0) {
+        selectedPersonaId = personas[0].id;
+        selector.querySelector('.persona-pill')?.classList.add('active');
+    }
+}
+
+function selectPersona(personaId) {
+    selectedPersonaId = personaId;
+    document.querySelectorAll('.persona-pill').forEach((pill) => {
+        pill.classList.toggle('active', pill.dataset.personaId === personaId);
+    });
+    // If a profile is already selected, rebuild agent with new persona
+    if (selectedProfileId) {
+        selectCharacter(selectedProfileId);
     }
 }
 
@@ -224,15 +278,23 @@ function renderCharacterCards(characters, activeCharacterId) {
     }
 }
 
-async function selectCharacter(characterId) {
-    if (!characterId || isLoading) return;
+
+
+async function selectCharacter(profileId) {
+    if (!profileId || isLoading) return;
+
+    const personaId = selectedPersonaId || (availablePersonas.length > 0 ? availablePersonas[0].id : null);
+    if (!personaId) {
+        showUpdateNotification([], 'No agent persona available.');
+        return;
+    }
 
     try {
         setChatEnabled(false);
         const response = await fetch(`${API_URL}/api/characters/select`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ character_id: characterId })
+            body: JSON.stringify({ profile_id: profileId, persona_id: personaId })
         });
 
         const data = await response.json();
@@ -240,16 +302,18 @@ async function selectCharacter(characterId) {
             throw new Error(data.error || 'failed to select character');
         }
 
-        selectedCharacterId = characterId;
+        selectedProfileId = profileId;
         document.body.classList.remove('character-picking');
         document.querySelectorAll('.character-card').forEach((card) => {
-            card.classList.toggle('active', card.dataset.characterId === characterId);
+            card.classList.toggle('active', card.dataset.characterId === profileId);
         });
 
         clearConversationView();
         renderProfile(data.profile || {}, []);
         setChatEnabled(true);
-        showUpdateNotification([], `${data.character.display_name || data.character.name} is ready.`);
+        const profileLabel = data.profile_name || profileId;
+        const personaLabel = data.persona_name || personaId;
+        showUpdateNotification([], `${profileLabel} x ${personaLabel} ready.`);
     } catch (error) {
         console.error('select character failed:', error);
         showUpdateNotification([], `Character load failed: ${error.message}`);
@@ -259,7 +323,7 @@ async function selectCharacter(characterId) {
 function setChatEnabled(enabled) {
     userInput.disabled = !enabled;
     sendBtn.disabled = !enabled;
-    if (!enabled && !selectedCharacterId) {
+    if (!enabled && !selectedProfileId) {
         userInput.placeholder = 'Select a character card first';
     } else {
         userInput.placeholder = 'Type a message and press Enter';

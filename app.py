@@ -5,6 +5,7 @@ import os
 import atexit
 from pathlib import Path
 
+import copy
 import threading
 import time
 from flask import Flask, Response, g, jsonify, request, stream_with_context
@@ -16,25 +17,77 @@ load_dotenv()
 
 from src.agent import StateDrivenCompanionAgent
 from src.logger import logger
-from src.utils import save_json
+from src.utils import save_json, load_json
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
 CORS(app)
 sock = Sock(app)
 
-CHARACTER_CARDS = {
-    "emi": {
-        "id": "emi",
-        "display_name": "Emi",
-        "user_name": "Emi_Kate",
-        "profile_path": "user/Emi_Kate_profile.json",
-        "persona_path": "agent/elise_persona.json"
-    },
-}
-
 agent = None
-active_character_id = None
+active_profile_id = None
+active_persona_id = None
 conversation_history = []
+
+DATASET_USER_DIR = Path("dataset/output/user")
+DATASET_AGENT_DIR = Path("dataset/output/agent")
+WORKING_PROFILE_DIR = Path("data/active_profiles")
+
+
+def _humanize(name: str) -> str:
+    """Convert a file-stem like 'fahim_khan' to a display name like 'Fahim Khan'."""
+    return name.replace("_", " ").title()
+
+
+def discover_user_profiles() -> dict:
+    """Scan dataset/output/user/ for *_profile.json and build a lookup dict."""
+    profiles = {}
+    if DATASET_USER_DIR.exists():
+        for f in sorted(DATASET_USER_DIR.glob("*_profile.json")):
+            stem = f.stem.replace("_profile", "")
+            profiles[stem] = {
+                "id": stem,
+                "display_name": _humanize(stem),
+                "file_name": f.name,
+                "source_path": str(f),
+            }
+    return profiles
+
+
+def discover_agent_personas() -> dict:
+    """Scan dataset/output/agent/ for *_persona.json and build a lookup dict."""
+    personas = {}
+    if DATASET_AGENT_DIR.exists():
+        for f in sorted(DATASET_AGENT_DIR.glob("*_persona.json")):
+            stem = f.stem.replace("_persona", "")
+            personas[stem] = {
+                "id": stem,
+                "display_name": _humanize(stem),
+                "file_name": f.name,
+                "source_path": str(f),
+            }
+    return personas
+
+
+USER_PROFILES = discover_user_profiles()
+AGENT_PERSONAS = discover_agent_personas()
+
+
+def _wrap_dataset_profile(raw: dict) -> dict:
+    """Wrap a raw 5-layer dataset profile into the state_axis format the agent expects."""
+    if "state_axis" in raw:
+        return raw
+    return {
+        "state_axis": {
+            "static_profile": raw,
+            "current_state": {},
+            "projected_state": {},
+        },
+        "context_axis": {
+            "current_context": "",
+            "context_detail": "",
+            "inferred_at_turn": 0,
+        },
+    }
 
 def finalize_agent_session() -> dict:
     if agent is None:
@@ -45,35 +98,40 @@ def finalize_agent_session() -> dict:
         }
     return agent.finalize_session()
 
-def public_character_card(card: dict) -> dict:
-    return {
-        "id": card["id"],
-        "file_name": card["user_name"],
-        "display_name": card.get("display_name", card["display_name"]),
-        "description": card.get("description", ""),
-    }
-
 def require_agent():
     if agent is None:
         return jsonify({"error": "character is required"}), 409
     return None
 
-def build_agent_for_character(character_id: str) -> StateDrivenCompanionAgent:
-    card = CHARACTER_CARDS.get(character_id)
-    if not card:
-        raise ValueError(f"unknown character: {character_id}")
+def build_agent_for_character(profile_id: str, persona_id: str) -> StateDrivenCompanionAgent:
+    profile_info = USER_PROFILES.get(profile_id)
+    if not profile_info:
+        raise ValueError(f"unknown user profile: {profile_id}")
 
-    profile_path = Path(card["profile_path"])
-    persona_path = Path(card["persona_path"])
-    if not profile_path.exists():
-        raise FileNotFoundError(f"profile file not found: {profile_path}")
+    persona_info = AGENT_PERSONAS.get(persona_id)
+    if not persona_info:
+        raise ValueError(f"unknown agent persona: {persona_id}")
+
+    source_profile_path = Path(profile_info["source_path"])
+    persona_path = Path(persona_info["source_path"])
+    if not source_profile_path.exists():
+        raise FileNotFoundError(f"profile file not found: {source_profile_path}")
     if not persona_path.exists():
         raise FileNotFoundError(f"persona file not found: {persona_path}")
 
+    # Load dataset profile and wrap into agent-expected format
+    raw_profile = load_json(str(source_profile_path))
+    wrapped = _wrap_dataset_profile(raw_profile)
+
+    # Save working copy so agent mutations don't overwrite the dataset original
+    WORKING_PROFILE_DIR.mkdir(parents=True, exist_ok=True)
+    working_profile_path = WORKING_PROFILE_DIR / f"{profile_id}_profile.json"
+    save_json(str(working_profile_path), copy.deepcopy(wrapped))
+
     return StateDrivenCompanionAgent(
-        profile_path=str(profile_path),
+        profile_path=str(working_profile_path),
         persona_path=str(persona_path),
-        user_name=card.get("user_name", card["id"]),
+        user_name=profile_info["display_name"],
     )
 
 
@@ -108,39 +166,57 @@ def index():
 @app.route("/api/characters", methods=["GET"])
 def get_characters():
     return jsonify({
-        "characters": [public_character_card(card) for card in CHARACTER_CARDS.values()],
-        "active_character_id": active_character_id,
+        "user_profiles": [
+            {"id": v["id"], "display_name": v["display_name"], "file_name": v["file_name"]}
+            for v in USER_PROFILES.values()
+        ],
+        "agent_personas": [
+            {"id": v["id"], "display_name": v["display_name"], "file_name": v["file_name"]}
+            for v in AGENT_PERSONAS.values()
+        ],
+        "active_profile_id": active_profile_id,
+        "active_persona_id": active_persona_id,
     }), 200
 
 
 @app.route("/api/characters/select", methods=["POST"])
 def select_character():
-    global agent, active_character_id
+    global agent, active_profile_id, active_persona_id
 
     data = request.json or {}
-    character_id = data.get("character_id")
-    if not character_id:
-        return jsonify({"error": "character_id is required"}), 400
+    profile_id = data.get("profile_id") or data.get("character_id")
+    persona_id = data.get("persona_id")
 
-    if character_id == active_character_id and agent is not None:
-        card = CHARACTER_CARDS[character_id]
+    if not profile_id:
+        return jsonify({"error": "profile_id is required"}), 400
+
+    if not persona_id:
+        if AGENT_PERSONAS:
+            persona_id = list(AGENT_PERSONAS.keys())[0]
+        else:
+            return jsonify({"error": "no agent personas available"}), 400
+
+    if profile_id == active_profile_id and persona_id == active_persona_id and agent is not None:
         return jsonify({
             "message": "character already active",
-            "character": public_character_card(card),
             "profile": agent.user_profile,
+            "profile_name": USER_PROFILES[profile_id]["display_name"],
+            "persona_name": AGENT_PERSONAS[persona_id]["display_name"],
         }), 200
 
     try:
         if agent is not None:
             finalize_agent_session()
 
-        agent = build_agent_for_character(character_id)
-        active_character_id = character_id
+        agent = build_agent_for_character(profile_id, persona_id)
+        active_profile_id = profile_id
+        active_persona_id = persona_id
         conversation_history.clear()
         return jsonify({
             "message": "character selected",
-            "character": public_character_card(CHARACTER_CARDS[character_id]),
             "profile": agent.user_profile,
+            "profile_name": USER_PROFILES[profile_id]["display_name"],
+            "persona_name": AGENT_PERSONAS[persona_id]["display_name"],
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 400

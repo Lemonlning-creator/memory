@@ -1,0 +1,1442 @@
+{
+  "results": [
+    {
+      "chat_file": "Chat_10_Fahim_Muhhamed.json",
+      "user_speaker": "Fahim Khan",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "discussing spiderman movies",
+            "sharing opinions on marvel and dc characters",
+            "recollecting details about spiderman films"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "spiderman movies",
+            "marvel characters",
+            "x-men",
+            "dc characters"
+          ],
+          "coping_mode": "casual conversation",
+          "checkpoint_index": 0,
+          "turn_index": 41,
+          "sample_messages": [
+            "I personally love spiderman and the x-men especially. I love all the x-men movie",
+            "yeah it was more to introduce his character. Did you watch any other spiderman m",
+            "the original spiderman trilogy was great and the amazing spiderman was also real"
+          ]
+        },
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "esports in Brawlhalla",
+            "rewards for getting gold",
+            "comparison to League of Legends"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "Brawlhalla esports",
+            "gold rewards",
+            "League of Legends comparisons"
+          ],
+          "coping_mode": "information seeking",
+          "checkpoint_index": 1,
+          "turn_index": 124,
+          "sample_messages": [
+            "are there any rewards for getting gold?",
+            "In league they have rewards once you hit gold. Back in the day gold was harder t",
+            "it was the same skin for everyone though"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "work",
+            "weather",
+            "dinner",
+            "parental help"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "work",
+            "weather",
+            "family",
+            "dining"
+          ],
+          "coping_mode": "practical and reflective",
+          "checkpoint_index": 2,
+          "turn_index": 207,
+          "sample_messages": [
+            "I’m going to have some dinner soon",
+            "I just got home from work, luckily my parents could pick me up today because the",
+            "otherwise it’s raining like crazy today so I would’ve been soaked trying to walk"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "discussing fictional character power dynamics",
+            "reflecting on musical experiences"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "fictional character comparisons",
+            "classical music appreciation"
+          ],
+          "coping_mode": "analytical",
+          "checkpoint_index": 3,
+          "turn_index": 290,
+          "sample_messages": [
+            "there’s also some people who say that Goku or superman or whoever can beat one p",
+            "Anyways today I was listening to some classical piano and I went through some of",
+            "I’ve listened to the years of pilgrimage many times but somehow I glossed over t"
+          ]
+        },
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "finding a good starting point for TMNT",
+            "discussing CGI in movies"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "Pirates of the Caribbean",
+            "TMNT",
+            "CGI in movies"
+          ],
+          "coping_mode": "seeking recommendations and sharing interests",
+          "checkpoint_index": 4,
+          "turn_index": 373,
+          "sample_messages": [
+            "do you have any recommendations?",
+            "I have watched it as a kid, but obviously not in a consistent manner, so I know ",
+            "Wow you really are knowledgeable on TMNT."
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:02:59.933174"
+    },
+    {
+      "chat_file": "Chat_1_Emi_Elise.json",
+      "user_speaker": "Emi",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "sharing her passion for skiing",
+            "engaging in conversation about travel experiences"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "skiing",
+            "travel",
+            "personal experiences"
+          ],
+          "coping_mode": "open and enthusiastic",
+          "checkpoint_index": 0,
+          "turn_index": 23,
+          "sample_messages": [
+            "That is amazing!",
+            "I've been skiing for about 10 years now. It's been a passion of mine, and hittin",
+            "What was your favorite part of your first trip there?"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "sharing experiences in San Diego and Las Vegas",
+            "discussing the Grand Canyon"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "travel experiences",
+            "Grand Canyon",
+            "photos"
+          ],
+          "coping_mode": "sharing and discussing positive experiences",
+          "checkpoint_index": 1,
+          "turn_index": 69,
+          "sample_messages": [
+            "I did!",
+            "Do you have any pictures yourself?",
+            "That looks beautiful."
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "receiving updates about Emily's basketball game",
+            "discussing sports activities"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "sports",
+            "basketball game",
+            "NBA match",
+            "volleyball"
+          ],
+          "coping_mode": "social interaction",
+          "checkpoint_index": 2,
+          "turn_index": 115,
+          "sample_messages": [
+            "For sure! Let me know how the game goes!",
+            "Hello Emily! How did the basketball game go yesterday?",
+            "That sounds incredible, Emily! Congratulations on your team's victory in the gam"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "fashion events",
+            "Oscars",
+            "Met Gala",
+            "fashion moments"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "fashion events",
+            "Oscars",
+            "Met Gala",
+            "outfits"
+          ],
+          "coping_mode": "exploratory",
+          "checkpoint_index": 3,
+          "turn_index": 161,
+          "sample_messages": [
+            "Certainly! Some of my favorite Oscar moments include Olivia Colman's heartfelt s",
+            "I really liked Zendaya's cinderella inspired Met Gala outfit in 2019. The dress ",
+            "Do you enjoy fashion, Emily?"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "aviation experiences",
+            "A380 aircraft",
+            "travel stories"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "aviation",
+            "flight experiences",
+            "aircraft design"
+          ],
+          "coping_mode": "curious and engaged",
+          "checkpoint_index": 4,
+          "turn_index": 207,
+          "sample_messages": [
+            "Yes, it was a long but scenic journey. Seeing the vast expanse of the ocean and ",
+            "Flying in business or first class on the A380 for amenities like walk-up bars an",
+            "I haven't flown recently, but I'm always excited to hear about others' travel ex"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:08.076767"
+    },
+    {
+      "chat_file": "Chat_2_Kevin_Elise.json",
+      "user_speaker": "Kevin",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "planning a trip to Albania",
+            "exploring attractions in Houston",
+            "learning about Albanian culture"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "travel planning",
+            "Albanian culture",
+            "tourism destinations",
+            "food"
+          ],
+          "coping_mode": "enthusiastic exploration",
+          "checkpoint_index": 0,
+          "turn_index": 23,
+          "sample_messages": [
+            "I would definetly start with the capital Tirana, its very diverse and the most m",
+            "Then i would recommend going to some more historical sites like the castles in K",
+            "Finally you should definetly bring your swimsuit because Albania has beautiful b"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "homemade ravioli recipe",
+            "cooking tips",
+            "food preferences"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "cooking",
+            "recipes",
+            "food"
+          ],
+          "coping_mode": "exploratory",
+          "checkpoint_index": 1,
+          "turn_index": 69,
+          "sample_messages": [
+            "Youre right! She actually makes the ravioli herself. Heres a simple form of the ",
+            "Homemade ravioli is way better than store bought! The flavors, customizable fill",
+            "I must say, here in San Francisco we quite love our burgers and barbeque!"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "academic pursuits",
+            "winter activities",
+            "sharing experiences"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "academic choices",
+            "winter break plans",
+            "skiing",
+            "personal experiences"
+          ],
+          "coping_mode": "positive engagement",
+          "checkpoint_index": 2,
+          "turn_index": 115,
+          "sample_messages": [
+            "That sounds like an greatplan! Skiing is such a fun winter activity, and it's fa",
+            "Heres a picture of me skiing last year!",
+            "Hello Elise! What have you been doing these days!"
+          ]
+        },
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "finding the right resources for learning calculus",
+            "the importance of textbooks in understanding math",
+            "the value of reading more"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "learning calculus",
+            "textbooks and resources",
+            "reading habits"
+          ],
+          "coping_mode": "seeking advice and exploring options",
+          "checkpoint_index": 3,
+          "turn_index": 161,
+          "sample_messages": [
+            "That's great advice! The choice of a textbook can make a significant difference.",
+            "Oh wow there are a lot of options to choose from!",
+            "I dont have a lot of books in my house. Maybe I should start reading more, what "
+          ]
+        },
+        {
+          "emotional_state": "positive",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "health and wellness",
+            "lifestyle habits",
+            "self-care routines"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "health practices",
+            "exercise",
+            "nutrition",
+            "self-care"
+          ],
+          "coping_mode": "proactive and positive",
+          "checkpoint_index": 4,
+          "turn_index": 207,
+          "sample_messages": [
+            "Thats very interesting! Drink water, get enough sleep (around 8 hours), eat a mi",
+            "Hello how are you today?",
+            "That's awesome to hear! It seems we share a similar approach to staying in shape"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:15.526968"
+    },
+    {
+      "chat_file": "Chat_3_Kevin_Paola.json",
+      "user_speaker": "Kevin",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "happy",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "spending time with family",
+            "enjoying movies",
+            "sharing about his dog"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "family time",
+            "movies",
+            "pets"
+          ],
+          "coping_mode": "relaxed and social",
+          "checkpoint_index": 0,
+          "turn_index": 22,
+          "sample_messages": [
+            "\"The Hangover\" is a classic comedy with its wild and hilarious adventures, defin",
+            "What a cute cat!",
+            "Heres a picture of my dog!"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "baking experiments",
+            "trying new recipes",
+            "sharing results"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "baking",
+            "recipes",
+            "experiments",
+            "flavors"
+          ],
+          "coping_mode": "enthusiastic and proactive",
+          "checkpoint_index": 1,
+          "turn_index": 66,
+          "sample_messages": [
+            "Thanks for the excitement! I'll definitely keep you posted on my macaron-making ",
+            "Hello how are you today?",
+            "That sounds like a chill and relaxing way to spend your day. I always enjoy slee"
+          ]
+        },
+        {
+          "emotional_state": "positive",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "community service projects",
+            "volunteering experiences",
+            "impact of helping others"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "community service",
+            "volunteering",
+            "impact on others",
+            "personal experiences"
+          ],
+          "coping_mode": "positive engagement",
+          "checkpoint_index": 2,
+          "turn_index": 110,
+          "sample_messages": [
+            "Absolutely, I totally get the appeal of \"Friends\" and \"The Office\" for unwinding",
+            "That's a powerful and heartwarming experience. Volunteering at a local homeless ",
+            "That's awesome! I'm looking into helping with education projects in communities "
+          ]
+        },
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "exploring lounge experiences",
+            "trying new drink combinations",
+            "discussing rooftop lounges"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "lounge experiences",
+            "drink recipes",
+            "rooftop views"
+          ],
+          "coping_mode": "interactive and inquisitive",
+          "checkpoint_index": 3,
+          "turn_index": 154,
+          "sample_messages": [
+            "A rooftop lounge with city skyline views sounds absolutely enchanting. The blend",
+            "Similair to you, I would say the rooftop lounges always stand out compared to th",
+            "Your fresh pineapple, coconut milk, and grenadine mix sounds like a tropical del"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "engaging in conversation",
+            "sharing interests",
+            "learning about others' passions"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "interests and hobbies",
+            "academic pursuits",
+            "astronomy",
+            "history",
+            "art"
+          ],
+          "coping_mode": "curious and open",
+          "checkpoint_index": 4,
+          "turn_index": 198,
+          "sample_messages": [
+            "That's awesome! I have a particular interest in economics—it's a dynamic field t",
+            "Absolutely! Astronomy is a captivating field that unveils the wonders of the cos",
+            "Your interests in ancient civilizations and impressionist art are truly captivat"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:22.599656"
+    },
+    {
+      "chat_file": "Chat_4_Emi_Paola.json",
+      "user_speaker": "Emi",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "sharing experiences",
+            "exploring new recipes",
+            "discussing art and books"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "cooking",
+            "art galleries",
+            "books",
+            "restaurants"
+          ],
+          "coping_mode": "social interaction and creative expression",
+          "checkpoint_index": 0,
+          "turn_index": 20,
+          "sample_messages": [
+            "Chicken and Waffles is a classic comfort food combination, and it sounds like yo",
+            "\"Prose & Pages\" sounds like a book lover's paradise! I appreciate a wide range o",
+            "\"The Night Circus\" is a magical and enchanting novel, and I completely understan"
+          ]
+        },
+        {
+          "emotional_state": "happy",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "chatting with Liza",
+            "sharing pictures of her cat",
+            "thinking about travel plans"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "conversation with Liza",
+            "travel plans",
+            "cooking",
+            "her cat"
+          ],
+          "coping_mode": "relaxed and social",
+          "checkpoint_index": 1,
+          "turn_index": 61,
+          "sample_messages": [
+            "It was lovely chatting with you today Liza!",
+            "Hi there, Liza! How's your evening going?",
+            "Sounds like you had a busy day! I've had a relaxing evening so far, just catchin"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "high",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "discussing travel destinations",
+            "sharing book recommendations",
+            "engaging in conversation"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "travel",
+            "books",
+            "conversations about interests"
+          ],
+          "coping_mode": "social engagement and shared interests",
+          "checkpoint_index": 2,
+          "turn_index": 102,
+          "sample_messages": [
+            "Hi Liza! I'm good, and you? What have you been up to today?",
+            "That's great! Speaking of reading, have you started reading \"Where the Crawdads ",
+            "I'm glad to hear you're enjoying \"Where the Crawdads Sing\"! Delia Owens' descrip"
+          ]
+        },
+        {
+          "emotional_state": "content",
+          "emotional_intensity": "low",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "fitness routine",
+            "well-being",
+            "community connection"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "fitness preparation",
+            "recovery",
+            "mindfulness",
+            "community"
+          ],
+          "coping_mode": "balanced and reflective",
+          "checkpoint_index": 3,
+          "turn_index": 143,
+          "sample_messages": [
+            "Hydration post-class is just as important as pre-class, so I make sure to drink ",
+            "I also keep a journal where I note down my experiences from each class, what I f",
+            "Absolutely, Liza! The mental and community aspects are truly invaluable. I agree"
+          ]
+        },
+        {
+          "emotional_state": "grieving",
+          "emotional_intensity": "medium",
+          "emotional_valence": "negative",
+          "energy_level": "medium",
+          "stress_level": "medium",
+          "current_concerns": [
+            "dealing with the breakup",
+            "processing emotions",
+            "maintaining emotional distance from ex"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "healing from a breakup",
+            "emotional processing",
+            "self-care",
+            "social support"
+          ],
+          "coping_mode": "active and reflective",
+          "checkpoint_index": 4,
+          "turn_index": 184,
+          "sample_messages": [
+            "As I navigate through this challenging period, I'm curious to know if you've eve",
+            "I appreciate your understanding, Liza. It's been reassuring to have the comfort ",
+            "I've taken the step of unfollowing and muting my ex on social media to establish"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:29.838855"
+    },
+    {
+      "chat_file": "Chat_5_Nicolas_Nebraas.json",
+      "user_speaker": "Nicolas",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "cautious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "medium",
+          "current_concerns": [
+            "avoiding spreading sickness",
+            "preparing for potential threats",
+            "deciding on activities"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "survival strategies",
+            "health concerns",
+            "daily activities"
+          ],
+          "coping_mode": "practical and cautious",
+          "checkpoint_index": 0,
+          "turn_index": 85,
+          "sample_messages": [
+            "Do anything else interesting today?",
+            "I was gonna hit up the roller rink but I dont wanna spread my sickness if im sic",
+            "Yeah it helped out"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "access to prescription medications",
+            "effectiveness and safety of over-the-counter alternatives"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "medication options",
+            "costco medication",
+            "melatonin and over-the-counter meds"
+          ],
+          "coping_mode": "pragmatic",
+          "checkpoint_index": 1,
+          "turn_index": 255,
+          "sample_messages": [
+            "Yeah I get em from costco",
+            "Theyre gummies",
+            "Whats the bad part about them?"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "comparing pets",
+            "food choices",
+            "personal preferences"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "pets",
+            "food",
+            "personal habits"
+          ],
+          "coping_mode": "casual",
+          "checkpoint_index": 2,
+          "turn_index": 425,
+          "sample_messages": [
+            "Also got a coffee",
+            "Ignore the goofy on the spoon",
+            "Id think that dogs are more expensive than cats"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "Julio's behavior",
+            "his own personality named Victor",
+            "drinking coffee",
+            "pottery"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "Julio",
+            "personality traits",
+            "coffee",
+            "pottery"
+          ],
+          "coping_mode": "casual and reflective",
+          "checkpoint_index": 3,
+          "turn_index": 595,
+          "sample_messages": [
+            "Drinking some coffee rn",
+            "Oh cool pottery seems cool",
+            "You could make a coffee mug"
+          ]
+        },
+        {
+          "emotional_state": "anxious",
+          "emotional_intensity": "high",
+          "emotional_valence": "negative",
+          "energy_level": "low",
+          "stress_level": "high",
+          "current_concerns": [
+            "impending doom",
+            "health-related fears",
+            "existential thoughts",
+            "clowns"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "declining",
+          "dominant_topics": [
+            "anxiety",
+            "existential fears",
+            "health concerns",
+            "unusual fears (clowns)"
+          ],
+          "coping_mode": "internalizing and ruminating",
+          "checkpoint_index": 4,
+          "turn_index": 765,
+          "sample_messages": [
+            "Dont start thinking about health related things like a heart attack and how all ",
+            "Or dont think about clowns theyre scary",
+            "I dont think it exists but I hope it exists"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:37.594443"
+    },
+    {
+      "chat_file": "Chat_6_Vanessa_Nicolas.json",
+      "user_speaker": "Nicolas",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "the hypothetical scenario of surviving in a grocery store",
+            "entertainment options in such a situation",
+            "the financial incentive of the scenario"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "survival in a grocery store",
+            "entertainment in isolation",
+            "financial compensation for inactivity"
+          ],
+          "coping_mode": "speculative and analytical",
+          "checkpoint_index": 0,
+          "turn_index": 87,
+          "sample_messages": [
+            "What would you do for entertainment though?",
+            "Sure you have food water shelter etc but not much else to do",
+            "Then again youre getting paid essentially 42 dollars an hour to do nothing"
+          ]
+        },
+        {
+          "emotional_state": "concerned",
+          "emotional_intensity": "medium",
+          "emotional_valence": "negative",
+          "energy_level": "medium",
+          "stress_level": "medium",
+          "current_concerns": [
+            "something not going as planned",
+            "social arrangements"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "plans for the day",
+            "alternative options"
+          ],
+          "coping_mode": "seeking alternatives",
+          "checkpoint_index": 1,
+          "turn_index": 262,
+          "sample_messages": [
+            "Oh dang that sucks",
+            "Do you have someone else youre gonna hang out with?",
+            "Hopefully it goes well"
+          ]
+        },
+        {
+          "emotional_state": "anxious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "negative",
+          "energy_level": "low",
+          "stress_level": "medium",
+          "current_concerns": [
+            "lack of responses from others",
+            "feeling unwell",
+            "preparing for an event without support"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "health condition",
+            "preparing the room",
+            "waiting for responses",
+            "birthday"
+          ],
+          "coping_mode": "resignation",
+          "checkpoint_index": 2,
+          "turn_index": 437,
+          "sample_messages": [
+            "Thanks its my birthday",
+            "Nobodys responded yet so I think theyre still asleep",
+            "Its 3PM"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "helping a friend move",
+            "saving money",
+            "avoiding transit"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "physical labor",
+            "cost-saving",
+            "personal fitness"
+          ],
+          "coping_mode": "practical and resourceful",
+          "checkpoint_index": 3,
+          "turn_index": 612,
+          "sample_messages": [
+            "Better to save money",
+            "Also saves time so I dont have to commit to transit",
+            "What about you?"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "past cringe moments",
+            "tea preferences",
+            "food experiences",
+            "finding money",
+            "ethical decisions about finding cash"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "personal reflections",
+            "teas",
+            "food",
+            "money",
+            "ethics"
+          ],
+          "coping_mode": "casual and reflective",
+          "checkpoint_index": 4,
+          "turn_index": 787,
+          "sample_messages": [
+            "Maybe one day youll find like a hundred bucks and itll make it up",
+            "If you saw a bag of cash slightly hidden would you take it",
+            "Id think it has illicit connections and taking it could be bad"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:45.502575"
+    },
+    {
+      "chat_file": "Chat_7_Nebraas_Vanessa.json",
+      "user_speaker": "Vanessa",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "happy",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "meeting people",
+            "work at the clinic",
+            "breakfast"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "meeting people",
+            "work",
+            "breakfast"
+          ],
+          "coping_mode": "positive and relaxed",
+          "checkpoint_index": 0,
+          "turn_index": 47,
+          "sample_messages": [
+            "Good morning! Hope you are having a good morning so far!",
+            "Its been good! Im at work today at the clinic and its going pretty smoothly than",
+            "Had a bacon egg and cheese on a bagel and a caramel latte for breakfast 😋"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "whether her friends will respond to her plans",
+            "if she will end up going out tonight",
+            "her appearance and feeling productive"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "plans for the evening",
+            "family interactions",
+            "personal appearance"
+          ],
+          "coping_mode": "proactive and flexible",
+          "checkpoint_index": 1,
+          "turn_index": 142,
+          "sample_messages": [
+            "Yeah true but we'll see later! Right now im doing my makeup just incase though i",
+            "Im a bit messy lol",
+            "Not really but it makes me feel like im being productive in a way if i have ever"
+          ]
+        },
+        {
+          "emotional_state": "hopeful",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "the Detroit Pistons' performance",
+            "their potential comeback",
+            "preparing food for future meetups"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "Detroit Pistons",
+            "food preparation",
+            "future meetups",
+            "sports optimism"
+          ],
+          "coping_mode": "positive anticipation",
+          "checkpoint_index": 2,
+          "turn_index": 237,
+          "sample_messages": [
+            "Thats fun too! Also eating game foods too like wings and veggies with ranch or b",
+            "Its a plus when your team wins too lol how was your day today? I ended up making",
+            "I hope the day we meet i can whip up something during the first meet up"
+          ]
+        },
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "the status of the moon",
+            "preparing for the arrival of a cat",
+            "the compatibility between cats and dogs"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "cat preparation",
+            "moon updates",
+            "cat-dog compatibility"
+          ],
+          "coping_mode": "lighthearted and proactive",
+          "checkpoint_index": 3,
+          "turn_index": 332,
+          "sample_messages": [
+            "Got it got it, if anything hopefully soon! Do you have stuff at home to prep you",
+            "I guess basic stuff like food and food bowls, litter boxes with litter maybe som",
+            "Wait really? That sounds annoying since there are plenty of people who are new c"
+          ]
+        },
+        {
+          "emotional_state": "amused",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "her dog's behavior",
+            "what foods are safe for her dog"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "her dog's habits",
+            "dog food safety"
+          ],
+          "coping_mode": "lighthearted and proactive",
+          "checkpoint_index": 4,
+          "turn_index": 427,
+          "sample_messages": [
+            "Im not sure how to avoid that",
+            "Ill try it but its really hard since shes too cute",
+            "I have to research more foods that are ok to feed her too when i can"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:52.969227"
+    },
+    {
+      "chat_file": "Chat_8_Akib_Muhhamed.json",
+      "user_speaker": "Akib",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "relieved",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "medium",
+          "current_concerns": [
+            "fixing server issues",
+            "planning weekend activities"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "weekend plans",
+            "work challenges",
+            "socializing"
+          ],
+          "coping_mode": "proactive",
+          "checkpoint_index": 0,
+          "turn_index": 77,
+          "sample_messages": [
+            "I just got to the office and I haven't found the problem with the servers yet bu",
+            "I'm gonna call up some old friends and see if they're free to hang out",
+            "Do you have any plans for this weekend?"
+          ]
+        },
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "neutral",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "the implications of AI advancement",
+            "Roko's Basilisk thought experiment"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "AI advancements",
+            "Roko's Basilisk",
+            "future technology"
+          ],
+          "coping_mode": "analytical",
+          "checkpoint_index": 1,
+          "turn_index": 231,
+          "sample_messages": [
+            "Have you ever heard of Roko's Basilisk?",
+            "Roko's basilisk is basically a thought experiment which says that an otherwise g",
+            "And me telling you about it means you have to help it grow or else you'll have t"
+          ]
+        },
+        {
+          "emotional_state": "sadness",
+          "emotional_intensity": "medium",
+          "emotional_valence": "negative",
+          "energy_level": "low",
+          "stress_level": "medium",
+          "current_concerns": [
+            "the gloomy weather",
+            "feeling bad",
+            "not beating the game"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "weather",
+            "game progress",
+            "emotional state"
+          ],
+          "coping_mode": "resignation",
+          "checkpoint_index": 2,
+          "turn_index": 385,
+          "sample_messages": [
+            "Oh well",
+            "I've been playing Monster Hunter World again recently",
+            "I never beat the game the first time"
+          ]
+        },
+        {
+          "emotional_state": "neutral",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "food preferences",
+            "cultural comparisons"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "food culture",
+            "national cuisine"
+          ],
+          "coping_mode": "lighthearted",
+          "checkpoint_index": 3,
+          "turn_index": 539,
+          "sample_messages": [
+            "I don't really eat a lot of their classics",
+            "Like fish and chips or beans on toast",
+            "I think American cuisine is underrated on the global stage"
+          ]
+        },
+        {
+          "emotional_state": "frustration",
+          "emotional_intensity": "medium",
+          "emotional_valence": "negative",
+          "energy_level": "low",
+          "stress_level": "medium",
+          "current_concerns": [
+            "unproductive group members",
+            "fairness of work distribution",
+            "managing future projects"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "work group dynamics",
+            "project management",
+            "professional boundaries"
+          ],
+          "coping_mode": "pragmatic problem-solving",
+          "checkpoint_index": 4,
+          "turn_index": 693,
+          "sample_messages": [
+            "After that though I'll just be better equipped to work within certain groups and",
+            "I just don't want management to give me any hassle for other employees faults, d",
+            "It's like that in a lot of work spaces if feels like that. There's always gonna "
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:03:59.592232"
+    },
+    {
+      "chat_file": "Chat_9_Fahim_Akib.json",
+      "user_speaker": "Akib",
+      "num_checkpoints": 5,
+      "states": [
+        {
+          "emotional_state": "apologetic",
+          "emotional_intensity": "low",
+          "emotional_valence": "neutral",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "forgetting to charge the phone",
+            "waking up early"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "sleeping through the night",
+            "phone battery",
+            "morning routine"
+          ],
+          "coping_mode": "accepting",
+          "checkpoint_index": 0,
+          "turn_index": 82,
+          "sample_messages": [
+            "I should have plugged it in but I didn't think I'd fall asleep so suddenly",
+            "Well, at least since I went to bed so early I woke up pretty early too",
+            "Already did my morning routine"
+          ]
+        },
+        {
+          "emotional_state": "curious",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "the technological experience of someone from the past",
+            "the use of electricity",
+            "visiting a planetarium"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "technology",
+            "electricity",
+            "planetarium"
+          ],
+          "coping_mode": "reflective",
+          "checkpoint_index": 1,
+          "turn_index": 247,
+          "sample_messages": [
+            "And DO in fact do that",
+            "I've never been to a planetarium",
+            "I want to go to one but i don't think there's one in my city"
+          ]
+        },
+        {
+          "emotional_state": "anxious",
+          "emotional_intensity": "high",
+          "emotional_valence": "negative",
+          "energy_level": "medium",
+          "stress_level": "high",
+          "current_concerns": [
+            "the outcome of the physical solution",
+            "the possibility of disintegration",
+            "the pain involved"
+          ],
+          "social openness": "withdrawn",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "physical solution",
+            "disintegration",
+            "pain",
+            "sun's wavelength"
+          ],
+          "coping_mode": "accepting potential outcomes",
+          "checkpoint_index": 2,
+          "turn_index": 412,
+          "sample_messages": [
+            "If it goes poorly",
+            "I will disintegrate entirely and it's going to hurt the whole time",
+            "Well"
+          ]
+        },
+        {
+          "emotional_state": "content",
+          "emotional_intensity": "low",
+          "emotional_valence": "positive",
+          "energy_level": "medium",
+          "stress_level": "low",
+          "current_concerns": [
+            "the meal they ate"
+          ],
+          "social openness": "neutral",
+          "mood_trajectory": "stable",
+          "dominant_topics": [
+            "food experience",
+            "meal quality"
+          ],
+          "coping_mode": "relaxed",
+          "checkpoint_index": 3,
+          "turn_index": 577,
+          "sample_messages": [
+            "But the battery was still crunchy",
+            "And the sauce was still good",
+            "Over all it was a solid meal"
+          ]
+        },
+        {
+          "emotional_state": "excited",
+          "emotional_intensity": "medium",
+          "emotional_valence": "positive",
+          "energy_level": "high",
+          "stress_level": "low",
+          "current_concerns": [
+            "the experience of flying",
+            "the concept of airplanes"
+          ],
+          "social openness": "engaged",
+          "mood_trajectory": "improving",
+          "dominant_topics": [
+            "airplanes",
+            "flying experience",
+            "metal tube metaphor"
+          ],
+          "coping_mode": "casual and reflective",
+          "checkpoint_index": 4,
+          "turn_index": 742,
+          "sample_messages": [
+            "I don't get to fly very often but the whole concept is pretty awesome",
+            "You get into this metal tube that weighs multiple tons",
+            "Like so many thousands of pounds"
+          ]
+        }
+      ],
+      "timestamp": "2026-06-30T18:04:06.904840"
+    }
+  ]
+}
