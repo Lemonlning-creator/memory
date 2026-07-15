@@ -18,13 +18,13 @@ const TOAST_DURATION = 30000;
 const PROFILE_LABELS = {};
 const ROOT_PROFILE_ORDER = ['state_axis', 'context_axis'];
 const HIDDEN_PROFILE_KEYS = new Set(['persona_type', 'persona_name']);
-const STATIC_PROFILE_LAYER_ORDER = ['core', 'regulation', 'cognitive_style', 'behavior_preference', 'social_physical'];
+const STATIC_PROFILE_LAYER_ORDER = ['core', 'regulation', 'cognition', 'identity', 'behavior'];
 const DEFAULT_EXPANDED_PATHS = [
     'state_axis',
     'state_axis.static_profile',
     'state_axis.current_state',
     'state_axis.static_profile.core',
-    'state_axis.static_profile.social_physical',
+    'state_axis.static_profile.identity',
 ];
 const DEFAULT_SYSTEM_MESSAGE = '对话已准备好。你好！我是你的个性化助手，请尽情聊天吧！';
 

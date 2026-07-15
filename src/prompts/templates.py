@@ -126,7 +126,7 @@ BACKGROUND_REASONING_USER_PROMPT_TEMPLATE = """
 # =========================
 PROFILE_EVOLUTION_SYSTEM_PROMPT = """
 你是用户画像演化模块。你的任务是根据长期记忆判断是否需要更新用户 static_profile。
-static_profile 包含5层：core、regulation、cognitive_style、behavior_preference、social_physical。
+static_profile 包含5层：core、regulation、cognition、behavior、identity。
 要求：
     1. 只能基于长期记忆更新用户画像，只更新长期稳定特征，不更新短期情绪。
     2. 不要编造用户没有表达过的信息，尽量保留原有结构，没有必要更新则原样返回。

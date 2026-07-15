@@ -13,7 +13,7 @@ PROMPT_LANGUAGE = "en"
 def load_prompts():
     """
     Load prompts based on the configured language.
-    
+
     Returns:
         module: The prompt template module (either templates or templates_en)
     """
@@ -30,10 +30,10 @@ def load_prompts():
 def get_prompt(prompt_name: str):
     """
     Get a specific prompt by name.
-    
+
     Args:
         prompt_name: The name of the prompt variable (e.g., 'EI_EVALUATION_SYSTEM_PROMPT')
-    
+
     Returns:
         The prompt string
     """
@@ -105,3 +105,29 @@ CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.CONTEXT_PROFILE_EXT
 # Understanding Feedback prompts (Deep Empathy Updating step)
 UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT = _templates.UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT
 UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE = _templates.UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE
+
+# --- New prompts for Experiments 1-5 ---
+
+# Flat Profile Extraction (Exp 1 / 5)
+FLAT_PROFILE_EXTRACTION_SYSTEM_PROMPT = _templates.FLAT_PROFILE_EXTRACTION_SYSTEM_PROMPT
+FLAT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.FLAT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
+
+# Self-Model Other Modeling (Exp 1 / 5)
+SELF_MODEL_SYSTEM_PROMPT = _templates.SELF_MODEL_SYSTEM_PROMPT
+SELF_MODEL_USER_PROMPT_TEMPLATE = _templates.SELF_MODEL_USER_PROMPT_TEMPLATE
+
+# Periodic Profile Rebuild (Exp 4)
+PERIODIC_REBUILD_SYSTEM_PROMPT = _templates.PERIODIC_REBUILD_SYSTEM_PROMPT
+PERIODIC_REBUILD_USER_PROMPT_TEMPLATE = _templates.PERIODIC_REBUILD_USER_PROMPT_TEMPLATE
+
+# Emotion / Sentiment Extraction (Exp 1 evaluation)
+EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT = _templates.EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT
+EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE
+
+# Topic Extraction (Exp 1 evaluation)
+TOPIC_EXTRACTION_SYSTEM_PROMPT = _templates.TOPIC_EXTRACTION_SYSTEM_PROMPT
+TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE
+
+# Intimacy Extraction (Exp 2 evaluation)
+INTIMACY_EXTRACTION_SYSTEM_PROMPT = _templates.INTIMACY_EXTRACTION_SYSTEM_PROMPT
+INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE

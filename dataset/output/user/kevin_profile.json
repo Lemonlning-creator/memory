@@ -1,128 +1,128 @@
 {
   "core": {
     "fears": {
-      "value": "None explicitly mentioned",
-      "evidence": "No specific fears were discussed in the conversation."
+      "value": "None explicitly mentioned, but there may be a fear of not meeting expectations in academics or career choices.",
+      "evidence": "Kevin expressed uncertainty about his future career path, considering law after studying economics."
     },
     "desires": {
-      "value": "Engaging in sports, exploring new experiences, and spending time with friends and family",
-      "evidence": "Kevin enjoys basketball, football, and jiu-jitsu, and frequently mentions spending time with friends and family."
+      "value": "To explore different career paths, enjoy sports, and have meaningful social interactions.",
+      "evidence": "Kevin discussed his interest in law, basketball, and maintaining relationships with friends and family."
     },
     "values": {
-      "value": "Teamwork, fun, and personal growth",
-      "evidence": "Kevin emphasizes the importance of teamwork in sports, enjoys social activities, and is open to learning new skills like jiu-jitsu."
+      "value": "Education, personal growth, and social connections.",
+      "evidence": "Kevin talked about his studies, career considerations, and spending time with friends and family."
     },
-    "attachment_style": {
-      "value": "Secure",
-      "evidence": "Kevin maintains consistent communication, shows interest in others' lives, and engages in meaningful conversations."
+    "attachment style": {
+      "value": "Secure, as he maintains regular communication and shares personal experiences.",
+      "evidence": "Kevin consistently engages in conversations, shares details about his life, and shows interest in others."
     },
-    "sources_of_meaning": {
-      "value": "Sports, social interactions, and personal development",
-      "evidence": "Kevin frequently talks about sports, friends, and his own growth through activities like jiu-jitsu and studying."
+    "sources of meaning": {
+      "value": "Academic pursuits, sports, and social relationships.",
+      "evidence": "Kevin discussed school, basketball, and interactions with friends and family."
     }
   },
   "regulation": {
     "avoidance": {
-      "value": "None explicitly mentioned",
-      "evidence": "No signs of avoidance behavior were observed."
+      "value": "None explicitly mentioned.",
+      "evidence": "No evidence of avoidance behaviors."
     },
     "control": {
-      "value": "Moderate",
-      "evidence": "Kevin seems to take initiative in planning activities and discussing future goals."
+      "value": "Moderate, as he sets goals for his career and academic life.",
+      "evidence": "Kevin is considering transitioning to law after his undergraduate studies."
     },
     "people-pleasing": {
-      "value": "None explicitly mentioned",
-      "evidence": "No evidence of people-pleasing behavior was found."
+      "value": "None explicitly mentioned.",
+      "evidence": "No evidence of people-pleasing behaviors."
     },
     "aggression": {
-      "value": "None explicitly mentioned",
-      "evidence": "No aggressive tendencies were observed."
+      "value": "None explicitly mentioned.",
+      "evidence": "No evidence of aggressive tendencies."
     },
     "humor": {
-      "value": "Present",
-      "evidence": "Kevin uses humor in conversations, such as joking about his basketball skills and sharing funny stories."
+      "value": "Moderate, as he uses light-hearted comments in conversation.",
+      "evidence": "Kevin made jokes about his basketball game and shared funny movie recommendations."
     },
     "obsession": {
-      "value": "None explicitly mentioned",
-      "evidence": "No signs of obsession were noted."
+      "value": "None explicitly mentioned.",
+      "evidence": "No evidence of obsessive behavior."
     },
     "rationalization": {
-      "value": "None explicitly mentioned",
-      "evidence": "No rationalization was evident in the conversation."
+      "value": "None explicitly mentioned.",
+      "evidence": "No evidence of rationalizing behavior."
     }
   },
-  "cognitive_style": {
-    "expression_style": {
-      "value": "Verbal and expressive",
-      "evidence": "Kevin communicates clearly and often shares detailed experiences, such as describing his basketball games or golf outings."
+  "cognition": {
+    "expression style": {
+      "value": "Verbal and expressive, sharing detailed stories and opinions.",
+      "evidence": "Kevin provided detailed descriptions of his activities, such as his basketball games and golf outings."
     },
-    "information_density": {
-      "value": "Moderate",
-      "evidence": "Kevin provides enough detail in conversations without overwhelming the listener."
+    "information density": {
+      "value": "High, as he often provides detailed accounts of his experiences.",
+      "evidence": "Kevin gave detailed descriptions of his day, including specific events like playing basketball and attending a lounge."
     },
-    "emotional_visibility": {
-      "value": "High",
-      "evidence": "Kevin expresses emotions openly, such as excitement about sports or sharing personal experiences."
+    "emotional visibility": {
+      "value": "Moderate, as he expresses feelings but not overly emotional.",
+      "evidence": "Kevin shared his excitement about his basketball game and his fatigue after a long day."
     },
-    "social_distance": {
-      "value": "Close",
-      "evidence": "Kevin maintains a friendly and open relationship with Paola, showing interest in her life and sharing personal details."
+    "social distance": {
+      "value": "Close, as he maintains regular contact and shares personal details.",
+      "evidence": "Kevin frequently checks in on Paola and discusses personal topics like his studies and hobbies."
     },
-    "decision_style": {
-      "value": "Balanced",
-      "evidence": "Kevin considers different options when making decisions, such as choosing between Greece and Italy for a trip."
+    "decision style": {
+      "value": "Deliberate, as he considers multiple options before making decisions.",
+      "evidence": "Kevin discussed his future career options, including law and economics."
     }
   },
-  "behavior_preference": {
-    "content_preferences": {
-      "value": "Sports, movies, and social activities",
-      "evidence": "Kevin discusses sports, movies, and social gatherings frequently."
-    },
-    "consumption_preferences": {
-      "value": "Diverse",
-      "evidence": "Kevin enjoys various types of movies, food, and activities."
-    },
-    "entertainment_preferences": {
-      "value": "Sports, comedy, and action movies",
-      "evidence": "Kevin mentions enjoying basketball, football, and action/comedy films."
-    },
-    "habits": {
-      "value": "Regular exercise, socializing, and studying",
-      "evidence": "Kevin regularly plays sports, spends time with friends, and studies for exams."
-    },
-    "long_term_behavior_patterns": {
-      "value": "Continuous learning and social engagement",
-      "evidence": "Kevin is interested in learning new skills like jiu-jitsu and stays socially active."
-    }
-  },
-  "social_physical": {
+  "identity": {
     "occupation": {
-      "value": "Student",
-      "evidence": "Kevin mentions studying economics at Stanford University."
+      "value": "Student, currently studying economics at Stanford University.",
+      "evidence": "Kevin mentioned he is an undergrad at Stanford and considering a transition to law."
     },
     "age": {
-      "value": "Young adult",
-      "evidence": "Kevin's conversations suggest he is in his late teens or early twenties."
+      "value": "Young adult, likely in his early 20s.",
+      "evidence": "Kevin mentioned being in college and discussing future career plans."
     },
-    "social_relationships": {
-      "value": "Strong friendships and family connections",
-      "evidence": "Kevin frequently talks about spending time with friends and family."
+    "social relationships": {
+      "value": "Active, with close ties to friends and family.",
+      "evidence": "Kevin frequently talks about spending time with friends and family, including dinner plans and basketball games."
     },
     "family": {
-      "value": "Present and involved",
-      "evidence": "Kevin mentions cooking with his mom and spending time with family."
+      "value": "Present and involved, as he mentions family activities.",
+      "evidence": "Kevin mentioned having dinner with his family and cooking with his mom."
     },
     "economy": {
-      "value": "Middle-class",
-      "evidence": "Kevin's lifestyle suggests he has access to education and leisure activities."
+      "value": "Middle-class, as he discusses living in a dorm and planning for the future.",
+      "evidence": "Kevin mentioned living in a dorm and considering future career paths."
     },
     "devices": {
-      "value": "Smartphone and computer",
-      "evidence": "Kevin sends pictures and messages through digital means."
+      "value": "Uses smartphones and social media for communication.",
+      "evidence": "Kevin and Paola communicate through messages and share photos."
     },
-    "physical_environment": {
-      "value": "Urban area",
-      "evidence": "Kevin mentions living in San Francisco and visiting places like Disney World."
+    "physical environment": {
+      "value": "Urban, as he lives in San Francisco and mentions locations like Disney World and Miami.",
+      "evidence": "Kevin mentioned living in San Francisco and visiting places like Disney World and Miami."
+    }
+  },
+  "behavior": {
+    "content preferences": {
+      "value": "Sports, movies, and social activities.",
+      "evidence": "Kevin discussed basketball, UFC fights, and movies like 'The Grand Budapest Hotel.'"
+    },
+    "consumption preferences": {
+      "value": "Diverse, including food, drinks, and entertainment.",
+      "evidence": "Kevin mentioned enjoying desserts, trying unique drink combinations, and watching various types of movies."
+    },
+    "entertainment preferences": {
+      "value": "Sports, movies, and social gatherings.",
+      "evidence": "Kevin enjoys basketball, UFC, and lounges, and often spends time with friends."
+    },
+    "habits": {
+      "value": "Regular exercise, studying, and socializing.",
+      "evidence": "Kevin plays basketball, studies regularly, and maintains social interactions."
+    },
+    "long-term behavior patterns": {
+      "value": "Continuously exploring new interests and planning for the future.",
+      "evidence": "Kevin is considering a career change and exploring new hobbies like jiu-jitsu and golf."
     }
   }
 }

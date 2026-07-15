@@ -20,8 +20,10 @@ from .prompts.prompt_loader import (
     UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE,
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
+    PERIODIC_REBUILD_SYSTEM_PROMPT,
+    PERIODIC_REBUILD_USER_PROMPT_TEMPLATE,
 )
-from .epistemic_decay import EpistemicDecayTracker
+from .epistemic_decay import EpistemicDecayTracker, EXPLORATION_MODES
 
 DEFAULT_CONFIG_PATH = "config.ini"
 DEFAULT_PERSONA_PATH = "agent_persona.json"
@@ -31,6 +33,11 @@ DEFAULT_USER_NAME = "default_user"
 FALLBACK_RESPONSE = "我刚才卡了一下，你再说一遍？"
 MID_TERM_SOURCE_MESSAGES = 14
 
+# Valid modeling modes
+MODELING_MODES = ("explicit", "self_model", "flat")
+# Valid update modes
+UPDATE_MODES = ("bayesian_online", "static", "periodic_rebuild")
+
 
 class StateDrivenCompanionAgent:
     def __init__(
@@ -39,16 +46,35 @@ class StateDrivenCompanionAgent:
         profile_path: Optional[str] = None,
         persona_path: Optional[str] = None,
         user_name: str = DEFAULT_USER_NAME,
+        # --- New experimental mode switches ---
+        modeling_mode: str = "explicit",
+        update_mode: str = "bayesian_online",
+        exploration_mode: str = "adaptive",
+        periodic_rebuild_interval: int = 5,
     ):
+        # Validate modes
+        if modeling_mode not in MODELING_MODES:
+            raise ValueError(f"Unknown modeling_mode: {modeling_mode}. Must be one of {MODELING_MODES}")
+        if update_mode not in UPDATE_MODES:
+            raise ValueError(f"Unknown update_mode: {update_mode}. Must be one of {UPDATE_MODES}")
+        if exploration_mode not in EXPLORATION_MODES:
+            raise ValueError(f"Unknown exploration_mode: {exploration_mode}. Must be one of {EXPLORATION_MODES}")
+
         self.llm = LLMClient(config_path)
         self.user_name = user_name
+        self.modeling_mode = modeling_mode
+        self.update_mode = update_mode
+        self.exploration_mode = exploration_mode
+        self.periodic_rebuild_interval = periodic_rebuild_interval
+        self._sessions_since_last_rebuild = 0
+
         self.profile_path = profile_path or self._profile_path_for_user(user_name)
         self.user_profile = self._load_or_create_user_profile(self.profile_path)
         self.persona_path = persona_path or DEFAULT_PERSONA_PATH
         state_axis_obj = self.user_profile.setdefault("state_axis", {})
         state_axis_obj["current_state"] = {}
         state_axis_obj["projected_state"] = {}
-        self.epistemic_tracker = EpistemicDecayTracker()
+        self.epistemic_tracker = EpistemicDecayTracker(mode=exploration_mode)
         self.last_empathy_state: Dict[str, Any] = {}
         self.last_prediction: Dict[str, Any] = {}
         self.last_agent_response: str = ""
@@ -62,7 +88,7 @@ class StateDrivenCompanionAgent:
         self._background_generation = 0
 
     def _profile_path_for_user(self, user_name: str) -> str:
-        name = re.sub(r"[^0-9A-Za-z_\-\u4e00-\u9fff]+", "_", user_name).strip("_")
+        name = re.sub(r"[^0-9A-Za-z_\-一-鿿]+", "_", user_name).strip("_")
         return str(Path(DEFAULT_USER_DIR) / f"{name}_profile.json")
 
     def _load_or_create_user_profile(self, profile_path: str) -> Dict[str, Any]:
@@ -113,7 +139,7 @@ class StateDrivenCompanionAgent:
 
     def _is_generation_stale(self, generation: int) -> bool:
         return generation != self._background_generation
-    
+
     def _memory_pipeline(
         self,
         generation: int,
@@ -150,6 +176,21 @@ class StateDrivenCompanionAgent:
                 save_json(self.profile_path, self.user_profile)
 
     def _evolve_profile_from_long_term(self, long_term_memory_id: str) -> bool:
+        """Evolve profile based on update_mode.
+
+        - bayesian_online: incremental Bayesian update (our method)
+        - static: no update at all
+        - periodic_rebuild: handled separately in finalize_session
+        """
+        if self.update_mode == "static":
+            print("[Profile Evolution] Static mode — skipping update")
+            return False
+
+        if self.update_mode == "periodic_rebuild":
+            print("[Profile Evolution] Periodic rebuild mode — skipping incremental update")
+            return False
+
+        # Default: bayesian_online
         long_term_memories = self.memory_manager.get_memories_by_ids([long_term_memory_id])
         if not long_term_memories:
             print(f"[Profile Evolution] missing long-term memory id={long_term_memory_id}")
@@ -181,6 +222,39 @@ class StateDrivenCompanionAgent:
                     return True
         except Exception as e:
             print(f"[Profile Evolution Error] {e}")
+            return False
+
+    def rebuild_profile_from_conversations(self, conversations: List[Dict[str, Any]]) -> bool:
+        """Rebuild profile from scratch using all conversation data (for periodic_rebuild mode).
+
+        Args:
+            conversations: List of conversation turn dicts.
+
+        Returns:
+            True if profile was successfully rebuilt.
+        """
+        from .profile_utils import flatten_static_profile
+        state = state_axis(self.user_profile)
+        conversation_text = "\n".join(
+            f"{t.get('speaker', 'unknown')}: {t.get('content', '')}"
+            for t in conversations
+        )
+
+        try:
+            result = parse_json(self.llm.chat(
+                PERIODIC_REBUILD_SYSTEM_PROMPT,
+                PERIODIC_REBUILD_USER_PROMPT_TEMPLATE.format(
+                    user_name=self.user_name,
+                    full_conversation=conversation_text[:8000],
+                ),
+                temperature=0.3,
+            ))
+            if isinstance(result, dict):
+                state["static_profile"] = result
+                print(f"[Profile Rebuild] Complete rebuild from {len(conversations)} turns")
+                return True
+        except Exception as e:
+            print(f"[Profile Rebuild Error] {e}")
             return False
 
     def _run_empathy_alignment(
@@ -264,6 +338,15 @@ class StateDrivenCompanionAgent:
             self._evolve_profile_from_long_term(long_term_memory_id)
             print(f"[Agent Profile] final save profile path={self.profile_path}")
             save_json(self.profile_path, self.user_profile)
+
+        # Periodic rebuild check
+        self._sessions_since_last_rebuild += 1
+        if (self.update_mode == "periodic_rebuild"
+                and self._sessions_since_last_rebuild >= self.periodic_rebuild_interval):
+            all_messages = self.memory_manager.get_recent_messages(limit=100)
+            self.rebuild_profile_from_conversations(all_messages)
+            save_json(self.profile_path, self.user_profile)
+            self._sessions_since_last_rebuild = 0
 
         return {
             "flushed_mid_term_ids": flushed_mid_term_ids,

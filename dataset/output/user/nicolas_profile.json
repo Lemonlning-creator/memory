@@ -1,38 +1,38 @@
 {
   "core": {
     "fears": {
-      "value": "Fear of being a burden to others, fear of illness spreading to others, fear of failure in social situations",
-      "evidence": "Nicolas expresses concern about spreading COVID to others, mentions feeling like a burden when he's sick, and shows anxiety during interviews."
+      "value": "Fear of being a burden to others, fear of illness spreading to others, fear of social rejection",
+      "evidence": "Nicolas mentions worrying about spreading covid to others and not wanting to be a burden. He also expresses disappointment when friends cancel plans due to his illness."
     },
     "desires": {
-      "value": "Desire for connection, desire for personal growth, desire for creative expression through cooking",
-      "evidence": "Nicolas talks about wanting relationships, mentions his cooking as a form of self-expression, and discusses his aspirations to become a chef."
+      "value": "Desire for connection, desire for recognition, desire for personal growth",
+      "evidence": "Nicolas talks about wanting to have relationships and roommates, mentions his idol Gordon Ramsay, and expresses a desire to become a chef."
     },
     "values": {
-      "value": "Value of health, value of authenticity, value of independence",
-      "evidence": "Nicolas is concerned about his health, expresses frustration with societal norms, and values his independence in decision-making."
+      "value": "Value of health, value of personal space, value of authenticity",
+      "evidence": "Nicolas is concerned about his health, mentions the importance of personal space when hosting guests, and expresses a desire to be authentic in interviews."
     },
     "attachment style": {
       "value": "Anxious attachment",
-      "evidence": "Nicolas shows concern about being rejected or not being understood, especially in social situations and relationships."
+      "evidence": "Nicolas shows concern about his friends canceling plans and expresses disappointment, indicating a need for reassurance and connection."
     },
-    "sources_of_meaning": {
+    "sources of meaning": {
       "value": "Cooking, personal achievements, helping others",
-      "evidence": "Nicolas finds meaning in cooking, shares stories of his achievements, and expresses a desire to help others through his work."
+      "evidence": "Nicolas takes pride in his cooking, mentions his goal to become a chef, and expresses a desire to help others through his work."
     }
   },
   "regulation": {
     "avoidance": {
-      "value": "Avoids social interactions when feeling unwell or anxious",
-      "evidence": "Nicolas cancels plans due to feeling sick and expresses anxiety about interviews."
+      "value": "Avoids social situations when sick, avoids confrontation",
+      "evidence": "Nicolas avoids going out when sick and cancels plans with friends. He also avoids discussing his feelings openly."
     },
     "control": {
-      "value": "Seeks control over his environment and health",
-      "evidence": "Nicolas takes precautions to avoid spreading illness, manages his health with medication, and tries to maintain a routine."
+      "value": "Seeks control over his environment, especially regarding health",
+      "evidence": "Nicolas is careful about his health, mentions the importance of hygiene, and tries to manage his symptoms."
     },
     "people-pleasing": {
-      "value": "Tends to prioritize others' needs over his own",
-      "evidence": "Nicolas mentions making food for others even when he doesn't feel like it and expresses concern for others' well-being."
+      "value": "Willing to please others, even if it means sacrificing his own comfort",
+      "evidence": "Nicolas makes food for others despite not liking it himself and tries to maintain social connections."
     },
     "aggression": {
       "value": "Not evident",
@@ -40,89 +40,89 @@
     },
     "humor": {
       "value": "Uses humor to cope with stress",
-      "evidence": "Nicolas makes jokes about his situation, such as joking about his appearance and using lighthearted banter."
+      "evidence": "Nicolas uses jokes about his situation, such as joking about his skincare routine."
     },
     "obsession": {
-      "value": "Obsessed with personal health and routines",
-      "evidence": "Nicolas frequently discusses his health, medications, and skincare routine."
+      "value": "Obsessed with cooking and food",
+      "evidence": "Nicolas frequently discusses cooking, recipes, and food preferences."
     },
     "rationalization": {
       "value": "Rationalizes his actions and decisions",
-      "evidence": "Nicolas rationalizes his behavior, such as justifying his choice to eat certain foods despite health concerns."
+      "evidence": "Nicolas rationalizes his decision to host a dinner despite being sick and justifies his food choices."
     }
   },
-  "cognitive_style": {
-    "expression_style": {
-      "value": "Expresses thoughts openly and candidly",
-      "evidence": "Nicolas freely shares his feelings, fears, and experiences with Vanessa."
+  "cognition": {
+    "expression style": {
+      "value": "Informal, conversational",
+      "evidence": "Nicolas uses casual language, slang, and emojis in his messages."
     },
-    "information_density": {
-      "value": "Moderate information density",
-      "evidence": "Nicolas provides enough detail in his conversations without overwhelming the listener."
+    "information density": {
+      "value": "Moderate",
+      "evidence": "Nicolas provides enough detail in his conversations but doesn't overload with information."
     },
-    "emotional_visibility": {
-      "value": "Emotionally visible",
+    "emotional visibility": {
+      "value": "High",
       "evidence": "Nicolas openly expresses his emotions, including sadness, frustration, and excitement."
     },
-    "social_distance": {
-      "value": "Comfortable with close social distance",
-      "evidence": "Nicolas shares personal stories and feelings with Vanessa, indicating a level of trust."
+    "social distance": {
+      "value": "Close",
+      "evidence": "Nicolas shares personal details about his health, relationships, and daily life with Vanessa."
     },
-    "decision_style": {
-      "value": "Impulsive decision-making",
-      "evidence": "Nicolas makes spontaneous decisions, such as deciding to eat cake for breakfast or canceling plans on a whim."
+    "decision style": {
+      "value": "Impulsive",
+      "evidence": "Nicolas makes quick decisions, such as deciding to host a dinner despite being sick."
     }
   },
-  "behavior_preference": {
-    "content_preferences": {
-      "value": "Enjoys cooking, watching TV shows, and discussing personal topics",
-      "evidence": "Nicolas frequently talks about cooking, watches shows like The Great British Bake Off, and discusses personal experiences."
-    },
-    "consumption_preferences": {
-      "value": "Prefers simple, comforting foods and drinks",
-      "evidence": "Nicolas enjoys foods like soup, grilled cheese, and juice, and prefers warm drinks."
-    },
-    "entertainment_preferences": {
-      "value": "Enjoys cooking shows, comedy, and hypothetical scenarios",
-      "evidence": "Nicolas mentions watching cooking shows, enjoys comedy, and engages in hypothetical discussions."
-    },
-    "habits": {
-      "value": "Has inconsistent habits, especially around health and routines",
-      "evidence": "Nicolas has irregular sleep patterns, skips skincare routines, and often makes impulsive decisions."
-    },
-    "long_term_behavior_patterns": {
-      "value": "Struggles with consistency in health and lifestyle choices",
-      "evidence": "Nicolas frequently mentions skipping routines and making unhealthy choices despite knowing they're not ideal."
-    }
-  },
-  "social_physical": {
+  "identity": {
     "occupation": {
       "value": "Healthcare worker (previously)",
       "evidence": "Nicolas mentions working in healthcare to help people get benefits."
     },
     "age": {
       "value": "Young adult",
-      "evidence": "Nicolas references childhood memories and discusses life stages, suggesting he is in his 20s or 30s."
+      "evidence": "Nicolas talks about his experiences in school, work, and social life, suggesting he's in his 20s or early 30s."
     },
-    "social_relationships": {
-      "value": "Limited close relationships, struggles with social anxiety",
-      "evidence": "Nicolas mentions having few close friends, feels anxious in social situations, and expresses loneliness."
+    "social relationships": {
+      "value": "Limited close relationships, values family and friends",
+      "evidence": "Nicolas mentions his family and friends but seems to have few close connections."
     },
     "family": {
-      "value": "Unclear, but may have strained relationships",
-      "evidence": "Nicolas mentions family issues, including being ghosted and feeling misunderstood."
+      "value": "Distant relationship with family",
+      "evidence": "Nicolas mentions his family ghosting him and not being supportive of his choices."
     },
     "economy": {
-      "value": "Financial struggles",
-      "evidence": "Nicolas mentions being unable to afford delivery, expensive medications, and living paycheck to paycheck."
+      "value": "Struggles financially",
+      "evidence": "Nicolas mentions the high cost of healthcare, groceries, and the difficulty of saving money."
     },
     "devices": {
       "value": "Uses smartphones and social media",
-      "evidence": "Nicolas mentions being blocked by Gordon Ramsay on Twitter and uses messaging apps."
+      "evidence": "Nicolas communicates via text messages and references online content."
     },
-    "physical_environment": {
-      "value": "Urban environment",
-      "evidence": "Nicolas mentions living in a city and discusses driving to the airport."
+    "physical environment": {
+      "value": "Urban area",
+      "evidence": "Nicolas mentions living in a city and going to the airport."
+    }
+  },
+  "behavior": {
+    "content preferences": {
+      "value": "Cooking shows, food, hypothetical scenarios",
+      "evidence": "Nicolas frequently discusses cooking, food, and engages in hypothetical questions."
+    },
+    "consumption preferences": {
+      "value": "Prefers sweet and fruity drinks, enjoys eating",
+      "evidence": "Nicolas mentions his preference for sweet and fruity drinks and enjoys eating various foods."
+    },
+    "entertainment preferences": {
+      "value": "Cooking shows, comedy, hypothetical discussions",
+      "evidence": "Nicolas watches cooking shows, enjoys comedy, and engages in hypothetical discussions."
+    },
+    "habits": {
+      "value": "Eats a lot, has a skincare routine, watches TV",
+      "evidence": "Nicolas mentions eating frequently, has a skincare routine, and watches TV."
+    },
+    "long-term behavior patterns": {
+      "value": "Struggles with consistency in routines",
+      "evidence": "Nicolas mentions having trouble maintaining consistent skincare and exercise routines."
     }
   }
 }

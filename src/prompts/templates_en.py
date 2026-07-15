@@ -183,9 +183,9 @@ Output JSON with this structure:
   "static_profile": {{
     "core": {{}},
     "regulation": {{}},
-    "cognitive_style": {{}},
-    "behavior_preference": {{}},
-    "social_physical": {{}}
+    "cognition": {{}},
+    "identity": {{}},
+    "behavior": {{}}
   }}
 }}
 
@@ -339,9 +339,9 @@ Profile structure:
 {{
   "core": {{}},                    // Core fears, core desires, values, attachment style, sources of meaning
   "regulation": {{}},              // Avoidance, control, people-pleasing, aggression, humor, obsession, rationalization
-  "cognitive_style": {{}},         // Expression style, information density, emotional visibility, social distance, decision style
-  "behavior_preference": {{}},     // Content preferences, consumption preferences, entertainment preferences, habits, long-term behavior patterns
-  "social_physical": {{}}          // Occupation, age, social relationships, family, economy, devices, physical environment
+  "cognition": {{}},         // Expression style, information density, emotional visibility, social distance, decision style
+  "identity": {{}},          // Occupation, age, social relationships, family, economy, devices, physical environment
+  "behavior": {{}},          // Content preferences, consumption preferences, entertainment preferences, habits, long-term behavior patterns
 }}
 
 Return ONLY valid JSON, no explanation. Each leaf attribute should be in format: {{"value": "...", "evidence": "dialogue snippet supporting this attribute"}}
@@ -401,8 +401,8 @@ SELF DOMAIN (Agent's perspective):
 USER DOMAIN (User's perspective, reasoned through 5 profile layers):
 - Core layer: What core fears, desires, or values are being activated?
 - Regulation layer: What coping mechanisms is the user employing?
-- Cognitive style layer: How does this user process and prefer information?
-- Behavior preference layer: What topics or approaches resonate with them?
+- Cognition layer: How does this user process and prefer information?
+- Identity layer: What topics or approaches resonate with them?
 - Social/physical layer: What contextual factors (work, relationships, health) affect their current state?
 
 EXPLORATION VS EXPLOITATION:
@@ -436,9 +436,9 @@ STEP 1 - UNDERSTANDING (Self Domain + User Domain):
 1b. User Domain (5-layer reasoning): For EACH of the 5 profile layers, assess what this layer tells you about the user\'s current state and expectations:
   - Core: What core fear, desire, or value is activated?
   - Regulation: What coping mechanism is the user using?
-  - Cognitive style: How should you adapt communication?
-  - Behavior preference: What approach will resonate?
-  - Social/physical: What contextual factors matter?
+  - Cognition: How should you adapt communication?
+  - Identity: What contextual factors matter?
+  - Behavior: What approach will resonate?
 
 STEP 2 - PREDICTION:
 Based on the 5-layer understanding, predict the user\'s emotional trajectory. What will happen if you respond with high empathy? With low empathy? What is the risk of misalignment?
@@ -463,9 +463,9 @@ Output JSON:
     "user_domain": {{
       "core_layer": "what core fear/desire/value is activated",
       "regulation_layer": "what coping mechanism is the user using",
-      "cognitive_style_layer": "how to adapt communication",
-      "behavior_preference_layer": "what approach will resonate",
-      "social_physical_layer": "what contextual factors matter",
+      "cognition_layer": "how to adapt communication",
+      "identity_layer": "what contextual factors matter",
+      "behavior_layer": "what approach will resonate",
       "current_emotion": "user\'s current emotion",
       "emotional_intensity": "low/medium/high",
       "underlying_need": "what the user really needs right now",
@@ -572,7 +572,7 @@ PROFILE_CONSISTENCY_SYSTEM_PROMPT = """You are an expert psychologist evaluating
 
 Two profiles have been extracted independently from two DIFFERENT conversations with the same person. Your task is to evaluate how consistent these profiles are — i.e., whether they describe the same underlying personality.
 
-For each major section (core, regulation, cognitive_style, behavior_preference, social_physical), compare the two profiles and assess:
+For each major section (core, regulation, cognition, identity, behavior), compare the two profiles and assess:
 - Do they describe compatible personality traits?
 - Are there contradictions?
 - Is the overlap meaningful or just superficial?
@@ -584,9 +584,9 @@ Output ONLY valid JSON:
   "section_scores": {
     "core": {"score": <1-5>, "reasoning": "..."},
     "regulation": {"score": <1-5>, "reasoning": "..."},
-    "cognitive_style": {"score": <1-5>, "reasoning": "..."},
-    "behavior_preference": {"score": <1-5>, "reasoning": "..."},
-    "social_physical": {"score": <1-5>, "reasoning": "..."}
+    "cognition": {"score": <1-5>, "reasoning": "..."},
+    "identity": {"score": <1-5>, "reasoning": "..."},
+    "behavior": {"score": <1-5>, "reasoning": "..."}
   },
   "contradictions": ["list of any contradictions found"],
   "stable_traits": ["list of traits that appear consistently in both profiles"],
@@ -777,12 +777,179 @@ Output JSON:
   }},
   "learning": {{
     "new_insight": "what the agent learned about this user from this interaction",
-    "profile_layer_affected": "core/regulation/cognitive_style/behavior_preference/social_physical/none",
+    "profile_layer_affected": "core/regulation/cognition/identity/behavior/none",
     "confidence_delta": "how much more/less confident the agent should be about this user"
   }},
   "understanding_update": {{
     "calibration_note": "how to adjust future empathy reasoning for this user",
     "explore_vs_exploit_adjustment": "should future turns lean more toward exploration or exploitation based on this outcome"
   }}
+}}
+"""
+
+
+# =========================
+# Flat Profile Extraction (Experiment 1 / 5)
+# =========================
+# Used for "Flat User Profile" baseline in RQ1 and "Flat Profile" ablation in RQ5.
+# Extracts user traits as a flat list without hierarchical layer constraints.
+FLAT_PROFILE_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting user profiles from conversations. Based on the dialogue between two people, extract the profile of {user_name} (the human user).
+
+IMPORTANT: Extract traits as a FLAT list of attributes WITHOUT any hierarchical structure.
+Do NOT organize into layers like core/regulation/cognition/identity/behavior.
+Just list all observed traits, preferences, behaviors, and characteristics as individual attributes.
+
+Return ONLY valid JSON in this format:
+{{
+  "trait_name": {{"value": "description", "evidence": "dialogue snippet supporting this"}},
+  ...
+}}
+
+Extract as many relevant traits as you can find. Each trait should be a separate key-value pair.
+"""
+
+FLAT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = """The following is a conversation between {user_name} and their conversation partner:
+
+{corpus}
+"""
+
+
+# =========================
+# Self-Model Other Modeling (Experiment 1 / 5)
+# =========================
+# Based on Mahault et al.: The agent projects its own persona/self-model
+# onto the user instead of building an explicit user model.
+SELF_MODEL_SYSTEM_PROMPT = """You are a companion agent. Instead of building an explicit model of the user, you use YOUR OWN persona and perspective to infer what the user might be feeling, thinking, or needing.
+
+This is called "Self-model based Other Modeling" — you project your own emotional patterns and communication style onto the other person.
+
+YOUR PERSONA:
+{agent_persona}
+
+Based on your own persona and the conversation context, infer the user's current state. Assume the user thinks and feels similarly to how YOU would in their situation.
+
+Return ONLY valid JSON."""
+
+SELF_MODEL_USER_PROMPT_TEMPLATE = """CONVERSATION CONTEXT:
+{conversation_history}
+
+USER'S LATEST MESSAGE:
+"{user_message}"
+
+YOUR PERSONA:
+{agent_persona}
+
+Based on YOUR OWN persona and how YOU would feel in this situation, infer the user's state.
+Project your own emotional patterns onto the user.
+
+Output JSON:
+{{
+  "inferred_emotion": "what emotion you think the user feels (based on how YOU would feel)",
+  "inferred_sentiment": "positive/negative/neutral",
+  "inferred_need": "what the user likely needs (based on what YOU would need)",
+  "inferred_topic": "what topic the user will likely discuss next",
+  "confidence": 0.0,
+  "reasoning": "how your persona leads you to this inference"
+}}
+"""
+
+
+# =========================
+# Periodic Profile Rebuild (Experiment 4)
+# =========================
+# Used for "Periodic Rebuild" baseline in RQ4.
+# Rebuilds the entire profile from scratch using all available conversation data.
+PERIODIC_REBUILD_SYSTEM_PROMPT = """You are a user profile rebuild module. Your task is to rebuild the user's COMPLETE profile from scratch using ALL available conversation data.
+
+This is a FULL REBUILD — ignore any previous profile. Extract everything you can from the conversation history.
+
+Profile structure (5-layer):
+{{
+  "core": {{}},          // Core fears, desires, values, attachment style, sources of meaning
+  "regulation": {{}},    // Coping mechanisms, avoidance, control, humor, etc.
+  "cognition": {{}},     // Expression style, information density, emotional visibility, etc.
+  "identity": {{}},      // Occupation, relationships, family, environment, etc.
+  "behavior": {{}}       // Preferences, habits, patterns, etc.
+}}
+
+Each leaf attribute: {{"value": "...", "confidence": 0.0-1.0, "memory_ids": [], "evidence": "..."}}
+
+Return ONLY valid JSON."""
+
+PERIODIC_REBUILD_USER_PROMPT_TEMPLATE = """COMPLETE conversation history with {user_name}:
+
+{full_conversation}
+
+Rebuild the complete user profile from scratch.
+"""
+
+
+# =========================
+# Emotion / Sentiment Extraction (Experiment 1 Evaluation)
+# =========================
+# Used to extract ground-truth emotion and sentiment from user messages.
+EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting emotional states from text messages.
+
+Analyze the user's message and extract:
+1. Primary emotion (from: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity, neutral)
+2. Sentiment (positive / negative / neutral)
+3. Emotional intensity (low / medium / high)
+
+Output ONLY valid JSON."""
+
+EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE = """User message:
+"{user_message}"
+
+Extract the emotional state. Output JSON:
+{{
+  "emotion": "emotion label",
+  "sentiment": "positive/negative/neutral",
+  "intensity": "low/medium/high"
+}}
+"""
+
+
+# =========================
+# Topic Extraction (Experiment 1 Evaluation)
+# =========================
+TOPIC_EXTRACTION_SYSTEM_PROMPT = """You are an expert at identifying conversation topics.
+
+Analyze the user's message and identify the main topic being discussed.
+Be specific but concise (2-5 words).
+
+Output ONLY valid JSON."""
+
+TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE = """User message:
+"{user_message}"
+
+Identify the main topic. Output JSON:
+{{
+  "topic": "main topic (2-5 words)",
+  "subtopics": ["subtopic1", "subtopic2"]
+}}
+"""
+
+
+# =========================
+# Intimacy Level Extraction (Experiment 2 Evaluation)
+# =========================
+INTIMACY_EXTRACTION_SYSTEM_PROMPT = """You are an expert at assessing intimacy levels in conversation.
+
+Analyze the message and rate the intimacy level:
+- 0.0-0.2: Very distant/formal (small talk, polite exchanges)
+- 0.3-0.4: Casual acquaintance (general topics, surface-level sharing)
+- 0.5-0.6: Friendly (personal opinions, moderate self-disclosure)
+- 0.7-0.8: Close (personal feelings, vulnerable sharing)
+- 0.9-1.0: Very intimate (deep fears, core values, highly personal)
+
+Output ONLY valid JSON."""
+
+INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE = """Message:
+"{message}"
+
+Rate the intimacy level. Output JSON:
+{{
+  "intimacy_level": 0.0,
+  "evidence": "what in the message indicates this intimacy level"
 }}
 """

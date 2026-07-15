@@ -16,9 +16,11 @@ where:
     completeness = profile completeness in [0, 1], measured by the proportion
                    of populated attributes across all 5 layers
 
-The formula combines two decay pressures:
-  1. Temporal decay: older relationships have less novel information to discover.
-  2. Completeness decay: a richer profile means less room for new discoveries.
+Exploration modes (for Experiment 3 ablation):
+    adaptive  — omega(t) decays naturally (our method)
+    no_exploration    — omega(t) = 0 always (pure exploit)
+    fixed_exploration — omega(t) = fixed_value always
+    always_exploration — omega(t) = 1.0 always (pure explore)
 """
 from __future__ import annotations
 
@@ -27,7 +29,10 @@ from typing import Any, Dict, Optional
 
 
 # Five layers of the hierarchical user profile
-PROFILE_LAYERS = ("core", "regulation", "cognitive_style", "behavior_preference", "social_physical")
+PROFILE_LAYERS = ("core", "regulation", "cognition", "identity", "behavior")
+
+# Valid exploration modes
+EXPLORATION_MODES = ("adaptive", "no_exploration", "fixed_exploration", "always_exploration")
 
 
 def compute_profile_completeness(static_profile: Dict[str, Any],
@@ -98,12 +103,58 @@ def get_exploration_label(omega: float) -> str:
         return "exploit"
 
 
+def compute_portrait_entropy(static_profile: Dict[str, Any]) -> float:
+    """Compute the posterior entropy of the user profile.
+
+    Uses the confidence values from Bayesian updating to measure uncertainty.
+    For each attribute with confidence c:
+      H_i = -c * log2(c) - (1-c) * log2(1-c)  (binary entropy)
+    The total entropy is the average across all attributes.
+
+    Attributes without confidence values are treated as c=0.5 (maximum uncertainty).
+    Empty profile returns maximum entropy (1.0).
+
+    Returns:
+        Portrait entropy in [0, 1]. Lower = more certain profile.
+    """
+    if not static_profile:
+        return 1.0
+
+    entropies = []
+    for layer in PROFILE_LAYERS:
+        section = static_profile.get(layer, {})
+        if not isinstance(section, dict):
+            continue
+        for key, val in section.items():
+            if isinstance(val, dict):
+                c = val.get("confidence", 0.5)
+                if not isinstance(c, (int, float)):
+                    c = 0.5
+            else:
+                c = 0.5  # no confidence info = max uncertainty
+
+            # Clamp to avoid log(0)
+            c = max(0.001, min(0.999, float(c)))
+            h = -c * math.log2(c) - (1 - c) * math.log2(1 - c)
+            entropies.append(h)
+
+    if not entropies:
+        return 1.0
+
+    return round(sum(entropies) / len(entropies), 4)
+
+
 class EpistemicDecayTracker:
     """Stateful tracker for epistemic value decay across an interaction session.
 
+    Supports multiple exploration modes for ablation experiments:
+        adaptive          — omega(t) decays naturally (our method)
+        no_exploration    — omega(t) = 0 always
+        fixed_exploration — omega(t) = fixed_value always
+        always_exploration — omega(t) = 1.0 always
+
     Usage:
-        tracker = EpistemicDecayTracker()
-        # After each turn:
+        tracker = EpistemicDecayTracker(mode="adaptive")
         tracker.increment()
         omega = tracker.compute(static_profile)
     """
@@ -114,23 +165,37 @@ class EpistemicDecayTracker:
         decay_lambda: float = 0.01,
         max_attrs_per_layer: int = 8,
         initial_count: int = 0,
+        mode: str = "adaptive",
+        fixed_value: float = 0.5,
     ):
+        if mode not in EXPLORATION_MODES:
+            raise ValueError(f"Unknown exploration mode: {mode}. Must be one of {EXPLORATION_MODES}")
         self.omega_0 = omega_0
         self.decay_lambda = decay_lambda
         self.max_attrs_per_layer = max_attrs_per_layer
         self.interaction_count = initial_count
+        self.mode = mode
+        self.fixed_value = fixed_value
 
     def increment(self) -> None:
         self.interaction_count += 1
 
     def compute(self, static_profile: Optional[Dict[str, Any]] = None) -> float:
-        return compute_omega(
-            interaction_count=self.interaction_count,
-            static_profile=static_profile,
-            omega_0=self.omega_0,
-            decay_lambda=self.decay_lambda,
-            max_attrs_per_layer=self.max_attrs_per_layer,
-        )
+        """Compute omega(t) based on the current exploration mode."""
+        if self.mode == "no_exploration":
+            return 0.0
+        elif self.mode == "always_exploration":
+            return 1.0
+        elif self.mode == "fixed_exploration":
+            return self.fixed_value
+        else:  # adaptive
+            return compute_omega(
+                interaction_count=self.interaction_count,
+                static_profile=static_profile,
+                omega_0=self.omega_0,
+                decay_lambda=self.decay_lambda,
+                max_attrs_per_layer=self.max_attrs_per_layer,
+            )
 
     def label(self, static_profile: Optional[Dict[str, Any]] = None) -> str:
         return get_exploration_label(self.compute(static_profile))
