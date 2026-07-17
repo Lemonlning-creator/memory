@@ -1,0 +1,157 @@
+{
+  "core": {
+    "fears": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "desires": {
+      "value": "进行有意义的对话，探索新兴趣，并保持社交联系",
+      "confidence": 0.9,
+      "evidence": "Emi经常询问Paola的经历，分享自己的兴趣，并对旅行、书籍和爱好表现出热情。"
+    },
+    "values": {
+      "value": "联系、创造力和个人成长",
+      "confidence": 0.9,
+      "evidence": "Emi重视社交互动，享受烹饪、阅读和音乐等创造性活动，并通过普拉提和语言学习等方式对自我提升感兴趣。"
+    },
+    "attachment style": {
+      "value": "安全型",
+      "confidence": 0.8,
+      "evidence": "Emi保持持续的沟通，表现出对他人的兴趣，并参与深入而有意义的对话。"
+    },
+    "sources of meaning": {
+      "value": "个人发展、人际关系和创造性表达",
+      "confidence": 0.9,
+      "evidence": "Emi讨论了学习新语言的目标，参与园艺和烹饪等爱好，并维持友谊。"
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "control": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "people-pleasing": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "aggression": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "humor": {
+      "value": "适度",
+      "confidence": 0.7,
+      "evidence": "Emi在谈论她的猫、指甲护理和有趣的电影推荐时会使用幽默。"
+    },
+    "obsession": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "rationalization": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    }
+  },
+  "cognition": {
+    "expression style": {
+      "value": "口头且富有表现力",
+      "confidence": 0.9,
+      "evidence": "Emi坦率地交流，详细描述经历，并参与深思熟虑的讨论。"
+    },
+    "information density": {
+      "value": "中等",
+      "confidence": 0.8,
+      "evidence": "Emi提供足够的细节来传达她的想法，而不会让对话变得繁重。"
+    },
+    "emotional visibility": {
+      "value": "高",
+      "confidence": 0.9,
+      "evidence": "Emi清楚地表达情感，比如对旅行的兴奋或分享个人成就，如新的发型。"
+    },
+    "social distance": {
+      "value": "亲密",
+      "confidence": 0.9,
+      "evidence": "Emi分享个人细节并询问Paola的生活，表明一种亲密的关系。"
+    },
+    "decision style": {
+      "value": "灵活",
+      "confidence": 0.8,
+      "evidence": "Emi乐于接受建议，尝试新事物如烹饪或园艺，并适应不同的情况。"
+    }
+  },
+  "identity": {
+    "occupation": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "age": {
+      "value": "年轻成人",
+      "confidence": 0.8,
+      "evidence": "Emi提到她在上大学（第12次会话），并参考了年轻成人的典型活动，如旅行、烹饪和社交。"
+    },
+    "social relationships": {
+      "value": "牢固的友谊和家庭纽带",
+      "confidence": 0.9,
+      "evidence": "Emi谈论朋友、家人（如她在爱达荷州的阿姨）并保持与Paola的定期联系。"
+    },
+    "family": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "economy": {
+      "value": "中产阶级",
+      "confidence": 0.7,
+      "evidence": "Emi提到住在洛杉矶，参加普拉提课程，并享受暗示稳定经济状况的活动。"
+    },
+    "devices": {
+      "value": "智能手机和电脑",
+      "confidence": 0.9,
+      "evidence": "Emi提到使用设备进行沟通、观看电视剧和在线活动。"
+    },
+    "physical environment": {
+      "value": "洛杉矶的都市地区",
+      "confidence": 0.9,
+      "evidence": "Emi提到住在洛杉矶，去爱达荷州阿姨家附近的山地徒步旅行，并参观纽约的中央公园。"
+    }
+  },
+  "behavior": {
+    "content preferences": {
+      "value": "旅行、书籍、电影和食物",
+      "confidence": 0.9,
+      "evidence": "Emi经常讨论旅行目的地，推荐书籍和电影，并分享烹饪经验。"
+    },
+    "consumption preferences": {
+      "value": "多样且风格各异",
+      "confidence": 0.9,
+      "evidence": "Emi喜欢各种类型，从科幻到浪漫，并尝试不同的美食和爱好。"
+    },
+    "entertainment preferences": {
+      "value": "电影、书籍和户外活动",
+      "confidence": 0.9,
+      "evidence": "Emi看电影、读书并参与徒步和园艺等户外活动。"
+    },
+    "habits": {
+      "value": "定期的社交互动、烹饪和健身习惯",
+      "confidence": 0.9,
+      "evidence": "Emi定期与Paola聊天、做饭并参与普拉提和徒步等体育活动。"
+    },
+    "long-term behavior patterns": {
+      "value": "好奇、适应性强且社交活跃",
+      "confidence": 0.9,
+      "evidence": "Emi持续探索新兴趣，维持人际关系，并适应不同环境。"
+    }
+  }
+}

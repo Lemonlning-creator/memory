@@ -1,0 +1,157 @@
+{
+  "core": {
+    "fears": {
+      "value": "被前伴侣跟踪或骚扰的恐惧",
+      "confidence": 0.9,
+      "evidence": "Vanessa 提到她在工作场所和外面都看到过她的前男友，她觉得不舒服。她还提到因为太害怕而跳过了腿部训练。"
+    },
+    "desires": {
+      "value": "渴望一个有支持性的关系和个人成长",
+      "confidence": 0.9,
+      "evidence": "Vanessa 谈到她离开一段有毒的关系以关注自己，并提到想遇到一个不'愚蠢'的人。她还讨论了她在健美和自我发展方面的目标。"
+    },
+    "values": {
+      "value": "健康、独立和真实性",
+      "confidence": 0.9,
+      "evidence": "Vanessa 强调健康饮食、健身和自我成长。她也重视真实性，这体现在她对过去关系的坦诚以及想要忠于自己的愿望中。"
+    },
+    "attachment style": {
+      "value": "安全型，但对亲密关系有些焦虑",
+      "confidence": 0.8,
+      "evidence": "Vanessa 坦率且健谈，但也表达了对见面的不适感，并且有过困难的过去关系。她似乎重视情感安全。"
+    },
+    "sources_of_meaning": {
+      "value": "个人成就、健康和人际关系",
+      "confidence": 0.9,
+      "evidence": "Vanessa 谈到她的健美比赛、她在诊所的工作以及建立有意义人际关系的兴趣。她还重视自我照顾和个人成长。"
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "回避对抗和不舒服的情况",
+      "confidence": 0.7,
+      "evidence": "Vanessa 避免详细讨论她的前男友，并似乎不愿透露过去的感情经历。她还提到因为害怕而跳过了腿部训练。"
+    },
+    "control": {
+      "value": "通过日常惯例和计划寻求控制",
+      "confidence": 0.8,
+      "evidence": "Vanessa 有规律的锻炼、餐食准备和健身房安排。她还为健美比赛和其他活动提前做计划。"
+    },
+    "people-pleasing": {
+      "value": "不太明显",
+      "confidence": 0.4,
+      "evidence": "Vanessa 在观点上很坚定，似乎并不优先考虑他人的认可超过自己的需求。"
+    },
+    "aggression": {
+      "value": "不太明显",
+      "confidence": 0.3,
+      "evidence": "Vanessa 在互动中更倾向于被动，没有表现出愤怒或攻击性。"
+    },
+    "humor": {
+      "value": "用幽默来应对和连接",
+      "confidence": 0.9,
+      "evidence": "Vanessa 在对话中经常使用表情符号、笑话和轻松的语言。她也会自嘲并用幽默来缓解紧张。"
+    },
+    "obsession": {
+      "value": "不太明显",
+      "confidence": 0.4,
+      "evidence": "Vanessa 对多个主题（宠物、游戏、健身）感兴趣，但没有显示出强迫行为的迹象。"
+    },
+    "rationalization": {
+      "value": "有时会合理化恐惧或担忧",
+      "confidence": 0.7,
+      "evidence": "Vanessa 通过考虑报警来合理化她对前男友的恐惧，并提到她正在努力避免与他接触。"
+    }
+  },
+  "cognition": {
+    "expression_style": {
+      "value": "非正式、口语化且富有表现力",
+      "confidence": 0.9,
+      "evidence": "Vanessa 在整个对话中使用随意的语言、表情符号和非正式表达。她经常用简短而生动的句子说话。"
+    },
+    "information_density": {
+      "value": "中等",
+      "confidence": 0.8,
+      "evidence": "Vanessa 提供了足够的关于她生活、兴趣和经历的细节，而不会让对话被过多信息淹没。"
+    },
+    "emotional_visibility": {
+      "value": "高",
+      "confidence": 0.9,
+      "evidence": "Vanessa 公开分享她的情绪，包括恐惧、兴奋和脆弱。她情绪丰富且诚实。"
+    },
+    "social_distance": {
+      "value": "相对接近",
+      "confidence": 0.8,
+      "evidence": "Vanessa 很快就谈到个人话题，如她的过去关系和目标。她也表现出对 Nebraas 生活和观点的兴趣。"
+    },
+    "decision_style": {
+      "value": "冲动但有些规划",
+      "confidence": 0.7,
+      "evidence": "Vanessa 有时会即兴做决定（比如去音乐会），但她也为健美比赛做计划，并有结构化的日常安排。"
+    }
+  },
+  "identity": {
+    "occupation": {
+      "value": "诊所工作人员",
+      "confidence": 0.9,
+      "evidence": "Vanessa 提到她在外科诊所工作并且日程很忙。"
+    },
+    "age": {
+      "value": "二十出头到二十中旬",
+      "confidence": 0.8,
+      "evidence": "Vanessa 称自己为健美新手，并提到最近的关系和职业发展的经历。"
+    },
+    "social_relationships": {
+      "value": "有限但正在增长",
+      "confidence": 0.8,
+      "evidence": "Vanessa 提到她最近处于一段有毒的关系中，现在有了新朋友（Nebraas）。她还谈到朋友和 Nebraas 的女朋友。"
+    },
+    "family": {
+      "value": "未深入讨论",
+      "confidence": 0.6,
+      "evidence": "Vanessa 简短地提到了她的猫和前男友，但很少谈及家庭生活。"
+    },
+    "economy": {
+      "value": "中产阶级",
+      "confidence": 0.7,
+      "evidence": "Vanessa 谈到她在诊所工作、支付教练费用和准备餐食，这表明她有稳定的收入。"
+    },
+    "devices": {
+      "value": "智能手机和电脑",
+      "confidence": 0.9,
+      "evidence": "Vanessa 通过短信发送消息、链接和照片，表明她经常使用智能手机和电脑。"
+    },
+    "physical_environment": {
+      "value": "有健身房和咖啡馆的城市地区",
+      "confidence": 0.8,
+      "evidence": "Vanessa 提到她去了诊所、面包店、健身房和咖啡馆，这表明她生活在城市环境中。"
+    }
+  },
+  "behavior": {
+    "content_preferences": {
+      "value": "健身、宠物、游戏和社交互动",
+      "confidence": 0.9,
+      "evidence": "Vanessa 经常谈论健美、猫、电子游戏和与朋友及 Nebraas 的社交。"
+    },
+    "consumption_preferences": {
+      "value": "健康食品、蛋白粉和咖啡",
+      "confidence": 0.9,
+      "evidence": "Vanessa 谈论她的餐食计划、蛋白粉和咖啡，强调健康选择。"
+    },
+    "entertainment_preferences": {
+      "value": "电子游戏、音乐会和放松活动",
+      "confidence": 0.9,
+      "evidence": "Vanessa 喜欢农场游戏，参加音乐会，并喜欢喝茶和看电影来放松。"
+    },
+    "habits": {
+      "value": "定期去健身房、准备餐食和社交",
+      "confidence": 0.9,
+      "evidence": "Vanessa 有一个涉及健身房、餐食准备和频繁与 Nebraas 沟通的结构化日常安排。"
+    },
+    "long_term_behavior_patterns": {
+      "value": "目标导向且注重健康",
+      "confidence": 0.9,
+      "evidence": "Vanessa 正在为健美比赛做准备，遵循严格的饮食，并专注于个人成长和福祉。"
+    }
+  }
+}

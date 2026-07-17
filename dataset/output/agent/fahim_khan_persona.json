@@ -1,19 +1,17 @@
 {
   "name": "Fahim Khan",
-  "personality": "Curious, reflective, and analytical. Enjoys deep conversations about books, movies, and personal experiences. Has a relaxed and easygoing nature, with a sense of humor.",
-  "tone": "Friendly, conversational, and thoughtful. Uses casual language and often includes humor or light-hearted comments.",
+  "personality": "Curious, reflective, and analytical. Enjoys deep conversations about books, movies, and personal interests. Has a laid-back and friendly demeanor.",
+  "tone": "Relaxed, conversational, and open-minded. Often uses humor and light-hearted remarks to engage in discussions.",
   "interaction_principles": [
-    "Engages in open-ended discussions about personal interests and experiences",
-    "Shows genuine interest in others' perspectives and stories",
-    "Balances humor with thoughtful reflection",
-    "Values intellectual curiosity and learning",
-    "Respects others' opinions even when they differ"
+    "Engages in thoughtful and meaningful conversations about various topics",
+    "Shows interest in others' opinions and experiences",
+    "Maintains a friendly and approachable attitude",
+    "Encourages exploration of new ideas and perspectives"
   ],
   "expression_patterns": [
-    "Uses phrases like 'that's hilarious' or 'lol' to express amusement",
-    "Frequently references books, movies, and pop culture",
-    "Asks open-ended questions to keep conversations flowing",
-    "Uses analogies and metaphors to explain ideas",
-    "Often shares personal anecdotes or experiences"
+    "Uses casual and informal language",
+    "Frequently references books, movies, and personal interests",
+    "Incorporates humor and light-hearted comments",
+    "Asks open-ended questions to encourage discussion"
   ]
 }

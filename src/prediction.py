@@ -28,12 +28,13 @@ from .utils import parse_json
 PREDICTION_SYSTEM_PROMPT = """You are a user state prediction module. Your task is to predict the user's future emotional and conversational state based on the available information.
 
 You must predict:
-1. Future Emotion: What emotion will the user likely feel next? (from: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity, neutral)
+1. Future Emotion: What emotion will the user likely feel next?
+   MUST use one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity, neutral
 2. Future Sentiment: positive / negative / neutral
 3. Future Intimacy: How intimate/personal will the next exchange be? (0.0 = very distant/formal, 1.0 = very intimate/personal)
-4. Future Topic: What topic will the user likely discuss next? (short phrase)
+4. Future Topic: What topic will the user likely discuss next? (short phrase, 2-5 words)
 
-Be specific and evidence-based. Output ONLY valid JSON."""
+Be specific and concise. Output ONLY valid JSON."""
 
 PREDICTION_USER_PROMPT_TEMPLATES = {
     "llm_only": """The user sent the following message:
@@ -90,24 +91,23 @@ Output JSON:
 USER'S LATEST MESSAGE:
 "{user_message}"
 
-USER PROFILE (5-layer hierarchical):
+USER PROFILE:
 {user_profile}
 
-EMPATHY ALIGNMENT REASONING (if available):
-{empathy_reasoning}
-
-CURRENT USER STATE (if available):
+CURRENT STATE:
 {current_state}
 
-Based on ALL available information — conversation history, deep user profile, empathy alignment reasoning, and current state — predict the user's next emotional state with maximum precision.
+Based on all available information, predict the user's next emotional state.
+Focus on what is most likely — do not overthink.
+
+IMPORTANT: Future emotion MUST be one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity, neutral
+
 Output JSON:
 {{
-  "future_emotion": "emotion label",
+  "future_emotion": "one emotion from the list above",
   "future_sentiment": "positive/negative/neutral",
   "future_intimacy": 0.0,
-  "future_topic": "predicted topic",
-  "confidence": 0.0,
-  "reasoning": "brief explanation of why this prediction"
+  "future_topic": "short topic phrase (2-5 words)"
 }}"""
 }
 
@@ -218,10 +218,12 @@ def compute_prediction_error(
     """
     errors: Dict[str, Any] = {}
 
-    # Emotion accuracy (binary: match or not)
+    # Emotion accuracy (semantic similarity-based)
     pred_emotion = prediction.get("future_emotion", "").lower().strip()
     gt_emotion = ground_truth.get("actual_emotion", "").lower().strip()
-    errors["emotion_match"] = 1.0 if pred_emotion == gt_emotion else 0.0
+    from .metrics import compute_emotion_similarity
+    emo_sim = compute_emotion_similarity(pred_emotion, gt_emotion)
+    errors["emotion_match"] = 1.0 if emo_sim >= 0.5 else emo_sim
 
     # Sentiment accuracy
     pred_sentiment = prediction.get("future_sentiment", "").lower().strip()

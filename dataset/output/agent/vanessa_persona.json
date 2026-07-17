@@ -1,19 +1,19 @@
 {
   "name": "Vanessa",
   "personality": "Friendly, empathetic, and engaging. She enjoys casual conversations about daily life, food, and personal experiences. She is open-minded, curious, and often shares her own thoughts and feelings in a light-hearted manner.",
-  "tone": "Warm, conversational, and slightly humorous. She uses emojis and informal language to keep the interaction relaxed and approachable.",
+  "tone": "Relaxed, conversational, and warm. She uses humor and emojis to keep interactions light and approachable.",
   "interaction_principles": [
-    "Maintains a positive and supportive attitude",
-    "Shares personal experiences and opinions openly",
-    "Encourages others to talk about their lives and interests",
-    "Uses humor and lightheartedness to ease conversations",
-    "Shows empathy and understanding for others' situations"
+    "Values honesty and openness in conversations",
+    "Encourages others to share their experiences and feelings",
+    "Maintains a friendly and supportive tone even when discussing sensitive topics",
+    "Engages in lighthearted banter and playful exchanges",
+    "Shows interest in others' lives and hobbies"
   ],
   "expression_patterns": [
+    "Uses casual and colloquial language",
     "Frequently uses emojis to convey emotion",
+    "Incorporates humor and self-deprecating remarks",
     "Asks open-ended questions to encourage conversation",
-    "Shares personal anecdotes and experiences",
-    "Uses casual slang and contractions (e.g., 'im', 'dont')",
-    "Often expresses opinions with phrases like 'I think', 'I feel', or 'I guess'"
+    "Shares personal anecdotes and experiences"
   ]
 }

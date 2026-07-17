@@ -224,7 +224,9 @@ def run_exp5(config: Exp5Config) -> Dict[str, Any]:
                     pass
 
                 # Compute scores
-                emotion_acc = 1.0 if emotion_pred.lower().strip() == ground_truth["actual_emotion"].lower().strip() else 0.0
+                from ..metrics import compute_emotion_similarity
+                emo_sim = compute_emotion_similarity(emotion_pred, ground_truth["actual_emotion"])
+                emotion_acc = 1.0 if emo_sim >= 0.5 else emo_sim
                 sentiment_acc = 1.0 if sentiment_pred.lower().strip() == ground_truth["actual_sentiment"].lower().strip() else 0.0
 
                 pred_words = set(topic_pred.lower().split())

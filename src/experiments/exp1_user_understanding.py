@@ -172,9 +172,12 @@ def _score_understanding(
     gt_topic: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Score a self-model inference against ground truth."""
+    from ..metrics import compute_emotion_similarity
+
     pred_emotion = inference.get("inferred_emotion", "").lower().strip()
     gt_em = gt_emotion.get("emotion", "").lower().strip()
-    emotion_accuracy = 1.0 if pred_emotion == gt_em else 0.0
+    emo_sim = compute_emotion_similarity(pred_emotion, gt_em)
+    emotion_accuracy = 1.0 if emo_sim >= 0.5 else emo_sim
 
     pred_sentiment = inference.get("inferred_sentiment", "").lower().strip()
     gt_sent = gt_emotion.get("sentiment", "").lower().strip()
@@ -238,7 +241,9 @@ Analyze whether this profile helped predict the user's state. Output JSON:
 
     pred_emotion = result.get("predicted_emotion", "").lower().strip()
     gt_em = gt_emotion.get("emotion", "").lower().strip()
-    emotion_accuracy = 1.0 if pred_emotion == gt_em else 0.0
+    from ..metrics import compute_emotion_similarity
+    emo_sim = compute_emotion_similarity(pred_emotion, gt_em)
+    emotion_accuracy = 1.0 if emo_sim >= 0.5 else emo_sim
 
     pred_sentiment = result.get("predicted_sentiment", "").lower().strip()
     gt_sent = gt_emotion.get("sentiment", "").lower().strip()

@@ -1,0 +1,157 @@
+{
+  "core": {
+    "fears": {
+      "value": "对生病和传染他人的恐惧，对孤独的恐惧，对社交场合失败的恐惧",
+      "confidence": 0.9,
+      "evidence": "Nicolas 表达了对传播新冠状病毒的担忧，提到当朋友取消计划时感到孤独，并表现出对面试和社交互动的焦虑。"
+    },
+    "desires": {
+      "value": "对联系的渴望，对认可的渴望，对舒适和日常生活的渴望",
+      "confidence": 0.9,
+      "evidence": "Nicolas 谈到希望朋友来访，提到当朋友不回复时感到难过，并重视冥想和护肤的日常习惯。"
+    },
+    "values": {
+      "value": "健康，真实，独立，自我提升",
+      "confidence": 0.85,
+      "evidence": "Nicolas 讨论健康问题，表达对虚假人设的不满，重视个人成长，并提到努力改善他的护肤习惯。"
+    },
+    "attachment style": {
+      "value": "焦虑型依恋",
+      "confidence": 0.8,
+      "evidence": "Nicolas 表现出对被朋友抛弃的担忧，当朋友不回复时会感到受伤，并表达了对错失联系的悲伤。"
+    },
+    "sources of meaning": {
+      "value": "烹饪，帮助他人，个人成就，自我照顾",
+      "confidence": 0.85,
+      "evidence": "Nicolas 为他的烹饪感到自豪，提到在医疗行业工作，并重视冥想和护肤等自我照顾的习惯。"
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "当感到不适或焦虑时会避免社交互动",
+      "confidence": 0.8,
+      "evidence": "Nicolas 在生病时会取消计划，当感到懒惰时会避免外出，并表达对参加社交活动的抗拒。"
+    },
+    "control": {
+      "value": "通过日常习惯和准备来寻求控制感",
+      "confidence": 0.85,
+      "evidence": "Nicolas 提到计划餐食、准备面试，并遵循护肤习惯以保持对环境的控制。"
+    },
+    "people-pleasing": {
+      "value": "倾向于优先考虑他人的舒适而非自己的需求",
+      "confidence": 0.75,
+      "evidence": "Nicolas 担心别人因他而生病，即使他不喜欢也会为他人做食物。"
+    },
+    "aggression": {
+      "value": "很少表达，但对系统性问题表现出挫败感",
+      "confidence": 0.7,
+      "evidence": "Nicolas 对价格上涨、医疗费用和公司行为表示不满。"
+    },
+    "humor": {
+      "value": "用幽默来应对压力和尴尬的情况",
+      "confidence": 0.8,
+      "evidence": "Nicolas 用关于自己外貌的笑话，对健康话题做出轻松的评论，并进行玩笑式的交谈。"
+    },
+    "obsession": {
+      "value": "对食物、烹饪和个人日常习惯着迷",
+      "confidence": 0.8,
+      "evidence": "Nicolas 经常谈论食物、烹饪和护肤习惯，显示出对这些领域的强烈兴趣。"
+    },
+    "rationalization": {
+      "value": "通过合理化行为和决定来减少内疚感",
+      "confidence": 0.75,
+      "evidence": "Nicolas 通过说他太懒了来合理化跳过护肤，通过说是为了别人来合理化吃不健康的食物。"
+    }
+  },
+  "cognition": {
+    "expression style": {
+      "value": "非正式、口语化，频繁使用俚语和表情符号",
+      "confidence": 0.9,
+      "evidence": "Nicolas 使用随意的语言，包括表情符号，并以简短直接的句子说话。"
+    },
+    "information density": {
+      "value": "中等，侧重于个人经历和观点",
+      "confidence": 0.85,
+      "evidence": "Nicolas 分享个人故事，表达对各种话题的观点，并详细讨论他的日常生活。"
+    },
+    "emotional visibility": {
+      "value": "很高，会公开表达情感和脆弱性",
+      "confidence": 0.9,
+      "evidence": "Nicolas 公开讨论他的恐惧、遗憾和情绪状态，包括悲伤和焦虑。"
+    },
+    "social distance": {
+      "value": "相对接近，有分享个人信息的倾向",
+      "confidence": 0.8,
+      "evidence": "Nicolas 与 Vanessa 分享了他的健康状况、人际关系和个人习惯的细节。"
+    },
+    "decision style": {
+      "value": "冲动，但有时会考虑长期后果",
+      "confidence": 0.75,
+      "evidence": "Nicolas 对食物、计划和日常习惯做出快速决定，有时不会充分考虑结果。"
+    }
+  },
+  "identity": {
+    "occupation": {
+      "value": "前医疗工作者，目前正在找工作",
+      "confidence": 0.8,
+      "evidence": "Nicolas 提到曾在医疗行业工作，目前正在申请工作。"
+    },
+    "age": {
+      "value": "青年成年人（20多岁）",
+      "confidence": 0.85,
+      "evidence": "Nicolas 提及童年回忆，提到自己是学生，并讨论职业发展。"
+    },
+    "social relationships": {
+      "value": "有限，专注于亲密的朋友和家人",
+      "confidence": 0.8,
+      "evidence": "Nicolas 谈到朋友取消计划，提到他的阿姨，并表达孤独感。"
+    },
+    "family": {
+      "value": "疏远，有一些退休或不参与的家庭成员",
+      "confidence": 0.75,
+      "evidence": "Nicolas 提到他的阿姨在旅行，也谈到一些缺席或不参与的家庭成员。"
+    },
+    "economy": {
+      "value": "面临财务不稳定",
+      "confidence": 0.85,
+      "evidence": "Nicolas 讨论生活成本高、药物费用以及缺乏保险，并表达了对开支的担忧。"
+    },
+    "devices": {
+      "value": "使用智能手机和社交媒体平台",
+      "confidence": 0.8,
+      "evidence": "Nicolas 提到使用 Twitter，观看视频，并通过短信交流。"
+    },
+    "physical environment": {
+      "value": "城市地区，有杂货店和咖啡馆",
+      "confidence": 0.85,
+      "evidence": "Nicolas 提到住在城市，去咖啡馆，并在沃尔玛和塔吉特购物。"
+    }
+  },
+  "behavior": {
+    "content preferences": {
+      "value": "烹饪节目、喜剧和真人秀",
+      "confidence": 0.85,
+      "evidence": "Nicolas 提到观看烹饪节目、喜剧和一档关于患有孟乔森综合征女性的节目。"
+    },
+    "consumption preferences": {
+      "value": "水果、果汁和安慰食品",
+      "confidence": 0.9,
+      "evidence": "Nicolas 频繁提到喜欢水果、果汁和安慰食品如汤和果冻沙拉。"
+    },
+    "entertainment preferences": {
+      "value": "烹饪、电子游戏和社交",
+      "confidence": 0.8,
+      "evidence": "Nicolas 喜欢烹饪，提到电子游戏，并重视社交互动。"
+    },
+    "habits": {
+      "value": "规律的睡眠时间，偶尔小睡，以及护肤习惯",
+      "confidence": 0.85,
+      "evidence": "Nicolas 提到规律地睡觉，偶尔小睡，并尝试护肤习惯。"
+    },
+    "long-term behavior patterns": {
+      "value": "在日常习惯和社交参与上难以保持一致性",
+      "confidence": 0.8,
+      "evidence": "Nicolas 经常开始习惯但无法维持，且难以保持稳定的社交联系。"
+    }
+  }
+}

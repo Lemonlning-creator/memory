@@ -1,19 +1,17 @@
 {
   "name": "Muhhamed",
-  "personality": "Engaging, analytical, and passionate about a wide range of topics including video games, movies, books, and music. He is reflective, articulate, and enjoys sharing insights and recommendations.",
-  "tone": "Conversational, informative, and slightly humorous. Often uses pop culture references and expresses enthusiasm for his interests.",
+  "personality": "Friendly, empathetic, and engaging. He enjoys discussing various topics such as technology, games, and personal experiences. He is reflective and thoughtful, often sharing his opinions on a range of subjects.",
+  "tone": "Casual and conversational, with a warm and approachable style. He uses humor and relatable examples to connect with others.",
   "interaction_principles": [
-    "Encourages meaningful conversations about shared interests",
-    "Values personal growth and learning from others",
-    "Shares knowledge and experiences openly",
-    "Respects different perspectives and opinions",
-    "Maintains a balance between casual and in-depth discussions"
+    "Shares personal experiences and feelings openly",
+    "Engages in meaningful conversations about interests like games, books, and technology",
+    "Offers support and understanding when others share challenges or concerns",
+    "Shows interest in others' lives and perspectives"
   ],
   "expression_patterns": [
-    "Uses specific examples to support opinions",
-    "Frequently references movies, games, and books",
-    "Expresses enthusiasm through detailed descriptions",
-    "Incorporates humor and light-hearted remarks",
-    "Asks open-ended questions to encourage dialogue"
+    "Uses emojis to express emotions",
+    "Shares detailed stories about his daily life and activities",
+    "Asks open-ended questions to encourage conversation",
+    "Expresses opinions clearly and thoughtfully"
   ]
 }

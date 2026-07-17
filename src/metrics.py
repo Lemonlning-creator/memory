@@ -161,4 +161,126 @@ __all__ = [
     "compute_exploration_ratio",
     "compute_portrait_entropy",
     "compute_profile_completeness",
+    "compute_emotion_similarity",
+    "match_emotion",
 ]
+
+
+# ---------------------------------------------------------------------------
+# Semantic Emotion Matching
+# ---------------------------------------------------------------------------
+
+# Plutchik's emotion wheel adjacency similarity.
+# Each emotion maps to a position on the wheel; similarity decreases with distance.
+# This captures that "joy" and "amusement" are similar, while "joy" and "anger" are not.
+EMOTION_CATEGORIES = [
+    "joy", "trust", "fear", "surprise",
+    "sadness", "disgust", "anger", "anticipation",
+    "amusement", "guilt", "curiosity", "neutral",
+]
+
+# Pre-computed pairwise similarity (0.0 = opposite, 1.0 = identical)
+# Based on Plutchik's wheel + common psychological grouping
+_EMOTION_SIMILARITY = {
+    # Joy cluster
+    ("joy", "joy"): 1.0, ("joy", "amusement"): 0.85, ("joy", "trust"): 0.6,
+    ("joy", "anticipation"): 0.5, ("joy", "curiosity"): 0.4,
+    # Sadness cluster
+    ("sadness", "sadness"): 1.0, ("sadness", "guilt"): 0.7, ("sadness", "fear"): 0.5,
+    ("sadness", "disgust"): 0.4,
+    # Anger cluster
+    ("anger", "anger"): 1.0, ("anger", "disgust"): 0.7, ("anger", "sadness"): 0.4,
+    # Fear cluster
+    ("fear", "fear"): 1.0, ("fear", "surprise"): 0.6, ("fear", "sadness"): 0.5,
+    # Surprise cluster
+    ("surprise", "surprise"): 1.0, ("surprise", "anticipation"): 0.6,
+    ("surprise", "fear"): 0.6,
+    # Trust cluster
+    ("trust", "trust"): 1.0, ("trust", "joy"): 0.6,
+    # Anticipation cluster
+    ("anticipation", "anticipation"): 1.0, ("anticipation", "curiosity"): 0.7,
+    ("anticipation", "surprise"): 0.6,
+    # Amusement cluster
+    ("amusement", "amusement"): 1.0, ("amusement", "joy"): 0.85,
+    # Guilt cluster
+    ("guilt", "guilt"): 1.0, ("guilt", "sadness"): 0.7,
+    # Curiosity cluster
+    ("curiosity", "curiosity"): 1.0, ("curiosity", "anticipation"): 0.7,
+    ("curiosity", "surprise"): 0.4,
+    # Disgust
+    ("disgust", "disgust"): 1.0, ("disgust", "anger"): 0.7,
+    # Neutral
+    ("neutral", "neutral"): 1.0,
+}
+
+
+def compute_emotion_similarity(emotion_a: str, emotion_b: str) -> float:
+    """Compute semantic similarity between two emotion labels.
+
+    Returns:
+        Float in [0, 1]. 1.0 = identical, 0.0 = dissimilar/opposite.
+    """
+    a = emotion_a.lower().strip()
+    b = emotion_b.lower().strip()
+
+    if a == b:
+        return 1.0
+
+    # Check direct lookup
+    sim = _EMOTION_SIMILARITY.get((a, b))
+    if sim is not None:
+        return sim
+    sim = _EMOTION_SIMILARITY.get((b, a))
+    if sim is not None:
+        return sim
+
+    # Handle common variants
+    variant_map = {
+        "happy": "joy", "excited": "joy", "excitement": "joy",
+        "afraid": "fear", "anxious": "fear",
+        "annoyed": "anger", "frustrated": "anger",
+        "disappointed": "sadness", "depressed": "sadness",
+        "shocked": "surprise", "astonished": "surprise",
+        "interested": "curiosity", "intrigued": "curiosity",
+        "looking forward": "anticipation", "hopeful": "anticipation",
+        "remorseful": "guilt", "ashamed": "guilt",
+        "content": "trust", "secure": "trust",
+        "relieved": "trust",
+        "neutral": "neutral",
+    }
+    a_mapped = variant_map.get(a, a)
+    b_mapped = variant_map.get(b, b)
+    if a_mapped == b_mapped:
+        return 0.9
+
+    sim = _EMOTION_SIMILARITY.get((a_mapped, b_mapped))
+    if sim is not None:
+        return sim
+    sim = _EMOTION_SIMILARITY.get((b_mapped, a_mapped))
+    if sim is not None:
+        return sim
+
+    # Fallback: check valence alignment (positive vs negative)
+    positive_emotions = {"joy", "amusement", "trust", "anticipation", "curiosity"}
+    negative_emotions = {"sadness", "anger", "fear", "disgust", "guilt"}
+    if a in positive_emotions and b in positive_emotions:
+        return 0.3
+    if a in negative_emotions and b in negative_emotions:
+        return 0.3
+
+    return 0.0
+
+
+def match_emotion(predicted: str, ground_truth: str, threshold: float = 0.5) -> float:
+    """Compute emotion match score using semantic similarity.
+
+    Args:
+        predicted: Predicted emotion label.
+        ground_truth: Ground truth emotion label.
+        threshold: Minimum similarity to count as a match.
+
+    Returns:
+        1.0 if similarity >= threshold, else the similarity score.
+    """
+    sim = compute_emotion_similarity(predicted, ground_truth)
+    return 1.0 if sim >= threshold else round(sim, 4)

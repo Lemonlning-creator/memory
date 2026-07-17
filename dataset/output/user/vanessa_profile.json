@@ -2,127 +2,156 @@
   "core": {
     "fears": {
       "value": "Fear of being stalked or harassed by an ex-partner",
-      "evidence": "Vanessa: \"It was a very weird toxic relationship where he never let me see anyone meaning my friends or family and basically kept me sheltered throughout our time together.\""
+      "confidence": 0.9,
+      "evidence": "Vanessa mentions seeing her ex at work and outside, and she feels creeped out. She also mentions skipping leg day because she was too freaked out."
     },
     "desires": {
-      "value": "Desire for personal growth and self-improvement",
-      "evidence": "Vanessa: \"I think one day you will be able to! And no probs, good night! Talk to you later!\""
+      "value": "Desire for a supportive relationship and personal growth",
+      "confidence": 0.9,
+      "evidence": "Vanessa talks about leaving a toxic relationship to focus on herself and mentions wanting to meet someone who isn't 'stupid.' She also discusses her goals in bodybuilding and personal development."
     },
     "values": {
-      "value": "Health and fitness, personal responsibility, and ethical treatment of animals",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Health, independence, and authenticity",
+      "confidence": 0.9,
+      "evidence": "Vanessa emphasizes healthy eating, fitness, and personal growth. She also values authenticity, as seen in her openness about her past relationship and her desire to be true to herself."
     },
     "attachment style": {
-      "value": "Secure with some anxiety around intimacy and trust",
-      "evidence": "Vanessa: \"I feel like if i dont do it im gunna be a failure and do really bad at the competition\""
+      "value": "Secure with some anxiety around intimacy",
+      "confidence": 0.8,
+      "evidence": "Vanessa is open and talkative but also expresses discomfort with meeting people in person and has had a difficult past relationship. She seems to value emotional safety."
     },
     "sources_of_meaning": {
-      "value": "Personal achievements, relationships, and helping others",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Personal achievements, health, and relationships",
+      "confidence": 0.9,
+      "evidence": "Vanessa talks about her bodybuilding competition, her job in a clinic, and her interest in building meaningful relationships. She also values self-care and personal growth."
     }
   },
   "regulation": {
     "avoidance": {
-      "value": "Avoids confrontation and difficult situations",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Avoids confrontation and uncomfortable situations",
+      "confidence": 0.7,
+      "evidence": "Vanessa avoids discussing her ex in detail and seems hesitant to open up about her past relationship. She also mentions skipping leg day due to fear."
     },
     "control": {
       "value": "Seeks control through routines and planning",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "confidence": 0.8,
+      "evidence": "Vanessa has a structured routine for her workouts, meal prep, and gym sessions. She also plans ahead for her bodybuilding competition and other activities."
     },
     "people-pleasing": {
-      "value": "Willing to accommodate others' needs",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Not strongly evident",
+      "confidence": 0.4,
+      "evidence": "Vanessa is assertive in her opinions and doesn't seem to prioritize others' approval over her own needs."
     },
     "aggression": {
-      "value": "Not prone to aggression, prefers peaceful resolutions",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Not strongly evident",
+      "confidence": 0.3,
+      "evidence": "Vanessa is more passive in her interactions and doesn't express anger or aggression."
     },
     "humor": {
-      "value": "Uses humor to cope with stress",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Uses humor to cope and connect",
+      "confidence": 0.9,
+      "evidence": "Vanessa frequently uses emojis, jokes, and lighthearted language in her conversations. She also makes fun of herself and uses humor to ease tension."
     },
     "obsession": {
-      "value": "Focused on specific goals like bodybuilding",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Not strongly evident",
+      "confidence": 0.4,
+      "evidence": "Vanessa is interested in multiple topics (pets, gaming, fitness) but doesn't show signs of obsessive behavior."
     },
     "rationalization": {
-      "value": "Justifies actions based on logic and long-term goals",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Sometimes rationalizes fears or concerns",
+      "confidence": 0.7,
+      "evidence": "Vanessa rationalizes her fear of her ex by considering calling the cops and mentions that she's trying to avoid him."
     }
   },
   "cognition": {
     "expression_style": {
-      "value": "Expresses thoughts openly and honestly",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Informal, conversational, and expressive",
+      "confidence": 0.9,
+      "evidence": "Vanessa uses casual language, emojis, and informal expressions throughout the conversation. She often speaks in short, lively sentences."
     },
     "information_density": {
-      "value": "Provides detailed information when discussing interests",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Moderate",
+      "confidence": 0.8,
+      "evidence": "Vanessa provides enough detail about her life, interests, and experiences without overwhelming the conversation with excessive information."
     },
     "emotional_visibility": {
-      "value": "Open about emotions and experiences",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "High",
+      "confidence": 0.9,
+      "evidence": "Vanessa openly shares her emotions, including fear, excitement, and vulnerability. She is emotionally expressive and honest."
     },
     "social_distance": {
-      "value": "Maintains a friendly but not overly close relationship",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Relatively close",
+      "confidence": 0.8,
+      "evidence": "Vanessa quickly opens up about personal topics like her past relationship and her goals. She also shows interest in Nebraas's life and opinions."
     },
     "decision_style": {
-      "value": "Makes decisions based on personal values and long-term goals",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Impulsive with some planning",
+      "confidence": 0.7,
+      "evidence": "Vanessa sometimes makes decisions on the spot (like going to a concert), but she also plans for her bodybuilding competition and has a structured routine."
     }
   },
   "identity": {
     "occupation": {
-      "value": "Works in a surgeon clinic",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Clinic worker",
+      "confidence": 0.9,
+      "evidence": "Vanessa mentions working in a surgeon clinic and having a busy schedule."
     },
     "age": {
-      "value": "Young adult",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Early 20s to mid-20s",
+      "confidence": 0.8,
+      "evidence": "Vanessa refers to herself as a 'newbie' in bodybuilding and mentions recent experiences with relationships and career development."
     },
     "social_relationships": {
-      "value": "Has a cat and a small mix dog, previously in a toxic relationship",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Limited but growing",
+      "confidence": 0.8,
+      "evidence": "Vanessa mentions being in a toxic relationship recently and now has a new friend (Nebraas). She also talks about friends and a girlfriend in the context of Nebraas's life."
     },
     "family": {
-      "value": "Not explicitly mentioned, but has a supportive friend network",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Not deeply discussed",
+      "confidence": 0.6,
+      "evidence": "Vanessa briefly mentions her cat and her ex, but there is little detail about her family life."
     },
     "economy": {
-      "value": "Middle-class, works multiple jobs (clinic and gym)",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Middle-class",
+      "confidence": 0.7,
+      "evidence": "Vanessa talks about working in a clinic, paying for a trainer, and making meal preps, suggesting a stable income."
     },
     "devices": {
-      "value": "Uses a smartphone and possibly a computer",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Smartphone and computer",
+      "confidence": 0.9,
+      "evidence": "Vanessa sends messages, links, and photos through text, indicating regular use of smartphones and computers."
     },
     "physical_environment": {
-      "value": "Lives in an area with access to gyms, cafes, and pet adoption centers",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Urban area with access to gyms and cafes",
+      "confidence": 0.8,
+      "evidence": "Vanessa mentions going to a clinic, a bakery, a gym, and a cafe, suggesting she lives in an urban environment."
     }
   },
   "behavior": {
     "content_preferences": {
-      "value": "Interested in bodybuilding, gaming, and pets",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Fitness, pets, gaming, and social interaction",
+      "confidence": 0.9,
+      "evidence": "Vanessa frequently discusses bodybuilding, cats, video games, and socializing with friends and Nebraas."
     },
     "consumption_preferences": {
-      "value": "Prefers healthy food and occasional cheat meals",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Healthy food, protein shakes, and coffee",
+      "confidence": 0.9,
+      "evidence": "Vanessa talks about her meal plans, protein shakes, and coffee, emphasizing healthy choices."
     },
     "entertainment_preferences": {
-      "value": "Enjoys gaming, concerts, and watching sports",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Video games, concerts, and relaxing activities",
+      "confidence": 0.9,
+      "evidence": "Vanessa enjoys farming games, attends concerts, and likes to relax with tea and movies."
     },
     "habits": {
-      "value": "Regular gym routine and meal prep",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Regular gym visits, meal prepping, and socializing",
+      "confidence": 0.9,
+      "evidence": "Vanessa has a structured routine involving the gym, meal prep, and frequent communication with Nebraas."
     },
     "long_term_behavior_patterns": {
-      "value": "Consistent focus on health and personal development",
-      "evidence": "Vanessa: \"I think it's important to eat healthy but I think it's ok to cheat on yourself a little lol, it makes all the days you spend eating well worth it!\""
+      "value": "Goal-oriented and health-focused",
+      "confidence": 0.9,
+      "evidence": "Vanessa is preparing for a bodybuilding competition, following a strict diet, and focusing on personal growth and well-being."
     }
   }
 }

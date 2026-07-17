@@ -2,127 +2,156 @@
   "core": {
     "fears": {
       "value": "None explicitly mentioned",
-      "evidence": "No specific fears were discussed in the conversation."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "desires": {
-      "value": "Exploring new experiences, connecting with others, and personal growth",
-      "evidence": "Emi expressed interest in traveling, trying new recipes, learning a new language, and engaging in activities like Pilates and gardening. She also showed enthusiasm for meeting new people and discussing various topics."
+      "value": "Engaging in meaningful conversations, exploring new interests, and maintaining social connections",
+      "confidence": 0.9,
+      "evidence": "Emi frequently asks about Paola's experiences, shares her own interests, and expresses enthusiasm for activities like travel, books, and hobbies."
     },
     "values": {
-      "value": "Connection, creativity, and personal development",
-      "evidence": "Emi emphasized the importance of relationships, shared interests in books, movies, and music, and expressed a desire to grow personally through activities like learning a language and exercising."
+      "value": "Connection, creativity, and personal growth",
+      "confidence": 0.9,
+      "evidence": "Emi values social interaction, enjoys creative pursuits like cooking, reading, and music, and is interested in self-improvement through activities like Pilates and language learning."
     },
     "attachment style": {
       "value": "Secure",
-      "evidence": "Emi displayed comfort in sharing personal details, expressing interest in others' lives, and maintaining consistent communication throughout the conversation."
+      "confidence": 0.8,
+      "evidence": "Emi maintains consistent communication, shows interest in others' lives, and engages in deep, meaningful conversations."
     },
-    "sources_of_meaning": {
-      "value": "Personal growth, relationships, and creative expression",
-      "evidence": "Emi found meaning in learning new things, connecting with others, and engaging in creative hobbies like cooking, reading, and gardening."
+    "sources of meaning": {
+      "value": "Personal development, relationships, and creative expression",
+      "confidence": 0.9,
+      "evidence": "Emi discusses goals like learning a new language, engaging in hobbies like gardening and cooking, and maintaining friendships."
     }
   },
   "regulation": {
     "avoidance": {
       "value": "None explicitly mentioned",
-      "evidence": "No signs of avoidance were noted in Emi's behavior or statements."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "control": {
       "value": "None explicitly mentioned",
-      "evidence": "No evidence of a need for control was observed in the conversation."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "people-pleasing": {
       "value": "None explicitly mentioned",
-      "evidence": "Emi did not show tendencies toward excessive people-pleasing."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "aggression": {
       "value": "None explicitly mentioned",
-      "evidence": "No signs of aggression were present in Emi's interactions."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "humor": {
-      "value": "Present",
-      "evidence": "Emi used humor when discussing her cat, her haircut, and her experience with the movie 'The Profector.'"
+      "value": "Moderate",
+      "confidence": 0.7,
+      "evidence": "Emi uses humor when discussing topics like her cat, nail appointments, and funny movie recommendations."
     },
     "obsession": {
       "value": "None explicitly mentioned",
-      "evidence": "No signs of obsession were observed in Emi's behavior."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "rationalization": {
       "value": "None explicitly mentioned",
-      "evidence": "No evidence of rationalization was found in the conversation."
+      "confidence": 0.3,
+      "evidence": ""
     }
   },
   "cognition": {
-    "expression_style": {
+    "expression style": {
       "value": "Verbal and expressive",
-      "evidence": "Emi communicated openly, shared detailed descriptions of her experiences, and engaged in thoughtful discussions about various topics."
+      "confidence": 0.9,
+      "evidence": "Emi communicates openly, shares detailed descriptions of experiences, and engages in thoughtful discussions."
     },
-    "information_density": {
+    "information density": {
       "value": "Moderate",
-      "evidence": "Emi provided enough detail in her responses without overwhelming the conversation with excessive information."
+      "confidence": 0.8,
+      "evidence": "Emi provides enough detail to convey her thoughts without overwhelming the conversation."
     },
-    "emotional_visibility": {
+    "emotional visibility": {
       "value": "High",
-      "evidence": "Emi expressed her emotions openly, such as excitement about her new haircut, enjoyment of her Pilates class, and appreciation for her cat."
+      "confidence": 0.9,
+      "evidence": "Emi expresses emotions clearly, such as excitement about travel or sharing personal achievements like a new haircut."
     },
-    "social_distance": {
+    "social distance": {
       "value": "Close",
-      "evidence": "Emi maintained a warm and friendly tone, shared personal details, and engaged in meaningful conversations with Paola."
+      "confidence": 0.9,
+      "evidence": "Emi shares personal details and asks about Paola's life, indicating a close relationship."
     },
-    "decision_style": {
-      "value": "Spontaneous",
-      "evidence": "Emi made spontaneous decisions, such as trying a new recipe, cutting her hair, and attending a Pilates class."
+    "decision style": {
+      "value": "Flexible",
+      "confidence": 0.8,
+      "evidence": "Emi is open to suggestions, tries new things like cooking or gardening, and adapts to different situations."
     }
   },
   "identity": {
     "occupation": {
       "value": "Not explicitly mentioned",
-      "evidence": "No specific occupation was discussed in the conversation."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "age": {
-      "value": "Not explicitly mentioned",
-      "evidence": "No age-related information was directly stated."
+      "value": "Young adult",
+      "confidence": 0.8,
+      "evidence": "Emi mentions being in college (in Session 12) and references typical activities of a young adult, such as traveling, cooking, and socializing."
     },
-    "social_relationships": {
-      "value": "Strong connections with friends and family",
-      "evidence": "Emi mentioned missing her friends, staying in touch with them through video calls, and enjoying time with her cat."
+    "social relationships": {
+      "value": "Strong friendships and family ties",
+      "confidence": 0.9,
+      "evidence": "Emi talks about friends, family (like her aunt in Idaho), and maintains regular contact with Paola."
     },
     "family": {
       "value": "Not explicitly mentioned",
-      "evidence": "No direct mention of family members was made in the conversation."
+      "confidence": 0.3,
+      "evidence": ""
     },
     "economy": {
-      "value": "Not explicitly mentioned",
-      "evidence": "No financial details were discussed."
+      "value": "Middle-class",
+      "confidence": 0.7,
+      "evidence": "Emi mentions living in Los Angeles, attending a Pilates class, and enjoying activities that suggest a stable financial situation."
     },
     "devices": {
-      "value": "Used for communication and entertainment",
-      "evidence": "Emi used devices for video calls, social media, and watching shows."
+      "value": "Smartphone and computer",
+      "confidence": 0.9,
+      "evidence": "Emi references using devices for communication, watching TV shows, and online activities."
     },
-    "physical_environment": {
-      "value": "Urban setting with access to nature",
-      "evidence": "Emi mentioned living in Los Angeles and enjoying hiking trips, indicating an urban environment with nearby natural spaces."
+    "physical environment": {
+      "value": "Urban area in Los Angeles",
+      "confidence": 0.9,
+      "evidence": "Emi mentions living in Los Angeles, going hiking near her aunt's house in Idaho, and visiting places like Central Park in New York."
     }
   },
   "behavior": {
-    "content_preferences": {
-      "value": "Books, movies, music, and travel",
-      "evidence": "Emi discussed books like 'Where the Crawdads Sing,' movies like 'The Shawshank Redemption,' and travel destinations like Santorini and Machu Picchu."
+    "content preferences": {
+      "value": "Travel, books, movies, and food",
+      "confidence": 0.9,
+      "evidence": "Emi frequently discusses travel destinations, recommends books and movies, and shares cooking experiences."
     },
-    "consumption_preferences": {
-      "value": "Diverse and experimental",
-      "evidence": "Emi tried new recipes, experimented with different hair colors, and enjoyed a variety of cuisines, including Mediterranean and Thai."
+    "consumption preferences": {
+      "value": "Diverse and eclectic",
+      "confidence": 0.9,
+      "evidence": "Emi enjoys a variety of genres, from science fiction to romance, and experiments with different cuisines and hobbies."
     },
-    "entertainment_preferences": {
-      "value": "Movies, books, and music",
-      "evidence": "Emi enjoyed watching movies like 'The Hunger Games' and 'The Shawshank Redemption,' reading books like 'Where the Crawdads Sing,' and playing the guitar."
+    "entertainment preferences": {
+      "value": "Movies, books, and outdoor activities",
+      "confidence": 0.9,
+      "evidence": "Emi watches movies, reads books, and participates in outdoor activities like hiking and gardening."
     },
     "habits": {
-      "value": "Regular exercise, reading, and socializing",
-      "evidence": "Emi attended Pilates classes, read regularly, and maintained consistent communication with friends."
+      "value": "Regular social interactions, cooking, and fitness routines",
+      "confidence": 0.9,
+      "evidence": "Emi regularly chats with Paola, cooks, and engages in physical activities like Pilates and hiking."
     },
-    "long_term_behavior_patterns": {
-      "value": "Continuous learning and exploration",
-      "evidence": "Emi expressed a desire to learn a new language, explore new places, and engage in new hobbies like gardening and photography."
+    "long-term behavior patterns": {
+      "value": "Curious, adaptive, and socially engaged",
+      "confidence": 0.9,
+      "evidence": "Emi consistently explores new interests, maintains relationships, and adapts to different environments."
     }
   }
 }

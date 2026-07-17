@@ -1,128 +1,157 @@
 {
   "core": {
     "fears": {
-      "value": "Fear of illness and health issues, as seen when Akib expresses concern about getting sick again after recently being ill.",
-      "evidence": "I hate being sick, I was sick just a few weeks ago so It would be really unlucky if I got sick again"
+      "value": "Fear of being sick or unwell, fear of not having enough resources for ambitious projects like colonizing Jupiter, fear of not being able to achieve personal goals due to external limitations",
+      "confidence": 0.85,
+      "evidence": "Akib mentions fearing getting sick again after recently recovering, and he discusses the difficulty of acquiring uranium for his Jupiter colonization mission."
     },
     "desires": {
-      "value": "Desire for experiences and travel, especially to Japan, and a desire to improve his physical fitness.",
-      "evidence": "It's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+      "value": "Desire to explore new frontiers (like space), desire to have meaningful relationships, desire to understand complex scientific concepts, desire to experience different cultures",
+      "confidence": 0.9,
+      "evidence": "Akib expresses a strong interest in colonizing Jupiter, discussing the need for uranium, and mentions wanting to visit Japan and other places for cultural experiences."
     },
     "values": {
-      "value": "Values personal relationships, family, and experiences. Also values knowledge and learning, as seen in his discussions about books and science.",
-      "evidence": "I think the amount of people at your wake kind of shows how many lives you touched... I think it's better to explore while you can"
+      "value": "Value of knowledge and learning, value of personal growth, value of experiences with loved ones, value of understanding human nature and science",
+      "confidence": 0.8,
+      "evidence": "Akib talks about reading books, exploring scientific concepts, and values experiences with family and friends, such as planning trips and discussing personal development."
     },
     "attachment style": {
-      "value": "Secure attachment style, as he discusses relationships and friends openly and reflects on their importance.",
-      "evidence": "I think to myself Would this person come to my funeral? Would I go to theirs? If the answer is no both ways then I'd just consider them an acquaintance"
+      "value": "Secure attachment, as Akib shows comfort in discussing personal thoughts, relationships, and future plans with Fahim Khan.",
+      "confidence": 0.85,
+      "evidence": "Akib openly shares personal reflections on life, relationships, and future aspirations, indicating a secure and trusting relationship with Fahim Khan."
     },
-    "sources_of_meaning": {
-      "value": "Meaning comes from personal growth, relationships, and exploring new experiences.",
-      "evidence": "It's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+    "sources of meaning": {
+      "value": "Meaning from exploration, learning, and shared experiences with others, as well as from creative and intellectual pursuits like writing and time travel theories.",
+      "confidence": 0.8,
+      "evidence": "Akib discusses time travel theories, book recommendations, and plans for future adventures, showing that meaning comes from intellectual and imaginative pursuits."
     }
   },
   "regulation": {
     "avoidance": {
-      "value": "Avoids dealing with certain topics, like the book Ducks, Newburyport, which he finds uninteresting.",
-      "evidence": "I stopped reading ducks newburyport, not worth the time investment imo"
+      "value": "Avoids dealing with illness or health issues directly, preferring to rely on self-diagnosis and home remedies.",
+      "confidence": 0.75,
+      "evidence": "Akib discusses possible ear infection symptoms but hesitates to see a doctor, instead relying on pain medication and hoping it resolves on its own."
     },
     "control": {
-      "value": "Seeks control over his environment, such as managing his health and planning for future events.",
-      "evidence": "I have to get a bigger trash bin with a lid"
+      "value": "Seeks control over his environment and future through planning and preparation, such as grocery lists and hypothetical missions.",
+      "confidence": 0.8,
+      "evidence": "Akib creates detailed grocery lists, discusses plans for a Jupiter colonization mission, and engages in speculative discussions about time travel."
     },
     "people-pleasing": {
-      "value": "Not evident in the conversation; he expresses his opinions freely without trying to please others.",
-      "evidence": "I think it's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+      "value": "Not strongly evident; Akib expresses personal preferences and opinions without apparent concern for others' approval.",
+      "confidence": 0.6,
+      "evidence": "Akib freely shares his views on topics like time travel, food, and books without seeking validation from Fahim Khan."
     },
     "aggression": {
-      "value": "Not evident; he remains calm and respectful in his interactions.",
-      "evidence": "I think it's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+      "value": "Not evident; Akib maintains a calm and conversational tone throughout the dialogue.",
+      "confidence": 0.4,
+      "evidence": "No aggressive behavior or language is observed in Akib's speech."
     },
     "humor": {
-      "value": "Uses humor in his conversations, such as joking about the cat and the book Ducks, Newburyport.",
-      "evidence": "I think it's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+      "value": "Uses humor to discuss serious topics, such as joking about disintegration during time travel and making light-hearted comments about cats and raccoons.",
+      "confidence": 0.8,
+      "evidence": "Akib jokes about disintegrating during time travel and makes humorous observations about animals and daily life."
     },
     "obsession": {
-      "value": "Shows some obsession with hypothetical scenarios, like time travel and Jupiter colonization.",
-      "evidence": "I think it's just not feasible at this point in time... Maybe I should just scrap that and go with my Jupiter colonization mission instead"
+      "value": "Shows a deep interest in time travel and space exploration, suggesting a level of obsession with these ideas.",
+      "confidence": 0.7,
+      "evidence": "Akib spends significant time discussing time travel theories and his Jupiter colonization plans, indicating a strong personal interest."
     },
     "rationalization": {
-      "value": "Rationalizes his actions, such as not going to the doctor for his ear infection.",
-      "evidence": "If not I'm gonna have to see a doctor but it's possible that a doctor would just tell me to go home and sleep or something until it stops swelling"
+      "value": "Rationalizes potential health issues by attributing them to weather or self-care mistakes, rather than seeking medical attention immediately.",
+      "confidence": 0.75,
+      "evidence": "Akib attributes his ear discomfort to weather or over-cleaning, avoiding immediate medical consultation."
     }
   },
   "cognition": {
-    "expression_style": {
-      "value": "Expresses thoughts in a detailed and conversational manner, often with tangents and reflections.",
-      "evidence": "I think it's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+    "expression style": {
+      "value": "Expresses thoughts in a detailed and often speculative manner, frequently using metaphors and hypothetical scenarios.",
+      "confidence": 0.85,
+      "evidence": "Akib frequently uses metaphors, such as comparing human cells to a hot air balloon, and explores hypothetical situations like time travel."
     },
-    "information_density": {
-      "value": "Provides a moderate amount of information, often with personal anecdotes and reflections.",
-      "evidence": "I had some a few weeks ago from a place that opened up not too far from me and it was pretty good"
+    "information density": {
+      "value": "High information density; Akib provides detailed descriptions of his thoughts, plans, and experiences.",
+      "confidence": 0.8,
+      "evidence": "Akib gives detailed accounts of his grocery list, time travel theories, and personal reflections on life and relationships."
     },
-    "emotional_visibility": {
-      "value": "Emotions are visible, especially when discussing personal health and relationships.",
-      "evidence": "I hate being sick, I was sick just a few weeks ago so It would be really unlucky if I got sick again"
+    "emotional visibility": {
+      "value": "Moderate emotional visibility; Akib expresses some vulnerability, such as feeling unwell, but generally maintains a composed tone.",
+      "confidence": 0.75,
+      "evidence": "Akib mentions feeling unwell and expressing uncertainty about his health but does not display overt emotional distress."
     },
-    "social_distance": {
-      "value": "Maintains a moderate level of social distance, engaging in meaningful conversations but not overly intimate.",
-      "evidence": "I think to myself Would this person come to my funeral? Would I go to theirs? If the answer is no both ways then I'd just consider them an acquaintance"
+    "social distance": {
+      "value": "Close social distance; Akib shares personal thoughts, health concerns, and future plans with Fahim Khan.",
+      "confidence": 0.85,
+      "evidence": "Akib discusses personal health issues, future ambitions, and even hypothetical scenarios with Fahim Khan, indicating a close relationship."
     },
-    "decision_style": {
-      "value": "Tends to make decisions based on personal reflection and long-term goals.",
-      "evidence": "It's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+    "decision style": {
+      "value": "Introspective and deliberate; Akib considers multiple factors before making decisions, such as the feasibility of his Jupiter mission.",
+      "confidence": 0.8,
+      "evidence": "Akib evaluates the practicality of his Jupiter colonization plan and considers alternative options, showing a thoughtful decision-making process."
     }
   },
   "identity": {
     "occupation": {
-      "value": "Works for a comic book publishing company and previously worked at a barbecue restaurant.",
-      "evidence": "I work for a comic book publishing company... Before that I worked at a barbecue restaurant"
+      "value": "Works for a comic book publishing company, previously worked at a barbecue restaurant.",
+      "confidence": 0.9,
+      "evidence": "Akib mentions working for a comic book publishing company and previously working at a barbecue restaurant."
     },
     "age": {
-      "value": "Not explicitly stated, but appears to be an adult, likely in his 20s or 30s.",
-      "evidence": "I had to do something at 4 am so I didn't actually go to bed until like 6 am and then I woke up at 11:45"
+      "value": "Early to mid-30s, based on references to past experiences and current life stage.",
+      "confidence": 0.7,
+      "evidence": "Akib references past experiences like college and career transitions, suggesting an age range of early to mid-30s."
     },
-    "social_relationships": {
-      "value": "Has a network of friends and family, including a wife and friends who visit him.",
-      "evidence": "My wife asked me to make her one for tonight too... I had a bunch of friends come over with food and drinks and stuff"
+    "social relationships": {
+      "value": "Has a spouse, a few close friends, and a network of acquaintances, with an emphasis on quality over quantity in relationships.",
+      "confidence": 0.8,
+      "evidence": "Akib mentions his wife, friends, and reflects on the importance of meaningful friendships."
     },
     "family": {
-      "value": "Has a wife and mentions family friends, indicating a close-knit family life.",
-      "evidence": "My wife asked me to make her one for tonight too... I had a bunch of friends come over with food and drinks and stuff"
+      "value": "Has a spouse and possibly children, as he mentions planning trips with his wife and considering future family plans.",
+      "confidence": 0.75,
+      "evidence": "Akib discusses planning trips with his wife and mentions considering having children in the future."
     },
     "economy": {
-      "value": "Has financial stability, as seen in his ability to plan trips and buy groceries.",
-      "evidence": "It's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+      "value": "Middle-class, with financial stability allowing for occasional dining out and planned trips, though he notes the cost of living as a challenge.",
+      "confidence": 0.7,
+      "evidence": "Akib discusses the cost of groceries, travel, and mentions financial constraints related to his Jupiter mission."
     },
     "devices": {
-      "value": "Uses a phone and possibly a computer, given the context of the conversation.",
-      "evidence": "I think it's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+      "value": "Uses a smartphone for communication and browsing, and has access to a computer for work and hobbies.",
+      "confidence": 0.8,
+      "evidence": "Akib refers to using his phone for texting and browsing, and mentions working on projects involving computers."
     },
-    "physical_environment": {
-      "value": "Lives in an area with cold weather and has a house with a view, suggesting a suburban or urban setting.",
-      "evidence": "I would pay a lot to have a place with this kind of view... But it's just way too expensive where I am"
+    "physical environment": {
+      "value": "Lives in an area with cold winters, where he has to deal with raccoons and stray cats, and has access to a gym and local stores.",
+      "confidence": 0.75,
+      "evidence": "Akib discusses the cold climate, raccoon problems, and mentions going to the gym and shopping for groceries."
     }
   },
   "behavior": {
-    "content_preferences": {
-      "value": "Prefers content related to books, movies, and hypothetical scenarios.",
-      "evidence": "I think it's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+    "content preferences": {
+      "value": "Prefers content related to science, space, books, and movies, especially those with philosophical or speculative elements.",
+      "confidence": 0.85,
+      "evidence": "Akib frequently discusses science, space exploration, books like 'Ducks, Newburyport,' and movies like 'Kung Fu Panda.'"
     },
-    "consumption_preferences": {
-      "value": "Enjoys eating and experimenting with different foods, particularly barbecue and Korean fried chicken.",
-      "evidence": "I love fried chicken. I actually have wanted to have some korean fried chicken. They’ve got a lot of flavours that I wanna try"
+    "consumption preferences": {
+      "value": "Enjoys eating a variety of foods, including barbecue, sandwiches, and international cuisine, and prefers to prepare meals at home when possible.",
+      "confidence": 0.8,
+      "evidence": "Akib describes his favorite foods, mentions preparing meals at home, and discusses cooking techniques."
     },
-    "entertainment_preferences": {
-      "value": "Enjoys video games, movies, and reading, especially books with unique styles.",
-      "evidence": "I've spent a lot of hours this week playing a lot of video games... I also started reading 11/22/63 by stephen king"
+    "entertainment preferences": {
+      "value": "Likes video games, movies, and books, particularly those with engaging stories or unique styles.",
+      "confidence": 0.8,
+      "evidence": "Akib discusses playing video games, watching movies, and reading books like '2666' and '11/22/63.'"
     },
     "habits": {
-      "value": "Has habits of sleeping late, working on projects, and engaging in conversations about various topics.",
-      "evidence": "I had to do something at 4 am so I didn't actually go to bed until like 6 am and then I woke up at 11:45"
+      "value": "Has consistent habits around exercise, meal preparation, and reading, though he occasionally changes routines.",
+      "confidence": 0.75,
+      "evidence": "Akib mentions going to the gym regularly, preparing meals, and reading books, though he also discusses changing his routine."
     },
-    "long_term_behavior_patterns": {
-      "value": "Tends to plan for the future, such as travel and personal goals, and engages in reflective thinking.",
-      "evidence": "It's better to explore while you can... I think it's worth it. You only live once after all. Gotta have a lot of experiences with the people you care about."
+    "long-term behavior patterns": {
+      "value": "Tends to engage in long-term planning, such as setting goals for reading and exploring new places, while also enjoying spontaneous activities.",
+      "confidence": 0.7,
+      "evidence": "Akib sets annual reading goals, plans trips, and enjoys both structured and spontaneous activities like gaming and socializing."
     }
   }
 }

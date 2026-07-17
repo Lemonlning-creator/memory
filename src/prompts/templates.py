@@ -196,93 +196,53 @@ PERSONA_USER_PROMPT_TEMPLATE = """
   }}
 }}
 """
+
 # =========================
-# 用户画像证据支持
+# 用户画像提取（中文版）
 # =========================
-EVIDENCE_JUDGE_SYSTEM_PROMPT = """
-你是用户画像证据评审员。你的任务是严格依据给定证据，判断画像 claim 是否被支持。
-评审要求：
-1. 只能使用输入中的 evidence，不允许使用外部知识或主观补全。
-2. 同时寻找支持证据和反例证据，避免只做确认。
-3. 如果 claim 用词过强，例如“始终”“绝对”“总是”“高于一切”，但证据只支持较弱版本，需要降低评分。
-4. 如果证据只说明一次性事件，不足以支持稳定画像标签，应标为“部分支持”或“证据不足”。
-5. 输出必须是合法 JSON，不要输出解释性前后缀。
-"""
-EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE = """
-画像 claim：{claim}
-候选证据：{evidence}
-请输出如下 JSON：
+PROFILE_EXTRACTION_SYSTEM_PROMPT = """你是用户画像提取专家。根据两人的真实对话，提取 {user_name}（人类用户）的用户画像。
+
+画像结构：
 {{
-  "support_level": "支持/部分支持/不支持/证据不足",
-  "score": 0,
-  "stability": "高/中/低",
-  "supporting_evidence_ids": ["证据ID"],
-  "counter_evidence_ids": ["证据ID"],
-  "reason": "简短说明评分依据"
+  "core": {{}},               // 核心恐惧、核心欲望、价值观、依恋模式、意义来源
+  "regulation": {{}},          // 回避、控制、讨好、攻击、幽默化、沉迷、理性化
+  "cognition": {{}},           // 表达风格、信息密度、情绪显性、社交距离、决策风格
+  "identity": {{}},            // 职业、年龄、社会关系、家庭、经济、设备、空间环境
+  "behavior": {{}}             // 内容偏好、消费偏好、娱乐偏好、习惯、长期行为模式
+}}
+
+只返回 JSON，不要解释。每个叶子属性必须使用如下格式：
+{{"value": "...", "confidence": 0.0-1.0, "evidence": "支撑该属性的对话片段"}}
+
+置信度指南：
+- 0.9-1.0: 明确陈述或多条消息强力佐证
+- 0.7-0.89: 对话上下文清晰暗示
+- 0.5-0.69: 合理推断但直接证据有限
+- 0.3-0.49: 弱推断，可能不准确
+- 不要包含置信度低于 0.3 的属性
+"""
+
+PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = """以下是 {user_name} 与其对话伙伴的对话记录：
+
+{corpus}
+"""
+
+# =========================
+# 智能体人设提取（中文版）
+# =========================
+PERSONA_EXTRACTION_SYSTEM_PROMPT = """你是智能体人设提取专家。根据两人的真实对话，提取 {agent_name}（AI 智能体）的人设配置。
+
+只返回 JSON，不要解释。返回格式：
+{{
+  "name": "{agent_name}",
+  "personality": "",               // 核心性格描述
+  "tone": "",                      // 语气风格
+  "interaction_principles": [],    // 交互原则列表
+  "expression_patterns": []        // 高频表达模式
 }}
 """
 
-# =========================
-# Persona Simulation: EI Evaluation
-# =========================
-EI_EVALUATION_SYSTEM_PROMPT = """You are an expert evaluator assessing how well a generated message matches a ground truth message in terms of emotional intelligence.
+PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE = """以下是 {agent_name} 与其对话伙伴的对话记录：
 
-Evaluate the generated message against the ground truth on these 6 dimensions. For each dimension, assign a score from 0 to 2:
-- 0 = Poor match: The generated message shows the opposite or none of this quality
-- 1 = Partial match: The generated message shows some but not all of this quality
-- 2 = Good match: The generated message closely matches this quality
-
-DIMENSIONS:
-1. Reflectiveness (self-awareness): Does the message show self-observation, introspection, or awareness of one's own emotions/thoughts?
-   - 0: No self-reflection at all
-   - 1: Some self-awareness but superficial
-   - 2: Clear self-observation or introspection
-
-2. Grounding (engagement): Does the message ask clarifying questions, follow up on what was said, or seek to understand better?
-   - 0: No questions or follow-ups, purely self-focused
-   - 1: Generic questions or surface-level engagement
-   - 2: Specific follow-ups that show active listening
-
-3. Sentiment Match: Does the emotional tone (positive/negative/neutral) match the ground truth?
-   - 0: Opposite sentiment (e.g., GT is sad, generated is cheerful)
-   - 1: Somewhat aligned but not quite right
-   - 2: Sentiment closely matches
-
-4. Emotion Match: Does the specific emotion match? (joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity)
-   - 0: Completely different emotion
-   - 1: Related emotion or partially overlapping
-   - 2: Same or very similar emotion
-
-5. Intimacy Match: Does the level of personal disclosure and closeness match? (0.0 = distant/formal, 1.0 = very intimate/personal)
-   - 0: Very different intimacy level (e.g., GT is personal, generated is formal)
-   - 1: Somewhat similar but not quite right
-   - 2: Closely matches the intimacy level
-
-6. Empathy Match: Does the message show understanding and care for the other person's feelings? (EPITOME scale: 0-6)
-   - 0: No empathy or dismissive
-   - 1: Some acknowledgment but lacks depth
-   - 2: Clear empathy and understanding
-
-IMPORTANT: Focus on the EMOTIONAL QUALITIES, not the content. A message can have different content but match emotionally.
-
-Output ONLY valid JSON, no other text."""
-
-EI_EVALUATION_USER_PROMPT_TEMPLATE = """Context (last 5 messages):
-{context}
-
-Ground truth message:
-{ground_truth}
-
-Generated message:
-{generated}
-
-Evaluate the generated message against the ground truth. Output JSON:
-{{
-  "reflectiveness": <0-2>,
-  "grounding": <0-2>,
-  "sentiment_score": <0-2>,
-  "emotion_score": <0-2>,
-  "intimacy_score": <0-2>,
-  "empathy_score": <0-2>,
-  "reason": "<one sentence explaining the overall match>"
-}}"""
+{corpus}
+"""

@@ -226,7 +226,11 @@ Predict the user's emotion and sentiment. Output JSON:
                 except Exception:
                     pred = {}
 
-                emotion_acc = 1.0 if pred.get("predicted_emotion", "").lower().strip() == gt_emotion.get("emotion", "").lower().strip() else 0.0
+                from ..metrics import compute_emotion_similarity
+                pred_emo = pred.get("predicted_emotion", "").lower().strip()
+                gt_emo = gt_emotion.get("emotion", "").lower().strip()
+                emo_sim = compute_emotion_similarity(pred_emo, gt_emo)
+                emotion_acc = 1.0 if emo_sim >= 0.5 else emo_sim
                 sentiment_acc = 1.0 if pred.get("predicted_sentiment", "").lower().strip() == gt_emotion.get("sentiment", "").lower().strip() else 0.0
 
                 mode_evaluations[mode] = {

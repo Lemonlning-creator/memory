@@ -11,6 +11,8 @@ from .templates import (
     PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE,
 )
 
+# Evaluation prompts are available via prompt_loader or direct import from eval_templates
+
 __all__ = [
     "MID_TERM_MEMORY_SYSTEM_PROMPT",
     "MID_TERM_MEMORY_USER_PROMPT_TEMPLATE",

@@ -3,6 +3,9 @@ Prompt Configuration and Loader
 
 This module provides a centralized way to load prompts in different languages.
 To switch between Chinese and English prompts, change the PROMPT_LANGUAGE variable below.
+
+System implementation prompts are in templates.py / templates_en.py.
+Evaluation prompts are in eval_templates.py / eval_templates_en.py.
 """
 
 # Configuration: Set the language for prompts
@@ -11,18 +14,25 @@ PROMPT_LANGUAGE = "en"
 
 
 def load_prompts():
-    """
-    Load prompts based on the configured language.
-
-    Returns:
-        module: The prompt template module (either templates or templates_en)
-    """
+    """Load system prompt templates based on the configured language."""
     if PROMPT_LANGUAGE == "zh":
         from . import templates
         return templates
     elif PROMPT_LANGUAGE == "en":
         from . import templates_en
         return templates_en
+    else:
+        raise ValueError(f"Unsupported prompt language: {PROMPT_LANGUAGE}. Use 'zh' or 'en'.")
+
+
+def load_eval_prompts():
+    """Load evaluation prompt templates based on the configured language."""
+    if PROMPT_LANGUAGE == "zh":
+        from . import eval_templates
+        return eval_templates
+    elif PROMPT_LANGUAGE == "en":
+        from . import eval_templates_en
+        return eval_templates_en
     else:
         raise ValueError(f"Unsupported prompt language: {PROMPT_LANGUAGE}. Use 'zh' or 'en'.")
 
@@ -37,11 +47,17 @@ def get_prompt(prompt_name: str):
     Returns:
         The prompt string
     """
+    # Try system prompts first, then eval prompts
     module = load_prompts()
-    return getattr(module, prompt_name)
+    if hasattr(module, prompt_name):
+        return getattr(module, prompt_name)
+    eval_module = load_eval_prompts()
+    if hasattr(eval_module, prompt_name):
+        return getattr(eval_module, prompt_name)
+    raise AttributeError(f"Prompt '{prompt_name}' not found in system or eval templates")
 
 
-# Export commonly used prompts for direct import
+# ── System prompts ──────────────────────────────────────────────────
 _templates = load_prompts()
 
 # Memory prompts
@@ -64,19 +80,9 @@ PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE = _templates.PROFILE_EVOLUTION_USER_PROMP
 PERSONA_SYSTEM_PROMPT = _templates.PERSONA_SYSTEM_PROMPT
 PERSONA_USER_PROMPT_TEMPLATE = _templates.PERSONA_USER_PROMPT_TEMPLATE
 
-# Evidence prompts
-EVIDENCE_JUDGE_SYSTEM_PROMPT = _templates.EVIDENCE_JUDGE_SYSTEM_PROMPT
-EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE = _templates.EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE
-
-# EI Evaluation prompts
-EI_EVALUATION_SYSTEM_PROMPT = _templates.EI_EVALUATION_SYSTEM_PROMPT
-EI_EVALUATION_USER_PROMPT_TEMPLATE = _templates.EI_EVALUATION_USER_PROMPT_TEMPLATE
-
-# Profile Extraction prompts
+# Profile / Persona Extraction prompts
 PROFILE_EXTRACTION_SYSTEM_PROMPT = _templates.PROFILE_EXTRACTION_SYSTEM_PROMPT
 PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
-
-# Persona Extraction prompts
 PERSONA_EXTRACTION_SYSTEM_PROMPT = _templates.PERSONA_EXTRACTION_SYSTEM_PROMPT
 PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE
 
@@ -84,50 +90,51 @@ PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.PERSONA_EXTRACTION_USER_PRO
 EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT = _templates.EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT
 EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE = _templates.EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE
 
-# EPITOME Evaluation prompts
-EPITOME_EVALUATION_SYSTEM_PROMPT = _templates.EPITOME_EVALUATION_SYSTEM_PROMPT
-EPITOME_EVALUATION_USER_PROMPT_TEMPLATE = _templates.EPITOME_EVALUATION_USER_PROMPT_TEMPLATE
-
-# Cross-Conversation Consistency prompts
-PROFILE_CONSISTENCY_SYSTEM_PROMPT = _templates.PROFILE_CONSISTENCY_SYSTEM_PROMPT
-PROFILE_CONSISTENCY_USER_PROMPT_TEMPLATE = _templates.PROFILE_CONSISTENCY_USER_PROMPT_TEMPLATE
-PERSONA_CONSISTENCY_SYSTEM_PROMPT = _templates.PERSONA_CONSISTENCY_SYSTEM_PROMPT
-PERSONA_CONSISTENCY_USER_PROMPT_TEMPLATE = _templates.PERSONA_CONSISTENCY_USER_PROMPT_TEMPLATE
-
-# State Axis prompts
-CURRENT_STATE_EXTRACTION_SYSTEM_PROMPT = _templates.CURRENT_STATE_EXTRACTION_SYSTEM_PROMPT
-CURRENT_STATE_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.CURRENT_STATE_EXTRACTION_USER_PROMPT_TEMPLATE
-
-# Context Axis prompts
-CONTEXT_PROFILE_EXTRACTION_SYSTEM_PROMPT = _templates.CONTEXT_PROFILE_EXTRACTION_SYSTEM_PROMPT
-CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
-
 # Understanding Feedback prompts (Deep Empathy Updating step)
 UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT = _templates.UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT
 UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE = _templates.UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE
 
-# --- New prompts for Experiments 1-5 ---
-
-# Flat Profile Extraction (Exp 1 / 5)
+# Experiment baseline prompts
 FLAT_PROFILE_EXTRACTION_SYSTEM_PROMPT = _templates.FLAT_PROFILE_EXTRACTION_SYSTEM_PROMPT
 FLAT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.FLAT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
-
-# Self-Model Other Modeling (Exp 1 / 5)
 SELF_MODEL_SYSTEM_PROMPT = _templates.SELF_MODEL_SYSTEM_PROMPT
 SELF_MODEL_USER_PROMPT_TEMPLATE = _templates.SELF_MODEL_USER_PROMPT_TEMPLATE
-
-# Periodic Profile Rebuild (Exp 4)
 PERIODIC_REBUILD_SYSTEM_PROMPT = _templates.PERIODIC_REBUILD_SYSTEM_PROMPT
 PERIODIC_REBUILD_USER_PROMPT_TEMPLATE = _templates.PERIODIC_REBUILD_USER_PROMPT_TEMPLATE
 
-# Emotion / Sentiment Extraction (Exp 1 evaluation)
-EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT = _templates.EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT
-EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE
+# ── Evaluation prompts ──────────────────────────────────────────────
+_eval_templates = load_eval_prompts()
 
-# Topic Extraction (Exp 1 evaluation)
-TOPIC_EXTRACTION_SYSTEM_PROMPT = _templates.TOPIC_EXTRACTION_SYSTEM_PROMPT
-TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE
+# EI Evaluation prompts
+EI_EVALUATION_SYSTEM_PROMPT = _eval_templates.EI_EVALUATION_SYSTEM_PROMPT
+EI_EVALUATION_USER_PROMPT_TEMPLATE = _eval_templates.EI_EVALUATION_USER_PROMPT_TEMPLATE
 
-# Intimacy Extraction (Exp 2 evaluation)
-INTIMACY_EXTRACTION_SYSTEM_PROMPT = _templates.INTIMACY_EXTRACTION_SYSTEM_PROMPT
-INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE = _templates.INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE
+# EPITOME Evaluation prompts
+EPITOME_EVALUATION_SYSTEM_PROMPT = _eval_templates.EPITOME_EVALUATION_SYSTEM_PROMPT
+EPITOME_EVALUATION_USER_PROMPT_TEMPLATE = _eval_templates.EPITOME_EVALUATION_USER_PROMPT_TEMPLATE
+
+# Evidence Judge prompts
+EVIDENCE_JUDGE_SYSTEM_PROMPT = _eval_templates.EVIDENCE_JUDGE_SYSTEM_PROMPT
+EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE = _eval_templates.EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE
+
+# Cross-Conversation Consistency prompts
+PROFILE_CONSISTENCY_SYSTEM_PROMPT = _eval_templates.PROFILE_CONSISTENCY_SYSTEM_PROMPT
+PROFILE_CONSISTENCY_USER_PROMPT_TEMPLATE = _eval_templates.PROFILE_CONSISTENCY_USER_PROMPT_TEMPLATE
+PERSONA_CONSISTENCY_SYSTEM_PROMPT = _eval_templates.PERSONA_CONSISTENCY_SYSTEM_PROMPT
+PERSONA_CONSISTENCY_USER_PROMPT_TEMPLATE = _eval_templates.PERSONA_CONSISTENCY_USER_PROMPT_TEMPLATE
+
+# State Axis prompts
+CURRENT_STATE_EXTRACTION_SYSTEM_PROMPT = _eval_templates.CURRENT_STATE_EXTRACTION_SYSTEM_PROMPT
+CURRENT_STATE_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_templates.CURRENT_STATE_EXTRACTION_USER_PROMPT_TEMPLATE
+
+# Context Axis prompts
+CONTEXT_PROFILE_EXTRACTION_SYSTEM_PROMPT = _eval_templates.CONTEXT_PROFILE_EXTRACTION_SYSTEM_PROMPT
+CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_templates.CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
+
+# Experiment evaluation prompts
+EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT = _eval_templates.EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT
+EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_templates.EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE
+TOPIC_EXTRACTION_SYSTEM_PROMPT = _eval_templates.TOPIC_EXTRACTION_SYSTEM_PROMPT
+TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_templates.TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE
+INTIMACY_EXTRACTION_SYSTEM_PROMPT = _eval_templates.INTIMACY_EXTRACTION_SYSTEM_PROMPT
+INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_templates.INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE
