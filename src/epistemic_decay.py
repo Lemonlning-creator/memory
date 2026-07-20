@@ -11,7 +11,7 @@ Decay model:
 
 where:
     omega_0      = initial epistemic value (default 1.0)
-    lambda       = decay rate (default 0.01 per interaction turn)
+    lambda       = decay rate (default 0.05 per interaction turn)
     t            = number of interaction turns since the relationship started
     completeness = profile completeness in [0, 1], measured by the proportion
                    of populated attributes across all 5 layers
@@ -64,7 +64,7 @@ def compute_omega(
     interaction_count: int,
     static_profile: Optional[Dict[str, Any]] = None,
     omega_0: float = 1.0,
-    decay_lambda: float = 0.01,
+    decay_lambda: float = 0.05,
     max_attrs_per_layer: int = 8,
 ) -> float:
     """Compute the epistemic value omega(t).
@@ -162,7 +162,7 @@ class EpistemicDecayTracker:
     def __init__(
         self,
         omega_0: float = 1.0,
-        decay_lambda: float = 0.01,
+        decay_lambda: float = 0.05,
         max_attrs_per_layer: int = 8,
         initial_count: int = 0,
         mode: str = "adaptive",

@@ -200,17 +200,21 @@ def run_exp4(config: Exp4Config) -> Dict[str, Any]:
                 )[:2000]
                 history_text = format_conversation_history(context_turns[-10:])
 
-                pred_prompt = f"""Given this user profile, predict the user's emotional state for their next message.
-
-USER PROFILE (updated via {mode}):
-{profile_text}
+                pred_prompt = f"""STEP 1: Read the last 3-5 messages. What is the emotional tone?
+STEP 2: Based on the conversation tone, predict the user's next emotion.
 
 CONVERSATION CONTEXT:
 {history_text[:2000]}
 
 USER'S NEXT MESSAGE: "{target_msg}"
 
-Predict the user's emotion and sentiment. Output JSON:
+USER BACKGROUND (for reference only):
+{profile_text}
+
+IMPORTANT: Friends chatting are rarely "neutral". Pick a specific emotion.
+Use one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity
+
+Output JSON:
 {{
   "predicted_emotion": "emotion label",
   "predicted_sentiment": "positive/negative/neutral"
@@ -231,7 +235,9 @@ Predict the user's emotion and sentiment. Output JSON:
                 gt_emo = gt_emotion.get("emotion", "").lower().strip()
                 emo_sim = compute_emotion_similarity(pred_emo, gt_emo)
                 emotion_acc = 1.0 if emo_sim >= 0.5 else emo_sim
-                sentiment_acc = 1.0 if pred.get("predicted_sentiment", "").lower().strip() == gt_emotion.get("sentiment", "").lower().strip() else 0.0
+                pred_sent = pred.get("predicted_sentiment", "").lower().strip()
+                gt_sent = gt_emotion.get("sentiment", "").lower().strip()
+                sentiment_acc = 1.0 if pred_sent == gt_sent else 0.0
 
                 mode_evaluations[mode] = {
                     "portrait_entropy": entropy,

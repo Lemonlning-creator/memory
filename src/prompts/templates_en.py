@@ -155,10 +155,11 @@ Update rules:
   1. Only update based on long-term memories (stable, repeated patterns). Do NOT update based on transient emotions or single events.
   2. Do not fabricate information the user has not expressed. Preserve original structure where no update is warranted.
   3. If long-term memories indicate the user explicitly rejects certain topics, styles, or approaches, record it as interaction boundaries/preferences in the appropriate profile field.
-  4. Every leaf attribute MUST use this format:
+  4. ACCUMULATE evidence: If an attribute already has supporting memory_ids and new evidence also supports it, RAISE confidence (e.g., from 0.5 to 0.7). Multiple supporting memories should lead to higher confidence.
+  5. Every leaf attribute MUST use this format:
      {{"value": <description>, "confidence": <0.0-1.0>, "memory_ids": [<memory IDs>], "evidence": [<brief evidence summary>], "bayesian_update": {{"prior_confidence": <0.0-1.0>, "evidence_strength": "strong_supporting/moderate_supporting/weak_supporting/neutral/contradicting", "posterior_confidence": <0.0-1.0>, "update_direction": "strengthened/weakened/new/unchanged"}}}}
-  5. Attributes below confidence 0.2 should be removed (insufficient support).
-  6. Output must be valid JSON containing a "reasoning" object and the complete updated "static_profile". No explanatory text outside JSON.
+  6. Attributes below confidence 0.1 should be removed (truly unsupported). For attributes with confidence 0.1-0.3, keep them but do NOT strengthen them without strong evidence. Do NOT remove attributes that still have supporting memory_ids unless new evidence explicitly contradicts them.
+  7. Output must be valid JSON containing a "reasoning" object and the complete updated "static_profile". No explanatory text outside JSON.
 """
 PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE = """
 Current static_profile (PRIOR beliefs, each attribute may have a confidence field):

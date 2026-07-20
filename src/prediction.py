@@ -9,8 +9,8 @@ Predicts the user's future emotional state based on:
 Supports 4 experimental conditions:
   1. llm_only        — Zero-shot LLM (no user info)
   2. dialogue_history — Only conversation history
-  3. user_profile    — Profile + history, no prediction module
-  4. full_framework  — Full deep empathy framework with structured prediction
+  3. user_profile    — Profile + history
+  4. full_framework  — Full context with anti-neutral emphasis
 """
 from __future__ import annotations
 
@@ -22,109 +22,117 @@ from .utils import parse_json
 
 
 # ---------------------------------------------------------------------------
-# Prediction prompts
+# Prediction prompts — single template, conditional context blocks
 # ---------------------------------------------------------------------------
 
-PREDICTION_SYSTEM_PROMPT = """You are a user state prediction module. Your task is to predict the user's future emotional and conversational state based on the available information.
+PREDICTION_SYSTEM_PROMPT = """You predict the user's next conversational state.
 
-You must predict:
-1. Future Emotion: What emotion will the user likely feel next?
-   MUST use one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity, neutral
-2. Future Sentiment: positive / negative / neutral
-3. Future Intimacy: How intimate/personal will the next exchange be? (0.0 = very distant/formal, 1.0 = very intimate/personal)
-4. Future Topic: What topic will the user likely discuss next? (short phrase, 2-5 words)
+Given the dialogue (and optionally a user profile), infer the most likely state in the user's next turn.
 
-Be specific and concise. Output ONLY valid JSON."""
+Requirements:
+- Predict exactly one emotion.
+- Prefer conversation context over user profile.
+- Use "neutral" only when the dialogue is emotionally flat.
 
-PREDICTION_USER_PROMPT_TEMPLATES = {
-    "llm_only": """The user sent the following message:
-"{user_message}"
+Emotion must be one of:
+joy, sadness, anger, fear, surprise, disgust,
+trust, anticipation, amusement, guilt, curiosity, neutral.
 
-Predict the user's next emotional state with NO other information.
-Output JSON:
-{{
-  "future_emotion": "emotion label",
-  "future_sentiment": "positive/negative/neutral",
+Return JSON only:
+{
+  "future_emotion": "...",
+  "future_sentiment": "positive|negative|neutral",
   "future_intimacy": 0.0,
-  "future_topic": "predicted topic",
+  "future_topic": "...",
   "confidence": 0.0
-}}""",
+}"""
 
-    "dialogue_history": """CONVERSATION HISTORY (last {n_turns} turns):
+# Context block templates — assembled dynamically based on mode
+_CONTEXT_BLOCKS = {
+    "history": """CONVERSATION HISTORY (last {n_turns} turns):
 {conversation_history}
 
-USER'S LATEST MESSAGE:
-"{user_message}"
-
-Based on the conversation history, predict the user's next emotional state.
-Output JSON:
-{{
-  "future_emotion": "emotion label",
-  "future_sentiment": "positive/negative/neutral",
-  "future_intimacy": 0.0,
-  "future_topic": "predicted topic",
-  "confidence": 0.0
-}}""",
-
-    "user_profile": """CONVERSATION HISTORY (last {n_turns} turns):
-{conversation_history}
-
-USER'S LATEST MESSAGE:
-"{user_message}"
-
-USER PROFILE:
+""",
+    "profile": """USER BACKGROUND (for reference only — focus on conversation tone):
 {user_profile}
 
-Based on the conversation history AND user profile, predict the user's next emotional state.
-Output JSON:
-{{
-  "future_emotion": "emotion label",
-  "future_sentiment": "positive/negative/neutral",
-  "future_intimacy": 0.0,
-  "future_topic": "predicted topic",
-  "confidence": 0.0
-}}""",
-
-    "full_framework": """CONVERSATION HISTORY (last {n_turns} turns):
-{conversation_history}
-
-USER'S LATEST MESSAGE:
-"{user_message}"
-
-USER PROFILE:
-{user_profile}
-
-CURRENT STATE:
+""",
+    "state": """CURRENT STATE:
 {current_state}
 
-Based on all available information, predict the user's next emotional state.
-Focus on what is most likely — do not overthink.
+""",
+}
 
-IMPORTANT: Future emotion MUST be one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity, neutral
+# Per-mode anti-neutral hints (empty = no extra hint)
+_MODE_HINTS = {
+    "llm_only": "",
+    "dialogue_history": "",
+    "user_profile": "Focus on the conversation tone, NOT the profile, for your prediction.",
+    "full_framework": "IMPORTANT: The conversation between friends is rarely 'neutral'. Pick a specific emotion that matches the conversation tone.",
+}
 
-Output JSON:
+_OUTPUT_INSTRUCTION = """USER'S LATEST MESSAGE:
+"{user_message}"
+
+Predict the user's next emotional state. Output JSON:
 {{
-  "future_emotion": "one emotion from the list above",
+  "future_emotion": "emotion label",
   "future_sentiment": "positive/negative/neutral",
   "future_intimacy": 0.0,
-  "future_topic": "short topic phrase (2-5 words)"
+  "future_topic": "short topic phrase (2-5 words)",
+  "confidence": 0.0
 }}"""
+
+# Which context blocks each mode includes
+_MODE_BLOCKS = {
+    "llm_only": [],
+    "dialogue_history": ["history"],
+    "user_profile": ["history", "profile"],
+    "full_framework": ["history", "profile", "state"],
 }
+
+
+def build_user_prompt(
+    mode: str,
+    user_message: str,
+    conversation_history: str = "",
+    n_turns: int = 0,
+    user_profile: str = "",
+    current_state: str = "",
+) -> str:
+    """Build a prediction prompt by assembling context blocks for the given mode."""
+    parts = []
+
+    for block_name in _MODE_BLOCKS[mode]:
+        template = _CONTEXT_BLOCKS[block_name]
+        parts.append(template.format(
+            conversation_history=conversation_history,
+            n_turns=n_turns,
+            user_profile=user_profile,
+            current_state=current_state,
+        ))
+
+    hint = _MODE_HINTS.get(mode, "")
+    if hint:
+        parts.append(hint + "\n\n")
+
+    parts.append(_OUTPUT_INSTRUCTION.format(user_message=user_message))
+    return "".join(parts)
 
 
 # ---------------------------------------------------------------------------
 # Prediction module
 # ---------------------------------------------------------------------------
 
-class FutureStatePredictor:
-    """Predicts user's future emotional/conversational state.
+_VALID_MODES = set(_MODE_BLOCKS.keys())
 
-    Supports 4 experimental conditions for RQ2.
-    """
+
+class FutureStatePredictor:
+    """Predicts user's future emotional/conversational state."""
 
     def __init__(self, llm: LLMClient, mode: str = "full_framework"):
-        if mode not in PREDICTION_USER_PROMPT_TEMPLATES:
-            raise ValueError(f"Unknown prediction mode: {mode}")
+        if mode not in _VALID_MODES:
+            raise ValueError(f"Unknown prediction mode: {mode}. Must be one of {_VALID_MODES}")
         self.llm = llm
         self.mode = mode
 
@@ -133,30 +141,16 @@ class FutureStatePredictor:
         user_message: str,
         conversation_history: Optional[List[Dict[str, Any]]] = None,
         user_profile: Optional[Dict[str, Any]] = None,
-        empathy_reasoning: Optional[Dict[str, Any]] = None,
         current_state: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Predict the user's future state.
-
-        Args:
-            user_message: The user's latest message.
-            conversation_history: List of {speaker, content} dicts.
-            user_profile: The user's profile (5-layer or flat).
-            empathy_reasoning: Output from empathy alignment reasoning.
-            current_state: The user's current state snapshot.
-
-        Returns:
-            Dict with keys: future_emotion, future_sentiment, future_intimacy,
-            future_topic, confidence, and optionally reasoning.
-        """
+        """Predict the user's future state."""
         # Format conversation history
         history_text = ""
         n_turns = 0
         if conversation_history:
             n_turns = min(len(conversation_history), 20)
             recent = conversation_history[-n_turns:]
-            lines = [f"{t['speaker']}: {t['content']}" for t in recent]
-            history_text = "\n".join(lines)
+            history_text = "\n".join(f"{t['speaker']}: {t['content']}" for t in recent)
 
         # Format profile
         profile_text = ""
@@ -168,24 +162,18 @@ class FutureStatePredictor:
             else:
                 profile_text = json.dumps(user_profile, ensure_ascii=False, indent=2)[:2000]
 
-        # Format empathy reasoning
-        reasoning_text = ""
-        if empathy_reasoning:
-            reasoning_text = json.dumps(empathy_reasoning, ensure_ascii=False, indent=2)[:1500]
-
         # Format current state
         state_text = ""
         if current_state:
             state_text = json.dumps(current_state, ensure_ascii=False, indent=2)[:500]
 
-        # Build prompt based on mode
-        template = PREDICTION_USER_PROMPT_TEMPLATES[self.mode]
-        user_prompt = template.format(
+        # Build prompt
+        user_prompt = build_user_prompt(
+            mode=self.mode,
             user_message=user_message,
             conversation_history=history_text,
             n_turns=n_turns,
             user_profile=profile_text,
-            empathy_reasoning=reasoning_text,
             current_state=state_text,
         )
 
@@ -207,15 +195,7 @@ def compute_prediction_error(
     prediction: Dict[str, Any],
     ground_truth: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """Compute prediction error between predicted and actual future state.
-
-    Args:
-        prediction: Dict with future_emotion, future_sentiment, future_intimacy, future_topic.
-        ground_truth: Dict with actual_emotion, actual_sentiment, actual_intimacy, actual_topic.
-
-    Returns:
-        Dict with per-dimension errors and total error score.
-    """
+    """Compute prediction error between predicted and actual future state."""
     errors: Dict[str, Any] = {}
 
     # Emotion accuracy (semantic similarity-based)
@@ -230,23 +210,20 @@ def compute_prediction_error(
     gt_sentiment = ground_truth.get("actual_sentiment", "").lower().strip()
     errors["sentiment_match"] = 1.0 if pred_sentiment == gt_sentiment else 0.0
 
-    # Intimacy error (MSE-like, lower is better)
+    # Intimacy error
     pred_intimacy = float(prediction.get("future_intimacy", 0.5))
     gt_intimacy = float(ground_truth.get("actual_intimacy", 0.5))
     errors["intimacy_error"] = abs(pred_intimacy - gt_intimacy)
 
-    # Topic overlap (simple keyword overlap for now; can be upgraded to embedding similarity)
+    # Topic overlap
     pred_topic = prediction.get("future_topic", "").lower().strip()
     gt_topic = ground_truth.get("actual_topic", "").lower().strip()
     pred_words = set(pred_topic.split())
     gt_words = set(gt_topic.split())
-    if pred_words and gt_words:
-        overlap = len(pred_words & gt_words) / len(gt_words)
-    else:
-        overlap = 0.0
+    overlap = len(pred_words & gt_words) / len(gt_words) if pred_words and gt_words else 0.0
     errors["topic_overlap"] = round(overlap, 3)
 
-    # Composite error (lower is better): average of (1 - accuracy) for categorical + continuous errors
+    # Composite error
     errors["total_error"] = round(
         (1 - errors["emotion_match"]) * 0.3
         + (1 - errors["sentiment_match"]) * 0.3

@@ -124,8 +124,6 @@ def run_exp2(config: Exp2Config) -> Dict[str, Any]:
                     user_message=target_msg,
                     conversation_history=context_turns[-15:] if context_turns else None,
                     user_profile=profile if mode_name in ("user_profile", "full_framework") else None,
-                    empathy_reasoning=None,  # Can add empathy reasoning for full_framework
-                    current_state=None,
                 )
                 predictions[mode_name] = pred
 

@@ -211,22 +211,25 @@ def _score_with_profile(
     """
     profile_text = json.dumps(profile, ensure_ascii=False, indent=2)[:2000]
 
-    prompt = f"""Based on the user profile and conversation context, predict the user's emotional state and topic for their next message.
-
-USER PROFILE ({profile_type}):
-{profile_text}
+    prompt = f"""STEP 1: Read the last 3-5 messages of the conversation. What is the emotional tone?
+STEP 2: Based on the conversation tone (NOT the profile), predict the user's next emotion.
 
 CONVERSATION CONTEXT:
 {history_text[:2000]}
 
 USER'S NEXT MESSAGE: "{target_msg}"
 
-Analyze whether this profile helped predict the user's state. Output JSON:
+USER BACKGROUND (for reference only):
+{profile_text}
+
+IMPORTANT: Friends chatting are rarely "neutral". Pick a specific emotion that matches the conversation flow.
+Use one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity
+
+Predict the user's emotion and sentiment. Output JSON:
 {{
   "predicted_emotion": "emotion label",
   "predicted_sentiment": "positive/negative/neutral",
-  "predicted_topic": "topic",
-  "profile_usefulness": "how useful was the profile for understanding (1-5)"
+  "predicted_topic": "topic"
 }}"""
 
     try:
