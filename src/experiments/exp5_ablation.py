@@ -55,7 +55,7 @@ from .persona_simulation import (
     format_conversation_history, condense_profile, condense_persona,
 )
 from .empathy_alignment_analysis import EPITOMEEvaluator
-from ..prompts.prompt_loader import (
+from ..prompts.templates_en import (
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
 )
