@@ -1,13 +1,14 @@
 """Additional Chinese prompt templates missing from templates.py."""
 
-USER_PROFILE_ACTIVATION_SYSTEM_PROMPT = """你是用户画像字段匹配模块。你的任务是根据当前用户输入、上下文和已有用户画像，找出本轮对话直接关联到的画像字段。
+USER_PROFILE_ACTIVATION_SYSTEM_PROMPT = """你是用户画像字段激活模块。你的任务是根据当前用户输入、上下文和已有用户画像，找出本轮对话在语义上触发的画像字段。
 
 判断标准：
-1. 只匹配已有画像字段，不新增字段。
-2. 当前输入或上下文需要能作为匹配依据；依据不足时不要匹配。
-3. 匹配结果要保守，宁可少匹配，不要泛化。
-4. 如果没有明确匹配，activated_profile 返回空对象，matched_fields 返回空数组。
-5. 只返回合法 JSON，不要输出解释文字。
+1. 激活表示“当前这句话适合调动该画像字段来理解用户”，不要求字面关键词完全一致。
+2. 只返回已有画像字段的字段名和值，不新增字段。
+3. 优先匹配与当前输入的主题、关系诉求、表达方式、决策方式、偏好或稳定行为模式相关的字段。
+4. 忽略 value 为“未明确提及”的低信息字段。
+5. 如果确实没有语义相关字段，activated_profile 返回各层空数组，matched_fields 返回空数组。
+6. 只返回合法 JSON，不要输出解释文字。
 """
 
 USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE = """用户当前输入：
@@ -26,6 +27,7 @@ USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE = """用户当前输入：
       {{
         "field": "画像字段名",
         "value": "该字段画像内容",
+        "reason": "当前输入和该画像字段的语义关联",
         "confidence": 0.0
       }}
     ],
@@ -33,7 +35,11 @@ USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE = """用户当前输入：
     "cognition": [],
     "identity": [],
     "behavior": []
-  }}
+  }},
+  "matched_fields": [
+    "core.field_name"
+  ],
+  "activation_summary": "一句话概括本轮激活情况；若无激活则写：未激活明确用户画像字段"
 }}
 """
 

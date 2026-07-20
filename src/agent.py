@@ -322,7 +322,104 @@ class StateDrivenCompanionAgent:
                 "activation_summary",
                 "未激活明确用户画像字段",
             ),
-            "relevant_memory": relevant_memory,
+        }
+
+    def _is_usable_profile_value(self, value: Any) -> bool:
+        if value is None:
+            return False
+        text = str(value).strip()
+        if not text:
+            return False
+        low_information_markers = (
+            "未明确提及",
+            "未提及",
+            "没有明确提及",
+            "不明确",
+            "未知",
+            "不详",
+            "none",
+            "null",
+            "n/a",
+        )
+        return not any(marker in text.lower() for marker in low_information_markers)
+
+    def _activation_profile_candidates(
+        self,
+        static_profile: Dict[str, Any],
+    ) -> Dict[str, Dict[str, Any]]:
+        candidates: Dict[str, Dict[str, Any]] = {}
+        for layer, fields in static_profile.items():
+            if not isinstance(fields, dict):
+                continue
+            layer_candidates: Dict[str, Any] = {}
+            for field, payload in fields.items():
+                value = payload.get("value") if isinstance(payload, dict) else payload
+                if self._is_usable_profile_value(value):
+                    layer_candidates[field] = value
+            if layer_candidates:
+                candidates[layer] = layer_candidates
+        return candidates
+
+    def _sanitize_profile_activation_result(
+        self,
+        activation_result: Dict[str, Any],
+        candidates: Dict[str, Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        layers = ("core", "regulation", "cognition", "identity", "behavior")
+        raw_profile = activation_result.get("activated_profile", {})
+        if not isinstance(raw_profile, dict):
+            raw_profile = {}
+
+        clean_profile = {layer: [] for layer in layers}
+        matched_fields: List[str] = []
+
+        for layer in layers:
+            allowed_fields = candidates.get(layer, {})
+            raw_items = raw_profile.get(layer, [])
+            if isinstance(raw_items, dict):
+                raw_items = [
+                    {"field": field, **(item if isinstance(item, dict) else {"reason": str(item)})}
+                    for field, item in raw_items.items()
+                ]
+            if not isinstance(raw_items, list):
+                continue
+
+            for item in raw_items:
+                if isinstance(item, str):
+                    field = item
+                    reason = ""
+                    confidence = 0.0
+                elif isinstance(item, dict):
+                    field = item.get("field")
+                    reason = item.get("reason", "")
+                    confidence = item.get("confidence", 0.0)
+                else:
+                    continue
+
+                if field not in allowed_fields:
+                    continue
+
+                try:
+                    confidence = float(confidence)
+                except (TypeError, ValueError):
+                    confidence = 0.0
+
+                clean_profile[layer].append({
+                    "field": field,
+                    "value": allowed_fields[field],
+                    "reason": reason,
+                    "confidence": confidence,
+                })
+                matched_fields.append(f"{layer}.{field}")
+
+        clean_summary = activation_result.get("activation_summary", "")
+        if not matched_fields:
+            clean_summary = "未激活明确用户画像字段"
+
+        return {
+            "activated_profile": clean_profile,
+            "matched_fields": matched_fields,
+            "activation_summary": clean_summary,
         }
 
     def _run_user_profile_activation(
@@ -330,16 +427,14 @@ class StateDrivenCompanionAgent:
         user_input: str,
         relevant_memory: Dict[str, Any],
     ) -> Dict[str, Any]:
-        from .profile_utils import flatten_static_profile
-
         state = state_axis(self.user_profile)
         static_profile = state.get("static_profile", {})
-        flattened = flatten_static_profile(static_profile)
+        candidates = self._activation_profile_candidates(static_profile)
 
         user_prompt = USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE.format(
             user_message=user_input,
             current_context=json.dumps(relevant_memory, ensure_ascii=False)[:2000],
-            user_profile=json.dumps(flattened, ensure_ascii=False)[:4000],
+            user_profile=json.dumps(candidates, ensure_ascii=False)[:4000],
         )
 
         try:
@@ -349,10 +444,12 @@ class StateDrivenCompanionAgent:
                 temperature=0.2,
                 max_tokens=600,
             ))
-            return result if isinstance(result, dict) else {}
+            if isinstance(result, dict):
+                return self._sanitize_profile_activation_result(result, candidates)
+            return self._sanitize_profile_activation_result({}, candidates)
         except Exception as e:
             print(f"[User Profile Activation Error] {e}")
-            return {}
+            return self._sanitize_profile_activation_result({}, candidates)
 
     def _run_profile_activation_log(
         self,

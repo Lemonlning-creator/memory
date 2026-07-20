@@ -28,8 +28,11 @@ active_profile_id = None
 active_persona_id = None
 conversation_history = []
 
-DATASET_USER_PROFILE = Path("dataset/test_user.json")
-DATASET_AGENT_PERSONA = Path("dataset/test_agent.json")
+DATASET_OUTPUT_DIR = Path(os.getenv("MEMORY_DATASET_OUTPUT_DIR", "dataset/output_zh"))
+DATASET_USER_DIR = DATASET_OUTPUT_DIR / "user"
+DATASET_AGENT_DIR = DATASET_OUTPUT_DIR / "agent"
+DATASET_TEST_USER_PROFILE = Path("dataset/test_user.json")
+DATASET_TEST_AGENT_PERSONA = Path("dataset/test_agent.json")
 WORKING_PROFILE_DIR = Path("data/active_profiles")
 
 
@@ -39,28 +42,46 @@ def _humanize(name: str) -> str:
 
 
 def discover_user_profiles() -> dict:
-    """Load the single test user profile from dataset/test_user.json."""
+    """Scan dataset output user profiles and build selectable profile metadata."""
     profiles = {}
-    if DATASET_USER_PROFILE.exists():
+    if DATASET_TEST_USER_PROFILE.exists():
         profiles["test_user"] = {
             "id": "test_user",
             "display_name": "Test User",
-            "file_name": DATASET_USER_PROFILE.name,
-            "source_path": str(DATASET_USER_PROFILE),
+            "file_name": DATASET_TEST_USER_PROFILE.name,
+            "source_path": str(DATASET_TEST_USER_PROFILE),
         }
+    if DATASET_USER_DIR.exists():
+        for path in sorted(DATASET_USER_DIR.glob("*_profile.json")):
+            profile_id = path.stem.removesuffix("_profile")
+            profiles[profile_id] = {
+                "id": profile_id,
+                "display_name": _humanize(profile_id),
+                "file_name": path.name,
+                "source_path": str(path),
+            }
     return profiles
 
 
 def discover_agent_personas() -> dict:
-    """Load the single test agent persona from dataset/test_agent.json."""
+    """Scan dataset output agent personas and build selectable persona metadata."""
     personas = {}
-    if DATASET_AGENT_PERSONA.exists():
+    if DATASET_TEST_AGENT_PERSONA.exists():
         personas["test_agent"] = {
             "id": "test_agent",
             "display_name": "Test Agent",
-            "file_name": DATASET_AGENT_PERSONA.name,
-            "source_path": str(DATASET_AGENT_PERSONA),
+            "file_name": DATASET_TEST_AGENT_PERSONA.name,
+            "source_path": str(DATASET_TEST_AGENT_PERSONA),
         }
+    if DATASET_AGENT_DIR.exists():
+        for path in sorted(DATASET_AGENT_DIR.glob("*_persona.json")):
+            persona_id = path.stem.removesuffix("_persona")
+            personas[persona_id] = {
+                "id": persona_id,
+                "display_name": _humanize(persona_id),
+                "file_name": path.name,
+                "source_path": str(path),
+            }
     return personas
 
 
