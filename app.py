@@ -28,9 +28,8 @@ active_profile_id = None
 active_persona_id = None
 conversation_history = []
 
-DATASET_OUTPUT_DIR = Path(os.getenv("MEMORY_DATASET_OUTPUT_DIR", "dataset/output_zh"))
-DATASET_USER_DIR = DATASET_OUTPUT_DIR / "user"
-DATASET_AGENT_DIR = DATASET_OUTPUT_DIR / "agent"
+DATASET_USER_PROFILE = Path("dataset/test_user.json")
+DATASET_AGENT_PERSONA = Path("dataset/test_agent.json")
 WORKING_PROFILE_DIR = Path("data/active_profiles")
 
 
@@ -40,32 +39,28 @@ def _humanize(name: str) -> str:
 
 
 def discover_user_profiles() -> dict:
-    """Scan the configured user profile directory and build a lookup dict."""
+    """Load the single test user profile from dataset/test_user.json."""
     profiles = {}
-    if DATASET_USER_DIR.exists():
-        for f in sorted(DATASET_USER_DIR.glob("*_profile.json")):
-            stem = f.stem.replace("_profile", "")
-            profiles[stem] = {
-                "id": stem,
-                "display_name": _humanize(stem),
-                "file_name": f.name,
-                "source_path": str(f),
-            }
+    if DATASET_USER_PROFILE.exists():
+        profiles["test_user"] = {
+            "id": "test_user",
+            "display_name": "Test User",
+            "file_name": DATASET_USER_PROFILE.name,
+            "source_path": str(DATASET_USER_PROFILE),
+        }
     return profiles
 
 
 def discover_agent_personas() -> dict:
-    """Scan the configured agent persona directory and build a lookup dict."""
+    """Load the single test agent persona from dataset/test_agent.json."""
     personas = {}
-    if DATASET_AGENT_DIR.exists():
-        for f in sorted(DATASET_AGENT_DIR.glob("*_persona.json")):
-            stem = f.stem.replace("_persona", "")
-            personas[stem] = {
-                "id": stem,
-                "display_name": _humanize(stem),
-                "file_name": f.name,
-                "source_path": str(f),
-            }
+    if DATASET_AGENT_PERSONA.exists():
+        personas["test_agent"] = {
+            "id": "test_agent",
+            "display_name": "Test Agent",
+            "file_name": DATASET_AGENT_PERSONA.name,
+            "source_path": str(DATASET_AGENT_PERSONA),
+        }
     return personas
 
 
