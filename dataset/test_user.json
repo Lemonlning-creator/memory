@@ -1,0 +1,157 @@
+{
+  "core": {
+    "fears": {
+      "value": "长期停滞、失去成长空间",
+      "confidence": 0.45,
+      "evidence": "推测自其持续探索和学习倾向。"
+    },
+    "desires": {
+      "value": "不断学习新知识，构建自己的理解体系，并创造有价值的成果",
+      "confidence": 0.55,
+      "evidence": "表现出持续探索、总结和系统化知识的倾向。"
+    },
+    "values": {
+      "value": "真实性、理性思考、持续成长",
+      "confidence": 0.5,
+      "evidence": "更关注理解事物本质，而不仅仅是结果。"
+    },
+    "attachment style": {
+      "value": "偏安全型",
+      "confidence": 0.45,
+      "evidence": "能够主动交流观点，但缺乏足够长期证据。"
+    },
+    "sources of meaning": {
+      "value": "创造知识、解决问题、提升自我能力",
+      "confidence": 0.55,
+      "evidence": "推测来源于其持续投入学习和创造过程。"
+    }
+  },
+  "regulation": {
+    "avoidance": {
+      "value": "低",
+      "confidence": 0.4,
+      "evidence": "倾向于主动面对复杂问题。"
+    },
+    "control": {
+      "value": "较强",
+      "confidence": 0.45,
+      "evidence": "喜欢规划任务和组织信息。"
+    },
+    "people-pleasing": {
+      "value": "较低",
+      "confidence": 0.35,
+      "evidence": "更关注观点是否合理，而非获得认同。"
+    },
+    "aggression": {
+      "value": "低",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "humor": {
+      "value": "轻度冷幽默",
+      "confidence": 0.4,
+      "evidence": "偶尔会使用自嘲或调侃缓解讨论氛围。"
+    },
+    "obsession": {
+      "value": "容易深入钻研感兴趣的问题",
+      "confidence": 0.45,
+      "evidence": "面对感兴趣主题容易持续投入。"
+    },
+    "rationalization": {
+      "value": "较高",
+      "confidence": 0.5,
+      "evidence": "倾向于通过逻辑分析理解情绪和事件。"
+    }
+  },
+  "cognition": {
+    "expression style": {
+      "value": "分析型、结构化表达",
+      "confidence": 0.55,
+      "evidence": "倾向于按层次组织观点。"
+    },
+    "information density": {
+      "value": "高",
+      "confidence": 0.55,
+      "evidence": "交流时喜欢提供充分背景信息。"
+    },
+    "emotional visibility": {
+      "value": "中等偏低",
+      "confidence": 0.45,
+      "evidence": "更容易表达观点而非直接表达情绪。"
+    },
+    "social distance": {
+      "value": "熟悉后开放",
+      "confidence": 0.45,
+      "evidence": "初期保持礼貌，建立信任后分享更多。"
+    },
+    "decision style": {
+      "value": "分析后决策",
+      "confidence": 0.55,
+      "evidence": "偏向收集信息、比较方案再做决定。"
+    }
+  },
+  "identity": {
+    "occupation": {
+      "value": "科研或技术相关工作",
+      "confidence": 0.9,
+      "evidence": "长期围绕技术、研究和系统设计展开交流。"
+    },
+    "age": {
+      "value": "25-35岁",
+      "confidence": 0.8,
+      "evidence": "职业阶段和兴趣特征符合年轻专业人士。"
+    },
+    "social relationships": {
+      "value": "社交圈不大但稳定",
+      "confidence": 0.75,
+      "evidence": "更重视高质量交流而非广泛社交。"
+    },
+    "family": {
+      "value": "未明确提及",
+      "confidence": 0.3,
+      "evidence": ""
+    },
+    "economy": {
+      "value": "稳定",
+      "confidence": 0.75,
+      "evidence": "拥有稳定的学习和技术投入能力。"
+    },
+    "devices": {
+      "value": "笔记本电脑、多显示器、智能手机",
+      "confidence": 0.9,
+      "evidence": "日常依赖数字设备进行研究、开发和沟通。"
+    },
+    "physical environment": {
+      "value": "城市办公或居家工作环境",
+      "confidence": 0.8,
+      "evidence": "长期使用电脑开展知识工作。"
+    }
+  },
+  "behavior": {
+    "content preferences": {
+      "value": "人工智能、认知科学、科技产品、科普内容",
+      "confidence": 0.95,
+      "evidence": "长期关注AI、模型设计和前沿技术。"
+    },
+    "consumption preferences": {
+      "value": "重视产品质量和长期价值，偏好效率工具",
+      "confidence": 0.9,
+      "evidence": "倾向选择能够提升效率和学习体验的产品。"
+    },
+    "entertainment preferences": {
+      "value": "科技纪录片、科幻作品、知识类视频、策略游戏",
+      "confidence": 0.85,
+      "evidence": "偏好兼具思考性和探索性的娱乐内容。"
+    },
+    "habits": {
+      "value": "阅读技术资料、记录笔记、持续学习、长时间电脑工作",
+      "confidence": 0.95,
+      "evidence": "表现出稳定的知识积累和学习习惯。"
+    },
+    "long-term behavior patterns": {
+      "value": "持续探索、知识积累、系统化总结、不断优化工作流",
+      "confidence": 0.95,
+      "evidence": "长期保持学习、实践、反思和迭代的行为模式。"
+    }
+  }
+}
