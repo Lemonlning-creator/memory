@@ -13,6 +13,12 @@ from pymilvus import MilvusClient
 
 load_dotenv()
 
+
+def _env(name: str) -> str | None:
+    value = os.getenv(name)
+    return value.strip() if isinstance(value, str) else value
+
+
 from .prompts.templates import (
     MID_TERM_MEMORY_SYSTEM_PROMPT,
     MID_TERM_MEMORY_USER_PROMPT_TEMPLATE,
@@ -42,8 +48,8 @@ class MemoryOSLocal:
             "embedding_model", fallback="text-embedding-v4"
         )
         self.embedding_client = OpenAI(
-            api_key=os.getenv("API_KEY"),
-            base_url=os.getenv("BASE_URL"),
+            api_key=_env("API_KEY"),
+            base_url=_env("BASE_URL"),
         )
 
         milvus_config = config["Milvus"] if config.has_section("Milvus") else {}

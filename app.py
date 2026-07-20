@@ -28,8 +28,9 @@ active_profile_id = None
 active_persona_id = None
 conversation_history = []
 
-DATASET_USER_DIR = Path("dataset/output/user")
-DATASET_AGENT_DIR = Path("dataset/output/agent")
+DATASET_OUTPUT_DIR = Path(os.getenv("MEMORY_DATASET_OUTPUT_DIR", "dataset/output_zh"))
+DATASET_USER_DIR = DATASET_OUTPUT_DIR / "user"
+DATASET_AGENT_DIR = DATASET_OUTPUT_DIR / "agent"
 WORKING_PROFILE_DIR = Path("data/active_profiles")
 
 
@@ -39,7 +40,7 @@ def _humanize(name: str) -> str:
 
 
 def discover_user_profiles() -> dict:
-    """Scan dataset/output/user/ for *_profile.json and build a lookup dict."""
+    """Scan the configured user profile directory and build a lookup dict."""
     profiles = {}
     if DATASET_USER_DIR.exists():
         for f in sorted(DATASET_USER_DIR.glob("*_profile.json")):
@@ -54,7 +55,7 @@ def discover_user_profiles() -> dict:
 
 
 def discover_agent_personas() -> dict:
-    """Scan dataset/output/agent/ for *_persona.json and build a lookup dict."""
+    """Scan the configured agent persona directory and build a lookup dict."""
     personas = {}
     if DATASET_AGENT_DIR.exists():
         for f in sorted(DATASET_AGENT_DIR.glob("*_persona.json")):
@@ -253,6 +254,14 @@ def chat():
                     yield encode_event(event)
                     continue
 
+                if event_type == "profile_activation":
+                    logger.info(
+                        "[PROFILE_ACTIVATION] "
+                        + json.dumps(event, ensure_ascii=False)[:2000]
+                    )
+                    yield encode_event(event)
+                    continue
+
                 if event_type == "done":
                     response = event["response"]
                     total = time.perf_counter() - t_start
@@ -278,6 +287,28 @@ def chat():
             yield encode_event({"type": "error", "error": str(e)})
 
     return Response(generate(), mimetype="application/x-ndjson")
+
+
+@app.route("/api/profile-activation", methods=["POST"])
+def profile_activation():
+    agent_error = require_agent()
+    if agent_error:
+        return agent_error
+
+    data = request.json or {}
+    user_input = data.get("message", "").strip()
+    if not user_input:
+        return jsonify({"error": "message is required"}), 400
+
+    try:
+        t_start = time.perf_counter()
+        event = agent._run_profile_activation_log(user_input)
+        total = time.perf_counter() - t_start
+        logger.info(f"[PROFILE_ACTIVATION_API] total={total:.3f}s")
+        return jsonify(event or {"type": "profile_activation", "empty": True}), 200
+    except Exception as e:
+        logger.error(f"[PROFILE_ACTIVATION_API] error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 def _handle_voice_msg(ws, data):
@@ -652,4 +683,4 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000, use_reloader=False)
+    app.run(debug=True, host="0.0.0.0", port=18201, use_reloader=False)

@@ -31,4 +31,4 @@
 2. 修改 `agent.py` 中的 `api_key`、`base_url`、`MODEL`
 3. 检查或编辑 `user_profile.json` 的初始画像
 4. 运行：`python app.py`
-5. 打开浏览器访问 `http://127.0.0.1:5000`
+5. 打开浏览器访问 `http://127.0.0.1:18201`

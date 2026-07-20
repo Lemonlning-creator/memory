@@ -10,6 +10,12 @@ from openai import OpenAI
 
 load_dotenv()
 
+
+def _env(name: str) -> str | None:
+    value = os.getenv(name)
+    return value.strip() if isinstance(value, str) else value
+
+
 class LLMClient:
     def __init__(self, config_path: str = "config.ini"):
         config = configparser.ConfigParser()
@@ -19,8 +25,8 @@ class LLMClient:
         self.enable_thinking = api_config.getboolean("enable_thinking", fallback=False)
 
         self.client = OpenAI(
-            api_key = os.getenv("API_KEY"),
-            base_url = os.getenv("BASE_URL"),
+            api_key = _env("API_KEY"),
+            base_url = _env("BASE_URL"),
         )
         self.last_model_timing: Dict[str, float | None] = {"first_char_seconds": None}
         self.token_usage = {

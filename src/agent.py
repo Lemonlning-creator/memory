@@ -8,6 +8,7 @@ from time import perf_counter
 from typing import Any, Dict, Generator, Optional, List
 
 from .llm_client import LLMClient
+from .logger import logger
 from .memory_os_local import MemoryOSLocal
 from .profile_utils import state_axis, context_axis, create_empty_profile, migrate_profile
 from .utils import load_json, save_json, parse_json
@@ -16,6 +17,8 @@ from .prompts.prompt_loader import (
     DIRECT_RESPONSE_USER_PROMPT_TEMPLATE,
     PROFILE_EVOLUTION_SYSTEM_PROMPT,
     PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE,
+    USER_PROFILE_ACTIVATION_SYSTEM_PROMPT,
+    USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE,
     UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT,
     UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE,
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
@@ -293,6 +296,80 @@ class StateDrivenCompanionAgent:
             print(f"[Empathy Alignment Error] {e}")
             return {}
 
+    def _build_profile_activation_event(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+        activation_result: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        if not isinstance(activation_result, dict):
+            activation_result = {}
+
+        activated_profile = activation_result.get("activated_profile", {})
+        if not isinstance(activated_profile, dict):
+            activated_profile = {}
+
+        matched_fields = activation_result.get("matched_fields", [])
+        if not isinstance(matched_fields, list):
+            matched_fields = []
+
+        return {
+            "type": "profile_activation",
+            "user_message": user_input,
+            "activated_profile": activated_profile,
+            "matched_fields": matched_fields,
+            "activation_summary": activation_result.get(
+                "activation_summary",
+                "未激活明确用户画像字段",
+            ),
+            "relevant_memory": relevant_memory,
+        }
+
+    def _run_user_profile_activation(
+        self,
+        user_input: str,
+        relevant_memory: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        from .profile_utils import flatten_static_profile
+
+        state = state_axis(self.user_profile)
+        static_profile = state.get("static_profile", {})
+        flattened = flatten_static_profile(static_profile)
+
+        user_prompt = USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE.format(
+            user_message=user_input,
+            current_context=json.dumps(relevant_memory, ensure_ascii=False)[:2000],
+            user_profile=json.dumps(flattened, ensure_ascii=False)[:4000],
+        )
+
+        try:
+            result = parse_json(self.llm.chat(
+                USER_PROFILE_ACTIVATION_SYSTEM_PROMPT,
+                user_prompt,
+                temperature=0.2,
+                max_tokens=600,
+            ))
+            return result if isinstance(result, dict) else {}
+        except Exception as e:
+            print(f"[User Profile Activation Error] {e}")
+            return {}
+
+    def _run_profile_activation_log(
+        self,
+        user_input: str,
+        relevant_memory: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        if relevant_memory is None:
+            relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
+        activation_result = self._run_user_profile_activation(user_input, relevant_memory)
+        event = self._build_profile_activation_event(
+            user_input=user_input,
+            relevant_memory=relevant_memory,
+            activation_result=activation_result,
+        )
+        logger.info("[PROFILE_ACTIVATION] " + json.dumps(event, ensure_ascii=False)[:2000])
+        return event
+
     def _understanding_feedback(self, user_input: str) -> None:
         """UPDATING step: assess how previous empathy was received and update understanding."""
         if not self.last_agent_response:
@@ -369,15 +446,6 @@ class StateDrivenCompanionAgent:
 
         self.memory_manager.append_stm("user", user_input)
         relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
-
-        # Empathy alignment reasoning runs in background; does NOT block streaming.
-        # If a previous alignment result exists, use it; otherwise skip for this turn.
-        empathy_state = self.last_empathy_state if self.last_empathy_state else {}
-        threading.Thread(
-            target=self._run_empathy_alignment,
-            args=(user_input, relevant_memory),
-            daemon=True,
-        ).start()
 
         parts: List[str] = []
         first_token_logged = False
