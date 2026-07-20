@@ -21,6 +21,7 @@ class LLMClient:
         self.client = OpenAI(
             api_key = os.getenv("API_KEY"),
             base_url = os.getenv("BASE_URL"),
+            timeout=60.0,
         )
         self.last_model_timing: Dict[str, float | None] = {"first_char_seconds": None}
         self.token_usage = {
