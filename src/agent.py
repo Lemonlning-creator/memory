@@ -113,11 +113,21 @@ class StateDrivenCompanionAgent:
         user_input: str,
         relevant_memory: Dict[str, Any],
     ) -> Dict[str, str]:
+        from .profile_utils import flatten_static_profile
         state = state_axis(self.user_profile)
         context = context_axis(self.user_profile)
+        # Use flattened profile (key: value format, no nested JSON)
+        flat_profile = flatten_static_profile(state.get("static_profile", {}))
+        profile_lines = []
+        for layer, attrs in flat_profile.items():
+            if isinstance(attrs, dict):
+                for k, v in attrs.items():
+                    if v:
+                        profile_lines.append(f"- {k}: {v}")
+        profile_text = "\n".join(profile_lines) if profile_lines else json.dumps(flat_profile, ensure_ascii=False)
         return {
             "user_input": user_input,
-            "static_profile": json.dumps(state.get("static_profile", {}), ensure_ascii=False),
+            "static_profile": profile_text,
             "current_state": json.dumps(state.get("current_state", {}), ensure_ascii=False),
             "current_context": json.dumps(context, ensure_ascii=False),
             "persona_config": json.dumps(self.persona_config, ensure_ascii=False),
@@ -544,13 +554,25 @@ class StateDrivenCompanionAgent:
         self.memory_manager.append_stm("user", user_input)
         relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
 
+        # Empathy alignment reasoning runs in background; does NOT block streaming.
+        # If a previous alignment result exists, use it; otherwise skip for this turn.
+        empathy_state = self.last_empathy_state if self.last_empathy_state else {}
+        threading.Thread(
+            target=self._run_empathy_alignment,
+            args=(user_input, relevant_memory),
+            daemon=True,
+        ).start()
+
+        # Build the prompt
+        response_prompt = self._response_prompt(user_input, relevant_memory)
+
         parts: List[str] = []
         first_token_logged = False
         t_start = perf_counter()
         try:
             for content in self.llm.chat_stream(
                 DIRECT_RESPONSE_SYSTEM_PROMPT,
-                self._response_prompt(user_input, relevant_memory),
+                response_prompt,
                 temperature=0.4,
                 max_tokens=450,
             ):
