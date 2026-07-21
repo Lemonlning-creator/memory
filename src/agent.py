@@ -112,12 +112,20 @@ class StateDrivenCompanionAgent:
         self,
         user_input: str,
         relevant_memory: Dict[str, Any],
+        ablate_dimension: Optional[str] = None,
     ) -> Dict[str, str]:
         from .profile_utils import flatten_static_profile
         state = state_axis(self.user_profile)
         context = context_axis(self.user_profile)
+        static_profile = deepcopy(state.get("static_profile", {}))
+        if ablate_dimension:
+            if ablate_dimension not in ("core", "regulation", "cognition", "identity", "behavior"):
+                raise ValueError(f"Unknown profile ablation dimension: {ablate_dimension}")
+            # Ablation is prompt-local: the persisted user profile must not be
+            # modified by an experimental chat turn.
+            static_profile.pop(ablate_dimension, None)
         # Use flattened profile (key: value format, no nested JSON)
-        flat_profile = flatten_static_profile(state.get("static_profile", {}))
+        flat_profile = flatten_static_profile(static_profile)
         profile_lines = []
         for layer, attrs in flat_profile.items():
             if isinstance(attrs, dict):
@@ -138,8 +146,11 @@ class StateDrivenCompanionAgent:
         self,
         user_input: str,
         relevant_memory: Dict[str, Any],
+        ablate_dimension: Optional[str] = None,
     ) -> str:
-        return DIRECT_RESPONSE_USER_PROMPT_TEMPLATE.format(**self._prompt_context(user_input, relevant_memory))
+        return DIRECT_RESPONSE_USER_PROMPT_TEMPLATE.format(**self._prompt_context(
+            user_input, relevant_memory, ablate_dimension=ablate_dimension
+        ))
 
     # ---------- memory background pipelines ----------
     def _start_background(self, target, args: tuple) -> None:
@@ -557,7 +568,9 @@ class StateDrivenCompanionAgent:
         ).start()
 
         # Build the prompt
-        response_prompt = self._response_prompt(user_input, relevant_memory)
+        response_prompt = self._response_prompt(
+            user_input, relevant_memory, ablate_dimension=ablate_dimension
+        )
 
         parts: List[str] = []
         first_token_logged = False
@@ -590,6 +603,7 @@ class StateDrivenCompanionAgent:
         yield {
             "type": "done",
             "response": response,
+            "ablate_dimension": ablate_dimension,
             "background_memory_running": self._background_memory_running,
             "model_timing": self.llm.last_model_timing,
         }
