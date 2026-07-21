@@ -96,12 +96,32 @@ def _activation(llm: LLMClient, message: str, response: str, profile: dict[str, 
     return {layer: raw.get(layer, []) if isinstance(raw.get(layer, []), list) else [] for layer in LAYERS}
 
 
-def _judge(llm: LLMClient, message: str, response: str) -> dict[str, float]:
-    prompt = f"""Evaluate this Chinese companion-agent reply against the user message. Return JSON only.
-User message: {message}
-Agent reply: {response}
-Score each dimension from 1 (poor) to 5 (excellent): relevance, personalization, helpfulness, naturalness.
-JSON: {{\"relevance\": number, \"personalization\": number, \"helpfulness\": number, \"naturalness\": number}}"""
+def _judge(
+    llm: LLMClient,
+    message: str,
+    response: str,
+    user_profile: dict[str, Any],
+) -> dict[str, float]:
+    """Score a reply from the represented user's perspective."""
+    prompt = f"""你是对话质量评审员。请代入下面这位用户的画像，以该用户的视角评估智能体回复，而不是以泛化的旁观者视角评分。
+
+用户画像：
+{json.dumps(user_profile, ensure_ascii=False, indent=2)}
+
+用户当前输入：
+{message}
+
+智能体回复：
+{response}
+
+评分原则：
+1. 相关性：回复是否回应了用户当前问题与处境。
+2. 个性化：回复是否贴合该用户画像中的目标、偏好、思维/表达方式、身份背景或行为习惯；不要因为回复通用但流畅就给高分。
+3. 帮助性：站在该用户的实际需求与长期目标角度，回复是否提供了有价值、可执行或有启发的支持。
+4. 自然度：这位用户是否会觉得回复自然、不过度揣测、适合继续对话。
+
+每项给出 1–5 的整数分。只输出 JSON：
+{{\"relevance\": number, \"personalization\": number, \"helpfulness\": number, \"naturalness\": number}}"""
     try:
         result = parse_json(llm.chat("You are a strict, neutral dialogue evaluator. Output only JSON.", prompt, temperature=0.0, max_tokens=150))
     except Exception:
@@ -113,7 +133,13 @@ def _mean(values: list[float]) -> float:
     return round(sum(values) / len(values), 3) if values else 0.0
 
 
-def run(profile_path: str, persona_path: str, output_dir: str, conditions: tuple[str, ...] | None = None) -> dict[str, Any]:
+def run(
+    profile_path: str,
+    persona_path: str,
+    output_dir: str,
+    conditions: tuple[str, ...] | None = None,
+    overwrite: bool = False,
+) -> dict[str, Any]:
     llm = LLMClient()
     raw = load_json(profile_path)
     profile = raw.get("state_axis", {}).get("static_profile", raw)
@@ -128,6 +154,11 @@ def run(profile_path: str, persona_path: str, output_dir: str, conditions: tuple
     # profile-derived cases used by this version of the experiment.
     existing = [r for r in existing if r.get("case_id") in current_case_ids]
     selected = conditions or ("full_profile", *[f"without_{layer}" for layer in LAYERS])
+    if overwrite:
+        existing = [
+            r for r in existing
+            if not (r.get("case_id") in current_case_ids and r.get("condition") in selected)
+        ]
     records: list[dict[str, Any]] = existing
     completed = {(r.get("case_id"), r.get("condition")) for r in records}
     for target_layer, case_id, message, source_field in cases:
@@ -140,7 +171,9 @@ def run(profile_path: str, persona_path: str, output_dir: str, conditions: tuple
                 working.pop(removed, None)
             response = _response(llm, message, working, persona)
             activation = _activation(llm, message, response, working)
-            scores = _judge(llm, message, response)
+            # The ablation changes the agent's available profile context, not
+            # the identity of the user represented by the evaluation.
+            scores = _judge(llm, message, response, profile)
             records.append({
                 "case_id": case_id,
                 "target_layer": target_layer,
@@ -193,5 +226,12 @@ if __name__ == "__main__":
     parser.add_argument("--persona", default="dataset/test_agent.json")
     parser.add_argument("--output-dir", default="data/profile_layer_ablation")
     parser.add_argument("--conditions", nargs="*", choices=("full_profile", *[f"without_{layer}" for layer in LAYERS]))
+    parser.add_argument("--overwrite", action="store_true", help="Re-run selected conditions and replace existing records.")
     args = parser.parse_args()
-    run(args.profile, args.persona, args.output_dir, tuple(args.conditions) if args.conditions else None)
+    run(
+        args.profile,
+        args.persona,
+        args.output_dir,
+        tuple(args.conditions) if args.conditions else None,
+        overwrite=args.overwrite,
+    )
