@@ -288,7 +288,13 @@ def _predict_with_profile(
     target_msg: str,
 ) -> tuple[str, str, str]:
     """Use profile to predict user emotion, sentiment, topic."""
-    prompt = f"""Given the user profile and conversation context, predict the user's emotional state.
+    prompt = f"""Estimate the user's conversational state from the latest message, recent trajectory, and user profile.
+
+Reason silently in this order:
+1. The USER'S NEXT MESSAGE is the strongest evidence. Identify the emotion, sentiment, and specific topic it expresses or strongly implies.
+2. Use recent context to resolve tone, irony, pronouns, and whether the state continues or shifts.
+3. Use profile evidence as a prior only when current evidence is ambiguous. If it is hierarchical, combine only the relevant core/regulation/cognition/identity/behavior signals and weight higher-confidence attributes more strongly.
+4. Prefer a specific supported canonical emotion over neutral; never force an unrelated profile trait onto the current message.
 
 USER PROFILE:
 {profile_text}
@@ -298,7 +304,7 @@ CONVERSATION CONTEXT:
 
 USER'S NEXT MESSAGE: "{target_msg}"
 
-Predict the user's state. Output JSON:
+Return the state expressed at this boundary and most likely to continue. Use a concise 2-5 word topic. Output JSON only:
 {{
   "predicted_emotion": "emotion label",
   "predicted_sentiment": "positive/negative/neutral",

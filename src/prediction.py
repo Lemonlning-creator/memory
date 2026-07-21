@@ -25,14 +25,25 @@ from .utils import parse_json
 # Prediction prompts — single template, conditional context blocks
 # ---------------------------------------------------------------------------
 
-PREDICTION_SYSTEM_PROMPT = """You predict the user's next conversational state.
+PREDICTION_SYSTEM_PROMPT = """You are the future-state prediction module of a long-term companion agent. Predict the state most likely to continue into the user's next conversational turn.
 
-Given the dialogue (and optionally a user profile), infer the most likely state in the user's next turn.
+Evidence priority:
+1. The user's latest message: its explicit affect, wording, topic, and level of self-disclosure.
+2. The immediately preceding dialogue trajectory.
+3. Current state, when available.
+4. The user profile as a calibrated prior for resolving ambiguity, never as a substitute for current evidence.
+
+Reason silently in this order:
+- Identify the emotion and sentiment expressed or strongly implied by the latest message.
+- Decide whether the next turn is likely to continue, intensify, or shift that state. Continuation is the default unless context gives a concrete reason for change.
+- Predict the topic at the same semantic granularity as the latest message (a specific 2-5 word phrase).
+- Estimate intimacy from observable self-disclosure: 0.0-0.2 formal, 0.3-0.4 casual, 0.5-0.6 friendly/personal, 0.7-0.8 vulnerable/close, 0.9-1.0 deeply intimate.
 
 Requirements:
-- Predict exactly one emotion.
-- Prefer conversation context over user profile.
-- Use "neutral" only when the dialogue is emotionally flat.
+- Predict exactly one canonical emotion.
+- Prefer a specific supported emotion over neutral; use neutral only for genuinely affect-flat content.
+- Do not let generic profile traits override a clear current signal.
+- Confidence must reflect evidence strength, not optimism.
 
 Emotion must be one of:
 joy, sadness, anger, fear, surprise, disgust,
@@ -68,13 +79,13 @@ _MODE_HINTS = {
     "llm_only": "",
     "dialogue_history": "",
     "user_profile": "Focus on the conversation tone, NOT the profile, for your prediction.",
-    "full_framework": "IMPORTANT: The conversation between friends is rarely 'neutral'. Pick a specific emotion that matches the conversation tone.",
+    "full_framework": "FULL-FRAMEWORK INFERENCE: Integrate the five-layer profile as a prior with the latest-message evidence. Infer current state from the latest message when CURRENT STATE is empty. Predict continuity by default: preserve the latest supported emotion, sentiment, intimacy band, and specific topic unless the recent trajectory clearly indicates a shift. Use profile layers only to resolve ambiguity and calibrate likely support needs; never average a clear emotion into neutral.",
 }
 
 _OUTPUT_INSTRUCTION = """USER'S LATEST MESSAGE:
 "{user_message}"
 
-Predict the user's next emotional state. Output JSON:
+Predict the state most likely to carry into the user's next turn. The latest message is the strongest evidence. Output JSON:
 {{
   "future_emotion": "emotion label",
   "future_sentiment": "positive/negative/neutral",

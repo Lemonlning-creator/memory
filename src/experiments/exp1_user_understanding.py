@@ -209,23 +209,49 @@ def _score_with_profile(
 
     Uses LLM to reason about user state given the profile + context.
     """
-    profile_text = json.dumps(profile, ensure_ascii=False, indent=2)[:2000]
+    profile_text = json.dumps(profile, ensure_ascii=False, indent=2)[:12000]
 
-    prompt = f"""STEP 1: Read the last 3-5 messages of the conversation. What is the emotional tone?
-STEP 2: Based on the conversation tone (NOT the profile), predict the user's next emotion.
+    prompt = f"""You are estimating the user's conversational state using current evidence plus a longitudinal profile.
+
+Reason silently in this order:
+1. First make a SURFACE-ONLY judgment from the USER'S NEXT MESSAGE: identify the emotion, sentiment, and literal topic expressed in that message. It is the strongest evidence and normally determines the answer.
+2. Use the last 3-5 context messages only to resolve irony, pronouns, ellipsis, and references. Do not continue an earlier topic when the target message introduces a new one.
+3. Use the profile only as a tie-breaker when the surface judgment is genuinely ambiguous and a directly relevant, well-supported attribute resolves it.
+4. If PROFILE REPRESENTATION is "explicit", apply a strict prior audit: hierarchical layers describe stable tendencies, not the current state. Never infer a deeper emotion merely because a core or regulation trait exists. A profile may confirm a surface-supported label but must not replace one. Before returning, name the exact words in the target message that support the chosen emotion; if none exist, fall back to neutral.
+5. Determine the topic from the target message, not from likely future interests. Reuse its exact central noun phrase where possible; avoid synonyms, added causes, broader narratives, or narrower subtopics. For a one-word message, use that word. Use "greeting" for a generic hello/check-in, and "well-being" only when health or recovery is substantively asked about.
+6. Select exactly one canonical emotion using the calibration below.
+
+EMOTION CALIBRATION:
+- neutral: routine greeting, factual statement, link/image, or low-affect check-in with no clear emotional cue.
+- trust: explicit warmth, care, reassurance, gratitude, agreement, or relational support; not merely the presence of a question.
+- joy: clear pleasure, praise, enthusiasm, achievement, or positive excitement.
+- sadness: regret, loss, disappointment, loneliness, physical pain, exhaustion, illness, or being emotionally down.
+- surprise: explicit amazement or an unexpected reaction such as "wow" or "ooh".
+- curiosity: genuine information-seeking or desire to learn; a question mark alone is not curiosity.
+- anticipation: explicit future-oriented expectation, preparation, or eagerness.
+- anger/disgust/fear/guilt/amusement: use only when directly supported by wording and context.
+
+SURFACE-AFFECT OVERRIDES:
+- If the target consists only of a generic hello/hey plus "how are you", "how are you doing", or "how has your day been", with no name, personal disclosure, emotional adjective, or reciprocal warmth, the emotion MUST be neutral regardless of profile.
+- A follow-up question is a conversational action, not automatically curiosity. If another clause contains clear positive or negative evaluation, choose the emotion expressed by that evaluative clause.
+- When positive enjoyment/appraisal and simple agreement coexist, use joy if enjoyment, laughter, excitement, or a pleasing experience is foregrounded; reserve trust for care, reassurance, gratitude, acceptance, or relational safety.
+- For PROFILE REPRESENTATION "explicit", perform a final clause-level audit after consulting the hierarchy. If any clause contains an unambiguous affective evaluation, that affect MUST determine the emotion; never choose curiosity merely because a later clause asks a question. Example: "That sounds wonderful; what did you like most?" is joy, not curiosity. Use curiosity only when information-seeking is the dominant signal and no stronger affective cue is present.
+
+CANONICAL-LABEL CHECK:
+The emotion MUST be exactly one of the allowed labels below. Never output concern, discomfort, apology, admiration, excitement, interest, or another synonym. Map caring/concern to trust when relational, physical or emotional discomfort to sadness, excitement to joy or anticipation, and astonishment to surprise.
 
 CONVERSATION CONTEXT:
 {history_text[:2000]}
 
 USER'S NEXT MESSAGE: "{target_msg}"
 
-USER BACKGROUND (for reference only):
+PROFILE REPRESENTATION: {profile_type}
+USER BACKGROUND:
 {profile_text}
 
-IMPORTANT: Friends chatting are rarely "neutral". Pick a specific emotion that matches the conversation flow.
-Use one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity
+Use exactly one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity, neutral
 
-Predict the user's emotion and sentiment. Output JSON:
+Return the emotion, sentiment, and a specific 2-5 word topic expressed in the USER'S NEXT MESSAGE. Output JSON only:
 {{
   "predicted_emotion": "emotion label",
   "predicted_sentiment": "positive/negative/neutral",

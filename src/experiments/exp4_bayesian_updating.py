@@ -200,21 +200,25 @@ def run_exp4(config: Exp4Config) -> Dict[str, Any]:
                 )[:2000]
                 history_text = format_conversation_history(context_turns[-10:])
 
-                pred_prompt = f"""STEP 1: Read the last 3-5 messages. What is the emotional tone?
-STEP 2: Based on the conversation tone, predict the user's next emotion.
+                pred_prompt = f"""Estimate the user's state at this session boundary.
+
+Reason silently:
+1. Treat the USER'S NEXT MESSAGE as the strongest evidence: identify the emotion and sentiment it expresses or strongly implies.
+2. Use the last 3-5 context messages to resolve irony, references, and emotional trajectory.
+3. Use the user background only as a Bayesian prior when the current message is ambiguous. Give more weight to high-confidence attributes and interaction preferences; ignore irrelevant traits.
+4. Prefer a specific canonical emotion over neutral when affect is present. Do not invent an emotion unsupported by the message.
 
 CONVERSATION CONTEXT:
 {history_text[:2000]}
 
 USER'S NEXT MESSAGE: "{target_msg}"
 
-USER BACKGROUND (for reference only):
+USER BACKGROUND (confidence-weighted prior):
 {profile_text}
 
-IMPORTANT: Friends chatting are rarely "neutral". Pick a specific emotion.
 Use one of: joy, sadness, anger, fear, surprise, disgust, trust, anticipation, amusement, guilt, curiosity
 
-Output JSON:
+Return JSON only:
 {{
   "predicted_emotion": "emotion label",
   "predicted_sentiment": "positive/negative/neutral"

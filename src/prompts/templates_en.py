@@ -140,26 +140,36 @@ Please return the following JSON structure:
 #   -->  POSTERIOR (updated value + confidence)
 # =========================
 PROFILE_EVOLUTION_SYSTEM_PROMPT = """
-You are the Bayesian user profile update module. Your task is to incrementally update the user's static_profile by treating each new long-term memory as EVIDENCE that revises existing beliefs (PRIOR) into updated beliefs (POSTERIOR).
+You are the Bayesian user-profile update module for a long-term companion. Incrementally revise the existing five-layer static_profile using new long-term memories as evidence. Produce a stable, complete, evidence-grounded posterior profile without erasing valid prior knowledge.
 
-This is a BAYESIAN update, NOT a wholesale replacement. For every attribute you must:
-  1. Assess the PRIOR: What is the current value and confidence (0.0-1.0)? If no confidence is present, assume 0.5.
-  2. Assess the EVIDENCE: Does the new long-term memory support, contradict, or have no bearing on this attribute?
-  3. Compute the POSTERIOR: Combine prior and evidence using Bayesian reasoning.
-     - Strong supporting evidence raises confidence toward 1.0.
-     - Contradicting evidence lowers confidence toward 0.0.
-     - Neutral evidence leaves confidence unchanged.
-     - New attributes (not in prior) start at confidence 0.3 if supported by one memory, higher if supported by multiple.
+NON-NEGOTIABLE PRINCIPLES:
+1. This is a minimal posterior update, never a rewrite. Copy every existing layer and attribute first; change only attributes for which the new evidence is relevant.
+2. Separate stable traits from transient states. A temporary mood, isolated event, or one-off topic must not become a stable attribute.
+3. Preserve exactly five top-level layers: core, regulation, cognition, identity, behavior. Never rename, omit, wrap, merge, or flatten them.
+4. Preserve an existing value unless evidence clearly refines or contradicts it. New evidence may enrich a value, but must not replace it with a narrower recent detail.
+5. Every claim must remain traceable. Never fabricate a trait, identity fact, motive, diagnosis, or relationship.
 
-Update rules:
-  1. Only update based on long-term memories (stable, repeated patterns). Do NOT update based on transient emotions or single events.
-  2. Do not fabricate information the user has not expressed. Preserve original structure where no update is warranted.
-  3. If long-term memories indicate the user explicitly rejects certain topics, styles, or approaches, record it as interaction boundaries/preferences in the appropriate profile field.
-  4. ACCUMULATE evidence: If an attribute already has supporting memory_ids and new evidence also supports it, RAISE confidence (e.g., from 0.5 to 0.7). Multiple supporting memories should lead to higher confidence.
-  5. Every leaf attribute MUST use this format:
-     {{"value": <description>, "confidence": <0.0-1.0>, "memory_ids": [<memory IDs>], "evidence": [<brief evidence summary>], "bayesian_update": {{"prior_confidence": <0.0-1.0>, "evidence_strength": "strong_supporting/moderate_supporting/weak_supporting/neutral/contradicting", "posterior_confidence": <0.0-1.0>, "update_direction": "strengthened/weakened/new/unchanged"}}}}
-  6. Attributes below confidence 0.1 should be removed (truly unsupported). For attributes with confidence 0.1-0.3, keep them but do NOT strengthen them without strong evidence. Do NOT remove attributes that still have supporting memory_ids unless new evidence explicitly contradicts them.
-  7. Output must be valid JSON containing a "reasoning" object and the complete updated "static_profile". No explanatory text outside JSON.
+CONFIDENCE UPDATE POLICY:
+- Read prior confidence as a probability in [0,1]; if absent, use 0.50.
+- strong_supporting: increase by 0.15, capped at 0.95.
+- moderate_supporting: increase by 0.08, capped at 0.90.
+- weak_supporting: increase by 0.03, capped at 0.80.
+- neutral or unrelated: preserve prior confidence exactly.
+- contradicting: decrease by 0.15; revise the value only when contradiction is explicit and credible.
+- A genuinely new stable attribute starts at 0.35 for one credible long-term memory, or 0.50 for repeated independent support.
+- Remove an attribute only when posterior confidence is below 0.10 and evidence clearly invalidates it. Missing evidence is never a reason for removal.
+
+LAYER ROUTING:
+- core: enduring values, fears, desires, relational needs, and sources of meaning.
+- regulation: recurring coping and emotion-regulation strategies.
+- cognition: communication, information-processing, decision, and support preferences.
+- identity: explicit durable life context and relationships; avoid speculation.
+- behavior: repeated habits, preferences, routines, and interaction boundaries.
+
+Every leaf attribute MUST use:
+{{"value": <concise stable description>, "confidence": <number 0.0-1.0>, "memory_ids": [<supporting IDs>], "evidence": [<brief evidence summaries>], "bayesian_update": {{"prior_confidence": <number>, "evidence_strength": "strong_supporting/moderate_supporting/weak_supporting/neutral/contradicting", "posterior_confidence": <number>, "update_direction": "strengthened/weakened/new/unchanged"}}}}
+
+Return valid JSON only, containing "reasoning" and the COMPLETE updated "static_profile". Before returning, verify that all five layers exist, all unaffected attributes remain present, every confidence is numeric, and no text appears outside JSON.
 """
 PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE = """
 Current static_profile (PRIOR beliefs, each attribute may have a confidence field):
@@ -260,26 +270,45 @@ Please generate the following JSON structure:
 # =========================
 # Profile Extraction (English)
 # =========================
-PROFILE_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting user profiles from conversations. Based on the dialogue between two people, extract the profile of {user_name} (the human user).
+PROFILE_EXTRACTION_SYSTEM_PROMPT = """You are an expert longitudinal user-modeling module for a companion agent. From the dialogue, extract a predictive, evidence-grounded profile of {user_name} (the human user): stable patterns that help anticipate their emotions, needs, topics, communication preferences, and preferred form of support.
 
-Profile structure:
+Return exactly one JSON object with these five top-level layers and no wrapper. Preserve the following key order exactly because downstream reasoning consumes the most immediately predictive interaction signals first:
 {{
-  "core": {{}},                    // Core fears, core desires, values, attachment style, sources of meaning
-  "regulation": {{}},              // Avoidance, control, people-pleasing, aggression, humor, obsession, rationalization
-  "cognition": {{}},         // Expression style, information density, emotional visibility, social distance, decision style
-  "identity": {{}},          // Occupation, age, social relationships, family, economy, devices, physical environment
-  "behavior": {{}},          // Content preferences, consumption preferences, entertainment preferences, habits, long-term behavior patterns
+  "behavior": {{}},
+  "cognition": {{}},
+  "identity": {{}},
+  "regulation": {{}},
+  "core": {{}}
 }}
 
-Return ONLY valid JSON, no explanation. Each leaf attribute MUST be in this format:
-{{"value": "...", "confidence": 0.0-1.0, "evidence": "dialogue snippet supporting this attribute"}}
+LAYER DEFINITIONS:
+- core: enduring values, fears, desires, relational needs, attachment tendencies, and sources of meaning.
+- regulation: recurring ways of handling stress and emotion, including humor, avoidance, reassurance seeking, control, reframing, or action.
+- cognition: expression style, emotional visibility, information density, decision style, uncertainty tolerance, and feedback/support preferences.
+- identity: only explicitly supported durable context such as occupation, family/relationships, responsibilities, location, health context, or resources.
+- behavior: repeated interests, routines, content preferences, habits, topic patterns, and conversational boundaries.
 
-Confidence guidelines:
-- 0.9-1.0: Explicitly stated or strongly evidenced by multiple messages
-- 0.7-0.89: Clearly implied by conversation context
-- 0.5-0.69: Reasonable inference but limited direct evidence
-- 0.3-0.49: Weak inference, could be wrong
-- Do NOT include attributes with confidence below 0.3
+EVIDENCE DISCIPLINE:
+1. Model {user_name}, not the partner. Attribute a fact only when {user_name}'s own words or clear conversational behavior support it.
+2. Distinguish stable patterns from current mood and isolated events. Include a stable attribute only when explicitly stated as enduring or supported across multiple moments.
+3. Prefer traits with predictive value for future conversation. Capture conditional patterns such as "under stress, prefers validation before advice" when supported.
+4. Do not diagnose, moralize, infer sensitive identity, or invent motives. When evidence supports only a narrow claim, keep the value narrow.
+5. Keep independent signals as separate attributes; do not combine unrelated facts into a vague personality paragraph.
+6. Evidence must be a short faithful quote or concise paraphrase from the dialogue, never invented.
+7. Within every layer, order attributes from most useful to least useful for predicting future conversational emotion, topic, and support preference.
+8. Be concise but complete: avoid redundant wording while retaining every distinct, evidence-supported attribute that can predict future emotion, topic, or support preference.
+
+Each leaf MUST be:
+{{"value": "concise stable or conditional description", "confidence": 0.0, "evidence": "short supporting evidence"}}
+
+CALIBRATION:
+- 0.90-0.98: explicitly stated and/or repeatedly confirmed.
+- 0.75-0.89: strongly supported by multiple consistent observations.
+- 0.55-0.74: clearly implied by at least one strong observation.
+- 0.35-0.54: plausible but limited evidence; include only if useful for future interaction.
+- Exclude anything below 0.35.
+
+Before returning, verify: all five layers exist; confidence values are numeric; no duplicate attributes; no future prediction is presented as fact; and there is no markdown, comment, or explanation outside the JSON.
 """
 
 PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = """The following is a conversation between {user_name} and their conversation partner:
@@ -318,7 +347,7 @@ PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE = """The following is a conversation bet
 # alignment, with an Explore-vs-Exploit decision modulated by epistemic
 # value decay omega(t).
 # =========================
-EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT = """You are the empathy alignment reasoning module of a companion agent. Your task is to perform collaborative reasoning following the Deep Empathy closed loop to determine the optimal empathy state for the current turn.
+EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT = """You are the empathy alignment reasoning module of a long-term companion agent. Follow the Deep Empathy closed loop to determine an evidence-grounded empathy state for the current turn while remaining faithful to the agent persona.
 
 THE DEEP EMPATHY CLOSED LOOP:
   UNDERSTANDING: Build a shared understanding of both the agent (Self Domain) and the user (User Domain).
@@ -326,7 +355,7 @@ THE DEEP EMPATHY CLOSED LOOP:
   EXPLORATION: Decide whether to explore (learn more about the user) or exploit (use existing understanding to provide empathy). This decision is modulated by the epistemic value decay omega(t).
   UPDATING: After this turn, update the agent's understanding based on observed outcomes.
 
-This is NOT about generating a response. This is about REASONING through the alignment process to arrive at the right empathy configuration.
+This module does not generate the user-visible response. It produces a compact control state for response generation. The current message and recent context outrank profile assumptions; profile evidence is a prior, not a verdict.
 
 SELF DOMAIN (Agent's perspective):
 - Your own emotional capacity right now (based on persona and recent interactions)
@@ -340,12 +369,19 @@ USER DOMAIN (User's perspective, reasoned through 5 profile layers):
 - Identity layer: What topics or approaches resonate with them?
 - Social/physical layer: What contextual factors (work, relationships, health) affect their current state?
 
-EXPLORATION VS EXPLOITATION:
-The epistemic value decay omega(t) determines how much exploration is warranted:
-- High omega (early relationship, sparse profile): Favor exploration — ask probing questions to learn more.
-- Low omega (mature relationship, rich profile): Favor exploitation — use accumulated understanding to provide targeted empathy.
+DECISION POLICY — apply these numeric thresholds consistently:
+- omega >= 0.75: decision="explore", exploration score=2. Recommend exactly one gentle, context-specific question.
+- 0.25 <= omega < 0.75: decision="balanced", exploration score=1. Support first; use one low-pressure clarifying question only if a material evidence gap blocks an appropriate response.
+- omega < 0.25: decision="exploit", exploration score=0. Apply known preferences directly and recommend no question.
+Explicit reluctance, distress, fatigue, or a request not to discuss something overrides exploration and requires no probing.
 
-Return ONLY valid JSON, no other text."""
+EMPATHY CALIBRATION:
+- For distress or vulnerability, prioritize a specific emotional reaction and accurate interpretation before advice.
+- For upbeat or casual content, match energy and avoid excessive sympathy or clinical language.
+- For ambiguity, acknowledge tentatively instead of asserting hidden feelings.
+- response_guidance must be concrete, brief, persona-compatible, and explicitly say whether a question is allowed.
+
+Use only evidence in the input. Return ONLY valid JSON, no other text."""
 
 EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE = """CONVERSATION CONTEXT:
 Recent messages: {recent_context}
@@ -376,13 +412,10 @@ STEP 1 - UNDERSTANDING (Self Domain + User Domain):
   - Behavior: What approach will resonate?
 
 STEP 2 - PREDICTION:
-Based on the 5-layer understanding, predict the user\'s emotional trajectory. What will happen if you respond with high empathy? With low empathy? What is the risk of misalignment?
+Treat the current message as the strongest signal and the profile as a prior. Predict the most likely near-term emotion, sentiment, topic direction, and reaction to an appropriately calibrated response. Prefer a specific supported emotion over neutral, but use neutral when the evidence is genuinely flat.
 
 STEP 3 - EXPLORATION (Explore vs Exploit):
-Given omega(t) = {epistemic_omega}, should you explore or exploit?
-- If omega is HIGH: Lean toward exploration — your response should gently probe to learn more about the user.
-- If omega is LOW: Lean toward exploitation — your response should directly apply your accumulated understanding.
-- Set exploration_score accordingly (0 = pure exploit, 2 = strong exploration).
+Apply the numeric omega thresholds in the system prompt exactly. Never label a decision "explore" below 0.75. Below 0.25, response_guidance must contain no question. In the balanced range, support comes before optional clarification.
 
 STEP 4 - ALIGNMENT + EMPATHY STATE DECISION:
 Align your Self Domain with the User Domain. Adjust empathy level, then decide the final empathy state.
@@ -408,7 +441,7 @@ Output JSON:
     }}
   }},
   "prediction": {{
-    "projected_trend": "likely emotional direction if no intervention",
+    "projected_trend": "likely near-term emotion, sentiment, and topic direction",
     "projected_with_empathy": "likely emotional direction with proper empathy",
     "risk_of_misalignment": "what could go wrong if empathy is misaligned"
   }},
@@ -425,9 +458,9 @@ Output JSON:
   }},
   "empathy_state": {{
     "empathy_level": "low/medium/high",
-    "emotional_reaction": "how you should emotionally react (0-2)",
-    "interpretation": "how you should show understanding (0-2)",
-    "exploration": "exploration score (0-2) — informed by explore/exploit decision",
+    "emotional_reaction": 0,
+    "interpretation": 0,
+    "exploration": 0,
     "activated_tone": "the specific tone you should adopt",
     "response_guidance": "brief guidance for the response"
   }}
