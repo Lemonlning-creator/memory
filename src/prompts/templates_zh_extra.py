@@ -1,18 +1,20 @@
 """Additional Chinese prompt templates missing from templates.py."""
 
-USER_PROFILE_ACTIVATION_SYSTEM_PROMPT = """你是用户画像字段激活模块。你的任务是根据当前用户输入、上下文和已有用户画像，找出本轮对话在语义上触发的画像字段。
+USER_PROFILE_ACTIVATION_SYSTEM_PROMPT = """你是用户画像字段使用判定模块。你的任务是根据当前用户输入、上下文、智能体实际回复和已有用户画像，判断这次回复是否使用了用户画像字段。
 
 判断标准：
-1. 激活表示“当前这句话适合调动该画像字段来理解用户”，不要求字面关键词完全一致。
+1. 激活表示“智能体实际回复中调动了该画像字段来理解用户或组织回复”，不要求字面关键词完全一致。
 2. 只返回已有画像字段的字段名和值，不新增字段。
-3. 优先匹配与当前输入的主题、关系诉求、表达方式、决策方式、偏好或稳定行为模式相关的字段。
-4. 忽略 value 为“未明确提及”的低信息字段。
-5. 如果确实没有语义相关字段，activated_profile 返回各层空数组，matched_fields 返回空数组。
-6. 只返回合法 JSON，不要输出解释文字。
+3. 判断依据以智能体实际回复为主；用户输入和上下文只用于解释为什么该回复可能使用了某个画像字段。
+4. 不需要强制激活画像；如果回复只是普通确认、寒暄、转接或流程性回应，activated_profile 返回各层空数组。
+5. 只返回合法 JSON，不要输出解释文字。
 """
 
 USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE = """用户当前输入：
 "{user_message}"
+
+智能体实际回复：
+"{assistant_response}"
 
 当前上下文和相关记忆：
 {current_context}
@@ -20,14 +22,14 @@ USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE = """用户当前输入：
 已有用户画像：
 {user_profile}
 
-请判断本轮输入激活了哪些已有用户画像字段。输出 JSON：
+请判断智能体实际回复是否使用了已有用户画像字段。输出 JSON：
 {{
   "activated_profile": {{
     "core": [
       {{
         "field": "画像字段名",
         "value": "该字段画像内容",
-        "reason": "当前输入和该画像字段的语义关联",
+        "reason": "智能体实际回复如何使用了该画像字段；如果只是用户输入相关但回复没有使用，则不要填写",
         "confidence": 0.0
       }}
     ],
@@ -35,11 +37,7 @@ USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE = """用户当前输入：
     "cognition": [],
     "identity": [],
     "behavior": []
-  }},
-  "matched_fields": [
-    "core.field_name"
-  ],
-  "activation_summary": "一句话概括本轮激活情况；若无激活则写：未激活明确用户画像字段"
+  }}
 }}
 """
 

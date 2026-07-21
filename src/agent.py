@@ -309,6 +309,7 @@ class StateDrivenCompanionAgent:
     def _build_profile_activation_event(
         self,
         user_input: str,
+        assistant_response: str,
         relevant_memory: Dict[str, Any],
         activation_result: Dict[str, Any],
     ) -> Dict[str, Any]:
@@ -319,19 +320,11 @@ class StateDrivenCompanionAgent:
         if not isinstance(activated_profile, dict):
             activated_profile = {}
 
-        matched_fields = activation_result.get("matched_fields", [])
-        if not isinstance(matched_fields, list):
-            matched_fields = []
-
         return {
             "type": "profile_activation",
             "user_message": user_input,
+            "assistant_response": assistant_response,
             "activated_profile": activated_profile,
-            "matched_fields": matched_fields,
-            "activation_summary": activation_result.get(
-                "activation_summary",
-                "未激活明确用户画像字段",
-            ),
         }
 
     def _is_usable_profile_value(self, value: Any) -> bool:
@@ -381,7 +374,6 @@ class StateDrivenCompanionAgent:
             raw_profile = {}
 
         clean_profile = {layer: [] for layer in layers}
-        matched_fields: List[str] = []
 
         for layer in layers:
             allowed_fields = candidates.get(layer, {})
@@ -420,21 +412,15 @@ class StateDrivenCompanionAgent:
                     "reason": reason,
                     "confidence": confidence,
                 })
-                matched_fields.append(f"{layer}.{field}")
-
-        clean_summary = activation_result.get("activation_summary", "")
-        if not matched_fields:
-            clean_summary = "未激活明确用户画像字段"
 
         return {
             "activated_profile": clean_profile,
-            "matched_fields": matched_fields,
-            "activation_summary": clean_summary,
         }
 
     def _run_user_profile_activation(
         self,
         user_input: str,
+        assistant_response: str,
         relevant_memory: Dict[str, Any],
     ) -> Dict[str, Any]:
         state = state_axis(self.user_profile)
@@ -443,6 +429,7 @@ class StateDrivenCompanionAgent:
 
         user_prompt = USER_PROFILE_ACTIVATION_USER_PROMPT_TEMPLATE.format(
             user_message=user_input,
+            assistant_response=assistant_response,
             current_context=json.dumps(relevant_memory, ensure_ascii=False)[:2000],
             user_profile=json.dumps(candidates, ensure_ascii=False)[:4000],
         )
@@ -464,13 +451,19 @@ class StateDrivenCompanionAgent:
     def _run_profile_activation_log(
         self,
         user_input: str,
+        assistant_response: str,
         relevant_memory: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         if relevant_memory is None:
             relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
-        activation_result = self._run_user_profile_activation(user_input, relevant_memory)
+        activation_result = self._run_user_profile_activation(
+            user_input,
+            assistant_response,
+            relevant_memory,
+        )
         event = self._build_profile_activation_event(
             user_input=user_input,
+            assistant_response=assistant_response,
             relevant_memory=relevant_memory,
             activation_result=activation_result,
         )

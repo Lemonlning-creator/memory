@@ -115,6 +115,12 @@ def finalize_agent_session() -> dict:
         }
     return agent.finalize_session()
 
+def finalize_agent_instance(agent_instance: StateDrivenCompanionAgent) -> None:
+    try:
+        agent_instance.finalize_session()
+    except Exception as e:
+        logger.error(f"[FINALIZE_AGENT] error: {e}")
+
 def require_agent():
     if agent is None:
         return jsonify({"error": "character is required"}), 409
@@ -223,7 +229,11 @@ def select_character():
 
     try:
         if agent is not None:
-            finalize_agent_session()
+            threading.Thread(
+                target=finalize_agent_instance,
+                args=(agent,),
+                daemon=True,
+            ).start()
 
         agent = build_agent_for_character(profile_id, persona_id)
         active_profile_id = profile_id
@@ -313,12 +323,18 @@ def profile_activation():
 
     data = request.json or {}
     user_input = data.get("message", "").strip()
+    assistant_response = data.get("assistant_response", "").strip()
     if not user_input:
         return jsonify({"error": "message is required"}), 400
+    if not assistant_response:
+        return jsonify({"error": "assistant_response is required"}), 400
 
     try:
         t_start = time.perf_counter()
-        event = agent._run_profile_activation_log(user_input)
+        event = agent._run_profile_activation_log(
+            user_input,
+            assistant_response=assistant_response,
+        )
         total = time.perf_counter() - t_start
         logger.info(f"[PROFILE_ACTIVATION_API] total={total:.3f}s")
         return jsonify(event or {"type": "profile_activation", "empty": True}), 200
