@@ -19,13 +19,37 @@ from ..prompts.prompt_loader import (
 from ..utils import load_json, parse_json, save_json
 
 LAYERS = ("core", "regulation", "cognition", "identity", "behavior")
-CASES = (
-    ("core", "core_growth", "我最近总觉得自己在原地打转。明明一直在学习，却担心这些努力最后没有沉淀成真正有价值的东西。"),
-    ("regulation", "regulation_pressure", "项目突然卡住了，我脑子里一直在反复推演各种失败可能，越想越停不下来。"),
-    ("cognition", "cognition_decision", "我有两个方案：一个快但后续维护成本高，一个慢但结构更稳。你帮我按长期影响把它们拆开比较一下。"),
-    ("identity", "identity_work", "实验室下周要做阶段汇报。我既要解释算法结果，也得让非技术同事听懂，你觉得该怎么准备？"),
-    ("behavior", "behavior_preference", "我想找一套能长期坚持的科研效率工具和工作流，不想要只图新鲜感的推荐。"),
-)
+
+
+def build_cases(profile: dict[str, Any]) -> tuple[tuple[str, str, str, str], ...]:
+    """Build one deterministic layer-targeted input from dataset/test_user.json.
+
+    Each test input is grounded in the highest-confidence attribute in its own
+    profile layer, replacing the previous hand-written CASES fixture.
+    """
+    templates = {
+        "core": "我最近常有一种担心：{value}。你会怎么建议我？",
+        "regulation": "碰到难题时，我往往会这样：{value}。现在该怎么处理？",
+        "cognition": "我处理信息或做决策时的习惯是：{value}。这次我应该怎么推进？",
+        "identity": "我的实际情况是：{value}。你给我的建议可以怎样更贴合？",
+        "behavior": "我平时的偏好或习惯是：{value}。你会怎么给建议？",
+    }
+    cases = []
+    for layer in LAYERS:
+        fields = profile.get(layer, {})
+        if not isinstance(fields, dict) or not fields:
+            raise ValueError(f"Profile layer '{layer}' is missing or empty.")
+        field, payload = max(
+            fields.items(),
+            key=lambda item: float(item[1].get("confidence", 0)) if isinstance(item[1], dict) else 0.0,
+        )
+        value = payload.get("value", "") if isinstance(payload, dict) else str(payload)
+        value = value.strip().rstrip("。！？!?")
+        if not value:
+            raise ValueError(f"Profile field '{layer}.{field}' has no value.")
+        case_id = f"{layer}_{field}".replace(" ", "_")
+        cases.append((layer, case_id, templates[layer].format(value=value), field))
+    return tuple(cases)
 
 
 def _profile_text(profile: dict[str, Any]) -> str:
@@ -94,14 +118,19 @@ def run(profile_path: str, persona_path: str, output_dir: str, conditions: tuple
     raw = load_json(profile_path)
     profile = raw.get("state_axis", {}).get("static_profile", raw)
     persona = load_json(persona_path)
+    cases = build_cases(profile)
     root = Path(output_dir)
     root.mkdir(parents=True, exist_ok=True)
     results_path = root / "profile_layer_ablation_results.json"
     existing = load_json(str(results_path)).get("records", []) if results_path.exists() else []
+    current_case_ids = {case_id for _, case_id, _, _ in cases}
+    # Do not mix results produced by an older test-case definition with the
+    # profile-derived cases used by this version of the experiment.
+    existing = [r for r in existing if r.get("case_id") in current_case_ids]
     selected = conditions or ("full_profile", *[f"without_{layer}" for layer in LAYERS])
     records: list[dict[str, Any]] = existing
     completed = {(r.get("case_id"), r.get("condition")) for r in records}
-    for target_layer, case_id, message in CASES:
+    for target_layer, case_id, message, source_field in cases:
         for condition in selected:
             if (case_id, condition) in completed:
                 continue
@@ -115,6 +144,7 @@ def run(profile_path: str, persona_path: str, output_dir: str, conditions: tuple
             records.append({
                 "case_id": case_id,
                 "target_layer": target_layer,
+                "source_profile_field": source_field,
                 "message": message,
                 "condition": condition,
                 "removed_layer": removed,
@@ -127,7 +157,7 @@ def run(profile_path: str, persona_path: str, output_dir: str, conditions: tuple
             save_json(str(results_path), {"records": records})
             print(f"{case_id} | {condition} complete")
 
-    summary: dict[str, Any] = {"num_cases": len(CASES), "conditions": {}}
+    summary: dict[str, Any] = {"num_cases": len(cases), "conditions": {}}
     baseline_by_case = {r["case_id"]: r for r in records if r["condition"] == "full_profile"}
     for condition in ("full_profile", *[f"without_{layer}" for layer in LAYERS]):
         group = [r for r in records if r["condition"] == condition]
@@ -140,7 +170,7 @@ def run(profile_path: str, persona_path: str, output_dir: str, conditions: tuple
         }
     layer_effects = {}
     for layer in LAYERS:
-        case_id = next(case_id for target, case_id, _ in CASES if target == layer)
+        case_id = next(case_id for target, case_id, _, _ in cases if target == layer)
         base = baseline_by_case.get(case_id)
         ablated = next((r for r in records if r["case_id"] == case_id and r["condition"] == f"without_{layer}"), None)
         if base and ablated:

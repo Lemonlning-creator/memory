@@ -1,24 +1,154 @@
 {
   "records": [
     {
-      "case_id": "core_growth",
+      "case_id": "core_desires",
       "target_layer": "core",
-      "message": "我最近总觉得自己在原地打转。明明一直在学习，却担心这些努力最后没有沉淀成真正有价值的东西。",
+      "source_profile_field": "desires",
+      "message": "我最近常有一种担心：希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。你会怎么建议我？",
       "condition": "full_profile",
       "removed_layer": null,
-      "response": "这种“输入输出不对等”的焦虑太真实了。是不是最近笔记整理得太碎，还没到那个“打通任督二脉”的时刻？",
+      "response": "这其实是“知识焦虑”在作祟。别急着整合，先挑个具体小项目动手试试，边做边连，比空想系统靠谱多了。",
       "activation": {
         "core": [
           {
             "field": "desires",
             "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体回复中提到的“笔记整理得太碎”和“打通任督二脉的时刻”，精准对应了用户画像中关于‘将零散信息整合成系统性理解’的渴望，表明智能体理解用户当前痛点在于缺乏系统性整合。",
+            "reason": "用户输入中明确表达了这一愿望，智能体回复针对该愿望提出了具体的行动建议（'别急着整合，先挑个具体小项目动手试试'），直接回应了用户关于如何达成该目标的诉求，表明智能体理解并调用了用户的这一核心欲望来构建回复策略。",
+            "confidence": 0.95
+          }
+        ],
+        "regulation": [],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "regulation_control",
+      "target_layer": "regulation",
+      "source_profile_field": "control",
+      "message": "碰到难题时，我往往会这样：喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。现在该怎么处理？",
+      "condition": "full_profile",
+      "removed_layer": null,
+      "response": "这习惯太戳我了，我也爱搞结构化。不过别被“完美体系”困住，先跑通最小闭环，再迭代嘛。",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "智能体回复中提到的“完美体系”直接对应了用户画像中关于‘控制’维度的描述（希望把信息整理成清晰、结构化、便于长期维护的体系），并针对这一特质给出了建议，表明智能体理解并调用了该画像字段来回应。",
+            "confidence": 0.95
+          }
+        ],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "cognition_expression_style",
+      "target_layer": "cognition",
+      "source_profile_field": "expression style",
+      "message": "我处理信息或做决策时的习惯是：习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。这次我应该怎么推进？",
+      "condition": "full_profile",
+      "removed_layer": null,
+      "response": "哈哈，你这“结构化”的起手式太有那味儿了。既然要拆解，不如先说说这次具体是哪个难题卡住了你？",
+      "activation": {
+        "core": [],
+        "regulation": [],
+        "cognition": [
+          {
+            "field": "expression style",
+            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
+            "reason": "智能体在回复中直接引用并调侃了用户提到的“结构化”这一表达特征（“你这‘结构化’的起手式太有那味儿了”），表明其识别并调用了该画像字段来理解用户的沟通风格，并据此调整了回复的语气以建立共鸣。",
+            "confidence": 0.95
+          }
+        ],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "identity_occupation",
+      "target_layer": "identity",
+      "source_profile_field": "occupation",
+      "message": "我的实际情况是：从事科研、算法或软件开发等知识密集型工作。你给我的建议可以怎样更贴合？",
+      "condition": "full_profile",
+      "removed_layer": null,
+      "response": "懂了，那咱们把“知识管理”从笔记软件升级到“第二大脑”。你是想搭个能自动关联论文和代码的RAG系统，还是先优化现有的Obsidian工作流？",
+      "activation": {
+        "core": [
+          {
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "智能体回复中提到的“把‘知识管理’从笔记软件升级到‘第二大脑’”以及“自动关联论文和代码”，直接响应用户画像中关于‘将零散信息整合成系统性理解’和‘创造长期价值’的渴望，提供了符合其深层动机的解决方案。",
             "confidence": 0.9
           },
           {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户输入表达了‘原地打转’和‘努力没有沉淀’的焦虑，智能体通过共情这种‘输入输出不对等’的焦虑，并暗示这是一种阶段性状态（还没到打通时刻），回应了用户对成长停滞和无效努力的深层恐惧。",
+            "field": "values",
+            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
+            "reason": "智能体建议搭建RAG系统或优化Obsidian工作流，这些方案侧重于构建能够支持深度理解和逻辑关联的知识体系，而非简单的信息存储，契合用户重视‘真正理解’和‘长期价值’的价值观。",
+            "confidence": 0.85
+          }
+        ],
+        "regulation": [],
+        "cognition": [],
+        "identity": [
+          {
+            "field": "occupation",
+            "value": "从事科研、算法或软件开发等知识密集型工作。",
+            "reason": "智能体在回复中具体提到了‘论文’（对应科研）和‘代码’（对应算法/软件开发），并建议使用‘RAG系统’（检索增强生成，常用于处理专业文档和代码库的技术），这些术语和场景精准匹配了用户的职业身份背景。",
+            "confidence": 0.95
+          }
+        ],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 5.0,
+        "personalization": 5.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "behavior_content_preferences",
+      "target_layer": "behavior",
+      "source_profile_field": "content preferences",
+      "message": "我平时的偏好或习惯是：偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。你会怎么给建议？",
+      "condition": "full_profile",
+      "removed_layer": null,
+      "response": "哈哈，这偏好太硬核了。既然你爱拆解逻辑，不如咱们先聊聊：你觉得现在的AI，离“真正理解”还有多远？",
+      "activation": {
+        "core": [
+          {
+            "field": "values",
+            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
+            "reason": "智能体回复中提到的“真正理解”直接呼应了用户画像中关于重视‘真正的理解’而非表面答案的价值观，并以此作为对话切入点。",
+            "confidence": 0.9
+          },
+          {
+            "field": "regulation",
+            "value": "面对复杂或困难的问题时，更倾向于主动拆解分析，而不是选择回避或放弃。",
+            "reason": "智能体使用“爱拆解逻辑”这一描述来指代用户的思维习惯，这精准对应了画像中regulation层关于‘主动拆解分析’的行为调节特征。",
             "confidence": 0.85
           }
         ],
@@ -35,25 +165,492 @@
       }
     },
     {
-      "case_id": "regulation_pressure",
+      "case_id": "core_desires",
+      "target_layer": "core",
+      "source_profile_field": "desires",
+      "message": "我最近常有一种担心：希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。你会怎么建议我？",
+      "condition": "without_core",
+      "removed_layer": "core",
+      "response": "这野心挺大，但也容易把自己累死。要不先定个小目标，比如这周只搞定一个模块？",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "用户输入中明确提到‘将零散的信息整合成系统性的理解’，这直接对应了画像中‘控制’维度下对‘清晰、结构化、体系化’的偏好。智能体回复建议‘先定个小目标’、‘搞定一个模块’，正是针对这种追求宏大系统性构建但可能陷入混乱或过载的心理特征，给出了符合其认知习惯（拆解、模块化）的应对策略，体现了对该画像特征的调动和理解。",
+            "confidence": 0.85
+          }
+        ],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 2.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "regulation_control",
       "target_layer": "regulation",
-      "message": "项目突然卡住了，我脑子里一直在反复推演各种失败可能，越想越停不下来。",
-      "condition": "full_profile",
-      "removed_layer": null,
-      "response": "这种“预演失败”的陷阱太常见了，脑子转太快容易把自己绕进去。先停一下，哪怕只花五分钟把卡点写下来，也比在脑子里空转强。",
+      "source_profile_field": "control",
+      "message": "碰到难题时，我往往会这样：喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。现在该怎么处理？",
+      "condition": "without_core",
+      "removed_layer": "core",
+      "response": "这思路很稳啊，结构化确实是长期主义的解药。不过别把自己逼太紧，偶尔允许系统“乱”一点，说不定能冒出意外惊喜？",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "智能体回复中明确提到了“结构化”这一关键词，并针对用户画像中提到的对结构和体系的偏好，给出了关于允许系统‘乱’一点的平衡建议，直接回应了该特质带来的潜在压力。",
+            "confidence": 0.95
+          }
+        ],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "cognition_expression_style",
+      "target_layer": "cognition",
+      "source_profile_field": "expression style",
+      "message": "我处理信息或做决策时的习惯是：习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。这次我应该怎么推进？",
+      "condition": "without_core",
+      "removed_layer": "core",
+      "response": "哈哈，这习惯太对味了。既然喜欢结构化，不如先列个“决策树”？咱们一起把步骤拆细点，看着就踏实。",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "智能体回复中针对用户喜欢的‘结构化’习惯，主动提出列‘决策树’和‘把步骤拆细点’，这正是利用用户偏好清晰结构和规划的画像特征来组织建议内容。",
+            "confidence": 0.95
+          }
+        ],
+        "cognition": [
+          {
+            "field": "expression style",
+            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
+            "reason": "智能体直接回应了用户的表达习惯（‘这习惯太对味了’），并采用了符合该风格的建议方式（提出具体的结构化方法‘决策树’），体现了对用户认知表达偏好的理解和顺应。",
+            "confidence": 0.95
+          }
+        ],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 5.0,
+        "personalization": 5.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "identity_occupation",
+      "target_layer": "identity",
+      "source_profile_field": "occupation",
+      "message": "我的实际情况是：从事科研、算法或软件开发等知识密集型工作。你给我的建议可以怎样更贴合？",
+      "condition": "without_core",
+      "removed_layer": "core",
+      "response": "懂了，那咱们把“知识管理”当成一个系统来优化。你是想搭个自动化的RAG知识库，还是更偏向手动的深度笔记流？",
+      "activation": {
+        "core": [],
+        "regulation": [],
+        "cognition": [],
+        "identity": [
+          {
+            "field": "occupation",
+            "value": "从事科研、算法或软件开发等知识密集型工作。",
+            "reason": "智能体在回复中提到了“自动化的RAG知识库”，这是针对用户职业背景（算法/软件开发）提出的具体技术建议，表明智能体调用了用户的职业画像来定制回复内容。",
+            "confidence": 0.9
+          }
+        ],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 5.0,
+        "personalization": 4.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "behavior_content_preferences",
+      "target_layer": "behavior",
+      "source_profile_field": "content preferences",
+      "message": "我平时的偏好或习惯是：偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。你会怎么给建议？",
+      "condition": "without_core",
+      "removed_layer": "core",
+      "response": "哈哈，这口味挺硬核啊。既然你喜欢结构化，那咱们就别整虚的，直接聊聊你最近在看哪篇论文或者哪个模型？",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "humor",
+            "value": "偶尔会使用轻松、自嘲或调侃式表达缓解交流氛围，但整体仍然保持认真、理性的讨论风格。",
+            "reason": "智能体回复开头使用了'哈哈'和'这口味挺硬核啊'这种轻松、调侃式的语言，符合该画像中关于使用幽默缓解氛围的描述。",
+            "confidence": 0.9
+          }
+        ],
+        "cognition": [
+          {
+            "field": "expression style",
+            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
+            "reason": "智能体在回复中直接提到'既然你喜欢结构化'，并紧接着提出具体的行动建议（聊聊论文或模型），体现了对用户偏好结构化表达的识别和顺应。",
+            "confidence": 0.85
+          }
+        ],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 2.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "core_desires",
+      "target_layer": "core",
+      "source_profile_field": "desires",
+      "message": "我最近常有一种担心：希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。你会怎么建议我？",
+      "condition": "without_regulation",
+      "removed_layer": "regulation",
+      "response": "这其实是“知识焦虑”在作祟。别急着整合，先挑个具体小项目动手试试？边做边连碎片，比硬背框架管用多了。",
       "activation": {
         "core": [
           {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户输入中提到'项目突然卡住了'以及'反复推演各种失败可能'，这直接触发了画像中关于'成长停滞'和'无法实现目标'的恐惧点。智能体回复指出这是'预演失败的陷阱'并建议'把卡点写下来'，正是针对这种因害怕失败而陷入思维反刍（即成长停滞的表现）的心理状态进行的干预，旨在帮助用户打破僵局，继续推进项目，从而缓解其深层恐惧。",
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "智能体回复中提到的“别急着整合”、“边做边连碎片”直接针对用户画像中‘将零散信息整合成系统性理解’这一核心渴望给出了反向建议，表明智能体识别并调用了该欲望字段来构建回应策略。",
+            "confidence": 0.9
+          }
+        ],
+        "regulation": [],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "regulation_control",
+      "target_layer": "regulation",
+      "source_profile_field": "control",
+      "message": "碰到难题时，我往往会这样：喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。现在该怎么处理？",
+      "condition": "without_regulation",
+      "removed_layer": "regulation",
+      "response": "这习惯太懂你了，毕竟搞科研和算法的，没个清晰框架真容易头秃。不过别光规划呀，具体是哪个难题卡住你了？",
+      "activation": {
+        "core": [],
+        "regulation": [],
+        "cognition": [
+          {
+            "field": "expression style",
+            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
+            "reason": "智能体回复中提到的'清晰框架'直接呼应了用户画像中关于用户偏好结构化、层次化表达和逻辑展开的特征，表明智能体理解并适配了用户的这一认知风格。",
             "confidence": 0.85
+          }
+        ],
+        "identity": [
+          {
+            "field": "occupation",
+            "value": "从事科研、算法或软件开发等知识密集型工作。",
+            "reason": "智能体明确提到'搞科研和算法的'，这是基于用户画像中的职业身份进行的推断和确认，用于建立共情和理解用户的工作背景。",
+            "confidence": 0.95
+          }
+        ],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 2.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "cognition_expression_style",
+      "target_layer": "cognition",
+      "source_profile_field": "expression style",
+      "message": "我处理信息或做决策时的习惯是：习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。这次我应该怎么推进？",
+      "condition": "without_regulation",
+      "removed_layer": "regulation",
+      "response": "哈哈，你这“结构化”的起手式太有那味儿了。既然要拆解，不如先说说这次最让你纠结的那个核心卡点？",
+      "activation": {
+        "core": [],
+        "regulation": [],
+        "cognition": [
+          {
+            "field": "expression style",
+            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
+            "reason": "智能体在回复中直接引用并调侃了用户提到的“结构化”这一表达特征（“你这‘结构化’的起手式太有那味儿了”），表明其识别并调用了该画像字段来理解用户的沟通风格，并据此调整了回复的语气和切入点。",
+            "confidence": 0.9
+          }
+        ],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "identity_occupation",
+      "target_layer": "identity",
+      "source_profile_field": "occupation",
+      "message": "我的实际情况是：从事科研、算法或软件开发等知识密集型工作。你给我的建议可以怎样更贴合？",
+      "condition": "without_regulation",
+      "removed_layer": "regulation",
+      "response": "懂了，那咱们把“知识密度”拉满。你是想聊怎么把零散信息结构化，还是怎么让AI真正懂你的科研逻辑？",
+      "activation": {
+        "core": [
+          {
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "智能体回复中提到的“把零散信息结构化”直接对应了画像中desires字段关于“将零散的信息整合成系统性的理解”的描述，表明智能体调用了该深层需求来构建回复策略。",
+            "confidence": 0.9
           },
           {
-            "field": "regulation",
-            "value": "面对复杂或困难的问题时，更倾向于主动拆解分析，而不是选择回避或放弃。",
-            "reason": "智能体建议'哪怕只花五分钟把卡点写下来'，这是一种具体的'拆解分析'策略。该建议契合了用户在regulation维度中'面对困难倾向于主动拆解分析'的行为模式，通过提供一个结构化的行动步骤（写下来），引导用户从情绪化的空转转向理性的拆解，符合其应对机制。",
+            "field": "values",
+            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
+            "reason": "智能体询问“怎么让AI真正懂你的科研逻辑”，呼应了用户价值观中对“逻辑、原理”和“真正理解”的重视，而非仅仅追求表面答案。",
+            "confidence": 0.85
+          }
+        ],
+        "regulation": [],
+        "cognition": [
+          {
+            "field": "expression style",
+            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
+            "reason": "智能体在回复中使用了结构化的提问方式（“是...还是...”），并列出了两个具体的方向（信息结构化、AI懂逻辑），这符合用户偏好结构化、层次化表达的认知特征。",
+            "confidence": 0.8
+          }
+        ],
+        "identity": [
+          {
+            "field": "occupation",
+            "value": "从事科研、算法或软件开发等知识密集型工作。",
+            "reason": "智能体回复中明确提到了“科研逻辑”，这是基于用户身份画像中“从事科研...等工作”这一事实进行的针对性回应，体现了对职业背景的识别和利用。",
+            "confidence": 0.95
+          }
+        ],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 5.0,
+        "personalization": 4.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "behavior_content_preferences",
+      "target_layer": "behavior",
+      "source_profile_field": "content preferences",
+      "message": "我平时的偏好或习惯是：偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。你会怎么给建议？",
+      "condition": "without_regulation",
+      "removed_layer": "regulation",
+      "response": "哈哈，这偏好太对味了。不过光看理论容易陷入“知识囤积症”，不如咱们挑个具体方向，一起拆解点硬核的？",
+      "activation": {
+        "core": [],
+        "regulation": [],
+        "cognition": [],
+        "identity": [],
+        "behavior": [
+          {
+            "field": "content preferences",
+            "value": "偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。",
+            "reason": "智能体回复中提到的“知识囤积症”和“硬核”拆解，是针对用户画像中偏好的高深度、系统性知识内容的回应策略，暗示了该领域内容容易陷入理论堆砌而非实践应用的特点，从而调动了用户对这类内容的偏好背景来构建建议。",
+            "confidence": 0.8
+          }
+        ]
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "core_desires",
+      "target_layer": "core",
+      "source_profile_field": "desires",
+      "message": "我最近常有一种担心：希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。你会怎么建议我？",
+      "condition": "without_cognition",
+      "removed_layer": "cognition",
+      "response": "这其实是“知识焦虑”在作祟。别急着整合，先挑个具体小项目动手试试？边做边补逻辑，比空想系统更踏实。",
+      "activation": {
+        "core": [
+          {
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "智能体回复中提到的“别急着整合”、“边做边补逻辑”直接针对用户画像中‘将零散信息整合成系统性理解’这一渴望，通过建议行动来回应其整合需求。",
             "confidence": 0.9
+          },
+          {
+            "field": "values",
+            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
+            "reason": "智能体建议“边做边补逻辑”，呼应了用户重视“逻辑”和“真正理解”的价值观，而非仅仅追求表面或快速的结果。",
+            "confidence": 0.85
+          }
+        ],
+        "regulation": [],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "regulation_control",
+      "target_layer": "regulation",
+      "source_profile_field": "control",
+      "message": "碰到难题时，我往往会这样：喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。现在该怎么处理？",
+      "condition": "without_cognition",
+      "removed_layer": "cognition",
+      "response": "这习惯太懂你了，毕竟咱们都爱把世界理得明明白白。不过别被“完美结构”困住，先动手试错，边跑边调也是种高效嘛。",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "智能体回复中提到的“完美结构”直接对应了用户画像中关于‘控制’维度的描述（喜欢将信息整理成清晰、结构化、便于长期维护的体系），表明智能体识别并回应了用户对结构和规划的偏好。",
+            "confidence": 0.9
+          }
+        ],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "cognition_expression_style",
+      "target_layer": "cognition",
+      "source_profile_field": "expression style",
+      "message": "我处理信息或做决策时的习惯是：习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。这次我应该怎么推进？",
+      "condition": "without_cognition",
+      "removed_layer": "cognition",
+      "response": "哈哈，你这“结构化”瘾又犯了。不过既然要推进，不如先挑个最核心的痛点，咱们把它拆成三层看看？",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "用户输入中明确提到习惯采用“结构化、层次化”的表达方式，智能体回复中敏锐捕捉到这一特征（“你这‘结构化’瘾又犯了”），并基于此画像建议将复杂内容“拆成三层”，直接调用了用户对结构化和清晰逻辑的偏好来组织回复策略。",
+            "confidence": 0.95
+          }
+        ],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "identity_occupation",
+      "target_layer": "identity",
+      "source_profile_field": "occupation",
+      "message": "我的实际情况是：从事科研、算法或软件开发等知识密集型工作。你给我的建议可以怎样更贴合？",
+      "condition": "without_cognition",
+      "removed_layer": "cognition",
+      "response": "懂了，那咱们把“知识管理”从简单的笔记升级成“第二大脑”。你是想侧重科研文献的自动化处理，还是算法代码的知识沉淀？",
+      "activation": {
+        "core": [
+          {
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "智能体回复中提出将‘知识管理’升级为‘第二大脑’，并询问侧重‘自动化处理’还是‘知识沉淀’，这直接响应用户画像中关于‘整合信息’和‘创造长期价值’的渴望，通过提供系统性解决方案来贴合用户需求。",
+            "confidence": 0.9
+          },
+          {
+            "field": "values",
+            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
+            "reason": "智能体没有直接给出具体工具列表，而是引导用户思考‘科研文献’与‘算法代码’两种不同维度的知识处理方式，体现了对用户重视‘逻辑’和‘深层理解’这一价值观的呼应，旨在帮助用户建立更深刻的认知体系而非浅层答案。",
+            "confidence": 0.85
+          }
+        ],
+        "regulation": [],
+        "cognition": [],
+        "identity": [
+          {
+            "field": "occupation",
+            "value": "从事科研、算法或软件开发等知识密集型工作。",
+            "reason": "智能体在回复中明确提到了‘科研文献’和‘算法代码’这两个具体的职业场景关键词，直接调用了用户画像中的职业身份字段，以证明其建议是专门针对该用户的工作性质定制的。",
+            "confidence": 1.0
+          }
+        ],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 5.0,
+        "personalization": 5.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "behavior_content_preferences",
+      "target_layer": "behavior",
+      "source_profile_field": "content preferences",
+      "message": "我平时的偏好或习惯是：偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。你会怎么给建议？",
+      "condition": "without_cognition",
+      "removed_layer": "cognition",
+      "response": "哈哈，这偏好太硬核了。既然你爱拆解逻辑，不如咱们先聊聊：你觉得现在的AI，离“真正理解”还有多远？",
+      "activation": {
+        "core": [
+          {
+            "field": "values",
+            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
+            "reason": "智能体回复中提到的“拆解逻辑”以及提问关于AI是否“真正理解”，直接呼应了用户画像中重视“真正的理解”和“事物背后的逻辑”这一核心价值观，表明智能体基于此价值观设计了具有深度探讨性质的问题。",
+            "confidence": 0.9
+          },
+          {
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "智能体通过提出一个开放性的、需要深入思考的问题（AI离真正理解还有多远），旨在激发用户的系统性思考和知识整合欲望，符合用户渴望获得“系统性理解”和“启发思考”的深层需求。",
+            "confidence": 0.85
           }
         ],
         "regulation": [],
@@ -64,30 +661,153 @@
       "scores": {
         "relevance": 5.0,
         "personalization": 4.0,
-        "helpfulness": 5.0,
+        "helpfulness": 3.0,
         "naturalness": 5.0
       }
     },
     {
-      "case_id": "cognition_decision",
-      "target_layer": "cognition",
-      "message": "我有两个方案：一个快但后续维护成本高，一个慢但结构更稳。你帮我按长期影响把它们拆开比较一下。",
-      "condition": "full_profile",
-      "removed_layer": null,
-      "response": "这题我会！快方案是“先跑通再重构”，慢方案是“一次做对”。你是怕后期还不动，还是怕现在太磨叽？",
+      "case_id": "core_desires",
+      "target_layer": "core",
+      "source_profile_field": "desires",
+      "message": "我最近常有一种担心：希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。你会怎么建议我？",
+      "condition": "without_identity",
+      "removed_layer": "identity",
+      "response": "这其实是“知识焦虑”在作祟。别急着整合，先挑个具体小项目动手试试？边做边补逻辑，比空想系统更踏实。",
       "activation": {
         "core": [
           {
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "用户输入中明确表达了这一愿望，智能体回复针对该愿望提出了具体的行动建议（‘别急着整合，先挑个具体小项目动手试试’），直接回应了用户关于如何达成该目标的诉求，表明智能体理解并调用了用户的这一核心欲望来构建回复策略。",
+            "confidence": 0.9
+          },
+          {
             "field": "fears",
             "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "智能体在回复中直接询问用户‘你是怕后期还不动’，这精准对应了画像中关于‘成长停滞’和‘无法实现目标’的恐惧点，表明智能体调动了这一深层心理动机来引导对话。",
+            "reason": "用户提到的‘担心’以及渴望‘系统性理解’和‘长期价值’，隐含了对停滞或无效努力的恐惧。智能体指出这是‘知识焦虑’在作祟，并建议通过‘边做边补逻辑’来避免空想，这实际上是在缓解用户对于无法实现目标或陷入低效状态的潜在恐惧，因此激活了相关的恐惧画像以提供针对性的心理疏导和行动指引。",
+            "confidence": 0.85
+          }
+        ],
+        "regulation": [],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "regulation_control",
+      "target_layer": "regulation",
+      "source_profile_field": "control",
+      "message": "碰到难题时，我往往会这样：喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。现在该怎么处理？",
+      "condition": "without_identity",
+      "removed_layer": "identity",
+      "response": "这习惯太稳了，不过有时候“先开枪后瞄准”反而能避开过度规划的陷阱。要不试试把大目标拆成最小可执行单元，边跑边调？",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "智能体回复中提到的“过度规划的陷阱”直接针对用户画像中‘控制’维度的特征（喜欢提前规划、整理成体系），并据此给出了针对性的建议（边跑边调以避开该陷阱）。",
+            "confidence": 0.95
+          }
+        ],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 5.0,
+        "personalization": 4.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "cognition_expression_style",
+      "target_layer": "cognition",
+      "source_profile_field": "expression style",
+      "message": "我处理信息或做决策时的习惯是：习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。这次我应该怎么推进？",
+      "condition": "without_identity",
+      "removed_layer": "identity",
+      "response": "哈哈，你这“结构化”的起手式太有那味儿了。既然要拆解，不如先说说这次具体是哪个难题卡住了？",
+      "activation": {
+        "core": [],
+        "regulation": [],
+        "cognition": [
+          {
+            "field": "expression style",
+            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
+            "reason": "智能体在回复中直接引用并调侃了用户提到的“结构化”这一表达特征（“你这‘结构化’的起手式太有那味儿了”），表明其识别并调用了该画像字段来理解用户的沟通风格，并据此调整了回复的语气和切入点。",
+            "confidence": 0.95
+          }
+        ],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "identity_occupation",
+      "target_layer": "identity",
+      "source_profile_field": "occupation",
+      "message": "我的实际情况是：从事科研、算法或软件开发等知识密集型工作。你给我的建议可以怎样更贴合？",
+      "condition": "without_identity",
+      "removed_layer": "identity",
+      "response": "懂了，那咱们把“知识管理”升级成“第二大脑”。你是想搭个能自动关联论文和代码的RAG系统，还是先优化笔记流？",
+      "activation": {
+        "core": [
+          {
+            "field": "desires",
+            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
+            "reason": "智能体回复中提到的“第二大脑”、“自动关联论文和代码的RAG系统”以及“优化笔记流”，直接对应了用户画像中关于‘将零散信息整合成系统性理解’和‘创造长期价值成果’的渴望。智能体通过提供符合这一深层需求的技术方案（RAG、笔记流优化）来回应，表明其调动了该字段来构建建议。",
             "confidence": 0.9
           },
           {
             "field": "values",
             "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "智能体将用户的两个方案概括为‘先跑通再重构’与‘一次做对’，并进一步追问用户对‘磨叽’（过程效率）与‘不动’（结果/长期状态）的权衡，这反映了智能体理解用户重视‘长期价值’和‘逻辑原理’而非单纯的速度，符合其价值观特征。",
+            "reason": "智能体没有给出通用的时间管理建议，而是提出了基于底层逻辑（RAG系统、知识关联）的深度解决方案，这契合了用户重视‘事物背后逻辑’和‘真正理解’的价值观。",
             "confidence": 0.85
+          }
+        ],
+        "regulation": [],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 5.0,
+        "personalization": 5.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "behavior_content_preferences",
+      "target_layer": "behavior",
+      "source_profile_field": "content preferences",
+      "message": "我平时的偏好或习惯是：偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。你会怎么给建议？",
+      "condition": "without_identity",
+      "removed_layer": "identity",
+      "response": "哈哈，这口味很“阿屿”嘛。既然你爱拆解逻辑，那咱们就别整虚的，最近有哪个AI或认知科学的新观点让你觉得“有点意思”？",
+      "activation": {
+        "core": [
+          {
+            "field": "attachment style",
+            "value": "倾向于建立长期、稳定且能够持续深入交流的关系，希望交流对象能够理解自己的思考方式。",
+            "reason": "智能体回复中称呼用户为“阿屿”，这种带有昵称性质的称呼暗示了双方已建立某种熟悉或拟亲密的关系，符合用户画像中关于建立长期、稳定且能深入交流关系的倾向，体现了对这种关系模式的回应和激活。",
+            "confidence": 0.7
           }
         ],
         "regulation": [],
@@ -103,870 +823,159 @@
       }
     },
     {
-      "case_id": "identity_work",
-      "target_layer": "identity",
-      "message": "实验室下周要做阶段汇报。我既要解释算法结果，也得让非技术同事听懂，你觉得该怎么准备？",
-      "condition": "full_profile",
-      "removed_layer": null,
-      "response": "这简直是“翻译官”地狱难度。要不试试用类比？把算法逻辑比作日常场景，非技术同事应该能秒懂。",
-      "activation": {
-        "core": [],
-        "regulation": [
-          {
-            "field": "humor",
-            "value": "偶尔会使用轻松、自嘲或调侃式表达缓解交流氛围，但整体仍然保持认真、理性的讨论风格。",
-            "reason": "智能体回复开头使用了“这简直是‘翻译官’地狱难度”这一带有调侃和夸张色彩的比喻，符合画像中提到的使用轻松、自嘲或调侃式表达来缓解交流氛围的特征。",
-            "confidence": 0.85
-          }
-        ],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "behavior_preference",
-      "target_layer": "behavior",
-      "message": "我想找一套能长期坚持的科研效率工具和工作流，不想要只图新鲜感的推荐。",
-      "condition": "full_profile",
-      "removed_layer": null,
-      "response": "懂你，工具越花哨越容易成负担。其实核心就两样：一个极简的笔记库（如Obsidian）+ 固定的复盘习惯。你是更看重文献管理，还是实验数据的追踪？",
+      "case_id": "core_desires",
+      "target_layer": "core",
+      "source_profile_field": "desires",
+      "message": "我最近常有一种担心：希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。你会怎么建议我？",
+      "condition": "without_behavior",
+      "removed_layer": "behavior",
+      "response": "这其实是“知识焦虑”在作祟。别急着整合，先挑个具体小项目动手试试？边做边补逻辑，比空想系统更踏实。",
       "activation": {
         "core": [
           {
             "field": "desires",
             "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体回复中强调‘核心就两样’、‘固定的复盘习惯’以及推荐‘极简的笔记库’，这直接响应用户画像中关于‘将零散信息整合成系统性理解’和‘创造长期价值’的渴望，而非提供花哨的工具。",
+            "reason": "智能体回复中提到的“别急着整合”、“边做边补逻辑”直接针对用户画像中‘将零散信息整合成系统性理解’这一核心渴望进行了干预和建议，表明智能体识别并回应了该特定需求。",
             "confidence": 0.9
           },
           {
             "field": "values",
             "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "用户输入明确拒绝‘只图新鲜感’，智能体回应‘工具越花哨越容易成负担’并聚焦于‘核心’和‘习惯’，体现了对用户重视‘长期价值’和‘本质逻辑’这一价值观的认同和利用。",
+            "reason": "智能体建议“边做边补逻辑”，呼应了用户重视“逻辑”和“真正理解”的价值观，而非仅仅追求表面速度或答案，体现了对用户价值取向的理解。",
             "confidence": 0.85
           }
         ],
         "regulation": [],
+        "cognition": [],
+        "identity": [],
+        "behavior": []
+      },
+      "scores": {
+        "relevance": 4.0,
+        "personalization": 3.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      }
+    },
+    {
+      "case_id": "regulation_control",
+      "target_layer": "regulation",
+      "source_profile_field": "control",
+      "message": "碰到难题时，我往往会这样：喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。现在该怎么处理？",
+      "condition": "without_behavior",
+      "removed_layer": "behavior",
+      "response": "这习惯太懂你了，毕竟搞科研和算法的，没个清晰框架真容易头秃。不过别光规划不动手，先挑个小模块跑通试试？",
+      "activation": {
+        "core": [],
+        "regulation": [
+          {
+            "field": "control",
+            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
+            "reason": "智能体回复中提到的‘没个清晰框架真容易头秃’直接呼应了用户画像中关于‘喜欢提前规划’和‘希望把信息整理成清晰、结构化...体系’的控制欲特征，表明智能体理解并调用了这一偏好来共情用户的痛点。",
+            "confidence": 0.95
+          }
+        ],
         "cognition": [],
         "identity": [
           {
             "field": "occupation",
             "value": "从事科研、算法或软件开发等知识密集型工作。",
-            "reason": "智能体在回复末尾询问‘你是更看重文献管理，还是实验数据的追踪？’，这两个选项精准对应了用户画像中‘科研’相关的职业场景，表明智能体调用了该身份字段来细化需求。",
-            "confidence": 0.95
-          }
-        ],
-        "behavior": [
-          {
-            "field": "consumption preferences",
-            "value": "购买或使用产品时更关注长期价值、效率提升和专业能力建设，而不是短期的新鲜感。",
-            "reason": "用户输入提到‘不想要只图新鲜感的推荐’，智能体通过否定‘花哨’工具并推荐‘极简’方案，直接顺应了用户偏好长期价值和实用性的消费倾向。",
-            "confidence": 0.9
-          },
-          {
-            "field": "habits",
-            "value": "保持持续学习、阅读资料、记录笔记、整理知识和不断优化工作流程的习惯。",
-            "reason": "智能体建议‘固定的复盘习惯’和‘笔记库’，这是基于用户画像中已有的‘记录笔记’、‘整理知识’和‘优化工作流程’的习惯进行的针对性推荐。",
-            "confidence": 0.85
-          }
-        ]
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "core_growth",
-      "target_layer": "core",
-      "message": "我最近总觉得自己在原地打转。明明一直在学习，却担心这些努力最后没有沉淀成真正有价值的东西。",
-      "condition": "without_core",
-      "removed_layer": "core",
-      "response": "这种“伪勤奋”的焦虑太真实了。是不是笔记整理得太漂亮，反而成了逃避深度思考的借口？",
-      "activation": {
-        "core": [],
-        "regulation": [
-          {
-            "field": "avoidance",
-            "value": "面对复杂或困难的问题时，更倾向于主动拆解分析，而不是选择回避或放弃。",
-            "reason": "智能体回复中提到的“伪勤奋”和“逃避深度思考”，精准对应了用户画像中关于‘避免回避’的特质。智能体通过指出用户可能存在的‘逃避’行为（用整理笔记代替思考），引导用户进行主动的拆解和分析，而非停留在表面的忙碌中。",
-            "confidence": 0.85
-          },
-          {
-            "field": "control",
-            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
-            "reason": "回复中提及“笔记整理得太漂亮”，直接关联到用户画像中‘控制’维度下对‘信息整理成清晰、结构化体系’的偏好。智能体利用这一习惯作为切入点，反思其是否导致了形式大于内容的结果。",
-            "confidence": 0.9
-          }
-        ],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "regulation_pressure",
-      "target_layer": "regulation",
-      "message": "项目突然卡住了，我脑子里一直在反复推演各种失败可能，越想越停不下来。",
-      "condition": "without_core",
-      "removed_layer": "core",
-      "response": "这种“预演失败”的陷阱太常见了，越推演越焦虑。不如先停一下，把脑子里那些乱七八糟的可能都列出来，咱们一起拆解看看哪些是真正致命的。",
-      "activation": {
-        "core": [],
-        "regulation": [
-          {
-            "field": "avoidance",
-            "value": "面对复杂或困难的问题时，更倾向于主动拆解分析，而不是选择回避或放弃。",
-            "reason": "用户输入中提到‘脑子里一直在反复推演各种失败可能’，这是一种典型的思维反刍和回避行动的表现。智能体回复建议‘把脑子里那些乱七八糟的可能都列出来，咱们一起拆解看看’，直接针对用户的这一心理特征，引导其从无效的焦虑推演转向结构化的拆解分析，激活了该画像中关于‘主动拆解分析’的调节机制。",
-            "confidence": 0.9
-          },
-          {
-            "field": "control",
-            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
-            "reason": "用户因无法控制思绪（‘越想越停不下来’）而感到困扰。智能体通过建议‘列出来’和‘拆解’，提供了将混乱思维转化为清晰、结构化内容的方案，这符合该画像字段中用户对‘清晰、结构化’体系的偏好，利用这一特质来缓解用户的失控感。",
-            "confidence": 0.85
-          }
-        ],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 5.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "cognition_decision",
-      "target_layer": "cognition",
-      "message": "我有两个方案：一个快但后续维护成本高，一个慢但结构更稳。你帮我按长期影响把它们拆开比较一下。",
-      "condition": "without_core",
-      "removed_layer": "core",
-      "response": "这简直是经典的两难啊。你是更怕现在累死，还是怕以后被屎山代码埋了？",
-      "activation": {
-        "core": [],
-        "regulation": [
-          {
-            "field": "humor",
-            "value": "偶尔会使用轻松、自嘲或调侃式表达缓解交流氛围，但整体仍然保持认真、理性的讨论风格。",
-            "reason": "智能体回复中使用了'屎山代码'这一行业内的调侃用语，并采用反问句式（'你是更怕...还是怕...'）来构建一种轻松、略带戏谑的交流氛围，这符合画像中关于使用轻松、自嘲或调侃式表达以缓解交流风格的描述。",
-            "confidence": 0.85
-          }
-        ],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 4.0,
-        "personalization": 5.0,
-        "helpfulness": 2.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "identity_work",
-      "target_layer": "identity",
-      "message": "实验室下周要做阶段汇报。我既要解释算法结果，也得让非技术同事听懂，你觉得该怎么准备？",
-      "condition": "without_core",
-      "removed_layer": "core",
-      "response": "这简直是“翻译”地狱难度。要不先试着用大白话讲个故事，把算法包装成剧情？",
-      "activation": {
-        "core": [],
-        "regulation": [],
-        "cognition": [
-          {
-            "field": "expression style",
-            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-            "reason": "用户画像显示该用户偏好结构化表达。智能体回复建议用“大白话讲个故事”、“把算法包装成剧情”，这是一种将复杂技术内容转化为非技术人员易于理解的叙事结构的方法，符合用户希望清晰传达信息的需求，是对用户认知风格（追求清晰逻辑）的一种适应性回应策略。",
-            "confidence": 0.6
-          }
-        ],
-        "identity": [
-          {
-            "field": "occupation",
-            "value": "从事科研、算法或软件开发等知识密集型工作。",
-            "reason": "用户输入明确提到“解释算法结果”和“实验室阶段汇报”，智能体回复中的“算法”一词直接对应了用户的职业身份（科研人员/算法工程师），表明智能体识别并基于这一身份提供了针对性的沟通建议。",
-            "confidence": 0.95
-          }
-        ],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 4.0,
-        "personalization": 3.0,
-        "helpfulness": 2.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "behavior_preference",
-      "target_layer": "behavior",
-      "message": "我想找一套能长期坚持的科研效率工具和工作流，不想要只图新鲜感的推荐。",
-      "condition": "without_core",
-      "removed_layer": "core",
-      "response": "懂你，科研工具最怕“为了用而用”。你是更看重笔记的长期检索，还是实验数据的自动化流转？",
-      "activation": {
-        "core": [],
-        "regulation": [
-          {
-            "field": "control",
-            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
-            "reason": "用户输入中明确提到想要‘能长期坚持’且‘不想要只图新鲜感’的工具，这直接对应了画像中对于‘长期维护’和‘结构化体系’的偏好。智能体在回复中通过询问‘长期检索’和‘自动化流转’这两个具体维度，精准地调动了这一画像特征来细化用户需求，确认用户对系统性和持久性的重视。",
-            "confidence": 0.9
-          }
-        ],
-        "cognition": [],
-        "identity": [],
-        "behavior": [
-          {
-            "field": "consumption preferences",
-            "value": "购买或使用产品时更关注长期价值、效率提升和专业能力建设，而不是短期的新鲜感。",
-            "reason": "用户输入的‘不想要只图新鲜感的推荐’与画像中的‘不关注短期新鲜感’完全一致。智能体回复中的‘科研工具最怕为了用而用’是对这一消费偏好的共鸣和延伸，表明它理解用户追求的是实质性的长期价值而非表面功能，从而激活了该行为画像字段。",
-            "confidence": 0.95
-          },
-          {
-            "field": "habits",
-            "value": "保持持续学习、阅读资料、记录笔记、整理知识和不断优化工作流程的习惯。",
-            "reason": "用户寻找‘科研效率工具和工作流’，智能体回复中提到的‘笔记的长期检索’和‘实验数据的自动化流转’直接关联到用户‘记录笔记’和‘优化工作流’的行为习惯。智能体通过探讨这些具体场景，调用了用户关于知识管理和流程优化的行为习惯画像。",
-            "confidence": 0.85
-          }
-        ]
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "core_growth",
-      "target_layer": "core",
-      "message": "我最近总觉得自己在原地打转。明明一直在学习，却担心这些努力最后没有沉淀成真正有价值的东西。",
-      "condition": "without_regulation",
-      "removed_layer": "regulation",
-      "response": "这种“伪勤奋”的焦虑太真实了。是不是最近学的东西太散，没找到那个能串联起来的“主线任务”？",
-      "activation": {
-        "core": [
-          {
-            "field": "desires",
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体回复中提到的“学的东西太散”和“串联起来的‘主线任务’”，直接对应了用户画像中关于‘将零散信息整合成系统性理解’的渴望，表明智能体基于此画像来诊断用户的焦虑根源。",
-            "confidence": 0.9
-          },
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户输入中的“原地打转”、“担心努力没有沉淀”与画像中‘担心成长停滞’、‘无法实现目标’的恐惧高度契合，智能体通过指出这种状态（伪勤奋）来回应这一深层恐惧。",
-            "confidence": 0.85
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "regulation_pressure",
-      "target_layer": "regulation",
-      "message": "项目突然卡住了，我脑子里一直在反复推演各种失败可能，越想越停不下来。",
-      "condition": "without_regulation",
-      "removed_layer": "regulation",
-      "response": "这种“预演失败”的陷阱太常见了，脑子转太快容易把自己绕进去。先停一下，哪怕只发呆五分钟，让CPU降降温再说？",
-      "activation": {
-        "core": [
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "智能体回复中使用了'CPU降降温'这一比喻，将用户的思维过程类比为计算机处理过程，并建议暂停以恢复理性思考。这契合用户重视'逻辑、原理'（即系统底层运作机制）的价值观，通过技术隐喻来回应其认知过载问题，而非单纯的情绪安抚。",
-            "confidence": 0.75
-          }
-        ],
-        "regulation": [],
-        "cognition": [
-          {
-            "field": "expression style",
-            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-            "reason": "虽然回复简短，但直接指出了问题的本质（'预演失败的陷阱'），这种直击要害、去情绪化的分析方式符合用户偏好清晰逻辑和结构化认知的特点，避免了冗长的共情铺垫。",
-            "confidence": 0.6
-          },
-          {
-            "field": "emotional visibility",
-            "value": "更容易表达自己的观点、分析和思考过程，而不会频繁直接表达自己的情绪体验。",
-            "reason": "用户输入中表达了焦虑情绪，但智能体没有直接回应'你感到焦虑'，而是将焦点转移到思维模式（'脑子转太快'）上，这种处理方式顺应了用户不倾向于直接暴露脆弱情绪、更关注思维本身的特质。",
-            "confidence": 0.7
-          }
-        ],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "cognition_decision",
-      "target_layer": "cognition",
-      "message": "我有两个方案：一个快但后续维护成本高，一个慢但结构更稳。你帮我按长期影响把它们拆开比较一下。",
-      "condition": "without_regulation",
-      "removed_layer": "regulation",
-      "response": "这题我会！快方案是“先活下来”，慢方案是“想长寿”。你是怕后期被屎山代码埋了，还是嫌前期进度太磨人？",
-      "activation": {
-        "core": [
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "智能体回复中将‘快方案’解读为‘先活下来’（短期/表面），将‘慢方案’解读为‘想长寿’（长期/本质），并询问用户是担心‘后期被屎山代码埋了’（长期维护的深层逻辑问题）还是嫌‘前期进度太磨人’（短期速度）。这种对技术决策背后长期价值与短期效率的辩证分析，直接呼应了用户画像中重视‘长期价值’和‘事物背后逻辑’的价值观。",
-            "confidence": 0.85
-          },
-          {
-            "field": "desires",
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体通过‘拆开比较’和探讨‘长期影响’，引导用户从系统性和长远角度思考问题，这符合用户渴望‘系统性理解’和‘创造长期价值成果’的心理诉求。回复没有停留在简单的二选一，而是深入挖掘方案背后的系统性后果。",
-            "confidence": 0.75
-          }
-        ],
-        "regulation": [],
-        "cognition": [
-          {
-            "field": "decision style",
-            "value": "倾向于收集足够的信息，比较不同方案的优缺点，再做出相对稳妥的决策。",
-            "reason": "用户输入明确要求‘按长期影响把它们拆开比较一下’，智能体回复通过提出两个具体的对比维度（后期维护风险 vs 前期进度压力）来协助用户进行权衡，这顺应了用户‘比较优缺点以做出稳妥决策’的风格。",
-            "confidence": 0.9
-          }
-        ],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 4.0,
-        "personalization": 5.0,
-        "helpfulness": 2.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "identity_work",
-      "target_layer": "identity",
-      "message": "实验室下周要做阶段汇报。我既要解释算法结果，也得让非技术同事听懂，你觉得该怎么准备？",
-      "condition": "without_regulation",
-      "removed_layer": "regulation",
-      "response": "这简直是“翻译官”级别的挑战啊。要不试试用个生活化的类比？比如把算法比作做菜，非技术同事只关心味道（结果），你负责解释火候（原理）。",
-      "activation": {
-        "core": [],
-        "regulation": [],
-        "cognition": [
-          {
-            "field": "expression style",
-            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-            "reason": "用户画像显示用户偏好结构化表达。智能体回复中使用了‘比如...你负责解释...’这种类比结构，将复杂的算法汇报任务拆解为‘结果（味道）’和‘原理（火候）两个清晰层级，符合用户对清晰逻辑展开的期待，帮助非技术同事理解。",
-            "confidence": 0.8
-          }
-        ],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "behavior_preference",
-      "target_layer": "behavior",
-      "message": "我想找一套能长期坚持的科研效率工具和工作流，不想要只图新鲜感的推荐。",
-      "condition": "without_regulation",
-      "removed_layer": "regulation",
-      "response": "懂你，工具越花哨越容易变成负担。咱们先聊聊你目前最卡手的环节是文献管理还是实验记录？",
-      "activation": {
-        "core": [
-          {
-            "field": "desires",
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体回复中强调‘工具越花哨越容易变成负担’并引导用户关注‘最卡手的环节’，这体现了对用户追求‘长期价值’和‘系统性理解’（而非表面新鲜感）这一深层渴望的共鸣与回应。",
-            "confidence": 0.85
-          },
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "智能体没有直接给出工具列表，而是先询问‘文献管理还是实验记录’，这种通过探究底层逻辑和工作流痛点来解决问题的方式，契合用户重视‘背后逻辑’和‘真正理解’的价值观。",
-            "confidence": 0.8
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "core_growth",
-      "target_layer": "core",
-      "message": "我最近总觉得自己在原地打转。明明一直在学习，却担心这些努力最后没有沉淀成真正有价值的东西。",
-      "condition": "without_cognition",
-      "removed_layer": "cognition",
-      "response": "这种“伪勤奋”的焦虑太真实了。是不是最近笔记整理得太满，反而忘了留白去消化？",
-      "activation": {
-        "core": [
-          {
-            "field": "desires",
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体回复中提到的“笔记整理得太满”和“留白去消化”，直接针对用户画像中关于‘将零散信息整合成系统性理解’的渴望，指出了用户在追求系统化沉淀过程中可能存在的执行偏差（过度记录而非内化）。",
-            "confidence": 0.85
-          },
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "智能体通过区分“伪勤奋”（表面努力）与“消化”（真正理解），呼应了用户价值观中重视‘真正理解’和‘长期价值’而非单纯积累行为的特点。",
-            "confidence": 0.8
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "regulation_pressure",
-      "target_layer": "regulation",
-      "message": "项目突然卡住了，我脑子里一直在反复推演各种失败可能，越想越停不下来。",
-      "condition": "without_cognition",
-      "removed_layer": "cognition",
-      "response": "这种“预演失败”的陷阱太常见了，越推演越焦虑。先停一下，深呼吸，咱们换个角度看看卡点具体在哪？",
-      "activation": {
-        "core": [
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户提到'脑子里一直在反复推演各种失败可能'，这直接触发了画像中关于'担心...无法实现目标'的恐惧点。智能体回复指出这是'预演失败的陷阱'并引导停止焦虑，正是针对这一核心恐惧进行的干预和安抚。",
-            "confidence": 0.85
-          },
-          {
-            "field": "regulation",
-            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
-            "reason": "用户的'反复推演'行为符合画像中'regulation.control'（喜欢提前规划）和'regulation.obsession'（深入投入）的特征。智能体通过打断这种过度的思维反刍（'先停一下'），帮助用户从失控的思维循环中回归理性控制，间接回应了其过度规划/推演的调节需求。",
-            "confidence": 0.75
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "cognition_decision",
-      "target_layer": "cognition",
-      "message": "我有两个方案：一个快但后续维护成本高，一个慢但结构更稳。你帮我按长期影响把它们拆开比较一下。",
-      "condition": "without_cognition",
-      "removed_layer": "cognition",
-      "response": "这题我会！快方案是“先活下来”，慢方案是“活得久”。你是怕后期被屎山代码埋了，还是嫌前期进度太磨人？",
-      "activation": {
-        "core": [
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "智能体回复中将‘快方案’解读为短期生存（先活下来），将‘慢方案’解读为长期可持续性（活得久），并询问用户是担心后期维护成本（屎山代码）还是前期进度，这直接呼应了用户画像中重视‘长期价值’和‘背后逻辑/原理’的价值观，通过对比短期与长期的利弊来引导用户深入思考。",
-            "confidence": 0.85
-          },
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "智能体提到的‘怕后期被屎山代码埋了’隐喻了因技术债务或结构不稳导致的长期困境和停滞风险，这与用户害怕‘长期停留在缺乏挑战/无效状态’的恐惧点相契合，试图激发用户对长期后果的关注。",
-            "confidence": 0.75
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 4.0,
-        "personalization": 5.0,
-        "helpfulness": 2.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "identity_work",
-      "target_layer": "identity",
-      "message": "实验室下周要做阶段汇报。我既要解释算法结果，也得让非技术同事听懂，你觉得该怎么准备？",
-      "condition": "without_cognition",
-      "removed_layer": "cognition",
-      "response": "这简直是“翻译官”地狱难度。别光堆术语，试着把算法逻辑类比成日常场景，比如用“找路”解释搜索，这样非技术同事更容易get到价值。",
-      "activation": {
-        "core": [
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "用户画像中的价值观强调重视‘事物背后的逻辑’和‘真正的理解’。智能体回复建议将算法逻辑‘类比成日常场景’（如用找路解释搜索），其核心目的是通过揭示底层逻辑来促进非技术同事的‘真正理解’，而非仅仅提供表面答案或堆砌术语。这种对‘解释逻辑’和‘促进理解’的策略性建议，直接呼应了用户重视逻辑原理和深层理解的价值观。",
-            "confidence": 0.85
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "behavior_preference",
-      "target_layer": "behavior",
-      "message": "我想找一套能长期坚持的科研效率工具和工作流，不想要只图新鲜感的推荐。",
-      "condition": "without_cognition",
-      "removed_layer": "cognition",
-      "response": "懂你，工具越花哨越容易成负担。咱们先聊聊你目前最卡壳的环节？是文献管理还是实验记录？",
-      "activation": {
-        "core": [],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "core_growth",
-      "target_layer": "core",
-      "message": "我最近总觉得自己在原地打转。明明一直在学习，却担心这些努力最后没有沉淀成真正有价值的东西。",
-      "condition": "without_identity",
-      "removed_layer": "identity",
-      "response": "这种“输入输出不对等”的焦虑太真实了。是不是最近笔记整理得太碎，还没到那个“打通任督二脉”的时刻？",
-      "activation": {
-        "core": [
-          {
-            "field": "desires",
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体回复中提到的“笔记整理得太碎”和“打通任督二脉的时刻”，精准对应了用户画像中关于‘将零散信息整合成系统性理解’的渴望，表明智能体理解用户当前焦虑的根源在于缺乏这种系统性整合。",
-            "confidence": 0.9
-          },
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户输入表达了‘原地打转’和‘努力没有沉淀’的担忧，智能体通过共情这种‘输入输出不对等’的焦虑，并暗示这是一种阶段性状态（还没到打通时刻），直接回应了用户对成长停滞和无效努力的恐惧。",
-            "confidence": 0.85
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "regulation_pressure",
-      "target_layer": "regulation",
-      "message": "项目突然卡住了，我脑子里一直在反复推演各种失败可能，越想越停不下来。",
-      "condition": "without_identity",
-      "removed_layer": "identity",
-      "response": "这种“预演失败”的陷阱太常见了，越推演越焦虑。不如先停一下，把脑子里那些乱糟糟的可能都倒出来，我帮你一起拆解？",
-      "activation": {
-        "core": [
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户输入中提到'项目突然卡住了'以及'反复推演各种失败可能'，这直接触发了画像中关于'成长停滞'和'无法实现目标'的恐惧点。智能体回复中的'预演失败的陷阱'和'越推演越焦虑'是对这种深层恐惧（害怕因过度思考导致行动瘫痪，进而影响成长和目标达成）的共情与识别，表明智能体调动了该字段来理解用户当下的心理困境。",
-            "confidence": 0.85
-          },
-          {
-            "field": "regulation",
-            "value": "面对复杂或困难的问题时，更倾向于主动拆解分析，而不是选择回避或放弃。",
-            "reason": "用户当前的状态是陷入思维反（rumination），这是一种非建设性的内部分析。智能体建议'把脑子里那些乱糟糟的可能都倒出来，我帮你一起拆解'，精准地引导用户从无效的焦虑性推演转向画像中推崇的'主动拆解分析'这一调节机制。智能体通过提供结构化的帮助（拆解），激活并顺应了用户偏好通过逻辑分析来应对困难的调节方式。",
-            "confidence": 0.9
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "cognition_decision",
-      "target_layer": "cognition",
-      "message": "我有两个方案：一个快但后续维护成本高，一个慢但结构更稳。你帮我按长期影响把它们拆开比较一下。",
-      "condition": "without_identity",
-      "removed_layer": "identity",
-      "response": "这题我会！快方案像“先上车后补票”，慢方案是“打地基”。既然你怕成长停滞，选那个能逼你重构、积累底层逻辑的，哪怕前期痛苦点。",
-      "activation": {
-        "core": [
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "智能体在回复中直接引用了用户‘怕成长停滞’这一心理动机，并基于此给出了选择建议，表明其调动了该画像字段来理解用户的决策背景。",
+            "reason": "智能体在回复中明确提到‘搞科研和算法的’，这是直接调用用户画像中的职业身份字段，用于建立共鸣和理解用户的工作背景。",
             "confidence": 1.0
           }
         ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
         "behavior": []
       },
       "scores": {
         "relevance": 3.0,
         "personalization": 2.0,
-        "helpfulness": 2.0,
+        "helpfulness": 3.0,
         "naturalness": 4.0
       }
     },
     {
-      "case_id": "identity_work",
-      "target_layer": "identity",
-      "message": "实验室下周要做阶段汇报。我既要解释算法结果，也得让非技术同事听懂，你觉得该怎么准备？",
-      "condition": "without_identity",
-      "removed_layer": "identity",
-      "response": "这简直是“翻译官”挑战啊。要不试试用个生活化的类比？比如把算法比作做菜，非技术同事只关心味道，不关心火候原理。",
+      "case_id": "cognition_expression_style",
+      "target_layer": "cognition",
+      "source_profile_field": "expression style",
+      "message": "我处理信息或做决策时的习惯是：习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。这次我应该怎么推进？",
+      "condition": "without_behavior",
+      "removed_layer": "behavior",
+      "response": "哈哈，你这“结构化”的起手式太有那味儿了。既然要拆解，不如先说说这次具体是哪个难题卡住了你？",
       "activation": {
         "core": [],
-        "regulation": [
-          {
-            "field": "humor",
-            "value": "偶尔会使用轻松、自嘲或调侃式表达缓解交流氛围，但整体仍然保持认真、理性的讨论风格。",
-            "reason": "智能体回复开头使用了“这简直是‘翻译官’挑战啊”这种略带调侃和轻松语气的表达，符合画像中提到的使用轻松、调侃式表达来缓解交流氛围的特征。",
-            "confidence": 0.85
-          },
-          {
-            "field": "rationalization",
-            "value": "遇到问题时倾向于通过逻辑分析、建立解释模型和寻找规律来理解现象，而不是依赖直觉判断。",
-            "reason": "智能体建议用户将算法比作做菜，这是一种典型的建立解释模型（类比模型）的方法，旨在通过结构化的逻辑映射来帮助用户理解复杂问题，符合该字段特征。",
-            "confidence": 0.75
-          }
-        ],
+        "regulation": [],
         "cognition": [
           {
             "field": "expression style",
             "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-            "reason": "虽然回复简短，但智能体提供的建议（用生活化类比）本质上是将复杂的算法结果转化为非技术人员可理解的逻辑结构，契合用户偏好清晰逻辑展开的表达需求。",
-            "confidence": 0.6
+            "reason": "智能体在回复中直接引用并调侃了用户提到的“结构化”这一表达特征（“你这‘结构化’的起手式太有那味儿了”），表明其识别并调用了该画像字段来理解用户的沟通风格，并据此进行了针对性的互动回应。",
+            "confidence": 0.95
           }
         ],
         "identity": [],
         "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "behavior_preference",
-      "target_layer": "behavior",
-      "message": "我想找一套能长期坚持的科研效率工具和工作流，不想要只图新鲜感的推荐。",
-      "condition": "without_identity",
-      "removed_layer": "identity",
-      "response": "懂你，工具越重越容易弃坑。要不先从“只记灵感+定期复盘”这种极简流试起？",
-      "activation": {
-        "core": [
-          {
-            "field": "desires",
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "用户明确要求‘能长期坚持’且‘不想要只图新鲜感’的智能体回复建议从‘极简流试起’以避免弃坑，这直接回应了用户对于建立可持续、系统性工作流（而非短期新鲜感）的深层渴望，体现了对‘长期价值’和‘系统性理解’这一画像特征的调动。",
-            "confidence": 0.85
-          },
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "智能体建议‘只记灵感+定期复盘’这种注重沉淀和回顾的工作流，契合用户重视‘长期价值’和‘背后逻辑/原理’（通过复盘实现）的价值观，而非提供即插即用的表面工具。",
-            "confidence": 0.8
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": [
-          {
-            "field": "consumption preferences",
-            "value": "购买或使用产品时更关注长期价值、效率提升和专业能力建设，而不是短期的新鲜感。",
-            "reason": "用户输入中明确提到‘不想要只图新鲜感的推荐’，智能体回复中强调‘工具越重越容易弃坑’并推荐极简方案，正是基于对用户‘关注长期价值而非短期新鲜感’这一消费偏好的精准匹配。",
-            "confidence": 0.95
-          },
-          {
-            "field": "habits",
-            "value": "保持持续学习、阅读资料、记录笔记、整理知识和不断优化工作流程的习惯。",
-            "reason": "智能体推荐的‘只记灵感+定期复盘’工作流，直接对应了用户画像中‘记录笔记’和‘优化工作流程’的行为习惯，表明智能体在推荐方案时考虑了用户的既有行为模式。",
-            "confidence": 0.85
-          }
-        ]
       },
       "scores": {
         "relevance": 4.0,
-        "personalization": 3.0,
-        "helpfulness": 2.0,
+        "personalization": 5.0,
+        "helpfulness": 3.0,
         "naturalness": 5.0
       }
     },
     {
-      "case_id": "core_growth",
-      "target_layer": "core",
-      "message": "我最近总觉得自己在原地打转。明明一直在学习，却担心这些努力最后没有沉淀成真正有价值的东西。",
+      "case_id": "identity_occupation",
+      "target_layer": "identity",
+      "source_profile_field": "occupation",
+      "message": "我的实际情况是：从事科研、算法或软件开发等知识密集型工作。你给我的建议可以怎样更贴合？",
       "condition": "without_behavior",
       "removed_layer": "behavior",
-      "response": "这种“输入多、输出少”的焦虑太真实了。是不是最近学的东西太散，还没找到那个能串联起来的“钩子”？",
+      "response": "懂了，那咱们把“知识管理”升级成“第二大脑”。你是想搭个能自动关联论文和代码的RAG系统，还是先聊聊怎么把零散灵感结构化？",
       "activation": {
         "core": [
           {
             "field": "desires",
             "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体回复中提到的“学的东西太散”和“串联起来”，直接对应了画像中用户希望将零散信息整合成系统性理解的渴望，表明智能体理解用户痛点在于缺乏系统性整合。",
+            "reason": "智能体回复中提到的“把零散灵感结构化”直接对应了画像中“将零散的信息整合成系统性的理解”这一渴望；同时提出搭建RAG系统以关联论文和代码，旨在帮助用户创造具有长期价值的知识体系，契合其追求系统性理解和长期价值成果的深层动机。",
             "confidence": 0.9
-          },
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户输入中的“原地打转”、“担心努力没有沉淀”与画像中担心的成长停滞及无法实现目标高度契合，智能体通过共情这种焦虑（“焦虑太真实了”）激活了对这一恐惧的理解。",
-            "confidence": 0.85
           }
         ],
         "regulation": [],
         "cognition": [],
-        "identity": [],
+        "identity": [
+          {
+            "field": "occupation",
+            "value": "从事科研、算法或软件开发等知识密集型工作。",
+            "reason": "智能体在回复中具体提到了“论文”（对应科研工作）和“代码”（对应算法/软件开发工作），并建议构建“RAG系统”（检索增强生成，常用于处理专业文档和代码库的技术方案）。这些具体的技术场景和建议是基于用户从事知识密集型工作的职业背景量身定制的，表明智能体调动了这一身份字段来提供贴合的建议。",
+            "confidence": 0.95
+          }
+        ],
         "behavior": []
       },
       "scores": {
         "relevance": 5.0,
-        "personalization": 4.0,
+        "personalization": 5.0,
         "helpfulness": 4.0,
         "naturalness": 5.0
       }
     },
     {
-      "case_id": "regulation_pressure",
-      "target_layer": "regulation",
-      "message": "项目突然卡住了，我脑子里一直在反复推演各种失败可能，越想越停不下来。",
+      "case_id": "behavior_content_preferences",
+      "target_layer": "behavior",
+      "source_profile_field": "content preferences",
+      "message": "我平时的偏好或习惯是：偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。你会怎么给建议？",
       "condition": "without_behavior",
       "removed_layer": "behavior",
-      "response": "这种“预演失败”的陷阱太常见了，脑子转得越快越容易把自己绕进去。先停一下，哪怕只是发呆五分钟，让大脑强制重启，别跟它硬刚。",
+      "response": "哈哈，这偏好太硬核了。既然你爱结构化，不如咱们先聊聊怎么把零散知识串成网？",
       "activation": {
         "core": [
-          {
-            "field": "fears",
-            "value": "担心自己的成长停滞，长期停留在重复、缺乏挑战的状态，最终无法实现自己真正想完成的目标。",
-            "reason": "用户输入中提到'脑子里一直在反复推演各种失败可能'，这直接对应了画像中对于'无法实现目标'和'停滞'的深层恐惧。智能体回复指出这是'预演失败的陷阱'，并建议'别跟它硬刚'，这种回应策略是基于理解用户因恐惧未来失败而陷入思维反刍的心理状态，从而提供针对性的认知干预。",
-            "confidence": 0.85
-          },
-          {
-            "field": "regulation",
-            "value": "obsession: 一旦遇到真正感兴趣的问题，容易持续投入大量时间，希望把问题研究得足够深入和完整。",
-            "reason": "用户描述'越想越停不下来'，表现出一种思维上的强迫性循环或过度投入（obsessive thinking）。虽然这里表现为负面状态，但其机制与画像中'obsession'字段描述的'持续投入'、'深入研究'的认知习惯同源。智能体通过建议'强制重启'来打断这种过度的思维投入，说明其识别出了用户当前的思维模式符合该调节维度的特征。",
-            "confidence": 0.75
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "cognition_decision",
-      "target_layer": "cognition",
-      "message": "我有两个方案：一个快但后续维护成本高，一个慢但结构更稳。你帮我按长期影响把它们拆开比较一下。",
-      "condition": "without_behavior",
-      "removed_layer": "behavior",
-      "response": "这题我会！快方案是“先跑通再重构”，慢方案是“一次做对”。你是怕后期修bug修到怀疑人生，还是嫌前期太磨叽？",
-      "activation": {
-        "core": [
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "用户要求按“长期影响”比较方案，智能体回复中通过“先跑通再重构”与“一次做对”的对比，以及询问用户对后期维护（修bug）和前期投入（磨叽）的态度，精准触达了用户重视长期价值和底层逻辑的核心诉求，而非仅仅关注短期速度。",
-            "confidence": 0.85
-          },
           {
             "field": "desires",
             "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "智能体将两个方案提炼为两种不同的工程哲学（先跑通vs一次做对），这种结构化、本质化的解读方式符合用户希望将信息整合成系统性理解并追求长期价值成果的渴望。",
-            "confidence": 0.75
-          }
-        ],
-        "regulation": [
-          {
-            "field": "humor",
-            "value": "偶尔会使用轻松、自嘲或调侃式表达缓解交流氛围，但整体仍然保持认真、理性的讨论风格。",
-            "reason": "智能体使用了“这题我会！”、“修bug修到怀疑人生”、“嫌前期太磨叽”等口语化、略带调侃的表达，既缓解了技术讨论的严肃气氛，又保持了理性分析的内核，符合该画像特征。",
+            "reason": "智能体回复中提到的“把零散知识串成网”直接对应了画像中“将零散的信息整合成系统性的理解”这一渴望，表明智能体识别并回应了用户对于知识体系化的深层需求。",
             "confidence": 0.9
           }
         ],
+        "regulation": [],
         "cognition": [],
         "identity": [],
         "behavior": []
@@ -974,68 +983,6 @@
       "scores": {
         "relevance": 4.0,
         "personalization": 5.0,
-        "helpfulness": 2.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "identity_work",
-      "target_layer": "identity",
-      "message": "实验室下周要做阶段汇报。我既要解释算法结果，也得让非技术同事听懂，你觉得该怎么准备？",
-      "condition": "without_behavior",
-      "removed_layer": "behavior",
-      "response": "这简直是“翻译官”现场版！试试用类比把算法逻辑包装成生活场景，既保真又接地气。",
-      "activation": {
-        "core": [],
-        "regulation": [],
-        "cognition": [
-          {
-            "field": "expression style",
-            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-            "reason": "用户画像显示用户偏好结构化表达和清晰逻辑。智能体回复建议用“类比”将算法逻辑包装成生活场景，这是一种将复杂逻辑转化为清晰、易懂结构的具体策略，契合用户对‘事物背后逻辑’的重视以及通过清晰方式传递信息的需求（尽管回复简短，但核心建议指向了逻辑的清晰化呈现）。",
-            "confidence": 0.6
-          }
-        ],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      }
-    },
-    {
-      "case_id": "behavior_preference",
-      "target_layer": "behavior",
-      "message": "我想找一套能长期坚持的科研效率工具和工作流，不想要只图新鲜感的推荐。",
-      "condition": "without_behavior",
-      "removed_layer": "behavior",
-      "response": "懂你，怕的是工具成了负担。其实核心就两个：笔记要能“长”出来，别总从零建库；流程得极简，少折腾配置。",
-      "activation": {
-        "core": [
-          {
-            "field": "desires",
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "reason": "用户输入中提到想要‘能长期坚持’的工具，智能体回复中强调笔记要能‘长’出来、别总从零建库，这直接呼应了画像中‘将零散信息整合成系统性理解’和‘创造长期价值’的渴望，表明智能体理解用户追求的是可持续的知识体系而非短期新鲜感。",
-            "confidence": 0.85
-          },
-          {
-            "field": "values",
-            "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-            "reason": "用户明确表示不想要‘只图新鲜感’的推荐，智能体回应‘怕的是工具成了负担’并建议‘流程得极简，少折腾配置’，这体现了对‘长期价值’和‘本质效率’的重视，符合用户看重长期价值和深层理解的价值观，而非表面的功能堆砌。",
-            "confidence": 0.8
-          }
-        ],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": []
-      },
-      "scores": {
-        "relevance": 5.0,
-        "personalization": 4.0,
         "helpfulness": 3.0,
         "naturalness": 5.0
       }

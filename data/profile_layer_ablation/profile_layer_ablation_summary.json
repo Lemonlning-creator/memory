@@ -3,16 +3,16 @@
   "conditions": {
     "full_profile": {
       "mean_scores": {
-        "relevance": 4.6,
-        "personalization": 4.0,
+        "relevance": 4.4,
+        "personalization": 4.4,
         "helpfulness": 3.4,
         "naturalness": 5.0
       },
-      "target_layer_activation_rate": 0.4
+      "target_layer_activation_rate": 0.8
     },
     "without_core": {
       "mean_scores": {
-        "relevance": 4.6,
+        "relevance": 4.4,
         "personalization": 4.0,
         "helpfulness": 3.0,
         "naturalness": 5.0
@@ -21,39 +21,39 @@
     },
     "without_regulation": {
       "mean_scores": {
-        "relevance": 4.8,
-        "personalization": 4.2,
-        "helpfulness": 3.6,
+        "relevance": 4.2,
+        "personalization": 4.0,
+        "helpfulness": 2.8,
         "naturalness": 5.0
       },
-      "target_layer_activation_rate": 0.4
+      "target_layer_activation_rate": 0.8
     },
     "without_cognition": {
       "mean_scores": {
-        "relevance": 4.8,
-        "personalization": 4.2,
-        "helpfulness": 3.2,
+        "relevance": 4.4,
+        "personalization": 4.4,
+        "helpfulness": 3.4,
         "naturalness": 5.0
       },
-      "target_layer_activation_rate": 0.2
+      "target_layer_activation_rate": 0.6
     },
     "without_identity": {
       "mean_scores": {
-        "relevance": 4.4,
-        "personalization": 3.4,
-        "helpfulness": 3.0,
-        "naturalness": 4.8
-      },
-      "target_layer_activation_rate": 0.4
-    },
-    "without_behavior": {
-      "mean_scores": {
-        "relevance": 4.8,
+        "relevance": 4.2,
         "personalization": 4.2,
         "helpfulness": 3.2,
         "naturalness": 5.0
       },
-      "target_layer_activation_rate": 0.2
+      "target_layer_activation_rate": 0.6
+    },
+    "without_behavior": {
+      "mean_scores": {
+        "relevance": 4.0,
+        "personalization": 4.0,
+        "helpfulness": 3.2,
+        "naturalness": 4.8
+      },
+      "target_layer_activation_rate": 0.8
     }
   },
   "targeted_layer_effects": {
@@ -61,32 +61,32 @@
       "baseline_target_activated": true,
       "ablated_target_activated": false,
       "personalization_delta": 0.0,
-      "helpfulness_delta": 0.0
+      "helpfulness_delta": -2.0
     },
     "regulation": {
-      "baseline_target_activated": false,
+      "baseline_target_activated": true,
       "ablated_target_activated": false,
-      "personalization_delta": 0.0,
+      "personalization_delta": -2.0,
       "helpfulness_delta": -1.0
     },
     "cognition": {
+      "baseline_target_activated": true,
+      "ablated_target_activated": false,
+      "personalization_delta": 0.0,
+      "helpfulness_delta": 0.0
+    },
+    "identity": {
+      "baseline_target_activated": true,
+      "ablated_target_activated": false,
+      "personalization_delta": 0.0,
+      "helpfulness_delta": 0.0
+    },
+    "behavior": {
       "baseline_target_activated": false,
       "ablated_target_activated": false,
       "personalization_delta": 1.0,
       "helpfulness_delta": 0.0
-    },
-    "identity": {
-      "baseline_target_activated": false,
-      "ablated_target_activated": false,
-      "personalization_delta": 0.0,
-      "helpfulness_delta": 1.0
-    },
-    "behavior": {
-      "baseline_target_activated": true,
-      "ablated_target_activated": false,
-      "personalization_delta": 0.0,
-      "helpfulness_delta": -1.0
     }
   },
-  "run_at": "2026-07-21T16:37:05.311403"
+  "run_at": "2026-07-21T17:27:30.646191"
 }
