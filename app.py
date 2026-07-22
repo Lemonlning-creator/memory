@@ -42,7 +42,7 @@ def _humanize(name: str) -> str:
 
 
 def discover_user_profiles() -> dict:
-    """Scan dataset output user profiles and build selectable profile metadata."""
+    """Load the single test user profile from dataset/test_user.json."""
     profiles = {}
     if DATASET_TEST_USER_PROFILE.exists():
         profiles["test_user"] = {
@@ -64,7 +64,7 @@ def discover_user_profiles() -> dict:
 
 
 def discover_agent_personas() -> dict:
-    """Scan dataset output agent personas and build selectable persona metadata."""
+    """Load the single test agent persona from dataset/test_agent.json."""
     personas = {}
     if DATASET_TEST_AGENT_PERSONA.exists():
         personas["test_agent"] = {
