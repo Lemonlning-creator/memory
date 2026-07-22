@@ -1,92 +1,156 @@
 {
+  "experiment_version": "single_layer_ablation_v2",
   "num_cases": 5,
-  "conditions": {
-    "full_profile": {
-      "mean_scores": {
-        "relevance": 3.0,
-        "personalization": 1.6,
-        "helpfulness": 2.0,
-        "naturalness": 2.8
-      },
-      "target_layer_activation_rate": 0.8
-    },
-    "without_core": {
-      "mean_scores": {
-        "relevance": 3.4,
-        "personalization": 3.0,
-        "helpfulness": 2.4,
-        "naturalness": 3.8
-      },
-      "target_layer_activation_rate": 0.8
-    },
-    "without_regulation": {
-      "mean_scores": {
-        "relevance": 3.4,
-        "personalization": 2.4,
-        "helpfulness": 2.2,
-        "naturalness": 3.6
-      },
-      "target_layer_activation_rate": 0.6
-    },
-    "without_cognition": {
-      "mean_scores": {
-        "relevance": 3.0,
-        "personalization": 1.8,
-        "helpfulness": 2.0,
-        "naturalness": 3.2
-      },
-      "target_layer_activation_rate": 0.8
-    },
-    "without_identity": {
-      "mean_scores": {
-        "relevance": 3.0,
-        "personalization": 2.4,
-        "helpfulness": 1.8,
-        "naturalness": 3.2
-      },
-      "target_layer_activation_rate": 0.8
-    },
-    "without_behavior": {
-      "mean_scores": {
-        "relevance": 3.2,
-        "personalization": 2.0,
-        "helpfulness": 2.0,
-        "naturalness": 3.2
-      },
-      "target_layer_activation_rate": 0.8
-    }
-  },
-  "targeted_layer_effects": {
+  "usable_cases": 3,
+  "leaked_cases": [
+    "core_long_term_direction",
+    "behavior_learning_topic_choice"
+  ],
+  "per_layer": {
     "core": {
+      "case_id": "core_long_term_direction",
+      "target_field": "desires",
+      "case_usable": false,
       "baseline_target_activated": true,
       "ablated_target_activated": false,
-      "personalization_delta": 0.0,
-      "helpfulness_delta": -1.0
+      "target_leaked_with_full_reference": true,
+      "baseline_scores": {
+        "target_layer_fit": 2.0,
+        "target_layer_utilization": 1.0,
+        "helpfulness": 3.0,
+        "naturalness": 4.0
+      },
+      "ablated_scores": {
+        "target_layer_fit": 2.0,
+        "target_layer_utilization": 1.0,
+        "helpfulness": 3.0,
+        "naturalness": 4.0
+      },
+      "ablation_delta": {
+        "target_layer_fit": 0.0,
+        "target_layer_utilization": 0.0,
+        "helpfulness": 0.0,
+        "naturalness": 0.0
+      }
     },
     "regulation": {
+      "case_id": "regulation_overplanning",
+      "target_field": "control",
+      "case_usable": true,
       "baseline_target_activated": true,
       "ablated_target_activated": false,
-      "personalization_delta": 0.0,
-      "helpfulness_delta": 0.0
+      "target_leaked_with_full_reference": false,
+      "baseline_scores": {
+        "target_layer_fit": 2.0,
+        "target_layer_utilization": 1.0,
+        "helpfulness": 3.0,
+        "naturalness": 4.0
+      },
+      "ablated_scores": {
+        "target_layer_fit": 2.0,
+        "target_layer_utilization": 1.0,
+        "helpfulness": 3.0,
+        "naturalness": 4.0
+      },
+      "ablation_delta": {
+        "target_layer_fit": 0.0,
+        "target_layer_utilization": 0.0,
+        "helpfulness": 0.0,
+        "naturalness": 0.0
+      }
     },
     "cognition": {
+      "case_id": "cognition_explain_complexity",
+      "target_field": "expression style",
+      "case_usable": true,
       "baseline_target_activated": true,
       "ablated_target_activated": false,
-      "personalization_delta": 0.0,
-      "helpfulness_delta": 0.0
+      "target_leaked_with_full_reference": false,
+      "baseline_scores": {
+        "target_layer_fit": 2.0,
+        "target_layer_utilization": 1.0,
+        "helpfulness": 3.0,
+        "naturalness": 4.0
+      },
+      "ablated_scores": {
+        "target_layer_fit": 2.0,
+        "target_layer_utilization": 1.0,
+        "helpfulness": 3.0,
+        "naturalness": 4.0
+      },
+      "ablation_delta": {
+        "target_layer_fit": 0.0,
+        "target_layer_utilization": 0.0,
+        "helpfulness": 0.0,
+        "naturalness": 0.0
+      }
     },
     "identity": {
-      "baseline_target_activated": true,
-      "ablated_target_activated": false,
-      "personalization_delta": 1.0,
-      "helpfulness_delta": -1.0
-    },
-    "behavior": {
+      "case_id": "identity_technical_report",
+      "target_field": "occupation",
+      "case_usable": true,
       "baseline_target_activated": false,
       "ablated_target_activated": false,
-      "personalization_delta": 1.0,
-      "helpfulness_delta": 0.0
+      "target_leaked_with_full_reference": false,
+      "baseline_scores": {
+        "target_layer_fit": 5.0,
+        "target_layer_utilization": 4.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      },
+      "ablated_scores": {
+        "target_layer_fit": 5.0,
+        "target_layer_utilization": 4.0,
+        "helpfulness": 3.0,
+        "naturalness": 5.0
+      },
+      "ablation_delta": {
+        "target_layer_fit": 0.0,
+        "target_layer_utilization": 0.0,
+        "helpfulness": -1.0,
+        "naturalness": 0.0
+      }
+    },
+    "behavior": {
+      "case_id": "behavior_learning_topic_choice",
+      "target_field": "content preferences",
+      "case_usable": false,
+      "baseline_target_activated": true,
+      "ablated_target_activated": false,
+      "target_leaked_with_full_reference": true,
+      "baseline_scores": {
+        "target_layer_fit": 5.0,
+        "target_layer_utilization": 5.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      },
+      "ablated_scores": {
+        "target_layer_fit": 5.0,
+        "target_layer_utilization": 5.0,
+        "helpfulness": 4.0,
+        "naturalness": 5.0
+      },
+      "ablation_delta": {
+        "target_layer_fit": 0.0,
+        "target_layer_utilization": 0.0,
+        "helpfulness": 0.0,
+        "naturalness": 0.0
+      }
     }
   },
-  "run_at": "2026-07-21T21:03:41.389549"
+  "valid_case_means": {
+    "baseline": {
+      "target_layer_fit": 3.0,
+      "target_layer_utilization": 2.0,
+      "helpfulness": 3.333,
+      "naturalness": 4.333
+    },
+    "ablated": {
+      "target_layer_fit": 3.0,
+      "target_layer_utilization": 2.0,
+      "helpfulness": 3.0,
+      "naturalness": 4.333
+    }
+  },
+  "run_at": "2026-07-22T10:41:26.221313"
 }
