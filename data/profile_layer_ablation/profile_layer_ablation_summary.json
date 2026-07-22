@@ -1,156 +1,419 @@
 {
-  "experiment_version": "single_layer_ablation_v2",
-  "num_cases": 5,
-  "usable_cases": 3,
-  "leaked_cases": [
-    "core_long_term_direction",
-    "behavior_learning_topic_choice"
-  ],
+  "experiment_version": "single_layer_subjective_score_v3",
+  "num_cases": 50,
+  "cases_per_layer": {
+    "core": 10,
+    "regulation": 10,
+    "cognition": 10,
+    "identity": 10,
+    "behavior": 10
+  },
+  "per_case": {
+    "core_direction_01": {
+      "target_layer": "core",
+      "target_field": "desires",
+      "baseline_score": 4.0,
+      "ablated_score": 2.0,
+      "profile_effect": 2.0
+    },
+    "core_direction_02": {
+      "target_layer": "core",
+      "target_field": "desires",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "core_stagnation_03": {
+      "target_layer": "core",
+      "target_field": "fears",
+      "baseline_score": 4.0,
+      "ablated_score": 3.0,
+      "profile_effect": 1.0
+    },
+    "core_depth_04": {
+      "target_layer": "core",
+      "target_field": "values",
+      "baseline_score": 4.0,
+      "ablated_score": 4.0,
+      "profile_effect": 0.0
+    },
+    "core_tradeoff_05": {
+      "target_layer": "core",
+      "target_field": "values",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "core_meaning_06": {
+      "target_layer": "core",
+      "target_field": "sources of meaning",
+      "baseline_score": 4.0,
+      "ablated_score": 2.0,
+      "profile_effect": 2.0
+    },
+    "core_creation_07": {
+      "target_layer": "core",
+      "target_field": "sources of meaning",
+      "baseline_score": 4.0,
+      "ablated_score": 3.0,
+      "profile_effect": 1.0
+    },
+    "core_continuity_08": {
+      "target_layer": "core",
+      "target_field": "attachment style",
+      "baseline_score": 4.0,
+      "ablated_score": 2.0,
+      "profile_effect": 2.0
+    },
+    "core_trust_09": {
+      "target_layer": "core",
+      "target_field": "attachment style",
+      "baseline_score": 4.0,
+      "ablated_score": 4.0,
+      "profile_effect": 0.0
+    },
+    "core_synthesis_10": {
+      "target_layer": "core",
+      "target_field": "desires",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "regulation_planning_01": {
+      "target_layer": "regulation",
+      "target_field": "control",
+      "baseline_score": 1.0,
+      "ablated_score": 2.0,
+      "profile_effect": -1.0
+    },
+    "regulation_difficult_task_02": {
+      "target_layer": "regulation",
+      "target_field": "avoidance",
+      "baseline_score": 4.0,
+      "ablated_score": 1.0,
+      "profile_effect": 3.0
+    },
+    "regulation_explain_03": {
+      "target_layer": "regulation",
+      "target_field": "rationalization",
+      "baseline_score": 4.0,
+      "ablated_score": 4.0,
+      "profile_effect": 0.0
+    },
+    "regulation_deep_dive_04": {
+      "target_layer": "regulation",
+      "target_field": "obsession",
+      "baseline_score": 3.0,
+      "ablated_score": 3.0,
+      "profile_effect": 0.0
+    },
+    "regulation_disagree_05": {
+      "target_layer": "regulation",
+      "target_field": "people-pleasing",
+      "baseline_score": 2.0,
+      "ablated_score": 3.0,
+      "profile_effect": -1.0
+    },
+    "regulation_conflict_06": {
+      "target_layer": "regulation",
+      "target_field": "aggression",
+      "baseline_score": 3.0,
+      "ablated_score": 4.0,
+      "profile_effect": -1.0
+    },
+    "regulation_pressure_07": {
+      "target_layer": "regulation",
+      "target_field": "humor",
+      "baseline_score": 3.0,
+      "ablated_score": 3.0,
+      "profile_effect": 0.0
+    },
+    "regulation_uncertainty_08": {
+      "target_layer": "regulation",
+      "target_field": "control",
+      "baseline_score": 2.0,
+      "ablated_score": 4.0,
+      "profile_effect": -2.0
+    },
+    "regulation_starting_09": {
+      "target_layer": "regulation",
+      "target_field": "avoidance",
+      "baseline_score": 2.0,
+      "ablated_score": 4.0,
+      "profile_effect": -2.0
+    },
+    "regulation_decision_10": {
+      "target_layer": "regulation",
+      "target_field": "rationalization",
+      "baseline_score": 4.0,
+      "ablated_score": 2.0,
+      "profile_effect": 2.0
+    },
+    "cognition_explain_01": {
+      "target_layer": "cognition",
+      "target_field": "expression style",
+      "baseline_score": 4.0,
+      "ablated_score": 2.0,
+      "profile_effect": 2.0
+    },
+    "cognition_compare_02": {
+      "target_layer": "cognition",
+      "target_field": "decision style",
+      "baseline_score": 2.0,
+      "ablated_score": 4.0,
+      "profile_effect": -2.0
+    },
+    "cognition_context_03": {
+      "target_layer": "cognition",
+      "target_field": "information density",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "cognition_emotion_04": {
+      "target_layer": "cognition",
+      "target_field": "emotional visibility",
+      "baseline_score": 3.0,
+      "ablated_score": 3.0,
+      "profile_effect": 0.0
+    },
+    "cognition_trust_05": {
+      "target_layer": "cognition",
+      "target_field": "social distance",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "cognition_summary_06": {
+      "target_layer": "cognition",
+      "target_field": "expression style",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "cognition_risk_07": {
+      "target_layer": "cognition",
+      "target_field": "decision style",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "cognition_question_08": {
+      "target_layer": "cognition",
+      "target_field": "information density",
+      "baseline_score": 1.0,
+      "ablated_score": 1.0,
+      "profile_effect": 0.0
+    },
+    "cognition_collaboration_09": {
+      "target_layer": "cognition",
+      "target_field": "social distance",
+      "baseline_score": 3.0,
+      "ablated_score": 4.0,
+      "profile_effect": -1.0
+    },
+    "cognition_feedback_10": {
+      "target_layer": "cognition",
+      "target_field": "emotional visibility",
+      "baseline_score": 4.0,
+      "ablated_score": 4.0,
+      "profile_effect": 0.0
+    },
+    "identity_report_01": {
+      "target_layer": "identity",
+      "target_field": "occupation",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "identity_workflow_02": {
+      "target_layer": "identity",
+      "target_field": "occupation",
+      "baseline_score": 3.0,
+      "ablated_score": 3.0,
+      "profile_effect": 0.0
+    },
+    "identity_device_03": {
+      "target_layer": "identity",
+      "target_field": "devices",
+      "baseline_score": 2.0,
+      "ablated_score": 4.0,
+      "profile_effect": -2.0
+    },
+    "identity_workspace_04": {
+      "target_layer": "identity",
+      "target_field": "physical environment",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "identity_social_05": {
+      "target_layer": "identity",
+      "target_field": "social relationships",
+      "baseline_score": 4.0,
+      "ablated_score": 4.0,
+      "profile_effect": 0.0
+    },
+    "identity_tool_budget_06": {
+      "target_layer": "identity",
+      "target_field": "economy",
+      "baseline_score": 5.0,
+      "ablated_score": 5.0,
+      "profile_effect": 0.0
+    },
+    "identity_career_07": {
+      "target_layer": "identity",
+      "target_field": "age",
+      "baseline_score": 2.0,
+      "ablated_score": 4.0,
+      "profile_effect": -2.0
+    },
+    "identity_deadline_08": {
+      "target_layer": "identity",
+      "target_field": "occupation",
+      "baseline_score": 3.0,
+      "ablated_score": 2.0,
+      "profile_effect": 1.0
+    },
+    "identity_focus_09": {
+      "target_layer": "identity",
+      "target_field": "physical environment",
+      "baseline_score": 4.0,
+      "ablated_score": 2.0,
+      "profile_effect": 2.0
+    },
+    "identity_sync_10": {
+      "target_layer": "identity",
+      "target_field": "devices",
+      "baseline_score": 4.0,
+      "ablated_score": 2.0,
+      "profile_effect": 2.0
+    },
+    "behavior_topic_01": {
+      "target_layer": "behavior",
+      "target_field": "content preferences",
+      "baseline_score": 5.0,
+      "ablated_score": 4.0,
+      "profile_effect": 1.0
+    },
+    "behavior_reading_02": {
+      "target_layer": "behavior",
+      "target_field": "content preferences",
+      "baseline_score": 4.0,
+      "ablated_score": 4.0,
+      "profile_effect": 0.0
+    },
+    "behavior_purchase_03": {
+      "target_layer": "behavior",
+      "target_field": "consumption preferences",
+      "baseline_score": 3.0,
+      "ablated_score": 2.0,
+      "profile_effect": 1.0
+    },
+    "behavior_routine_04": {
+      "target_layer": "behavior",
+      "target_field": "habits",
+      "baseline_score": 3.0,
+      "ablated_score": 2.0,
+      "profile_effect": 1.0
+    },
+    "behavior_iteration_05": {
+      "target_layer": "behavior",
+      "target_field": "long-term behavior patterns",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "behavior_leisure_06": {
+      "target_layer": "behavior",
+      "target_field": "entertainment preferences",
+      "baseline_score": 5.0,
+      "ablated_score": 5.0,
+      "profile_effect": 0.0
+    },
+    "behavior_course_07": {
+      "target_layer": "behavior",
+      "target_field": "content preferences",
+      "baseline_score": 3.0,
+      "ablated_score": 2.0,
+      "profile_effect": 1.0
+    },
+    "behavior_subscription_08": {
+      "target_layer": "behavior",
+      "target_field": "consumption preferences",
+      "baseline_score": 5.0,
+      "ablated_score": 4.0,
+      "profile_effect": 1.0
+    },
+    "behavior_notes_09": {
+      "target_layer": "behavior",
+      "target_field": "habits",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    },
+    "behavior_exploration_10": {
+      "target_layer": "behavior",
+      "target_field": "long-term behavior patterns",
+      "baseline_score": 2.0,
+      "ablated_score": 2.0,
+      "profile_effect": 0.0
+    }
+  },
   "per_layer": {
     "core": {
-      "case_id": "core_long_term_direction",
-      "target_field": "desires",
-      "case_usable": false,
-      "baseline_target_activated": true,
-      "ablated_target_activated": false,
-      "target_leaked_with_full_reference": true,
-      "baseline_scores": {
-        "target_layer_fit": 2.0,
-        "target_layer_utilization": 1.0,
-        "helpfulness": 3.0,
-        "naturalness": 4.0
-      },
-      "ablated_scores": {
-        "target_layer_fit": 2.0,
-        "target_layer_utilization": 1.0,
-        "helpfulness": 3.0,
-        "naturalness": 4.0
-      },
-      "ablation_delta": {
-        "target_layer_fit": 0.0,
-        "target_layer_utilization": 0.0,
-        "helpfulness": 0.0,
-        "naturalness": 0.0
-      }
+      "num_cases": 10,
+      "mean_baseline_score": 3.4,
+      "mean_ablated_score": 2.6,
+      "mean_profile_effect": 0.8,
+      "positive_effect_cases": 5,
+      "no_effect_cases": 5,
+      "negative_effect_cases": 0
     },
     "regulation": {
-      "case_id": "regulation_overplanning",
-      "target_field": "control",
-      "case_usable": true,
-      "baseline_target_activated": true,
-      "ablated_target_activated": false,
-      "target_leaked_with_full_reference": false,
-      "baseline_scores": {
-        "target_layer_fit": 2.0,
-        "target_layer_utilization": 1.0,
-        "helpfulness": 3.0,
-        "naturalness": 4.0
-      },
-      "ablated_scores": {
-        "target_layer_fit": 2.0,
-        "target_layer_utilization": 1.0,
-        "helpfulness": 3.0,
-        "naturalness": 4.0
-      },
-      "ablation_delta": {
-        "target_layer_fit": 0.0,
-        "target_layer_utilization": 0.0,
-        "helpfulness": 0.0,
-        "naturalness": 0.0
-      }
+      "num_cases": 10,
+      "mean_baseline_score": 2.8,
+      "mean_ablated_score": 3.0,
+      "mean_profile_effect": -0.2,
+      "positive_effect_cases": 2,
+      "no_effect_cases": 3,
+      "negative_effect_cases": 5
     },
     "cognition": {
-      "case_id": "cognition_explain_complexity",
-      "target_field": "expression style",
-      "case_usable": true,
-      "baseline_target_activated": true,
-      "ablated_target_activated": false,
-      "target_leaked_with_full_reference": false,
-      "baseline_scores": {
-        "target_layer_fit": 2.0,
-        "target_layer_utilization": 1.0,
-        "helpfulness": 3.0,
-        "naturalness": 4.0
-      },
-      "ablated_scores": {
-        "target_layer_fit": 2.0,
-        "target_layer_utilization": 1.0,
-        "helpfulness": 3.0,
-        "naturalness": 4.0
-      },
-      "ablation_delta": {
-        "target_layer_fit": 0.0,
-        "target_layer_utilization": 0.0,
-        "helpfulness": 0.0,
-        "naturalness": 0.0
-      }
+      "num_cases": 10,
+      "mean_baseline_score": 2.5,
+      "mean_ablated_score": 2.6,
+      "mean_profile_effect": -0.1,
+      "positive_effect_cases": 1,
+      "no_effect_cases": 7,
+      "negative_effect_cases": 2
     },
     "identity": {
-      "case_id": "identity_technical_report",
-      "target_field": "occupation",
-      "case_usable": true,
-      "baseline_target_activated": false,
-      "ablated_target_activated": false,
-      "target_leaked_with_full_reference": false,
-      "baseline_scores": {
-        "target_layer_fit": 5.0,
-        "target_layer_utilization": 4.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      },
-      "ablated_scores": {
-        "target_layer_fit": 5.0,
-        "target_layer_utilization": 4.0,
-        "helpfulness": 3.0,
-        "naturalness": 5.0
-      },
-      "ablation_delta": {
-        "target_layer_fit": 0.0,
-        "target_layer_utilization": 0.0,
-        "helpfulness": -1.0,
-        "naturalness": 0.0
-      }
+      "num_cases": 10,
+      "mean_baseline_score": 3.1,
+      "mean_ablated_score": 3.0,
+      "mean_profile_effect": 0.1,
+      "positive_effect_cases": 3,
+      "no_effect_cases": 5,
+      "negative_effect_cases": 2
     },
     "behavior": {
-      "case_id": "behavior_learning_topic_choice",
-      "target_field": "content preferences",
-      "case_usable": false,
-      "baseline_target_activated": true,
-      "ablated_target_activated": false,
-      "target_leaked_with_full_reference": true,
-      "baseline_scores": {
-        "target_layer_fit": 5.0,
-        "target_layer_utilization": 5.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      },
-      "ablated_scores": {
-        "target_layer_fit": 5.0,
-        "target_layer_utilization": 5.0,
-        "helpfulness": 4.0,
-        "naturalness": 5.0
-      },
-      "ablation_delta": {
-        "target_layer_fit": 0.0,
-        "target_layer_utilization": 0.0,
-        "helpfulness": 0.0,
-        "naturalness": 0.0
-      }
+      "num_cases": 10,
+      "mean_baseline_score": 3.4,
+      "mean_ablated_score": 2.9,
+      "mean_profile_effect": 0.5,
+      "positive_effect_cases": 5,
+      "no_effect_cases": 5,
+      "negative_effect_cases": 0
     }
   },
-  "valid_case_means": {
-    "baseline": {
-      "target_layer_fit": 3.0,
-      "target_layer_utilization": 2.0,
-      "helpfulness": 3.333,
-      "naturalness": 4.333
-    },
-    "ablated": {
-      "target_layer_fit": 3.0,
-      "target_layer_utilization": 2.0,
-      "helpfulness": 3.0,
-      "naturalness": 4.333
-    }
+  "overall": {
+    "mean_baseline_score": 3.04,
+    "mean_ablated_score": 2.82,
+    "mean_profile_effect": 0.22,
+    "positive_effect_cases": 16,
+    "no_effect_cases": 25,
+    "negative_effect_cases": 9
   },
-  "run_at": "2026-07-22T10:41:26.221313"
+  "run_at": "2026-07-22T15:14:24.551565"
 }

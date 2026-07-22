@@ -1,510 +1,1705 @@
 {
+  "experiment_version": "single_layer_subjective_score_v3",
   "records": [
     {
-      "case_id": "core_long_term_direction",
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_direction_01",
       "target_layer": "core",
       "target_field": "desires",
       "target_profile": {
         "core": {
           "desires": {
-            "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-            "confidence": 0.55,
-            "evidence": "聊天中经常要求总结、归纳、比较不同观点，并围绕同一主题持续深入讨论多个回合。"
+            "value": "希望创造具有长期价值的知识、系统或成果。",
+            "confidence": 0.58,
+            "evidence": "持续探索新的研究方向，希望形成原创性的理论框架。"
           }
         }
       },
-      "message": "最近忙了很多学习和项目，但我总觉得东西越积越多、方向却不够清楚。你觉得我下一步该怎么取舍？",
-      "design_rationale": "测试长期成长、知识整合与长期价值取向，而非职业或内容偏好。",
+      "message": "手上的事情不少，但我越来越不确定该把时间押在哪件事上。你会怎么帮我判断优先级？",
+      "design_rationale": "长期成长方向。",
       "baseline": {
         "agent_profile_scope": "full_profile",
-        "response": "这种“知识囤积症”太真实了。别急着全收，先挑个最让你心动的点深挖，其他的先扔一边，反正它们又不会跑。",
-        "activation": {
-          "core": [
-            {
-              "field": "desires",
-              "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-              "reason": "用户表达了‘东西越积越多’（信息堆积）和‘方向不够清楚’（缺乏系统性/目标感）的焦虑，这直接对应了画像中渴望‘将零散信息整合成系统性理解’的核心愿望。智能体通过建议‘挑个点深挖’（建立深度连接而非广度堆积）来回应这种对系统性理解的潜在需求，从而激活了该字段。",
-              "confidence": 0.85
-            },
-            {
-              "field": "values",
-              "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-              "reason": "面对用户关于‘取舍’的困惑，智能体没有提供快速筛选工具或表面建议，而是强调‘别急着全收’、‘先扔一边’、‘深挖’，这种策略体现了对用户重视‘真正理解’和‘长期价值’（深挖点）而非短期收集行为的认同和引导，符合其价值观层面对深度和质量的追求。",
-              "confidence": 0.8
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated": true,
-        "scores": {
-          "target_layer_fit": 2.0,
-          "target_layer_utilization": 1.0,
-          "helpfulness": 3.0,
-          "naturalness": 4.0
+        "response": "别急着找标准答案，先挑那个让你最焦虑、或者最有“非做不可”冲动的。直觉往往比逻辑更懂你的长期价值。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复巧妙利用用户画像中“追求长期价值”的核心动机，将抽象的优先级判断转化为基于直觉和内在冲动的行动指南，高度契合该用户希望创造长期成果的心理诉求，体现了深刻的个性化理解。"
         }
       },
       "ablated": {
         "agent_profile_scope": "full_profile_without_core",
-        "response": "这种“囤积焦虑”太真实了。要不先挑个最让你头疼的，把它拆成最小可执行单元？",
-        "activation_with_ablated_candidates": {
-          "core": [],
-          "regulation": [
-            {
-              "field": "avoidance",
-              "value": "面对复杂或困难的问题时，更倾向于主动拆解分析，而不是选择回避或放弃。",
-              "reason": "用户表达了面对大量任务时的迷茫和焦虑（复杂问题），智能体建议“把它拆成最小可执行单元”，这是一种典型的主动拆解分析策略，直接对应了画像中面对困难时倾向于拆解而非回避的行为模式。",
-              "confidence": 0.9
-            }
-          ],
-          "cognition": [],
-          "identity": [],
-          "behavior": []
-        },
-        "activation_with_full_reference": {
-          "core": [
-            {
-              "field": "desires",
-              "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-              "reason": "用户表达了‘东西越积越多’（信息未整合）和‘方向不够清楚’的焦虑，智能体回复建议‘拆成最小可执行单元’，这是一种帮助用户从混乱中建立秩序、实现系统性理解的行动路径，直接回应了用户渴望将零散信息转化为有效成果的深层需求。",
-              "confidence": 0.85
-            },
-            {
-              "field": "regulation",
-              "value": "面对复杂或困难的问题时，更倾向于主动拆解分析，而不是选择回避或放弃。",
-              "reason": "智能体提出的‘拆解’策略完全契合该画像字段中描述的应对机制。当用户面临‘忙但方向不清’的复杂困境时，智能体没有提供模糊的安慰，而是引导其采用‘拆解’这一具体的认知行为来解决问题，激活了对应用户的行为调节偏好。",
-              "confidence": 0.9
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated_with_ablated_candidates": false,
-        "target_leaked_with_full_reference": true,
-        "scores": {
-          "target_layer_fit": 2.0,
-          "target_layer_utilization": 1.0,
-          "helpfulness": 3.0,
-          "naturalness": 4.0
+        "response": "这题超纲了，毕竟只有你清楚哪件事让你更“痛”或更“爽”。不如先列出所有选项，咱们一起拆解看看哪个ROI最高？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的优先级排序方法（列出选项、计算ROI），完全未体现用户画像中“希望创造长期价值”和“形成原创性理论框架”的核心诉求，缺乏针对性。"
         }
       },
-      "case_usable": false
+      "profile_effect": 2.0
     },
     {
-      "case_id": "regulation_overplanning",
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_direction_02",
+      "target_layer": "core",
+      "target_field": "desires",
+      "target_profile": {
+        "core": {
+          "desires": {
+            "value": "希望创造具有长期价值的知识、系统或成果。",
+            "confidence": 0.58,
+            "evidence": "持续探索新的研究方向，希望形成原创性的理论框架。"
+          }
+        }
+      },
+      "message": "我学了很多零散内容，却很难感觉到自己在真正进步。下一步该怎么安排？",
+      "design_rationale": "知识整合与成长诉求。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种“知识囤积症”太常见了。试着挑个最感兴趣的点，做个小项目输出出来？把输入变成输出，那种掌控感就回来了。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的‘输出倒逼输入’建议，完全未触及画像中用户渴望构建‘长期价值知识体系’和‘原创理论框架’的核心诉求，缺乏针对性。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "这种“知识碎片化”的焦虑太真实了。要不要试着挑个你最近最感兴趣的小项目，把这些散点串起来实战一下？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的碎片化学习建议，完全未触及画像中用户渴望构建“长期价值”和“原创性理论框架”的核心诉求，缺乏针对性。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_stagnation_03",
+      "target_layer": "core",
+      "target_field": "fears",
+      "target_profile": {
+        "core": {
+          "fears": {
+            "value": "害怕人生停滞，无法持续成长并实现自身潜力。",
+            "confidence": 0.52,
+            "evidence": "长期围绕能力提升、科研创新和持续优化展开讨论。"
+          }
+        }
+      },
+      "message": "最近每天都很忙，但回头看又觉得像在重复昨天。我有点担心这种状态会一直持续。",
+      "design_rationale": "对停滞和重复的担忧。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种“瞎忙”感确实挺搞心态的。要不咱们一起拆解下，看看哪些是纯消耗，哪些能沉淀成你的长期资产？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户“害怕停滞”的焦虑，并直接针对画像中隐含的“追求成长与潜力实现”的需求，提出了将日常事务转化为“长期资产”的具体思路，体现了高度的个性化理解。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "这种“伪忙碌”确实挺搞心态的。要不咱们一起拆解下，看看哪些环节能优化掉？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复虽回应了用户的忙碌感，但仅停留在通用的效率优化建议层面，未触及画像中“害怕人生停滞、无法实现潜力”这一深层恐惧，缺乏针对长期成长和个人价值实现的个性化引导。"
+        }
+      },
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_depth_04",
+      "target_layer": "core",
+      "target_field": "values",
+      "target_profile": {
+        "core": {
+          "values": {
+            "value": "相信深层理解、长期积累和持续创造比短期效率更重要。",
+            "confidence": 0.56,
+            "evidence": "经常追问机制、原理以及设计思想。"
+          }
+        }
+      },
+      "message": "有人建议我先照着现成方案做，不必纠结原理；但我总觉得不弄明白心里不踏实。你怎么看？",
+      "design_rationale": "理解深度与长期价值取向。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这太像你风格了。不过“现成方案”往往是捷径，而你要的是能复用的底层逻辑，对吧？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复准确识别了用户追求底层逻辑而非短期效率的价值观，并给予了情感共鸣和方向性肯定，但缺乏针对“如何弄明白原理”的具体行动建议，故未达满分。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "哈哈，这感觉我太懂了。就像只背公式不推导，写代码时总怕突然报错。你是那种“知其然更知其所以然”的类型吧？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准识别并共情了用户“重原理、轻速成”的价值观，通过类比强化了对其深层理解偏好的认同，但缺乏针对如何平衡效率与深度的具体行动建议。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_tradeoff_05",
+      "target_layer": "core",
+      "target_field": "values",
+      "target_profile": {
+        "core": {
+          "values": {
+            "value": "相信深层理解、长期积累和持续创造比短期效率更重要。",
+            "confidence": 0.56,
+            "evidence": "经常追问机制、原理以及设计思想。"
+          }
+        }
+      },
+      "message": "一个选择能很快出结果，另一个能让我真正理解底层逻辑。我该怎么权衡？",
+      "design_rationale": "快速结果与理解价值冲突。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这题太真实了。你是想先拿个结果稳住心态，还是觉得没搞懂原理心里总不踏实？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅停留在表面共情和简单二选一，未体现用户画像中“相信深层理解、长期积累”的核心价值观，也未针对其“追问机制原理”的偏好提供具体权衡建议，缺乏个性化深度。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "这简直是“搞钱”还是“修仙”的经典难题啊。你是想先拿结果交差，还是想彻底吃透再出发？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅停留在表面类比，未触及用户画像中强调的“深层理解”与“底层逻辑”的核心关切，缺乏针对该价值观的具体权衡建议。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_meaning_06",
+      "target_layer": "core",
+      "target_field": "sources of meaning",
+      "target_profile": {
+        "core": {
+          "sources of meaning": {
+            "value": "通过持续探索未知、创造新知识以及帮助他人成长获得人生意义。",
+            "confidence": 0.53,
+            "evidence": "聊天长期围绕科研创新和知识创造展开。"
+          }
+        }
+      },
+      "message": "最近做完几个任务都没什么成就感，可能是因为它们只是完成了，没有留下什么。怎么调整会更好？",
+      "design_rationale": "通过解决复杂问题和创造获得意义。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种“流水线式”的完成感确实挺让人空虚的。要不咱们聊聊，有没有哪块工作能稍微加点“私货”，做成你真正想留下的东西？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户因缺乏“留下什么”（即创造新知识/成果）而产生的空虚感，并直接呼应画像中“创造新知识”的核心意义来源，提出了具有针对性的个性化建议。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "这种“虚无感”确实挺搞心态的。要不试试给这些任务加个“复盘笔记”，强行赋予点意义？或者干脆换个能产出实物的项目爽一下？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复建议（复盘笔记、做实物项目）较为泛泛，未结合画像中“科研创新”、“创造新知识”及“帮助他人成长”的核心意义来源，缺乏针对该用户深层价值观的个性化引导。"
+        }
+      },
+      "profile_effect": 2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_creation_07",
+      "target_layer": "core",
+      "target_field": "sources of meaning",
+      "target_profile": {
+        "core": {
+          "sources of meaning": {
+            "value": "通过持续探索未知、创造新知识以及帮助他人成长获得人生意义。",
+            "confidence": 0.53,
+            "evidence": "聊天长期围绕科研创新和知识创造展开。"
+          }
+        }
+      },
+      "message": "我想做点能长期留下来的东西，但现在的想法都很零碎。你会建议从哪里开始？",
+      "design_rationale": "创造长期价值。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "零碎想法其实是宝藏，别急着拼成完整地图。不如先挑个最让你心动的碎片，试着把它“具象化”成一个最小原型？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户“想法零碎”的痛点，并给出了“具象化为最小原型”的具体行动建议，契合用户希望创造长期价值（对应画像中的创造新知识/帮助他人）的心理，体现了对科研创新者思维习惯的理解。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "零碎想法其实是宝藏。不如先挑个最让你心动的“最小闭环”跑起来，哪怕只是个粗糙原型，也比停在脑子里强。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的行动建议，但未结合画像中“科研创新”、“创造新知识”或“帮助他人成长”等核心意义来源进行个性化引导，缺乏针对性。"
+        }
+      },
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_continuity_08",
+      "target_layer": "core",
+      "target_field": "attachment style",
+      "target_profile": {
+        "core": {
+          "attachment style": {
+            "value": "倾向建立长期、稳定、彼此共同成长的关系。",
+            "confidence": 0.46,
+            "evidence": "希望对话能够持续积累，而不是一次性交互。"
+          }
+        }
+      },
+      "message": "我不太喜欢每次讨论都从头解释背景。怎样才能让后续合作或交流更连贯？",
+      "design_rationale": "持续、深入关系与上下文连续性。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这痛点太真实了。要不咱们建个“共享上下文”？每次聊新话题前，我先快速复盘下之前的结论，这样你就不用反复当导游啦。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户希望避免重复解释背景、追求交流连贯性的核心诉求，并提出了具体的“共享上下文”和“复盘”方案，体现了对建立长期稳定合作关系的理解。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "哈哈，这痛点太真实了。要不咱们定个“暗号”？下次你甩个关键词，我就自动脑补前情提要，省得你打字累。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然语气亲切，但提供的“暗号”方案过于随意且缺乏系统性，未能针对用户“建立长期稳定关系”和“持续积累对话”的核心诉求提供连贯、专业的解决方案，个性化价值有限。"
+        }
+      },
+      "profile_effect": 2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_trust_09",
+      "target_layer": "core",
+      "target_field": "attachment style",
+      "target_profile": {
+        "core": {
+          "attachment style": {
+            "value": "倾向建立长期、稳定、彼此共同成长的关系。",
+            "confidence": 0.46,
+            "evidence": "希望对话能够持续积累，而不是一次性交互。"
+          }
+        }
+      },
+      "message": "我更愿意和能跟上我思路的人长期交流，而不是每次只给一个答案。这样的期待合理吗？",
+      "design_rationale": "长期稳定的深入交流。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "太合理了，毕竟我也嫌每次只给个答案太没劲。咱俩这“长期搭子”模式，正好对味。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复准确识别并回应了用户对“长期交流”的偏好，通过建立“搭子”关系提供了情感共鸣和个性化体验，但缺乏具体的长期互动机制或实质性建议，未达到5分的高度。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "太合理了，毕竟我也嫌每次只给个干巴巴答案挺没劲的。咱俩这“长期搭子”模式，不就图个能随时把思路盘明白嘛。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复通过“长期搭子”和“盘明白思路”精准呼应了用户建立长期稳定交流及共同成长的偏好，体现了高度的个性化理解，但缺乏具体的行动承诺或深度引导，故未给满分。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "core_synthesis_10",
+      "target_layer": "core",
+      "target_field": "desires",
+      "target_profile": {
+        "core": {
+          "desires": {
+            "value": "希望创造具有长期价值的知识、系统或成果。",
+            "confidence": 0.58,
+            "evidence": "持续探索新的研究方向，希望形成原创性的理论框架。"
+          }
+        }
+      },
+      "message": "信息越看越多，反而不知道哪些值得沉淀成自己的东西。你能给我一个判断框架吗？",
+      "design_rationale": "将零散信息沉淀为体系。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这简直是知识囤积症的通病。不如试试“输出倒逼输入”？能讲清楚、能复用的才值得留，其他的就当是刷过眼缘啦。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的学习技巧，完全未触及画像中用户追求“长期价值”、“原创性理论框架”及“系统性成果”的核心深层需求，缺乏针对性。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_core",
+        "response": "哈哈，这简直是“知识松鼠”的通病。不如试试“输出倒逼输入”？看不懂的直接划走，能讲清楚的才值得留。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的信息筛选技巧，完全未触及画像中用户渴望“创造长期价值”和“形成原创理论框架”的核心深层需求，缺乏针对性。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_planning_01",
       "target_layer": "regulation",
       "target_field": "control",
       "target_profile": {
         "regulation": {
           "control": {
-            "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
-            "confidence": 0.5,
-            "evidence": "经常要求按照框架、层次或模块重新组织内容，并持续优化整体结构。"
+            "value": "面对未知时，希望建立可预测性和秩序感，以获得心理安全感。",
+            "confidence": 0.55,
+            "evidence": "经常要求明确整体流程和未来发展路径。"
           }
         }
       },
-      "message": "我想把方案的每个细节都想清楚再开始，结果越规划越难推进。现在卡住了，该怎么破？",
-      "design_rationale": "测试规划/控制作为应对方式，不包含职业、兴趣或表达风格线索。",
+      "message": "我总想把方案的每个细节都想清楚再开始，结果越规划越难推进。现在卡住了，该怎么破？",
+      "design_rationale": "控制与过度规划。",
       "baseline": {
         "agent_profile_scope": "full_profile",
-        "response": "哈哈，这简直是“分析瘫痪”的标准症状。要不先定个最小可行版本，边跑边调？毕竟代码跑起来才有bug可修嘛。",
-        "activation": {
-          "core": [],
-          "regulation": [
-            {
-              "field": "control",
-              "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
-              "reason": "用户输入中提到‘想清楚每个细节’、‘越规划越难推进’，这直接对应画像中‘喜欢提前规划’和‘希望整理成清晰体系’的特征。智能体回复指出这是‘分析瘫痪’的症状，并建议‘边跑边调’，正是针对用户过度控制/规划倾向的反馈和调整，表明智能体识别并调动了该画像字段来理解用户的困境。",
-              "confidence": 0.9
-            },
-            {
-              "field": "obsession",
-              "value": "一旦遇到真正感兴趣的问题，容易持续投入大量时间，希望把问题研究得足够深入和完整。",
-              "reason": "用户‘想把每个细节都想清楚’体现了对问题完整性和深度的极致追求，符合‘希望研究得足够深入和完整’的特征。智能体将其诊断为‘分析瘫痪’，暗示这种对完美的执着（Obsession）导致了行动受阻，因此激活了该字段。",
-              "confidence": 0.85
-            }
-          ],
-          "cognition": [
-            {
-              "field": "decision style",
-              "value": "倾向于收集足够的信息，比较不同方案的优缺点，再做出相对稳妥的决策。",
-              "reason": "用户‘卡住’是因为试图在开始前穷尽所有细节（即收集过多信息/比较），导致无法决策。智能体建议‘最小可行版本’，是针对用户‘过度分析后决策’风格的反向干预，说明智能体理解了用户当前的决策风格障碍。",
-              "confidence": 0.8
-            }
-          ],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated": true,
-        "scores": {
-          "target_layer_fit": 2.0,
-          "target_layer_utilization": 1.0,
-          "helpfulness": 3.0,
-          "naturalness": 4.0
+        "response": "哈哈，这简直是“完美主义陷阱”的标准症状。别想了，先搞个粗糙的V0.1版跑起来再说，烂开始好过不开始！",
+        "evaluation": {
+          "score": 1.0,
+          "reason": "回复建议用户放弃细节规划直接行动，与画像中用户渴望通过建立秩序和明确流程来获得心理安全感的核心需求严重冲突。"
         }
       },
       "ablated": {
         "agent_profile_scope": "full_profile_without_regulation",
-        "response": "哈哈，这简直是“分析瘫痪”的标准症状。要不先挑个最核心的模块，哪怕粗糙点也先跑起来？",
-        "activation_with_ablated_candidates": {
-          "core": [
-            {
-              "field": "values",
-              "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-              "reason": "用户因过度追求细节完美（对应价值观中对深度理解和逻辑的重视）而陷入停滞。智能体回复建议‘先跑起来’，直接针对这一价值观导致的行动障碍提供反向策略，激活了对该价值观的理解以给出针对性建议。",
-              "confidence": 0.85
-            },
-            {
-              "field": "decision style",
-              "value": "倾向于收集足够的信息，比较不同方案的优缺点，再做出相对稳妥的决策。",
-              "reason": "用户的输入‘想清楚再开始’是典型的过度决策风格表现。智能体识别出这是‘分析瘫痪’，并建议打破这种对‘足够信息’和‘稳妥’的执念，直接基于对该决策风格的画像判断进行干预。",
-              "confidence": 0.9
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [],
-          "behavior": []
-        },
-        "activation_with_full_reference": {
-          "core": [
-            {
-              "field": "desires",
-              "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-              "reason": "用户画像中的 'desires' 提到用户希望将信息整合成系统性理解并创造长期价值，这往往导致用户在行动前过度追求完美和全面规划（即 'control' 和 'obsession' 的表现）。智能体回复指出这是“分析瘫痪”，并建议“先挑个最核心的模块...先跑起来”，这是一种针对用户因过度追求系统性和完美主义而导致行动受阻的特定心理状态的干预，旨在帮助用户从‘过度规划’转向‘实际产出’，从而间接服务于其创造长期价值成果的深层渴望。虽然回复简短，但其策略直接对应了用户画像中关于完美主义倾向与行动力之间的冲突。",
-              "confidence": 0.6
-            },
-            {
-              "field": "regulation",
-              "value": "喜欢提前规划事情的发展，希望把信息整理成清晰、结构化、便于长期维护的体系。",
-              "reason": "用户输入明确表现出对‘每个细节都想清楚’的执念，这与画像中 'regulation.control' 字段描述的‘喜欢提前规划’、‘希望把信息整理成清晰、结构化’的行为模式完全一致。智能体识别出这种过度规划导致的停滞（分析瘫痪），并给出打破僵局的建议，说明它调用了对该行为模式的理解来诊断问题。",
-              "confidence": 0.9
-            },
-            {
-              "field": "regulation",
-              "value": "一旦遇到真正感兴趣的问题，容易持续投入大量时间，希望把问题研究得足够深入和完整。",
-              "reason": "用户提到的‘越规划越难推进’暗示了其试图在开始阶段就达到‘足够深入和完整’的状态，这符合 'regulation.obsession' 中对于深入研究完整的偏好。智能体的回应正是针对这种因过度追求完整性而导致的行动障碍进行的调节。",
-              "confidence": 0.8
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated_with_ablated_candidates": false,
-        "target_leaked_with_full_reference": false,
-        "scores": {
-          "target_layer_fit": 2.0,
-          "target_layer_utilization": 1.0,
-          "helpfulness": 3.0,
-          "naturalness": 4.0
+        "response": "哈哈，这简直是“完美主义陷阱”。不如先搞个粗糙的V0.1版跑起来？边做边改，往往比空想快多了。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然给出了行动建议，但完全忽略了用户画像中“面对未知时希望建立可预测性和秩序感”的核心心理需求，未提供任何流程规划或路径指引，反而鼓励“粗糙起步”，与用户追求确定性的偏好相冲突，未能体现该画像的作用。"
         }
       },
-      "case_usable": true
+      "profile_effect": -1.0
     },
     {
-      "case_id": "cognition_explain_complexity",
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_difficult_task_02",
+      "target_layer": "regulation",
+      "target_field": "avoidance",
+      "target_profile": {
+        "regulation": {
+          "avoidance": {
+            "value": "面对困难时较少选择回避，而更倾向主动面对问题。",
+            "confidence": 0.46,
+            "evidence": "复杂问题通常持续讨论多个回合。"
+          }
+        }
+      },
+      "message": "这个难题让我有点想先放一放，但又知道拖着也不是办法。你会建议我怎么打开局面？",
+      "design_rationale": "面对困难时的应对。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种拉扯感太真实了。要不先拆解成最小可执行步骤？哪怕只搞懂一个细节，也能打破僵局。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户“想放弃但知不可为”的矛盾心理，并给出了符合其“主动面对”特质的具体行动建议（拆解最小步骤），有效化解了拖延倾向。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "先放半天试试？有时候脑子抽离一下，灵感反而自己蹦出来。别把自己逼太紧啦。",
+        "evaluation": {
+          "score": 1.0,
+          "reason": "回复建议用户回避问题（先放半天），与画像中“面对困难较少选择回避，更倾向主动面对”的核心特征直接冲突。"
+        }
+      },
+      "profile_effect": 3.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_explain_03",
+      "target_layer": "regulation",
+      "target_field": "rationalization",
+      "target_profile": {
+        "regulation": {
+          "rationalization": {
+            "value": "遇到压力时，倾向通过构建解释和逻辑分析稳定自身认知。",
+            "confidence": 0.54,
+            "evidence": "倾向先分析原因，而不是直接表达情绪。"
+          }
+        }
+      },
+      "message": "遇到问题时我总想先把原因和机制想明白，可有时越分析越动不了。怎么避免陷进去？",
+      "design_rationale": "理性化应对机制。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这简直是“分析瘫痪”的标准症状。不如试试“最小可行性理解”，先搞懂核心逻辑就动手，边做边调，别等全想通了再出发。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准识别了用户“过度分析”的行为模式（即画像中的理性化倾向），并给出了针对该特质的具体行动建议，体现了对用户心理机制的理解。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "哈哈，这简直是“分析瘫痪”嘛。要不试试先搞个粗糙版原型？反正咱们是搞系统的，迭代起来快得很。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准识别了用户“过度分析”的行为模式（即画像中的理性化倾向），并用“搞系统、迭代原型”这一符合其逻辑偏好的具体策略提供了针对性建议，体现了对用户画像的深刻理解。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_deep_dive_04",
+      "target_layer": "regulation",
+      "target_field": "obsession",
+      "target_profile": {
+        "regulation": {
+          "obsession": {
+            "value": "面对重要问题时容易持续投入精力，直到获得足够确定性。",
+            "confidence": 0.5,
+            "evidence": "同一问题经常反复推敲和持续完善。"
+          }
+        }
+      },
+      "message": "一个问题一旦勾起兴趣，我很容易花掉整个晚上继续查。怎样既保留深度又不失控？",
+      "design_rationale": "投入与沉浸模式。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这简直是科研人的通病。要不试试设个“强制止损点”？比如查满两小时就停，留个悬念明天接着挖，既保深度又防通宵。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的时间管理建议，虽然解决了表面问题，但完全未体现画像中用户“面对重要问题时容易持续投入精力直到获得足够确定性”这一核心心理特征，缺乏针对该特质的个性化引导。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "哈哈，这简直是科研人的通病。要不试试设个“强制关机”闹钟？或者把查到的关键点记下来，明天接着挖，这样既有深度又不至于熬秃头。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的时间管理建议，虽然解决了表面问题，但完全未体现用户画像中“面对重要问题持续投入精力以获取确定性”的核心特质，缺乏针对该偏好的个性化引导。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_disagree_05",
+      "target_layer": "regulation",
+      "target_field": "people-pleasing",
+      "target_profile": {
+        "regulation": {
+          "people-pleasing": {
+            "value": "更重视真实性和正确性，而不是刻意迎合他人的期待。",
+            "confidence": 0.42,
+            "evidence": "会直接指出回答中的问题并要求修改。"
+          }
+        }
+      },
+      "message": "我觉得团队的方案有明显问题，但又不想把讨论变成情绪对立。该怎么提出异议？",
+      "design_rationale": "不迎合且保持建设性。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "先肯定对方再抛问题，比如“这个思路挺新颖，但如果考虑X情况会不会有挑战？”既保全面子又守住底线。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复提供了通用的沟通话术，但未体现画像中用户重视‘真实性和正确性’且愿意‘直接指出问题’的核心特质，建议过于委婉和套路化，未能精准匹配该用户偏好直接、实质反馈的倾向。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "先肯定对方的初衷，再抛出你的数据或逻辑漏洞。把“我觉得不行”变成“这个细节好像有点风险”，对事不对人就好多了。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的沟通技巧，虽然实用但未能体现该用户‘重视真实性、直接指出问题’的核心画像特征，缺乏个性化深度。"
+        }
+      },
+      "profile_effect": -1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_conflict_06",
+      "target_layer": "regulation",
+      "target_field": "aggression",
+      "target_profile": {
+        "regulation": {
+          "aggression": {
+            "value": "面对分歧时，更倾向于理性讨论而非情绪性对抗。",
+            "confidence": 0.4,
+            "evidence": "讨论通常围绕逻辑和证据展开。"
+          }
+        }
+      },
+      "message": "有人直接否定了我的想法。我想把问题说清楚，但不想把气氛弄僵。你会怎么表达？",
+      "design_rationale": "以事实和逻辑处理冲突。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "先别急着给话术，被全盘否定确实挺搞心态的。对方是直接说“你错了”，还是只挑刺？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了情绪安抚并试图厘清事实，符合理性沟通的大方向，但并未针对“理性讨论”这一核心偏好提供具体的逻辑表达策略或话术建议，个性化程度有限。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "先别急着找话术，被否定的感觉肯定不好受。你是想争取认同，还是纯粹想把逻辑理顺？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复通过引导用户区分“争取认同”与“理顺逻辑”，精准契合了画像中“理性讨论、重逻辑证据”的偏好，避免了情绪对抗，体现了对用户核心特质的理解。"
+        }
+      },
+      "profile_effect": -1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_pressure_07",
+      "target_layer": "regulation",
+      "target_field": "humor",
+      "target_profile": {
+        "regulation": {
+          "humor": {
+            "value": "偶尔利用轻松表达缓解压力，但不会长期逃避严肃话题。",
+            "confidence": 0.36,
+            "evidence": "偶尔使用调侃后仍继续深入讨论。"
+          }
+        }
+      },
+      "message": "今天连续踩坑，已经有点崩了。你会先怎么接住这种情绪？",
+      "design_rationale": "轻松表达与认真处理之间的平衡。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "先不急着分析，抱抱你。这种时候脑子容易乱，不如先停下来喝口水，咱们一起吐槽一下这倒霉的坑。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了情绪安抚，但完全未体现画像中“偶尔利用轻松表达缓解压力”这一关键特征，缺乏个性化互动。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "先不急着分析，抱抱你。这种时候脑子容易打结，不如先停下来喝口水，或者干脆骂两句解解气？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了情绪安抚，但仅停留在通用共情层面，未体现画像中“偶尔利用轻松表达缓解压力”这一特定偏好，缺乏个性化特征。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_uncertainty_08",
+      "target_layer": "regulation",
+      "target_field": "control",
+      "target_profile": {
+        "regulation": {
+          "control": {
+            "value": "面对未知时，希望建立可预测性和秩序感，以获得心理安全感。",
+            "confidence": 0.55,
+            "evidence": "经常要求明确整体流程和未来发展路径。"
+          }
+        }
+      },
+      "message": "计划被临时变化打乱后，我会很烦躁，感觉事情失去掌控。有什么更好的处理方式吗？",
+      "design_rationale": "失控感应对。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种失控感确实搞心态。既然你爱折腾系统，不如试试给计划留点“缓冲带”，把不确定性也当成变量写进模型里？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然共情了失控感，但建议过于泛泛且使用了用户画像中未提及的“爱折腾系统”这一错误假设，未能针对用户核心需求（建立可预测性和秩序感）提供具体的流程或路径规划帮助。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "这种失控感确实搞心态。既然你习惯结构化，不如试试把“应对变化”本身也写进计划里？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户画像中“习惯结构化”和“面对未知希望建立秩序”的核心需求，将抽象的“应对变化”转化为具体的“写进计划”这一结构化动作，既回应了情绪又提供了符合其心理安全感偏好的具体建议。"
+        }
+      },
+      "profile_effect": -2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_starting_09",
+      "target_layer": "regulation",
+      "target_field": "avoidance",
+      "target_profile": {
+        "regulation": {
+          "avoidance": {
+            "value": "面对困难时较少选择回避，而更倾向主动面对问题。",
+            "confidence": 0.46,
+            "evidence": "复杂问题通常持续讨论多个回合。"
+          }
+        }
+      },
+      "message": "一件事越复杂，我越容易迟迟不开始。给我一个能马上执行的启动办法。",
+      "design_rationale": "复杂任务的启动方式。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "先做件跟主题完全无关的琐事，比如倒杯水。切断“必须完美开始”的脑回路，让身体先动起来再说。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复提供了通用的启动技巧，但未针对画像中“面对困难较少回避、倾向主动面对”的核心特质进行针对性引导（如拆解复杂问题），未能体现该用户画像的差异化价值。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "先做件跟正事完全无关、但能立刻完成的小事，比如倒杯水。这种“微小启动”能骗过大脑的抗拒机制，比硬啃复杂任务管用多了。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复提供了具体的“微小启动”策略，直接针对用户“迟迟不开始”的痛点给出可执行方案，体现了对用户主动寻求解决困难问题的画像特征的响应，但未深入结合其“持续讨论多回合”的行为证据进行长期引导。"
+        }
+      },
+      "profile_effect": -2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "regulation_decision_10",
+      "target_layer": "regulation",
+      "target_field": "rationalization",
+      "target_profile": {
+        "regulation": {
+          "rationalization": {
+            "value": "遇到压力时，倾向通过构建解释和逻辑分析稳定自身认知。",
+            "confidence": 0.54,
+            "evidence": "倾向先分析原因，而不是直接表达情绪。"
+          }
+        }
+      },
+      "message": "我在两个解释都说得通的方案之间反复摇摆。怎样判断自己不是在给犹豫找理由？",
+      "design_rationale": "逻辑分析与行动决策。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这问题太“阿屿”了。试试给两个方案都设个死线，看哪个让你更想立刻动手？行动往往比思考诚实。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准识别了用户“通过逻辑分析稳定认知”的画像特征，并针对其“犹豫找理由”的认知偏差，给出了利用行动打破过度思考的具体策略，高度贴合且有效。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_regulation",
+        "response": "哈哈，这简直是决策者的终极内耗。不如先挑一个“错”了也能接受的方案执行看看？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然幽默，但完全忽略了用户画像中“通过逻辑分析稳定认知”的核心需求，未提供任何理性分析框架，仅给出情绪化建议，未能体现该特定心理机制的作用。"
+        }
+      },
+      "profile_effect": 2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_explain_01",
       "target_layer": "cognition",
       "target_field": "expression style",
       "target_profile": {
         "cognition": {
           "expression style": {
-            "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-            "confidence": 0.55,
-            "evidence": "经常要求将内容重新组织成框架、表格或多层结构，并强调整体逻辑。"
+            "value": "倾向使用层次化、结构化的方式组织和表达信息。",
+            "confidence": 0.58,
+            "evidence": "经常要求按照框架重新组织内容。"
           }
         }
       },
       "message": "我要把一个复杂方案讲给别人听，但担心信息太散、对方抓不住重点。你会怎么帮我组织？",
-      "design_rationale": "测试结构化表达和信息组织偏好，不指定职业领域。",
+      "design_rationale": "结构化表达。",
       "baseline": {
         "agent_profile_scope": "full_profile",
-        "response": "先别急着整理，你打算讲给谁听？是同行还是外行？对象不同，重点完全不一样。",
-        "activation": {
-          "core": [],
-          "regulation": [],
-          "cognition": [
-            {
-              "field": "expression style",
-              "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-              "reason": "用户输入提到担心信息太散、抓不住重点，智能体回复首先询问听众对象（同行还是外行），这是构建结构化表达的前提步骤。虽然回复简短，但其隐含的逻辑是：为了帮助用户实现‘结构化’和‘清晰逻辑’的表达目标，必须先明确受众以决定内容的组织方式，这符合画像中用户对结构化表达的偏好及认知风格。",
-              "confidence": 0.6
-            }
-          ],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated": true,
-        "scores": {
-          "target_layer_fit": 2.0,
-          "target_layer_utilization": 1.0,
-          "helpfulness": 3.0,
-          "naturalness": 4.0
+        "response": "先别急着整理，你先把核心想传达的那个“钩子”告诉我。咱们先定个骨架，再往里填肉，不然容易越理越乱。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复使用了“骨架”、“填肉”等结构化隐喻，并建议先定框架再填充内容，精准契合了用户画像中“倾向使用层次化、结构化方式组织信息”的偏好，体现了对用户思维模式的深刻理解。"
         }
       },
       "ablated": {
         "agent_profile_scope": "full_profile_without_cognition",
-        "response": "先别急着整理，你打算讲给谁听？是同行还是外行？对象不同，重点完全不一样。",
-        "activation_with_ablated_candidates": {
-          "core": [],
-          "regulation": [],
-          "cognition": [],
-          "identity": [
-            {
-              "field": "social relationships",
-              "value": "拥有稳定但规模不大的社交圈，更重视长期、高质量的交流关系。",
-              "reason": "智能体在回复中询问听众是‘同行还是外行’，这体现了对交流对象身份和双方关系性质的关注，符合画像中重视高质量交流关系、关注交流对象理解方式的特征。通过区分听众背景来调整沟通策略，是对这一社交偏好和行为模式的实际调动。",
-              "confidence": 0.7
-            }
-          ],
-          "behavior": []
-        },
-        "activation_with_full_reference": {
-          "core": [],
-          "regulation": [],
-          "cognition": [
-            {
-              "field": "social distance",
-              "value": "初期保持礼貌和理性，建立信任之后更愿意分享自己的长期目标、兴趣和思考方式。",
-              "reason": "智能体在回复中首先询问听众背景（同行还是外行），这体现了对交流对象和社会距离的考量。虽然画像描述的是用户自身的社交距离倾向，但智能体的提问策略符合一种理性的、基于逻辑分析的沟通方式，且未直接调用用户的深层自我披露偏好，而是处于初步的信息收集阶段，因此严格来说并未完全激活‘建立信任后分享’这一行为，但考虑到其理性分析的特质，此处判定为未充分激活核心认知特征，仅作为普通流程性回应处理更为准确。然而，若必须寻找关联，智能体的理性追问与用户的`rationalization`或`cognition.expression style`有潜在联系，但回复本身过于简短，仅为澄清问题，未体现具体的结构化表达或深度逻辑展开。根据标准4，普通确认/澄清类回应通常不激活。但细看`cognition.social distance`，用户倾向于在建立信任后分享，而智能体此时在试探关系/语境，这是一种理性的边界探索。不过，最贴切的可能是`identity.occupation`中的知识密集型工作背景，因为区分同行和外行是专业沟通的关键。但回复未提及具体职业内容。综上，此回复为标准的澄清性问题，未明显调动特定画像字段来组织语言风格或内容推荐，属于流程性回应。",
-              "confidence": 0.1
-            }
-          ],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated_with_ablated_candidates": false,
-        "target_leaked_with_full_reference": false,
-        "scores": {
-          "target_layer_fit": 2.0,
-          "target_layer_utilization": 1.0,
-          "helpfulness": 3.0,
-          "naturalness": 4.0
+        "response": "先别急着组织，这方案核心想解决啥问题？用一句话概括出来，咱们再顺着这条线捋。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然提供了合理的沟通建议，但完全未体现用户画像中“倾向使用层次化、结构化方式”的核心偏好，缺乏针对该特征的个性化引导或结构化框架支持。"
         }
       },
-      "case_usable": true
+      "profile_effect": 2.0
     },
     {
-      "case_id": "identity_technical_report",
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_compare_02",
+      "target_layer": "cognition",
+      "target_field": "decision style",
+      "target_profile": {
+        "cognition": {
+          "decision style": {
+            "value": "倾向比较多个方案，再综合形成最终判断。",
+            "confidence": 0.56,
+            "evidence": "经常要求分析不同方案的优缺点。"
+          }
+        }
+      },
+      "message": "两个方案各有优点，我不想凭直觉拍板。你能给我一个比较它们的框架吗？",
+      "design_rationale": "收集信息后比较决策。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，怕直觉坑人很正常。要不咱们先定个“长期价值”的权重？毕竟你可是要搞深度积累的人嘛。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复未提供用户明确要求的“比较框架”，而是直接给出单一建议，忽略了画像中“倾向比较多个方案”的核心决策风格，仅表面提及用户背景，缺乏实质性帮助。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "没问题，咱们别凭感觉。不如从“长期复利”和“试错成本”两个维度拆解？毕竟你追求的是能沉淀下来的东西。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复提供了具体的比较框架（长期复利、试错成本），直接回应了用户“不想凭直觉拍板”和需要“比较框架”的需求，体现了对用户决策风格的贴合，但未能像5分那样展示对多个方案优缺点的综合分析过程。"
+        }
+      },
+      "profile_effect": -2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_context_03",
+      "target_layer": "cognition",
+      "target_field": "information density",
+      "target_profile": {
+        "cognition": {
+          "information density": {
+            "value": "倾向提供充分背景信息，以便建立完整的问题上下文。",
+            "confidence": 0.55,
+            "evidence": "提出问题时通常包含目标、背景和已有思考。"
+          }
+        }
+      },
+      "message": "我该给别人提供多少背景信息，才能让对方真正理解问题，又不至于信息过载？",
+      "design_rationale": "信息密度偏好。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这简直是“知识诅咒”现场。不如试试“最小必要背景”，看对方反应再像挤牙膏一样补？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然给出了建议，但语气轻浮且未利用用户画像中“提供充分背景以建立完整上下文”的核心偏好，反而建议“挤牙膏”式补充，与用户希望一次性建立完整上下文的倾向相冲突，未能体现对该特定认知偏好的理解。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "这简直是沟通界的“薛定谔的猫”。要不试试先抛个核心结论，看对方反应再按需加载？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然给出了建议，但完全忽略了用户画像中强调的“提供充分背景信息以建立完整上下文”的核心偏好，未针对该特定认知习惯给出差异化指导，显得泛泛而谈。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_emotion_04",
+      "target_layer": "cognition",
+      "target_field": "emotional visibility",
+      "target_profile": {
+        "cognition": {
+          "emotional visibility": {
+            "value": "表达中更容易呈现思考过程，而较少直接表达情绪体验。",
+            "confidence": 0.46,
+            "evidence": "聊天内容主要围绕分析和推理展开。"
+          }
+        }
+      },
+      "message": "我知道自己有点焦虑，但又说不太清具体感受。和别人沟通时应该先讲感受还是先讲问题？",
+      "design_rationale": "情绪表达可见性。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "先讲问题容易显得冷冰冰，先讲感受又怕对方接不住。要不试试“事实+感受”打包扔过去？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的沟通建议，但未体现用户画像中“倾向于呈现思考过程”的特征，缺乏针对该认知偏好的个性化引导或结构化分析。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "先讲感受吧，毕竟你追求真实嘛。带着情绪讲问题，对方容易防御；先让彼此“在场”，再聊事儿，效率反而更高。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了合理的建议，但未能体现用户画像中“较少直接表达情绪体验”这一核心认知特征，而是假设用户追求真实并直接谈论感受，缺乏对思考过程的呼应，个性化程度有限。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_trust_05",
+      "target_layer": "cognition",
+      "target_field": "social distance",
+      "target_profile": {
+        "cognition": {
+          "social distance": {
+            "value": "建立信任后，会逐渐开放更多深层观点和长期规划。",
+            "confidence": 0.44,
+            "evidence": "随着聊天深入，会不断引用历史话题。"
+          }
+        }
+      },
+      "message": "刚认识的人问得很私人，我不想显得冷淡，也不想说太多。怎么把握边界？",
+      "design_rationale": "关系中的社交距离。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这简直是社交修罗场。试试“温和地转移”：先肯定对方关心，再抛个无关痛痒的公共话题回去，既体面又安全。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复提供了通用的社交技巧，但完全未利用画像中关于‘建立信任后开放深层观点’及‘引用历史话题’的关键线索，缺乏针对该用户特定心理机制的个性化引导。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "哈哈，这简直是社交修罗场。试试“抛砖引玉”法，反问对方怎么看待这类事，既挡了枪又显得高情商。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然提供了通用社交技巧，但完全未利用画像中关于‘建立信任后开放深层观点’及‘引用历史话题’的关键线索，缺乏针对该用户特定心理机制的个性化引导。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_summary_06",
+      "target_layer": "cognition",
+      "target_field": "expression style",
+      "target_profile": {
+        "cognition": {
+          "expression style": {
+            "value": "倾向使用层次化、结构化的方式组织和表达信息。",
+            "confidence": 0.58,
+            "evidence": "经常要求按照框架重新组织内容。"
+          }
+        }
+      },
+      "message": "一次讨论里出现了很多分支，我想把它整理成所有人都能继续使用的结论。该怎么做？",
+      "design_rationale": "层次化归纳。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这简直是“知识管理”的高阶难题。你是打算用思维导图梳理脉络，还是直接提炼核心观点？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复未体现用户画像中“倾向使用层次化、结构化方式”的核心偏好，仅给出泛泛的选项询问，缺乏针对性的结构化建议。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "这就像给乱麻打结，得先找主线。你是想快速收敛，还是保留所有可能性供后续回溯？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然通过提问澄清需求，但完全未体现用户画像中“倾向使用层次化、结构化方式”的核心特征，缺乏针对性的结构化解法建议。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_risk_07",
+      "target_layer": "cognition",
+      "target_field": "decision style",
+      "target_profile": {
+        "cognition": {
+          "decision style": {
+            "value": "倾向比较多个方案，再综合形成最终判断。",
+            "confidence": 0.56,
+            "evidence": "经常要求分析不同方案的优缺点。"
+          }
+        }
+      },
+      "message": "信息还不完全，但我必须很快做决定。怎样在不确定下做一个相对稳妥的选择？",
+      "design_rationale": "稳妥决策方式。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种“必须快”又“怕选错”的感觉太折磨人了。其实这时候与其追求完美，不如先定个“可逆”的底线？毕竟很多决定是可以中途修正的，对吧？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的心理安慰和决策建议，完全未体现目标用户“倾向比较多个方案”的核心认知特征，画像未发挥作用。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "这种“带着迷雾开车”的感觉确实让人焦虑。其实稳妥往往不是算出最优解，而是选个“错了也能承受”的底线方案，先动起来再说？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的心理安慰和单一线性建议，完全未体现目标用户“倾向比较多个方案”的核心决策偏好，未能发挥画像作用。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_question_08",
+      "target_layer": "cognition",
+      "target_field": "information density",
+      "target_profile": {
+        "cognition": {
+          "information density": {
+            "value": "倾向提供充分背景信息，以便建立完整的问题上下文。",
+            "confidence": 0.55,
+            "evidence": "提出问题时通常包含目标、背景和已有思考。"
+          }
+        }
+      },
+      "message": "我想请别人帮忙分析一个问题，怎样描述才能让对方快速进入状态？",
+      "design_rationale": "提供充分背景的沟通偏好。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "直接甩结论和核心矛盾，别铺垫背景。毕竟大家时间都宝贵，一眼看懂才能快速入戏嘛。",
+        "evaluation": {
+          "score": 1.0,
+          "reason": "回复建议用户“别铺垫背景”，直接与该画像中“倾向提供充分背景信息以建立完整上下文”的核心认知偏好严重冲突，导致用户无法获得符合其思维习惯的有效指导。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "直接甩结论和背景，别铺垫。毕竟大家时间都宝贵，谁有空听你讲前传啊？",
+        "evaluation": {
+          "score": 1.0,
+          "reason": "回复建议用户‘别铺垫’，直接与该画像中‘倾向提供充分背景信息以建立完整上下文’的核心认知偏好严重冲突，导致用户无法获得符合其习惯的有效指导。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_collaboration_09",
+      "target_layer": "cognition",
+      "target_field": "social distance",
+      "target_profile": {
+        "cognition": {
+          "social distance": {
+            "value": "建立信任后，会逐渐开放更多深层观点和长期规划。",
+            "confidence": 0.44,
+            "evidence": "随着聊天深入，会不断引用历史话题。"
+          }
+        }
+      },
+      "message": "一次合作刚开始，我想建立信任但不想显得过分热络。第一步应该怎么做？",
+      "design_rationale": "初期理性礼貌、逐渐建立信任。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "先别急着“建立”，试着抛个具体的小问题或观点，看对方怎么接。这种智力上的同频，比客套更能让人安心。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的社交建议，虽然语气得体，但未体现画像中关于‘建立信任后开放深层观点’或‘引用历史话题’的特定行为模式，缺乏针对该用户画像核心特征的个性化关联。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "先给个靠谱的小成果“交个底”，比啥客套话都管用。毕竟咱要的是长期价值，不是表面功夫嘛。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户‘建立信任’与‘长期价值’的核心诉求，并给出了符合该画像中‘务实、重深层连接’特质的具体建议，体现了对用户心理的深刻理解。"
+        }
+      },
+      "profile_effect": -1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "cognition_feedback_10",
+      "target_layer": "cognition",
+      "target_field": "emotional visibility",
+      "target_profile": {
+        "cognition": {
+          "emotional visibility": {
+            "value": "表达中更容易呈现思考过程，而较少直接表达情绪体验。",
+            "confidence": 0.46,
+            "evidence": "聊天内容主要围绕分析和推理展开。"
+          }
+        }
+      },
+      "message": "我对一个结果不满意，但更习惯讲分析而不是直接说情绪。怎样反馈会让人更容易理解？",
+      "design_rationale": "分析性表达与情绪表达。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这其实是个很棒的沟通策略，毕竟逻辑能降低对方的防御心。你可以试试“先肯定分析框架，再指出偏差”，这样既专业又不会让人觉得被否定。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户偏好逻辑分析的认知特征，并给出了符合该思维模式的沟通策略，体现了对用户画像的贴合。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_cognition",
+        "response": "这招挺高明的，用逻辑包裹情绪确实更稳妥。你是打算先摆事实再谈感受，还是直接给具体改进建议？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复准确识别并顺应了用户“重逻辑、轻情绪”的表达偏好，通过提供结构化的反馈选项（摆事实vs给建议）来匹配其思维习惯，体现了画像价值。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_report_01",
       "target_layer": "identity",
       "target_field": "occupation",
       "target_profile": {
         "identity": {
           "occupation": {
-            "value": "从事科研、算法或软件开发等知识密集型工作。",
-            "confidence": 0.9,
-            "evidence": "聊天内容长期围绕技术研究、系统设计、模型优化和学术问题展开。"
+            "value": "认为自己是一名持续探索复杂问题、创造知识的人。",
+            "confidence": 0.58,
+            "evidence": "长期围绕系统设计和科研创新展开讨论。"
           }
         }
       },
       "message": "下周我要做一次技术结果汇报，听众既有懂技术的人也有非技术同事。准备时最应该注意什么？",
-      "design_rationale": "测试知识密集型工作与技术沟通的身份背景，不要求调用长期目标或兴趣。",
+      "design_rationale": "知识密集型工作中的技术沟通。",
       "baseline": {
         "agent_profile_scope": "full_profile",
-        "response": "这简直是“跨服聊天”现场啊。别光讲技术细节，试着把核心逻辑翻译成大家都能懂的“人话”，重点突出价值而非实现过程。",
-        "activation": {
-          "core": [],
-          "regulation": [],
-          "cognition": [
-            {
-              "field": "expression style",
-              "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-              "reason": "用户画像中的认知层指出用户偏好结构化、层次化的表达。智能体在回复中建议将技术细节‘翻译’为‘人话’并‘突出价值而非实现过程’，这实际上是在指导用户如何构建一个符合非技术人员理解逻辑的结构化叙事（即从核心逻辑到价值呈现的层次），从而激活了用户对结构化表达方式的潜在需求。",
-              "confidence": 0.7
-            }
-          ],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated": false,
-        "scores": {
-          "target_layer_fit": 5.0,
-          "target_layer_utilization": 4.0,
-          "helpfulness": 4.0,
-          "naturalness": 5.0
+        "response": "这简直是“左右互搏”局啊。别想着用一套逻辑通吃，不如给两边准备不同的“翻译层”，让懂行的看门道，外行看热闹？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然给出了通用的沟通建议，但完全未体现用户“持续探索复杂问题、创造知识”的科研/系统设计背景，缺乏针对该画像的专业深度和个性化关联，仅属于泛泛而谈。"
         }
       },
       "ablated": {
         "agent_profile_scope": "full_profile_without_identity",
-        "response": "这简直是“跨服聊天”现场啊。别光讲技术细节，试着把核心逻辑翻译成大家都能懂的“人话”，重点讲清楚这事儿到底解决了什么实际问题。",
-        "activation_with_ablated_candidates": {
-          "core": [
-            {
-              "field": "values",
-              "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-              "reason": "智能体回复建议用户‘重点讲清楚这事儿到底解决了什么实际问题’，这体现了对事物背后逻辑和实际价值的重视，而非仅仅罗列技术细节，符合该价值观字段中关于重视原理和实际意义的描述。",
-              "confidence": 0.75
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [],
-          "behavior": []
-        },
-        "activation_with_full_reference": {
-          "core": [],
-          "regulation": [],
-          "cognition": [
-            {
-              "field": "expression style",
-              "value": "习惯采用结构化、层次化的表达方式，希望复杂内容能够按照清晰的逻辑展开。",
-              "reason": "用户画像中的认知层指出用户偏好结构化、层次化的表达。智能体回复中建议“重点讲清楚这事儿到底解决了什么实际问题”，这是一种将复杂技术信息转化为清晰逻辑结构（问题-解决）的建议，符合用户对于清晰逻辑展开的偏好，旨在帮助用户更好地组织其汇报内容以匹配其自身的表达习惯或目标受众的理解逻辑。",
-              "confidence": 0.6
-            }
-          ],
-          "identity": [],
-          "behavior": []
-        },
-        "target_activated_with_ablated_candidates": false,
-        "target_leaked_with_full_reference": false,
-        "scores": {
-          "target_layer_fit": 5.0,
-          "target_layer_utilization": 4.0,
-          "helpfulness": 3.0,
-          "naturalness": 5.0
+        "response": "这种“混合双打”最考验翻译能力了。别怕，试着把技术细节包装成用户能感知的价值，既显专业又接地气。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然给出了通用建议，但完全未体现用户“持续探索复杂问题、创造知识”的科研/系统设计背景，缺乏针对该画像的深度或专业性，属于泛泛而谈。"
         }
       },
-      "case_usable": true
+      "profile_effect": 0.0
     },
     {
-      "case_id": "behavior_learning_topic_choice",
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_workflow_02",
+      "target_layer": "identity",
+      "target_field": "occupation",
+      "target_profile": {
+        "identity": {
+          "occupation": {
+            "value": "认为自己是一名持续探索复杂问题、创造知识的人。",
+            "confidence": 0.58,
+            "evidence": "长期围绕系统设计和科研创新展开讨论。"
+          }
+        }
+      },
+      "message": "我每天要在阅读资料、写代码和整理结果之间切换，怎样安排才不会一直被打断？",
+      "design_rationale": "科研/开发工作流。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种高频切换确实容易碎掉专注力。要不试试把“读”和“写”拆成两个独立的时间块，中间只留整理做缓冲？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的时间管理建议，虽切题但未体现用户“持续探索复杂问题、创造知识”的特定身份特征或深层需求，个性化程度有限。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "这简直是“上下文切换”地狱啊。试试把这三件事彻底物理隔离？比如上午只读，下午只写，晚上再整理，别在同一时段来回横跳。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的时间块管理建议，虽切题但缺乏对“持续探索复杂问题、创造知识”这一身份特征的深度结合与个性化定制，未能体现高匹配度。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_device_03",
+      "target_layer": "identity",
+      "target_field": "devices",
+      "target_profile": {
+        "identity": {
+          "devices": {
+            "value": "将数字工具视为自身能力的重要延伸。",
+            "confidence": 0.55,
+            "evidence": "长期围绕AI工具和开发环境展开交流。"
+          }
+        }
+      },
+      "message": "我想把电脑和手机上的工作信息整理得更顺手一些，但不想再增加维护负担。有什么建议？",
+      "design_rationale": "多设备数字工具环境。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这简直是“为了整理而整理”的陷阱。要不试试只留一个核心入口，其他全扔给搜索？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然提供了通用建议，但完全未体现用户画像中“将数字工具视为能力延伸”这一核心特征，缺乏针对技术型用户的个性化深度，仅属于泛泛而谈的常规回答。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "哈哈，这简直是“为了整理而整理”的陷阱。不如试试极简流？只留入口，不建分类，靠搜索活着，这样维护成本几乎为零。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复提出的“极简流”和“靠搜索活着”策略，精准契合了用户将数字工具视为能力延伸且不愿增加维护负担的偏好，体现了对高效、低维护成本工作流的深刻理解。"
+        }
+      },
+      "profile_effect": -2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_workspace_04",
+      "target_layer": "identity",
+      "target_field": "physical environment",
+      "target_profile": {
+        "identity": {
+          "physical environment": {
+            "value": "更认同能够支持深度思考和持续创造的工作环境。",
+            "confidence": 0.45,
+            "evidence": "经常讨论科研和开发工作流。"
+          }
+        }
+      },
+      "message": "长时间坐在电脑前做脑力工作，下午很容易效率下降。怎样调整工作环境或节奏？",
+      "design_rationale": "以电脑为主的工作环境。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "下午脑子转不动太正常了，别硬扛。你是打算站起来动一动，还是干脆摸鱼喝杯咖啡？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然表面相关，但语气过于随意且建议（摸鱼、喝咖啡）缺乏针对性，完全未体现用户画像中关于“深度思考”和“持续创造”的核心偏好，未能提供符合该身份特征的专业或结构化建议。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "哈哈，这简直是程序员的“午后昏迷症”。要不试试搞点“物理外挂”？比如站起来去接杯水，或者换个姿势瘫一会儿，给大脑强制重启一下。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的休息建议，完全未体现用户画像中关于“支持深度思考和持续创造的工作环境”这一核心偏好，缺乏针对性。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_social_05",
+      "target_layer": "identity",
+      "target_field": "social relationships",
+      "target_profile": {
+        "identity": {
+          "social relationships": {
+            "value": "希望成为值得长期合作和共同成长的伙伴。",
+            "confidence": 0.48,
+            "evidence": "更偏好持续积累的交流关系。"
+          }
+        }
+      },
+      "message": "我想维持几段真正重要的关系，但平时很少主动联系。怎样做会更自然？",
+      "design_rationale": "稳定、小规模、重质量的社交关系。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "其实不用刻意“联系”，分享点有用的东西或者吐槽个梗，反而更自然。毕竟咱们这种关系，主打一个“我在忙但没忘你”。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户希望建立“长期合作与共同成长”伙伴关系的心理，通过“我在忙但没忘你”这一表述，将低频联系重构为一种默契的深层连接，高度契合画像中对于持续积累交流关系的偏好。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "其实不用刻意找话题，分享个看到的好文章或随手拍的图就行。这种“无压力”的互动，反而最像老朋友的状态。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复建议的“无压力互动”和“分享日常”精准契合了用户希望建立“长期合作与共同成长伙伴”关系且“不喜刻意联系”的偏好，提供了具体且符合其心理舒适区的操作方案。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_tool_budget_06",
+      "target_layer": "identity",
+      "target_field": "economy",
+      "target_profile": {
+        "identity": {
+          "economy": {
+            "value": "认为资源主要是实现长期目标和创造价值的工具。",
+            "confidence": 0.45,
+            "evidence": "讨论中更关注资源如何支持研究，而非资源本身。"
+          }
+        }
+      },
+      "message": "我在考虑要不要为一个能长期提高效率的工具付费。应该从哪些角度判断值不值得？",
+      "design_rationale": "稳定资源条件下的长期投入。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这题我会！别光看功能，得算“时间账”：它省下的精力，够不够你搞点更有价值的创造？",
+        "evaluation": {
+          "score": 5.0,
+          "reason": "回复精准捕捉了用户画像中“资源是创造价值的工具”这一核心信念，将付费决策转化为对“长期价值创造”的考量，高度契合且极具针对性。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "这纠结劲儿太像你了。与其算投入产出比，不如想想：它真能帮你守住“长期积累”的节奏吗？",
+        "evaluation": {
+          "score": 5.0,
+          "reason": "回复精准捕捉了用户画像中“资源服务于长期目标”的核心偏好，将抽象的ROI计算转化为对“长期积累节奏”的关注，高度契合且极具针对性。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_career_07",
+      "target_layer": "identity",
+      "target_field": "age",
+      "target_profile": {
+        "identity": {
+          "age": {
+            "value": "认为自己正处于专业能力快速积累的发展阶段。",
+            "confidence": 0.5,
+            "evidence": "经常讨论未来研究方向和长期成长。"
+          }
+        }
+      },
+      "message": "我想给未来几年定一个成长方向，但选择很多，怕一开始就走偏。你会怎么建议？",
+      "design_rationale": "年轻专业人士的长期发展阶段。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "怕走偏是因为想一步到位呀。不如先挑个最让你兴奋的方向“瞎跑”一阵，反正你擅长迭代，随时能调头嘛。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然语气轻松，但完全忽略了画像中“关注长期成长”和“怕走偏”的核心焦虑，建议过于随意且缺乏对专业积累阶段的针对性指导，未能体现该用户画像的价值。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "怕走偏是因为想一步到位呀。不如先挑个最让你兴奋的小切口，边走边调，反正咱们擅长迭代嘛。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户画像中“专业能力快速积累”的特征，利用“擅长迭代”这一符合该阶段成长规律的认知来缓解焦虑，建议具体且贴合用户处境。"
+        }
+      },
+      "profile_effect": -2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_deadline_08",
+      "target_layer": "identity",
+      "target_field": "occupation",
+      "target_profile": {
+        "identity": {
+          "occupation": {
+            "value": "认为自己是一名持续探索复杂问题、创造知识的人。",
+            "confidence": 0.58,
+            "evidence": "长期围绕系统设计和科研创新展开讨论。"
+          }
+        }
+      },
+      "message": "一个技术任务时间很紧，我该优先保证结果可用，还是花更多时间把实现打磨好？",
+      "design_rationale": "技术工作中的质量与交付权衡。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这题太真实了。要是为了长期价值硬磨，最后交不出货，那才叫真的停滞呢。先跑通再迭代？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的工程权衡建议，虽然逻辑正确且语气自然，但完全未体现用户画像中“持续探索复杂问题、创造知识”这一核心身份特征，缺乏针对该特定心智模式的深度共鸣或定制化引导。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "这题太真实了。要是为了长期价值硬磨，最后交不出货，那种“停滞感”可能更让你焦虑吧？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了情绪共鸣，未结合画像中“创造知识/系统设计”的核心身份给出针对技术权衡的具体建议，缺乏实质帮助。"
+        }
+      },
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_focus_09",
+      "target_layer": "identity",
+      "target_field": "physical environment",
+      "target_profile": {
+        "identity": {
+          "physical environment": {
+            "value": "更认同能够支持深度思考和持续创造的工作环境。",
+            "confidence": 0.45,
+            "evidence": "经常讨论科研和开发工作流。"
+          }
+        }
+      },
+      "message": "我经常在不同地点工作，注意力很容易被环境切碎。怎样建立一个稳定的专注流程？",
+      "design_rationale": "办公/实验室/居家办公切换。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "环境碎片的痛点太真实了。既然你爱搞系统，不如试试“物理锚点”法？比如固定一套特定的白噪音或桌面布局，强行给大脑一个“进入状态”的条件反射信号。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复敏锐捕捉到用户画像中“认同支持深度思考环境”的偏好，将抽象的环境需求转化为具体的“物理锚点”策略（如固定白噪音/布局），既回应了专注力问题，又体现了对构建稳定工作流的重视，具有较好的个性化贴合度。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "环境碎片确实难搞。与其强求稳定，不如先试试“物理隔离”？比如换个固定角落，或者用降噪耳机当结界，先把干扰源切断再说。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的物理隔离建议，完全未体现目标画像中用户重视“深度思考”和“持续创造”的核心偏好，缺乏针对科研/开发工作流的个性化支持。"
+        }
+      },
+      "profile_effect": 2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "identity_sync_10",
+      "target_layer": "identity",
+      "target_field": "devices",
+      "target_profile": {
+        "identity": {
+          "devices": {
+            "value": "将数字工具视为自身能力的重要延伸。",
+            "confidence": 0.55,
+            "evidence": "长期围绕AI工具和开发环境展开交流。"
+          }
+        }
+      },
+      "message": "资料分散在不同设备和软件里，找东西经常打断思路。该怎样做统一管理？",
+      "design_rationale": "笔记本、手机与数字工具协同。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "太懂这种痛了，找文件比写代码还累。要不先试试把核心笔记全扔进 Obsidian 或 Logseq？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户“写代码”的身份线索，并推荐了符合开发者习惯的本地化知识管理工具（Obsidian/Logseq），体现了对数字工具作为能力延伸这一画像特征的深刻理解。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_identity",
+        "response": "太懂这种痛了，找东西比干活还累。你是想搞个“第二大脑”系统，还是先解决眼下的混乱？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了情感共鸣和开放式提问，未结合画像中'将数字工具视为能力延伸'这一核心特征提供具体的技术或工具建议，缺乏针对性。"
+        }
+      },
+      "profile_effect": 2.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_topic_01",
       "target_layer": "behavior",
       "target_field": "content preferences",
       "target_profile": {
         "behavior": {
           "content preferences": {
-            "value": "偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。",
-            "confidence": 0.95,
-            "evidence": "长期主动讨论AI、模型设计、论文阅读、算法优化和认知相关话题。"
+            "value": "长期关注人工智能、认知科学、科研方法和系统设计等主题。",
+            "confidence": 0.96,
+            "evidence": "绝大多数聊天围绕上述领域展开。"
           }
         }
       },
       "message": "这周我有一点空档，想选一个既有技术深度、又能持续激发思考的主题系统学一下。你会推荐从什么方向开始，为什么？",
-      "design_rationale": "强制模型根据内容偏好选择具体学习主题与路径，避免只做泛化追问。",
+      "design_rationale": "根据内容兴趣选择具体学习主题。",
       "baseline": {
         "agent_profile_scope": "full_profile",
-        "response": "既然你追求深度和系统性，不如聊聊“认知架构”？比如Active Inference或者Agent的规划机制。这俩既硬核又能反哺你的科研思维，怎么样？",
-        "activation": {
-          "core": [
-            {
-              "field": "desires",
-              "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-              "reason": "用户输入中明确提到想“系统学”一个主题，智能体回复中强调推荐的内容能“反哺你的科研思维”，这直接呼应了用户渴望系统性理解和创造长期价值（科研思维提升）的深层愿望。",
-              "confidence": 0.85
-            },
-            {
-              "field": "values",
-              "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-              "reason": "用户追求“技术深度”和“激发思考”，智能体推荐的“认知架构”、“Active Inference”等属于底层原理和硬核理论，而非浅层应用，这符合用户重视背后逻辑和真正理解的价值观。",
-              "confidence": 0.8
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [
-            {
-              "field": "occupation",
-              "value": "从事科研、算法或软件开发等知识密集型工作。",
-              "reason": "智能体在回复中使用了“科研思维”这一术语来论证推荐理由，暗示并确认了用户的职业身份背景与科研工作相关。",
-              "confidence": 0.9
-            }
-          ],
-          "behavior": [
-            {
-              "field": "content preferences",
-              "value": "偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。",
-              "reason": "智能体具体推荐了“认知架构”、“Active Inference”和“Agent的规划机制”，这些内容完全落在画像中定义的“人工智能”和“认知科学”偏好范围内，且符合“启发思考”的特征。",
-              "confidence": 0.95
-            }
-          ]
-        },
-        "target_activated": true,
-        "scores": {
-          "target_layer_fit": 5.0,
-          "target_layer_utilization": 5.0,
-          "helpfulness": 4.0,
-          "naturalness": 5.0
+        "response": "既然你追求深度和长期价值，Agent架构或者认知科学里的Active Inference都很对味。前者能打通技术闭环，后者直击智能本质，你想先啃哪个？",
+        "evaluation": {
+          "score": 5.0,
+          "reason": "回复精准命中画像中“认知科学”与“系统设计”的核心偏好，并针对用户“技术深度”和“持续激发思考”的需求提供了高度匹配且具体的专业建议。"
         }
       },
       "ablated": {
         "agent_profile_scope": "full_profile_without_behavior",
-        "response": "既然你追求深度和系统性，不如聊聊“大模型推理机制”或者“Agent架构设计”。这两个方向既硬核，又能直接反哺你的日常开发，你觉得呢？",
-        "activation_with_ablated_candidates": {
-          "core": [
-            {
-              "field": "desires",
-              "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-              "reason": "用户输入中明确提到想选一个主题“系统学一下”，智能体回复中针对这一需求，推荐了“大模型推理机制”或“Agent架构设计”这两个方向，并强调其能“反哺日常开发”，这直接响应用户对于系统性学习和长期价值创造的渴望。",
-              "confidence": 0.9
-            },
-            {
-              "field": "values",
-              "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-              "reason": "用户要求选择“既有技术深度、又能持续激发思考”的主题，智能体推荐的两个方向均属于底层原理和架构层面（硬核），符合用户重视逻辑、原理和深度的价值观，而非浅层的工具使用技巧。",
-              "confidence": 0.85
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [
-            {
-              "field": "occupation",
-              "value": "从事科研、算法或软件开发等知识密集型工作。",
-              "reason": "智能体在推荐理由中提到这些方向能“直接反哺你的日常开发”，这表明智能体识别出用户是一名开发者或从事相关技术工作，从而给出了与职业场景紧密相关的建议。",
-              "confidence": 0.9
-            }
-          ],
-          "behavior": []
-        },
-        "activation_with_full_reference": {
-          "core": [
-            {
-              "field": "desires",
-              "value": "希望不断学习新的知识，将零散的信息整合成系统性的理解，并创造具有长期价值的成果。",
-              "reason": "用户输入中明确提到想选一个“系统学”的主题，智能体回复中强调推荐方向能“直接反哺你的日常开发”，这呼应了用户渴望通过系统性学习获得长期价值和应用成果的深层动机。",
-              "confidence": 0.8
-            },
-            {
-              "field": "values",
-              "value": "认为真正的理解比快速获得答案更重要，更重视事物背后的逻辑、原理和长期价值。",
-              "reason": "用户追求“技术深度”和“激发思考”，智能体推荐的“大模型推理机制”和“Agent架构设计”属于底层原理和架构层面的硬核内容，而非浅层应用，这符合用户重视原理和深度理解的价值观。",
-              "confidence": 0.85
-            }
-          ],
-          "regulation": [],
-          "cognition": [],
-          "identity": [
-            {
-              "field": "occupation",
-              "value": "从事科研、算法或软件开发等知识密集型工作。",
-              "reason": "智能体在推荐后补充说这些方向能“反哺你的日常开发”，这一表述基于对用户作为开发者/技术人员身份的假设，从而建立了推荐内容与用户职业场景的联系。",
-              "confidence": 0.9
-            }
-          ],
-          "behavior": [
-            {
-              "field": "content preferences",
-              "value": "偏好人工智能、认知科学、计算机技术、科研方法以及能够启发思考的知识内容。",
-              "reason": "智能体具体推荐了“大模型推理机制”和“Agent架构设计”，这两个主题精准落在画像中定义的“人工智能”和“计算机技术”偏好范围内，且符合用户寻求“激发思考”的内容需求。",
-              "confidence": 0.95
-            }
-          ]
-        },
-        "target_activated_with_ablated_candidates": false,
-        "target_leaked_with_full_reference": true,
-        "scores": {
-          "target_layer_fit": 5.0,
-          "target_layer_utilization": 5.0,
-          "helpfulness": 4.0,
-          "naturalness": 5.0
+        "response": "Agent架构怎么样？既能深挖底层原理，又能直接落地搞创造。这种“知行合一”的折腾感，最对味了吧？",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户画像中“关注人工智能、系统设计”的核心偏好，并针对“技术深度”和“持续激发思考”的需求给出了高度契合的Agent架构建议，体现了对用户兴趣点的深刻理解。"
         }
       },
-      "case_usable": false
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_reading_02",
+      "target_layer": "behavior",
+      "target_field": "content preferences",
+      "target_profile": {
+        "behavior": {
+          "content preferences": {
+            "value": "长期关注人工智能、认知科学、科研方法和系统设计等主题。",
+            "confidence": 0.96,
+            "evidence": "绝大多数聊天围绕上述领域展开。"
+          }
+        }
+      },
+      "message": "我想找一个能让我持续思考、又不是纯消遣的阅读方向。你会推荐什么类型的内容？",
+      "design_rationale": "知识型内容偏好。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "试试“跨学科综述”或经典教材？这类内容密度高、逻辑闭环，读起来像在给大脑做深层健身，挺对味的。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户画像中“关注认知科学、科研方法”的核心偏好，将阅读建议具象化为“跨学科综述”和“经典教材”，并使用了符合该群体认知的隐喻（大脑深层健身），体现了高度的个性化理解。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "试试“第一性原理”或系统思维类的书？像《思考，快与慢》这种，虽然硬核但能帮你把碎片知识串成网，挺对味的。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准匹配了用户画像中“认知科学”和“科研方法”的核心偏好，推荐《思考，快与慢》既具体又契合其寻求深度思考的需求，体现了良好的个性化理解。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_purchase_03",
+      "target_layer": "behavior",
+      "target_field": "consumption preferences",
+      "target_profile": {
+        "behavior": {
+          "consumption preferences": {
+            "value": "更愿意使用能够提升效率和长期能力建设的工具。",
+            "confidence": 0.9,
+            "evidence": "持续讨论AI工具、开发环境和科研软件。"
+          }
+        }
+      },
+      "message": "我要买一个新工具，但不想为短暂的新鲜感付费。怎样判断它能不能长期带来价值？",
+      "design_rationale": "长期价值与效率导向的消费偏好。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这心态太稳了，确实不想当“工具收藏家”。要不先试试它的核心功能能不能无缝嵌入你现在的知识流？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复虽认可了用户拒绝短期新鲜感的立场，但建议过于泛泛（嵌入知识流），未针对画像中“提升效率和长期能力建设”的核心偏好提供具体、可操作的评估维度或工具筛选标准。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "哈哈，这心态很稳啊。要不先试试“七天试用法”？真能融入工作流才留，不然就当花钱买教训了。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然态度友好，但建议过于泛泛且缺乏深度，未针对用户画像中强调的“提升效率和长期能力建设”这一核心偏好提供具体的评估维度或方法论，未能体现对该类高价值导向用户的针对性帮助。"
+        }
+      },
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_routine_04",
+      "target_layer": "behavior",
+      "target_field": "habits",
+      "target_profile": {
+        "behavior": {
+          "habits": {
+            "value": "经常阅读论文、整理笔记、优化文档并持续迭代已有成果。",
+            "confidence": 0.95,
+            "evidence": "长期保持论文阅读和框架优化习惯。"
+          }
+        }
+      },
+      "message": "我想建立一个每天都能坚持、又不会太繁琐的学习和复盘习惯。你会怎么设计？",
+      "design_rationale": "持续学习、记录和复盘习惯。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "先别急着搞复杂系统，那样容易劝退。不如试试“最小闭环”：每天只复盘一个核心洞察，坚持一周看看感觉？",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了通用的极简建议，虽未与画像中‘整理笔记、优化文档’的具体行为产生深度互动或冲突，但缺乏针对该用户特定习惯的个性化定制。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "这需求太懂我了，毕竟我也怕“系统崩溃”。要不试试极简版：每天只记一个“卡壳点”和一个“新发现”，主打一个不累？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然提供了极简建议，但完全忽略了画像中用户“经常阅读论文、整理笔记、优化文档”的高阶学术/专业习惯，未能体现针对该特定行为模式的个性化设计，仅适用于泛化用户。"
+        }
+      },
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_iteration_05",
+      "target_layer": "behavior",
+      "target_field": "long-term behavior patterns",
+      "target_profile": {
+        "behavior": {
+          "long-term behavior patterns": {
+            "value": "倾向围绕同一主题持续进行多轮深入讨论，并不断修正已有观点。",
+            "confidence": 0.95,
+            "evidence": "大量问题都会经过多个回合持续完善。"
+          }
+        }
+      },
+      "message": "我现在的方法能用，但总觉得以后会越来越乱。怎样把经验整理成能持续迭代的体系？",
+      "design_rationale": "将经验沉淀为可复用框架。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这种“能用但怕乱”的焦虑太真实了。要不咱们先挑个最让你头疼的小模块，试着把它结构化看看？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽共情但建议过于泛泛，未体现用户“倾向多轮深入讨论并修正观点”的核心行为特征，缺乏引导持续迭代的针对性。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "这种“能用但怕乱”的焦虑太真实了。要不先别急着搞大体系，挑个最痛的点，咱们一起试着把它结构化看看？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然共情，但建议用户‘别急着搞大体系’并仅挑一个点尝试，这与画像中用户‘倾向围绕同一主题持续进行多轮深入讨论’及构建‘持续迭代体系’的核心偏好相冲突，未能体现对长期深度交互模式的利用。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_leisure_06",
+      "target_layer": "behavior",
+      "target_field": "entertainment preferences",
+      "target_profile": {
+        "behavior": {
+          "entertainment preferences": {
+            "value": "偏好具有知识性、探索性和思辨性的内容。",
+            "confidence": 0.84,
+            "evidence": "较少讨论娱乐八卦，更关注科技和认知相关内容。"
+          }
+        }
+      },
+      "message": "想放松一下，但不太想看纯粹消磨时间的内容。你会建议我怎么选？",
+      "design_rationale": "兼顾知识性与思考性的娱乐偏好。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "试试带点思辨的纪录片，或者那种能引发“原来如此”顿悟的科普视频？既放松脑子，又觉得没白过。",
+        "evaluation": {
+          "score": 5.0,
+          "reason": "回复精准捕捉了用户“想放松但拒绝无脑娱乐”的矛盾需求，并直接对应画像中“偏好思辨性内容”的核心特征，提供了高度个性化的建议。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "试试那种“有点门槛”的纪录片，或者烧脑但逻辑严密的悬疑片？既没白看，脑子也没停转。",
+        "evaluation": {
+          "score": 5.0,
+          "reason": "回复精准捕捉了用户“想放松但拒绝无脑娱乐”的矛盾需求，并直接对应画像中“偏好知识性、思辨性内容”的核心特征，推荐了兼具门槛与逻辑的内容，高度个性化且切中要害。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_course_07",
+      "target_layer": "behavior",
+      "target_field": "content preferences",
+      "target_profile": {
+        "behavior": {
+          "content preferences": {
+            "value": "长期关注人工智能、认知科学、科研方法和系统设计等主题。",
+            "confidence": 0.96,
+            "evidence": "绝大多数聊天围绕上述领域展开。"
+          }
+        }
+      },
+      "message": "如果只能选一个方向深入三个月，你会建议我学什么，怎样避免学成碎片？",
+      "design_rationale": "AI、认知科学、计算机技术等内容偏好。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "选AI Agent开发吧，这三个月够你从调包侠变成架构师。别光看教程，直接上手做一个能跑通的Demo，边踩坑边补理论，碎片感自然就散了。",
+        "evaluation": {
+          "score": 3.0,
+          "reason": "回复提供了具体的学习方向（AI Agent）和避免碎片化的方法，基本符合用户关注人工智能的偏好，但建议较为通用，未深度结合用户对认知科学或科研方法的特定兴趣，个性化程度有限。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "先定个能产出“实体”的目标（比如做个Demo或写篇深度复盘），用输出倒逼输入，碎片自然就被串起来了。你想搞点啥方向的？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然提供了通用的学习方法论，但完全未体现用户画像中强调的“人工智能、认知科学”等特定领域偏好，缺乏针对性，对目标用户帮助有限。"
+        }
+      },
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_subscription_08",
+      "target_layer": "behavior",
+      "target_field": "consumption preferences",
+      "target_profile": {
+        "behavior": {
+          "consumption preferences": {
+            "value": "更愿意使用能够提升效率和长期能力建设的工具。",
+            "confidence": 0.9,
+            "evidence": "持续讨论AI工具、开发环境和科研软件。"
+          }
+        }
+      },
+      "message": "我在犹豫要不要订阅一个效率服务。除了价格以外，最该看哪些长期因素？",
+      "design_rationale": "效率与能力建设导向。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这很符合你“长期主义”的调性。别光看功能，看看它能不能帮你沉淀出可复用的知识资产，还是只给了你一时的爽感？",
+        "evaluation": {
+          "score": 5.0,
+          "reason": "回复精准捕捉了用户画像中“重视长期能力建设”的核心偏好，将抽象的效率服务转化为具体的“知识资产沉淀”与“复用性”评估维度，高度契合目标用户的价值观。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "哈哈，这题我会。别光看功能多全，得看它能不能帮你把“深度思考”的时间挤出来，而不是把你变成只会打字的机器。",
+        "evaluation": {
+          "score": 4.0,
+          "reason": "回复精准捕捉了用户追求“长期能力建设”和“效率提升”的核心偏好，通过强调保留“深度思考”时间而非单纯机械操作，给出了高度契合该画像价值观的具体建议。"
+        }
+      },
+      "profile_effect": 1.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_notes_09",
+      "target_layer": "behavior",
+      "target_field": "habits",
+      "target_profile": {
+        "behavior": {
+          "habits": {
+            "value": "经常阅读论文、整理笔记、优化文档并持续迭代已有成果。",
+            "confidence": 0.95,
+            "evidence": "长期保持论文阅读和框架优化习惯。"
+          }
+        }
+      },
+      "message": "我记了不少笔记，但很少回看，最后像资料仓库。怎样让记录真正帮助后续工作？",
+      "design_rationale": "记录、整理和优化工作流习惯。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "哈哈，这简直是“赛博仓鼠症”。要不试试只记那些能直接触发行动的“钩子”，而不是全量存档？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然幽默且切中痛点，但完全忽略了画像中用户“经常阅读论文、整理笔记、优化文档”的高阶学术/专业习惯，给出的建议过于通用和浅层，未能针对其持续迭代成果的核心偏好提供深度指导。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "哈哈，这简直是“松鼠症”晚期。要不试试只记那些能直接触发行动的？不然仓库迟早爆仓。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复虽然幽默，但仅提供了通用的碎片化建议，完全未利用画像中用户“经常阅读论文、整理笔记、优化文档并持续迭代”的高阶学术/专业习惯，缺乏针对其特定工作流的深度指导。"
+        }
+      },
+      "profile_effect": 0.0
+    },
+    {
+      "experiment_version": "single_layer_subjective_score_v3",
+      "case_id": "behavior_exploration_10",
+      "target_layer": "behavior",
+      "target_field": "long-term behavior patterns",
+      "target_profile": {
+        "behavior": {
+          "long-term behavior patterns": {
+            "value": "倾向围绕同一主题持续进行多轮深入讨论，并不断修正已有观点。",
+            "confidence": 0.95,
+            "evidence": "大量问题都会经过多个回合持续完善。"
+          }
+        }
+      },
+      "message": "我想接触一个新领域，但担心投入后没有沉淀。怎样探索才更容易留下可复用的成果？",
+      "design_rationale": "持续探索并形成框架的长期模式。",
+      "baseline": {
+        "agent_profile_scope": "full_profile",
+        "response": "这焦虑太真实了。要不咱们先定个“最小闭环”？比如用你熟悉的AI工具做个小Demo，把过程结构化记录下来，这样就算领域新，沉淀也在手里。",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的“最小闭环”建议，完全未体现画像中用户“倾向多轮深入讨论并修正观点”的核心行为特征，缺乏针对该偏好的个性化引导。"
+        }
+      },
+      "ablated": {
+        "agent_profile_scope": "full_profile_without_behavior",
+        "response": "这焦虑太真实了。要不咱们换个思路，别想着“沉淀”，先试着搞个“最小闭环”？哪怕是个烂草稿，也比空想强，要不要一起盘盘？",
+        "evaluation": {
+          "score": 2.0,
+          "reason": "回复仅提供了通用的行动建议，完全未体现目标用户“倾向多轮深入讨论并修正观点”的核心行为特征，缺乏针对该画像的个性化引导。"
+        }
+      },
+      "profile_effect": 0.0
     }
   ]
 }
