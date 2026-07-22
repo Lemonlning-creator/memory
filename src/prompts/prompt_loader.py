@@ -8,11 +8,11 @@ System implementation prompts are in templates.py / templates_en.py.
 Evaluation prompts are in eval_templates.py / eval_templates_en.py.
 """
 
-import os
-
-# Configuration: Set the language for prompts.
-# Options: "zh" for Chinese, "en" for English.
-PROMPT_LANGUAGE = os.getenv("MEMORY_PROMPT_LANGUAGE", "zh").strip().lower()
+# Configuration: Set the language for prompts
+# Options: "zh" for Chinese, "en" for English
+# Note: Experiments import directly from templates_en.py / eval_templates_en.py
+# This loader is used by the frontend agent (agent.py) and defaults to Chinese
+PROMPT_LANGUAGE = "zh"
 
 
 def load_prompts():
@@ -117,48 +117,6 @@ SELF_MODEL_USER_PROMPT_TEMPLATE = _template_attr("SELF_MODEL_USER_PROMPT_TEMPLAT
 PERIODIC_REBUILD_SYSTEM_PROMPT = _template_attr("PERIODIC_REBUILD_SYSTEM_PROMPT")
 PERIODIC_REBUILD_USER_PROMPT_TEMPLATE = _template_attr("PERIODIC_REBUILD_USER_PROMPT_TEMPLATE")
 
-# ── Evaluation prompts ──────────────────────────────────────────────
-_eval_templates = load_eval_prompts()
-from . import eval_templates_en as _eval_templates_en
-
-
-def _eval_template_attr(name: str):
-    if hasattr(_eval_templates, name):
-        return getattr(_eval_templates, name)
-    if hasattr(_eval_templates_en, name):
-        return getattr(_eval_templates_en, name)
-    raise AttributeError(f"Evaluation prompt '{name}' not found")
-
-# EI Evaluation prompts
-EI_EVALUATION_SYSTEM_PROMPT = _eval_template_attr("EI_EVALUATION_SYSTEM_PROMPT")
-EI_EVALUATION_USER_PROMPT_TEMPLATE = _eval_template_attr("EI_EVALUATION_USER_PROMPT_TEMPLATE")
-
-# EPITOME Evaluation prompts
-EPITOME_EVALUATION_SYSTEM_PROMPT = _eval_template_attr("EPITOME_EVALUATION_SYSTEM_PROMPT")
-EPITOME_EVALUATION_USER_PROMPT_TEMPLATE = _eval_template_attr("EPITOME_EVALUATION_USER_PROMPT_TEMPLATE")
-
-# Evidence Judge prompts
-EVIDENCE_JUDGE_SYSTEM_PROMPT = _eval_template_attr("EVIDENCE_JUDGE_SYSTEM_PROMPT")
-EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE = _eval_template_attr("EVIDENCE_JUDGE_USER_PROMPT_TEMPLATE")
-
-# Cross-Conversation Consistency prompts
-PROFILE_CONSISTENCY_SYSTEM_PROMPT = _eval_template_attr("PROFILE_CONSISTENCY_SYSTEM_PROMPT")
-PROFILE_CONSISTENCY_USER_PROMPT_TEMPLATE = _eval_template_attr("PROFILE_CONSISTENCY_USER_PROMPT_TEMPLATE")
-PERSONA_CONSISTENCY_SYSTEM_PROMPT = _eval_template_attr("PERSONA_CONSISTENCY_SYSTEM_PROMPT")
-PERSONA_CONSISTENCY_USER_PROMPT_TEMPLATE = _eval_template_attr("PERSONA_CONSISTENCY_USER_PROMPT_TEMPLATE")
-
-# State Axis prompts
-CURRENT_STATE_EXTRACTION_SYSTEM_PROMPT = _eval_template_attr("CURRENT_STATE_EXTRACTION_SYSTEM_PROMPT")
-CURRENT_STATE_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_template_attr("CURRENT_STATE_EXTRACTION_USER_PROMPT_TEMPLATE")
-
-# Context Axis prompts
-CONTEXT_PROFILE_EXTRACTION_SYSTEM_PROMPT = _eval_template_attr("CONTEXT_PROFILE_EXTRACTION_SYSTEM_PROMPT")
-CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_template_attr("CONTEXT_PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE")
-
-# Experiment evaluation prompts
-EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT = _eval_template_attr("EMOTION_SENTIMENT_EXTRACTION_SYSTEM_PROMPT")
-EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_template_attr("EMOTION_SENTIMENT_EXTRACTION_USER_PROMPT_TEMPLATE")
-TOPIC_EXTRACTION_SYSTEM_PROMPT = _eval_template_attr("TOPIC_EXTRACTION_SYSTEM_PROMPT")
-TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_template_attr("TOPIC_EXTRACTION_USER_PROMPT_TEMPLATE")
-INTIMACY_EXTRACTION_SYSTEM_PROMPT = _eval_template_attr("INTIMACY_EXTRACTION_SYSTEM_PROMPT")
-INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE = _eval_template_attr("INTIMACY_EXTRACTION_USER_PROMPT_TEMPLATE")
+# Note: Evaluation prompts (EPITOME, PROFILE_CONSISTENCY, EMOTION_SENTIMENT_EXTRACTION, etc.)
+# are only used by experiments and are imported directly from eval_templates_en.py
+# They are not loaded here since the frontend doesn't need them

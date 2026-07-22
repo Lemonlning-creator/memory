@@ -15,7 +15,7 @@ from typing import Any, Dict, List
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from src.llm_client import LLMClient
-from src.prompts.prompt_loader import (
+from src.prompts.templates_en import (
     PROFILE_EXTRACTION_SYSTEM_PROMPT,
     PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE,
     PERSONA_EXTRACTION_SYSTEM_PROMPT,

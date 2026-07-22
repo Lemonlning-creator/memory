@@ -42,7 +42,7 @@ from .persona_simulation import (
     detect_speakers, flatten_messages, session_keys,
     format_conversation_history, condense_profile, condense_persona,
 )
-from ..prompts.prompt_loader import (
+from ..prompts.templates_en import (
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
 )

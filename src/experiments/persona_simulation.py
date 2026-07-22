@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 
 from ..llm_client import LLMClient
 from ..utils import load_json, save_json, parse_json
-from ..prompts.prompt_loader import (
+from ..prompts.eval_templates_en import (
     EI_EVALUATION_SYSTEM_PROMPT,
     EI_EVALUATION_USER_PROMPT_TEMPLATE,
 )

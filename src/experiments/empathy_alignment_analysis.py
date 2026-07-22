@@ -23,9 +23,11 @@ from typing import Any, Dict, List, Optional
 from ..llm_client import LLMClient
 from ..utils import load_json, save_json, parse_json
 from ..epistemic_decay import EpistemicDecayTracker, get_exploration_label
-from ..prompts.prompt_loader import (
+from ..prompts.templates_en import (
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
+)
+from ..prompts.eval_templates_en import (
     EPITOME_EVALUATION_SYSTEM_PROMPT,
     EPITOME_EVALUATION_USER_PROMPT_TEMPLATE,
 )

@@ -46,7 +46,7 @@ from .persona_simulation import (
     detect_speakers, flatten_messages, session_keys,
     format_conversation_history, condense_profile,
 )
-from ..prompts.prompt_loader import (
+from ..prompts.templates_en import (
     PROFILE_EVOLUTION_SYSTEM_PROMPT,
     PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE,
     PERIODIC_REBUILD_SYSTEM_PROMPT,

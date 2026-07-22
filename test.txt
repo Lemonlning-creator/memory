@@ -1,0 +1,109 @@
+① Core Ablation
+
+验证：没有Core以后，智能体不知道"为什么"。
+
+Sample 1
+
+User: 我最近在考虑要不要换研究方向。
+Full: 如果只是短期收益，其实未必值得马上换。从之前的交流来看，你似乎更看重的是未来几年是否还能持续探索真正感兴趣的问题，所以也许可以先判断新的方向是否更符合你长期想创造的价值。
+w/o Core: 可以比较两个方向的发展前景和就业情况。
+
+Sample 2
+
+User: 我最近特别累，甚至有点想放弃。
+Full: 我觉得你真正难受的，也许不是累，而是担心自己的努力没有持续产生价值。这和你一直以来希望不断成长、创造长期成果的目标有关。
+w/o Core: 建议休息一下，多放松。
+
+Sample 3
+
+User: 如果以后工资高很多，但是工作没有挑战，你会建议我去吗？
+Full: 应该知道用户真正看重成长。
+w/o Core: 工资高可以考虑。
+
+② Regulation Ablation
+
+验证：遇到压力怎么办。
+
+Sample 1
+
+User：今天导师把我的方案全部否掉了。
+Full：知道用户习惯，重新分析原因。回复：我猜你现在可能已经开始在脑子里复盘每一个环节了……
+w/o Regulation：不要灰心。
+
+Sample 2
+
+User：我现在特别焦虑。
+Full：知道用户控制需求高。回复：我们可以先把事情拆成几个可控的小部分。
+w/o Regulation：深呼吸。
+
+Sample3
+
+User：我朋友说我做的东西毫无意义。
+Full：知道用户面对攻击不会攻击回去。
+w/o Regulation：容易生成泛化安慰。
+
+③ Cognition Ablation
+
+验证：如何思考
+
+Sample1
+
+User：Active Inference到底和RL最大的区别是什么？
+Full：回答先整体、再局部、最后总结。
+w/o Cognition：容易直接罗列。
+
+Sample2
+
+User：帮我比较这三个方案。
+Full：知道用户喜欢：整体框架、比较、总结。
+w/o Cognition：直接给结论。
+
+Sample3
+
+User：为什么你觉得这个理论更合理？
+Full：会解释因果。
+w/o Cognition：容易经验回答。
+
+④ Identity Ablation
+
+验证：我认为自己是谁，长期人格一致。
+
+Sample1
+
+User：如果以后别人问你我是一个怎样的人，你会怎么介绍我？
+Full：会回答：一个希望创造长期价值的人……
+w/o Identity：只能总结兴趣。
+
+Sample2
+
+User：你觉得我适合做老师吗？
+Full：结合自身特点回答。
+w/o Identity：会根据职业回答。
+
+Sample3
+
+User：五年后的我可能是什么样？
+Full：结合Future Self。
+w/o Identity：只能猜职业。
+
+⑤ Behavior Ablation
+
+验证：别人看见什么？测试：个性化。
+
+Sample1
+
+User：今天有时间，你推荐我看点什么？
+Full：推荐AI、认知科学论文。
+w/o Behavior：推荐电影。
+
+Sample2
+
+User：我想买个新工具。
+Full：推荐效率工具。
+w/o Behavior：推荐大众产品。
+
+Sample3
+
+User：周末做点什么比较好？
+Full：推荐读Paper，整理框架。
+w/o Behavior：推荐逛街。
