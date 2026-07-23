@@ -31,7 +31,7 @@ conversation_history = []
 DATASET_OUTPUT_DIR = Path(os.getenv("MEMORY_DATASET_OUTPUT_DIR", "dataset/output_zh"))
 DATASET_USER_DIR = DATASET_OUTPUT_DIR / "user"
 DATASET_AGENT_DIR = DATASET_OUTPUT_DIR / "agent"
-DATASET_TEST_USER_PROFILE = Path("dataset/test_user.json")
+DATASET_TEST_USER_PROFILE = Path("dataset/lsy_user.json")
 DATASET_TEST_AGENT_PERSONA = Path("dataset/test_agent.json")
 WORKING_PROFILE_DIR = Path("data/active_profiles")
 
@@ -42,12 +42,13 @@ def _humanize(name: str) -> str:
 
 
 def discover_user_profiles() -> dict:
-    """Load the single test user profile from dataset/test_user.json."""
+    """Load the configured single test user profile."""
     profiles = {}
     if DATASET_TEST_USER_PROFILE.exists():
-        profiles["test_user"] = {
-            "id": "test_user",
-            "display_name": "Test User",
+        profile_id = DATASET_TEST_USER_PROFILE.stem
+        profiles[profile_id] = {
+            "id": profile_id,
+            "display_name": _humanize(profile_id),
             "file_name": DATASET_TEST_USER_PROFILE.name,
             "source_path": str(DATASET_TEST_USER_PROFILE),
         }

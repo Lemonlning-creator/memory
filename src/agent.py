@@ -162,6 +162,8 @@ class StateDrivenCompanionAgent:
             if self._is_generation_stale(generation):
                 return
             self._run_memory_steps(generation)
+        except Exception as e:
+            logger.exception(f"[MEMORY_WRITE_ERROR] generation={generation} error={e}")
         finally:
             with self._background_memory_lock:
                 if not self._is_generation_stale(generation):
@@ -172,9 +174,12 @@ class StateDrivenCompanionAgent:
             if self._is_generation_stale(generation):
                 return
             start = perf_counter()
-            result = fn()
-            print(f"[pipeline] {name} done in {perf_counter() - start:.3f}s")
-            return result
+            try:
+                result = fn()
+                return result
+            except Exception as e:
+                logger.exception(f"[MEMORY_WRITE_STEP_ERROR] name={name} elapsed={perf_counter() - start:.3f}s error={e}")
+                raise
 
         if len(self.memory_manager.short_term_memory) >= 20:
             _step("build_mid_term_summary",
@@ -196,17 +201,14 @@ class StateDrivenCompanionAgent:
         - periodic_rebuild: handled separately in finalize_session
         """
         if self.update_mode == "static":
-            print("[Profile Evolution] Static mode — skipping update")
             return False
 
         if self.update_mode == "periodic_rebuild":
-            print("[Profile Evolution] Periodic rebuild mode — skipping incremental update")
             return False
 
         # Default: bayesian_online
         long_term_memories = self.memory_manager.get_memories_by_ids([long_term_memory_id])
         if not long_term_memories:
-            print(f"[Profile Evolution] missing long-term memory id={long_term_memory_id}")
             return False
 
         state = state_axis(self.user_profile)
@@ -224,17 +226,9 @@ class StateDrivenCompanionAgent:
                 updated_profile = result.get("static_profile", result)
                 if isinstance(updated_profile, dict):
                     state["static_profile"] = updated_profile
-                    reasoning = result.get("reasoning", {})
-                    if reasoning:
-                        print(f"[Bayesian Profile Update] {reasoning.get('evidence_summary', '')}")
-                        if reasoning.get("new_attributes"):
-                            print(f"  New attributes: {reasoning['new_attributes']}")
-                        if reasoning.get("removed_attributes"):
-                            print(f"  Removed (low confidence): {reasoning['removed_attributes']}")
-                    print(f"[Profile Evolution] Bayesian update from memory_id={long_term_memory_id}")
                     return True
         except Exception as e:
-            print(f"[Profile Evolution Error] {e}")
+            logger.exception(f"[MEMORY_PROFILE_EVOLVE_ERROR] error={e}")
             return False
 
     def rebuild_profile_from_conversations(self, conversations: List[Dict[str, Any]]) -> bool:
@@ -511,9 +505,7 @@ class StateDrivenCompanionAgent:
         flushed_mid_term_ids = self.memory_manager.flush_short_term_memory(self.llm)
         long_term_memory_id = self.memory_manager.extract_long_term_memory(self.llm)
         if long_term_memory_id:
-            print(f"[Agent Profile] final evolve from long_term_memory_id={long_term_memory_id}")
             self._evolve_profile_from_long_term(long_term_memory_id)
-            print(f"[Agent Profile] final save profile path={self.profile_path}")
             save_json(self.profile_path, self.user_profile)
 
         # Periodic rebuild check
