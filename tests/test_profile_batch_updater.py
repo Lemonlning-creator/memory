@@ -7,9 +7,11 @@ from types import SimpleNamespace
 from src.profile_batch_updater import (
     KimiProfileExtractor,
     PROFILE_LAYERS,
+    compact_profile_for_prompt,
     ProfileBatchUpdater,
     ProfileUpdateError,
     merge_patch,
+    normalize_patch_field_names,
     validate_patch,
 )
 
@@ -87,6 +89,29 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
         patch["layers"]["core"]["summary"] = None
         with self.assertRaises(ProfileUpdateError):
             validate_patch(patch, {"m1"})
+
+    def test_compacts_old_profile_without_old_evidence_metadata(self):
+        compact = compact_profile_for_prompt({
+            "core": {
+                "values": {
+                    "value": "重视证据",
+                    "confidence": 0.8,
+                    "evidence": "旧消息",
+                    "evidence_message_ids": ["old-id"],
+                    "updated_at": "yesterday",
+                }
+            }
+        })
+        self.assertEqual(compact, {"core": {"values": {"value": "重视证据", "confidence": 0.8}}})
+
+    def test_normalizes_known_snake_case_aliases_only(self):
+        patch = valid_patch()
+        patch["layers"]["core"]["attributes"] = {"sources_of_meaning": item("科研与成长")}
+        patch["layers"]["regulation"]["attributes"] = {"people_pleasing": item("倾向照顾他人感受")}
+        normalized = normalize_patch_field_names(patch)
+        self.assertIn("sources of meaning", normalized["layers"]["core"]["attributes"])
+        self.assertIn("people-pleasing", normalized["layers"]["regulation"]["attributes"])
+        validate_patch(normalized, {"m1"})
 
     def test_merge_is_field_level_and_keeps_existing_values(self):
         profile = {

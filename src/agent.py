@@ -85,10 +85,12 @@ class StateDrivenCompanionAgent:
         self.last_prediction: Dict[str, Any] = {}
         self.last_agent_response: str = ""
         self.persona_config = load_json(self.persona_path)
-        self.profile_batch_updater = ProfileBatchUpdater(
-            self.profile_path,
-            on_profile_updated=self._on_profile_updated,
-        )
+        self.profile_batch_updater: Optional[ProfileBatchUpdater] = None
+        if self.update_mode == "bayesian_online":
+            self.profile_batch_updater = ProfileBatchUpdater(
+                self.profile_path,
+                on_profile_updated=self._on_profile_updated,
+            )
 
         self.memory_manager = MemoryOSLocal()
         self._background_memory_running = False
@@ -193,8 +195,17 @@ class StateDrivenCompanionAgent:
             _step("build_mid_term_summary",
                   lambda: self.memory_manager.build_mid_term_summary(self.llm, MID_TERM_SOURCE_MESSAGES))
 
-        _step("extract_long_term_memory",
-              lambda: self.memory_manager.extract_long_term_memory(self.llm))
+        long_term_memory_id = _step(
+            "extract_long_term_memory",
+            lambda: self.memory_manager.extract_long_term_memory(self.llm),
+        )
+        if long_term_memory_id and self.profile_batch_updater is None:
+            profile_updated = _step(
+                "evolve_profile",
+                lambda: self._evolve_profile_from_long_term(long_term_memory_id),
+            )
+            if profile_updated:
+                save_json(self.profile_path, self.user_profile)
 
     def _evolve_profile_from_long_term(self, long_term_memory_id: str) -> bool:
         """Evolve profile based on update_mode.
@@ -507,6 +518,17 @@ class StateDrivenCompanionAgent:
 
         flushed_mid_term_ids = self.memory_manager.flush_short_term_memory(self.llm)
         long_term_memory_id = self.memory_manager.extract_long_term_memory(self.llm)
+        if long_term_memory_id and self.profile_batch_updater is None:
+            if self._evolve_profile_from_long_term(long_term_memory_id):
+                save_json(self.profile_path, self.user_profile)
+
+        self._sessions_since_last_rebuild += 1
+        if (self.update_mode == "periodic_rebuild"
+                and self._sessions_since_last_rebuild >= self.periodic_rebuild_interval):
+            all_messages = self.memory_manager.get_recent_messages(limit=100)
+            self.rebuild_profile_from_conversations(all_messages)
+            save_json(self.profile_path, self.user_profile)
+            self._sessions_since_last_rebuild = 0
 
         return {
             "flushed_mid_term_ids": flushed_mid_term_ids,
@@ -568,10 +590,11 @@ class StateDrivenCompanionAgent:
         self.memory_manager.append_stm("assistant", response)
         self.last_agent_response = response
         self.epistemic_tracker.increment()
-        try:
-            self.profile_batch_updater.submit_turn(user_input)
-        except Exception as exc:
-            logger.exception(f"[PROFILE_BATCH_ENQUEUE_ERROR] error={exc}")
+        if self.profile_batch_updater is not None:
+            try:
+                self.profile_batch_updater.submit_turn(user_input)
+            except Exception as exc:
+                logger.exception(f"[PROFILE_BATCH_ENQUEUE_ERROR] error={exc}")
         self._start_background(self._memory_pipeline, ())
 
         yield {

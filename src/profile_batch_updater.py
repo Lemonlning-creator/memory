@@ -23,11 +23,20 @@ PROFILE_FIELDS: Dict[str, tuple[str, ...]] = {
     "behavior": ("content preferences", "consumption preferences", "entertainment preferences", "habits", "long-term behavior patterns"),
 }
 
+
+def _field_aliases(layer: str) -> Dict[str, str]:
+    aliases: Dict[str, str] = {}
+    for canonical in PROFILE_FIELDS[layer]:
+        aliases[canonical] = canonical
+        aliases[canonical.replace(" ", "_").replace("-", "_")] = canonical
+    return aliases
+
 SYSTEM_PROMPT = """你是用户画像更新器。你只根据本批原始对话中的用户消息更新画像，不使用中期或长期记忆。
 必须输出一个 JSON 对象，不要输出 Markdown 或解释。顶层只能有 layers；layers 必须且只能包含 core、regulation、cognition、identity、behavior。
 每层必须包含 summary 和 attributes。summary 可以是 null，或包含 value、confidence、evidence_message_ids 的对象；但只要该层 attributes 有任何更新，summary 就必须同步更新且不可为 null。attributes 只能使用给定白名单字段。
+字段名必须逐字复制白名单，包括其中的空格和连字符；不要改成 snake_case。每个 summary 和属性值必须是包含 value、confidence、evidence_message_ids 的对象，不���直接返回字符串或数组。
 summary 用一句话概括该层当前画像，可综合旧画像与本批新证据；属性只记录用户明确表达或可被直接支持的稳定信息。证据不足、一次性情绪、助手诱导内容、推测和矛盾信息不要更新。
-所有 evidence_message_ids 必须来自本批用户消息。不要复制旧画像中没有新证据支持的变化。"""
+所有 evidence_message_ids 必须来自本批用户消息。绝对不要复用旧画像里的证据 ID；旧画像只用于理解当前值，不代表本批证据。不要复制旧画像中没有新证据支持的变化。"""
 
 
 class ProfileUpdateError(ValueError):
@@ -60,6 +69,25 @@ class RawDialogueTurn:
             "user": self.user,
             "created_at": self.created_at,
         }
+
+
+def compact_profile_for_prompt(static_profile: Mapping[str, Any]) -> Dict[str, Any]:
+    compact: Dict[str, Any] = {}
+    for layer, fields in static_profile.items():
+        if not isinstance(fields, Mapping):
+            compact[layer] = fields
+            continue
+        compact[layer] = {}
+        for field, raw in fields.items():
+            if isinstance(raw, Mapping) and "value" in raw:
+                item: Dict[str, Any] = {"value": raw.get("value")}
+                confidence = raw.get("confidence")
+                if isinstance(confidence, (int, float)) and not isinstance(confidence, bool):
+                    item["confidence"] = confidence
+                compact[layer][field] = item
+            else:
+                compact[layer][field] = raw
+    return compact
 
 
 class KimiProfileExtractor:
@@ -98,7 +126,7 @@ class KimiProfileExtractor:
         allowed_ids = {turn["message_id"] for turn in turn_list}
         payload = {
             "field_whitelist": {key: list(value) for key, value in PROFILE_FIELDS.items()},
-            "current_static_profile": current_profile,
+            "current_static_profile": compact_profile_for_prompt(current_profile),
             "raw_dialogue_batch": turn_list,
             "output_example": {
                 "layers": {
@@ -125,7 +153,7 @@ class KimiProfileExtractor:
                     extra_body={"thinking": {"type": "disabled"}},
                 )
                 raw = (response.choices[0].message.content or "").strip()
-                parsed = json.loads(raw)
+                parsed = normalize_patch_field_names(json.loads(raw))
                 return validate_patch(parsed, allowed_ids)
             except Exception as exc:
                 last_error = exc
@@ -161,6 +189,27 @@ def _validate_item(item: Any, allowed_ids: set[str], path: str) -> Dict[str, Any
         "confidence": round(float(confidence), 3),
         "evidence_message_ids": list(dict.fromkeys(evidence_ids)),
     }
+
+
+def normalize_patch_field_names(data: Any) -> Any:
+    if not isinstance(data, dict) or not isinstance(data.get("layers"), dict):
+        return data
+    normalized = copy.deepcopy(data)
+    for layer, section in normalized["layers"].items():
+        if layer not in PROFILE_FIELDS or not isinstance(section, dict):
+            continue
+        attributes = section.get("attributes")
+        if not isinstance(attributes, dict):
+            continue
+        aliases = _field_aliases(layer)
+        normalized_attributes: Dict[str, Any] = {}
+        for supplied, value in attributes.items():
+            canonical = aliases.get(supplied, supplied)
+            if canonical in normalized_attributes:
+                raise ProfileUpdateError(f"layers.{layer}.attributes contains duplicate aliases for {canonical}")
+            normalized_attributes[canonical] = value
+        section["attributes"] = normalized_attributes
+    return normalized
 
 
 def validate_patch(data: Any, allowed_ids: set[str]) -> Dict[str, Any]:

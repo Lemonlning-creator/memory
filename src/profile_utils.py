@@ -50,6 +50,8 @@ def convert_to_flat_profile(static_profile: Dict[str, Any]) -> Dict[str, Any]:
             flat[section] = fields
             continue
         for key, val in fields.items():
+            if key == "summary":
+                continue
             flat_key = f"{section}_{key}"
             flat[flat_key] = val
     return flat
@@ -87,7 +89,7 @@ def count_profile_attributes(static_profile: Dict[str, Any]) -> int:
     count = 0
     for section, fields in static_profile.items():
         if isinstance(fields, dict):
-            count += len(fields)
+            count += sum(1 for key in fields if key != "summary")
     return count
 
 
@@ -103,6 +105,8 @@ def get_attribute_confidences(static_profile: Dict[str, Any]) -> Dict[str, float
         if not isinstance(fields, dict):
             continue
         for key, val in fields.items():
+            if key == "summary":
+                continue
             path = f"{section}.{key}"
             if isinstance(val, dict):
                 c = val.get("confidence", 0.5)

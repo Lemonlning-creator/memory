@@ -147,10 +147,12 @@ def build_agent_for_character(profile_id: str, persona_id: str) -> StateDrivenCo
     raw_profile = load_json(str(source_profile_path))
     wrapped = _wrap_dataset_profile(raw_profile)
 
-    # Save working copy so agent mutations don't overwrite the dataset original
+    # Create the working copy once. Reuse it on later selections/restarts so
+    # accumulated profile growth is not overwritten by the dataset seed.
     WORKING_PROFILE_DIR.mkdir(parents=True, exist_ok=True)
     working_profile_path = WORKING_PROFILE_DIR / f"{profile_id}_profile.json"
-    save_json(str(working_profile_path), copy.deepcopy(wrapped))
+    if not working_profile_path.exists():
+        save_json(str(working_profile_path), copy.deepcopy(wrapped))
 
     return StateDrivenCompanionAgent(
         profile_path=str(working_profile_path),
