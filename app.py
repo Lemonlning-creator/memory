@@ -28,8 +28,8 @@ active_profile_id = None
 active_persona_id = None
 conversation_history = []
 
-DATASET_USER_PROFILE = Path("dataset/test_user.json")
-DATASET_AGENT_PERSONA = Path("dataset/test_agent.json")
+DATASET_USER_PROFILE = Path("dataset/lsy_user.json")
+DATASET_AGENT_PERSONA = Path("dataset/lx_agent.json")
 WORKING_PROFILE_DIR = Path("data/active_profiles")
 
 

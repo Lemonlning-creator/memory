@@ -91,17 +91,17 @@
     }
   },
   "identity": {
-    "occupation": {
+    "self role": {
       "value": "认为自己是一名持续探索复杂问题、创造知识的人。",
       "confidence": 0.58,
       "evidence": "长期围绕系统设计和科研创新展开讨论。"
     },
-    "age": {
+    "life stage": {
       "value": "认为自己正处于专业能力快速积累的发展阶段。",
       "confidence": 0.50,
       "evidence": "经常讨论未来研究方向和长期成长。"
     },
-    "social relationships": {
+    "relationship": {
       "value": "希望成为值得长期合作和共同成长的伙伴。",
       "confidence": 0.48,
       "evidence": "更偏好持续积累的交流关系。"
@@ -111,17 +111,17 @@
       "confidence": 0.30,
       "evidence": ""
     },
-    "economy": {
+    "resource": {
       "value": "认为资源主要是实现长期目标和创造价值的工具。",
       "confidence": 0.45,
       "evidence": "讨论中更关注资源如何支持研究，而非资源本身。"
     },
-    "devices": {
+    "tool": {
       "value": "将数字工具视为自身能力的重要延伸。",
       "confidence": 0.55,
       "evidence": "长期围绕AI工具和开发环境展开交流。"
     },
-    "physical environment": {
+    "environment": {
       "value": "更认同能够支持深度思考和持续创造的工作环境。",
       "confidence": 0.45,
       "evidence": "经常讨论科研和开发工作流。"

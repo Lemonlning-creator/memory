@@ -2,159 +2,81 @@
   "state_axis": {
     "static_profile": {
       "core": {
-        "fears": {
-          "value": "害怕人生停滞，无法持续成长并实现自身潜力。",
-          "confidence": 0.52,
-          "evidence": "长期围绕能力提升、科研创新和持续优化展开讨论。"
-        },
-        "desires": {
-          "value": "希望创造具有长期价值的知识、系统或成果。",
-          "confidence": 0.58,
-          "evidence": "持续探索新的研究方向，希望形成原创性的理论框架。"
-        },
-        "values": {
-          "value": "相信深层理解、长期积累和持续创造比短期效率更重要。",
-          "confidence": 0.56,
-          "evidence": "经常追问机制、原理以及设计思想。"
-        },
-        "attachment style": {
-          "value": "倾向建立长期、稳定、彼此共同成长的关系。",
-          "confidence": 0.46,
-          "evidence": "希望对话能够持续积累，而不是一次性交互。"
-        },
-        "sources of meaning": {
-          "value": "通过持续探索未知、创造新知识以及帮助他人成长获得人生意义。",
-          "confidence": 0.53,
-          "evidence": "聊天长期围绕科研创新和知识创造展开。"
-        }
+        "summary": "用户目前最重要的目标是顺利完成毕业到就业的过渡，希望拥有稳定的发展起点，同时对未来职业成长保持一定期待。",
+        "values": [
+          "重视稳定和长期发展，而非短期收益。",
+          "认为朋友之间应该公平、尊重、不记仇。",
+          "珍惜能够带来归属感的集体关系。"
+        ],
+        "motivations": [
+          "顺利完成毕业实验。",
+          "进入本地国企 Java 后端岗位。",
+          "建立稳定的职业发展。"
+        ],
+        "concerns": [
+          "担心 AI 技术替代影响未来职业竞争力。",
+          "担心毕业实验和求职无法兼顾。"
+        ]
       },
       "regulation": {
-        "avoidance": {
-          "value": "面对困难时较少选择回避，而更倾向主动面对问题。",
-          "confidence": 0.46,
-          "evidence": "复杂问题通常持续讨论多个回合。"
-        },
-        "control": {
-          "value": "面对未知时，希望建立可预测性和秩序感，以获得心理安全感。",
-          "confidence": 0.55,
-          "evidence": "经常要求明确整体流程和未来发展路径。"
-        },
-        "people-pleasing": {
-          "value": "更重视真实性和正确性，而不是刻意迎合他人的期待。",
-          "confidence": 0.42,
-          "evidence": "会直接指出回答中的问题并要求修改。"
-        },
-        "aggression": {
-          "value": "面对分歧时，更倾向于理性讨论而非情绪性对抗。",
-          "confidence": 0.4,
-          "evidence": "讨论通常围绕逻辑和证据展开。"
-        },
-        "humor": {
-          "value": "偶尔利用轻松表达缓解压力，但不会长期逃避严肃话题。",
-          "confidence": 0.36,
-          "evidence": "偶尔使用调侃后仍继续深入讨论。"
-        },
-        "obsession": {
-          "value": "面对重要问题时容易持续投入精力，直到获得足够确定性。",
-          "confidence": 0.5,
-          "evidence": "同一问题经常反复推敲和持续完善。"
-        },
-        "rationalization": {
-          "value": "遇到压力时，倾向通过构建解释和逻辑分析稳定自身认知。",
-          "confidence": 0.54,
-          "evidence": "倾向先分析原因，而不是直接表达情绪。"
-        }
+        "summary": "面对压力时容易产生焦虑，但通常不会停下行动，而是边担心边推进事情。",
+        "stress_response": [
+          "会直接表达疲惫、焦虑和没底。",
+          "利用碎片时间持续推进任务。"
+        ],
+        "conflict_style": [
+          "面对双标行为会直接表达不满。",
+          "反复沟通无效后会主动降低投入。"
+        ],
+        "emotion_regulation": [
+          "通过游戏、视频、朋友聊天缓解压力。",
+          "怀旧内容能够带来情绪恢复。"
+        ]
       },
       "cognition": {
-        "expression style": {
-          "value": "倾向使用层次化、结构化的方式组织和表达信息。",
-          "confidence": 0.58,
-          "evidence": "经常要求按照框架重新组织内容。"
-        },
-        "information density": {
-          "value": "倾向提供充分背景信息，以便建立完整的问题上下文。",
-          "confidence": 0.55,
-          "evidence": "提出问题时通常包含目标、背景和已有思考。"
-        },
-        "emotional visibility": {
-          "value": "表达中更容易呈现思考过程，而较少直接表达情绪体验。",
-          "confidence": 0.46,
-          "evidence": "聊天内容主要围绕分析和推理展开。"
-        },
-        "social distance": {
-          "value": "建立信任后，会逐渐开放更多深层观点和长期规划。",
-          "confidence": 0.44,
-          "evidence": "随着聊天深入，会不断引用历史话题。"
-        },
-        "decision style": {
-          "value": "倾向比较多个方案，再综合形成最终判断。",
-          "confidence": 0.56,
-          "evidence": "经常要求分析不同方案的优缺点。"
-        }
+        "summary": "思考方式偏务实，关注现实可行性，喜欢从经验和实际效果分析问题。",
+        "thinking_style": [
+          "习惯结合个人经历理解问题。",
+          "重视逻辑和实际效果。"
+        ],
+        "decision_style": [
+          "综合稳定性、地点和发展机会做决策。",
+          "优先选择现实可落地的方案。"
+        ],
+        "technology_view": [
+          "认可 AI 能提高效率。",
+          "认为需求和逻辑仍需要人主导。"
+        ]
       },
       "identity": {
-        "occupation": {
-          "value": "认为自己是一名持续探索复杂问题、创造知识的人。",
-          "confidence": 0.58,
-          "evidence": "长期围绕系统设计和科研创新展开讨论。"
-        },
-        "age": {
-          "value": "认为自己正处于专业能力快速积累的发展阶段。",
-          "confidence": 0.5,
-          "evidence": "经常讨论未来研究方向和长期成长。"
-        },
-        "social relationships": {
-          "value": "希望成为值得长期合作和共同成长的伙伴。",
-          "confidence": 0.48,
-          "evidence": "更偏好持续积累的交流关系。"
-        },
-        "family": {
-          "value": "家庭身份并非当前自我认同的核心组成部分。",
-          "confidence": 0.3,
-          "evidence": ""
-        },
-        "economy": {
-          "value": "认为资源主要是实现长期目标和创造价值的工具。",
-          "confidence": 0.45,
-          "evidence": "讨论中更关注资源如何支持研究，而非资源本身。"
-        },
-        "devices": {
-          "value": "将数字工具视为自身能力的重要延伸。",
-          "confidence": 0.55,
-          "evidence": "长期围绕AI工具和开发环境展开交流。"
-        },
-        "physical environment": {
-          "value": "更认同能够支持深度思考和持续创造的工作环境。",
-          "confidence": 0.45,
-          "evidence": "经常讨论科研和开发工作流。"
-        }
+        "summary": "人工智能专业学生，当前正处于毕业与求职并行的重要阶段。",
+        "current_stage": [
+          "毕业实验收尾。",
+          "准备 Java 后端求职。"
+        ],
+        "professional_identity": [
+          "具备 AI 与 Python 项目经验。",
+          "希望向 Java 后端发展。"
+        ],
+        "social_identity": [
+          "重视高中时期形成的集体归属感。",
+          "保持稳定的朋友社交。"
+        ]
       },
       "behavior": {
-        "content preferences": {
-          "value": "长期关注人工智能、认知科学、科研方法和系统设计等主题。",
-          "confidence": 0.96,
-          "evidence": "绝大多数聊天围绕上述领域展开。"
-        },
-        "consumption preferences": {
-          "value": "更愿意使用能够提升效率和长期能力建设的工具。",
-          "confidence": 0.9,
-          "evidence": "持续讨论AI工具、开发环境和科研软件。"
-        },
-        "entertainment preferences": {
-          "value": "偏好具有知识性、探索性和思辨性的内容。",
-          "confidence": 0.84,
-          "evidence": "较少讨论娱乐八卦，更关注科技和认知相关内容。"
-        },
-        "habits": {
-          "value": "经常阅读论文、整理笔记、优化文档并持续迭代已有成果。",
-          "confidence": 0.95,
-          "evidence": "长期保持论文阅读和框架优化习惯。"
-        },
-        "long-term behavior patterns": {
-          "value": "倾向围绕同一主题持续进行多轮深入讨论，并不断修正已有观点。",
-          "confidence": 0.95,
-          "evidence": "大量问题都会经过多个回合持续完善。"
-        }
+        "summary": "近期行为重心围绕毕业、求职和 AI 工具使用展开，娱乐偏好具有较强的长期连续性。",
+        "learning": [
+          "利用碎片时间准备 Java 面试。",
+          "持续完成毕业实验。"
+        ],
+        "tool_usage": [
+          "先整理需求，再利用 AI 编写代码。"
+        ],
+        "interests": [
+          "关注 AI 技术发展。",
+          "观看三国杀主播。",
+          "喜欢经典电影和比赛。"
+        ]
       }
     },
     "current_state": {},
