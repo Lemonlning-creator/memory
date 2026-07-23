@@ -10,6 +10,7 @@ from typing import Any, Dict, Generator, Optional, List
 from .llm_client import LLMClient
 from .logger import logger
 from .memory_os_local import MemoryOSLocal
+from .profile_batch_updater import ProfileBatchUpdater
 from .profile_utils import state_axis, context_axis, create_empty_profile, migrate_profile
 from .utils import load_json, save_json, parse_json
 from .prompts.prompt_loader import (
@@ -75,20 +76,27 @@ class StateDrivenCompanionAgent:
         self.user_profile = self._load_or_create_user_profile(self.profile_path)
         self.persona_path = persona_path or DEFAULT_PERSONA_PATH
         state_axis_obj = self.user_profile.setdefault("state_axis", {})
-        state_axis_obj["current_state"] = {}
-        state_axis_obj["projected_state"] = {}
+        state_axis_obj.setdefault("current_state", {})
+        state_axis_obj.setdefault("projected_state", {})
+        self.user_profile.setdefault("context_axis", {})
+        save_json(self.profile_path, self.user_profile)
         self.epistemic_tracker = EpistemicDecayTracker(mode=exploration_mode)
         self.last_empathy_state: Dict[str, Any] = {}
         self.last_prediction: Dict[str, Any] = {}
         self.last_agent_response: str = ""
-        self.user_profile["context_axis"] = {}
-        save_json(profile_path, self.user_profile)
         self.persona_config = load_json(self.persona_path)
+        self.profile_batch_updater = ProfileBatchUpdater(
+            self.profile_path,
+            on_profile_updated=self._on_profile_updated,
+        )
 
         self.memory_manager = MemoryOSLocal()
         self._background_memory_running = False
         self._background_memory_lock = threading.Lock()
         self._background_generation = 0
+
+    def _on_profile_updated(self, profile: Dict[str, Any]) -> None:
+        self.user_profile = profile
 
     def _profile_path_for_user(self, user_name: str) -> str:
         name = re.sub(r"[^0-9A-Za-z_\-一-鿿]+", "_", user_name).strip("_")
@@ -185,13 +193,8 @@ class StateDrivenCompanionAgent:
             _step("build_mid_term_summary",
                   lambda: self.memory_manager.build_mid_term_summary(self.llm, MID_TERM_SOURCE_MESSAGES))
 
-        long_term_memory_id = _step("extract_long_term_memory",
-                                    lambda: self.memory_manager.extract_long_term_memory(self.llm))
-
-        if long_term_memory_id:
-            profile_updated = _step("evolve_profile", lambda: self._evolve_profile_from_long_term(long_term_memory_id))
-            if profile_updated:
-                save_json(self.profile_path, self.user_profile)
+        _step("extract_long_term_memory",
+              lambda: self.memory_manager.extract_long_term_memory(self.llm))
 
     def _evolve_profile_from_long_term(self, long_term_memory_id: str) -> bool:
         """Evolve profile based on update_mode.
@@ -504,18 +507,6 @@ class StateDrivenCompanionAgent:
 
         flushed_mid_term_ids = self.memory_manager.flush_short_term_memory(self.llm)
         long_term_memory_id = self.memory_manager.extract_long_term_memory(self.llm)
-        if long_term_memory_id:
-            self._evolve_profile_from_long_term(long_term_memory_id)
-            save_json(self.profile_path, self.user_profile)
-
-        # Periodic rebuild check
-        self._sessions_since_last_rebuild += 1
-        if (self.update_mode == "periodic_rebuild"
-                and self._sessions_since_last_rebuild >= self.periodic_rebuild_interval):
-            all_messages = self.memory_manager.get_recent_messages(limit=100)
-            self.rebuild_profile_from_conversations(all_messages)
-            save_json(self.profile_path, self.user_profile)
-            self._sessions_since_last_rebuild = 0
 
         return {
             "flushed_mid_term_ids": flushed_mid_term_ids,
@@ -577,6 +568,10 @@ class StateDrivenCompanionAgent:
         self.memory_manager.append_stm("assistant", response)
         self.last_agent_response = response
         self.epistemic_tracker.increment()
+        try:
+            self.profile_batch_updater.submit_turn(user_input)
+        except Exception as exc:
+            logger.exception(f"[PROFILE_BATCH_ENQUEUE_ERROR] error={exc}")
         self._start_background(self._memory_pipeline, ())
 
         yield {
