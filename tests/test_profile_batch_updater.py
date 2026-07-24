@@ -175,5 +175,82 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
                 succeeded._timer.cancel()
 
 
+
+    def test_schema_rejects_report_style_profile_values(self):
+        patch = {
+            "layers": {
+                layer: {"summary": None, "attributes": {}}
+                for layer in PROFILE_LAYERS
+            }
+        }
+        patch["layers"]["core"] = {
+            "summary": {
+                "value": "最终画像呈现为敏感但有边界的人。",
+                "confidence": 0.8,
+                "evidence_message_ids": ["m1"],
+            },
+            "attributes": {},
+        }
+        with self.assertRaises(ProfileUpdateError):
+            validate_patch(patch, {"m1"})
+
+
+    def test_system_prompt_enforces_agent_viewpoint(self):
+        from src.profile_batch_updater import SYSTEM_PROMPT
+
+        for required in [
+            "它正在陪伴的这个人是什么样的人",
+            "站在 agent 观察对方的视角",
+            "不要写成报告元话语",
+            "不要直接搬运用户的自我描述或任务要求",
+            "从自然话题中的选择、反应、偏好、取舍和反复出现的行为中归纳",
+            "测试验收",
+        ]:
+            self.assertIn(required, SYSTEM_PROMPT)
+
+        for banned_example in ["最终画像呈现为", "用户表示自己是", "用户自称", "总结来说"]:
+            self.assertIn(banned_example, SYSTEM_PROMPT)
+
+    def test_prompt_payload_uses_raw_dialogue_without_assistant_replies(self):
+        class CapturingClient:
+            def __init__(self):
+                self.messages = None
+
+            class Chat:
+                def __init__(self, outer):
+                    self.completions = self
+                    self.outer = outer
+
+                def create(self, **kwargs):
+                    self.outer.messages = kwargs["messages"]
+                    content = json.dumps({
+                        "layers": {
+                            layer: {"summary": None, "attributes": {}}
+                            for layer in PROFILE_LAYERS
+                        }
+                    })
+                    return type("Response", (), {
+                        "choices": [type("Choice", (), {
+                            "message": type("Message", (), {"content": content})()
+                        })()]
+                    })()
+
+            @property
+            def chat(self):
+                return self.Chat(self)
+
+        client = CapturingClient()
+        extractor = KimiProfileExtractor(client=client)
+        extractor.extract({}, [{
+            "message_id": "m1",
+            "user": "我在讨论一个产品方案，不是在要求你给我贴标签。",
+            "created_at": "2026-07-24T00:00:00+00:00",
+        }])
+        payload = json.loads(client.messages[1]["content"])
+        self.assertEqual(list(payload["raw_dialogue_batch"][0]), ["message_id", "user", "created_at"])
+        self.assertNotIn("assistant", payload["raw_dialogue_batch"][0])
+        self.assertIn("field_whitelist", payload)
+
+
 if __name__ == "__main__":
     unittest.main()
