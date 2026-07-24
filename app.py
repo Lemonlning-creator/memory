@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import re
 
 import atexit
 from pathlib import Path
@@ -17,6 +18,7 @@ load_dotenv()
 
 from src.agent import StateDrivenCompanionAgent
 from src.logger import logger
+from src.profile_utils import create_empty_profile
 from src.utils import save_json, load_json
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
@@ -34,11 +36,50 @@ DATASET_AGENT_DIR = DATASET_OUTPUT_DIR / "agent"
 DATASET_TEST_USER_PROFILE = Path("dataset/lsy_user.json")
 DATASET_TEST_AGENT_PERSONA = Path("dataset/test_agent.json")
 WORKING_PROFILE_DIR = Path("data/active_profiles")
+ALLOW_CREATE_USER_PROFILES = os.getenv(
+    "MEMORY_ALLOW_CREATE_USER_PROFILES", "true"
+).lower() in ("1", "true", "yes", "on")
 
 
 def _humanize(name: str) -> str:
     """Convert a file-stem like 'fahim_khan' to a display name like 'Fahim Khan'."""
     return name.replace("_", " ").title()
+
+
+def _validate_profile_id(profile_id: str) -> str:
+    """Keep generated profile paths inside WORKING_PROFILE_DIR."""
+    profile_id = (profile_id or "").strip()
+    if not re.fullmatch(r"[0-9A-Za-z_\-]+", profile_id):
+        raise ValueError("profile_id can only contain letters, numbers, '_' and '-'")
+    return profile_id
+
+
+def _working_profile_path(profile_id: str) -> Path:
+    return WORKING_PROFILE_DIR / f"{profile_id}_profile.json"
+
+
+def ensure_user_profile(profile_id: str) -> dict:
+    profile_id = _validate_profile_id(profile_id)
+    profile_info = USER_PROFILES.get(profile_id)
+    if profile_info:
+        return profile_info
+
+    if not ALLOW_CREATE_USER_PROFILES:
+        raise ValueError(f"unknown user profile: {profile_id}")
+
+    WORKING_PROFILE_DIR.mkdir(parents=True, exist_ok=True)
+    path = _working_profile_path(profile_id)
+    if not path.exists():
+        save_json(str(path), create_empty_profile())
+
+    profile_info = {
+        "id": profile_id,
+        "display_name": _humanize(profile_id),
+        "file_name": path.name,
+        "source_path": str(path),
+    }
+    USER_PROFILES[profile_id] = profile_info
+    return profile_info
 
 
 def discover_user_profiles() -> dict:
@@ -61,6 +102,15 @@ def discover_user_profiles() -> dict:
                 "file_name": path.name,
                 "source_path": str(path),
             }
+    if WORKING_PROFILE_DIR.exists():
+        for path in sorted(WORKING_PROFILE_DIR.glob("*_profile.json")):
+            profile_id = path.stem.removesuffix("_profile")
+            profiles.setdefault(profile_id, {
+                "id": profile_id,
+                "display_name": _humanize(profile_id),
+                "file_name": path.name,
+                "source_path": str(path),
+            })
     return profiles
 
 
@@ -128,9 +178,7 @@ def require_agent():
     return None
 
 def build_agent_for_character(profile_id: str, persona_id: str) -> StateDrivenCompanionAgent:
-    profile_info = USER_PROFILES.get(profile_id)
-    if not profile_info:
-        raise ValueError(f"unknown user profile: {profile_id}")
+    profile_info = ensure_user_profile(profile_id)
 
     persona_info = AGENT_PERSONAS.get(persona_id)
     if not persona_info:
@@ -150,7 +198,7 @@ def build_agent_for_character(profile_id: str, persona_id: str) -> StateDrivenCo
     # Create the working copy once. Reuse it on later selections/restarts so
     # accumulated profile growth is not overwritten by the dataset seed.
     WORKING_PROFILE_DIR.mkdir(parents=True, exist_ok=True)
-    working_profile_path = WORKING_PROFILE_DIR / f"{profile_id}_profile.json"
+    working_profile_path = _working_profile_path(profile_id)
     if not working_profile_path.exists():
         save_json(str(working_profile_path), copy.deepcopy(wrapped))
 
