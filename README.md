@@ -62,7 +62,40 @@ PROFILE_BATCH_SECONDS=900
 运行离线单测：
 
 ```bash
-python -m unittest tests.test_profile_batch_updater -v
+python -m unittest \
+  tests.test_profile_batch_updater \
+  tests.test_interactive_profile_simulation \
+  tests.test_profile_integration_boundaries -v
 ```
 
-单测覆盖五层格式约束、字段级合并、任务内纠错重试，以及失败时不推进待处理队列。
+单测覆盖五层格式约束、字段级合并、任务内纠错重试、失败时不推进待处理队列，以及交互模拟的因果边界。
+
+### 逐轮交互画像模拟
+
+`src/experiments/interactive_profile_simulation.py` 不预写用户的 40 条输入。测试者只提供一份不向 agent 和画像提取器公开的隐藏 persona，以及一个或多个自然话题。每一轮先由 agent 根据此前对话发言，再由用户模拟模型读取这句发言并按照隐藏 persona 即时回应；只有这条新生成的用户原话会进入画像队列。模拟器只等待生产队列自己的后台 worker 完成“画像原子写入且 pending 清空”，不会手动调用处理函数。
+
+隐藏 persona 示例：
+
+```json
+{
+  "relationship": "很在意关系安全感，容易反复揣摩细节",
+  "strength": "共情和表达能力较强，愿意照顾他人感受",
+  "growth": "正在练习事实核对和边界表达"
+}
+```
+
+运行 40 轮、每 8 条激活一次画像：
+
+```bash
+SIMULATION_API_KEY=... PROFILE_API_KEY=... python -m src.experiments.interactive_profile_simulation \
+  --persona /tmp/hidden_persona.json \
+  --profile /tmp/interactive_profile.json \
+  --output /tmp/interactive_simulation_record.json \
+  --turns 40 \
+  --batch-size 8 \
+  --topic "朋友临时改变约定时如何沟通" \
+  --topic "任务堆积时怎样安排优先级" \
+  --topic "是否购买一件昂贵但长期使用的设备"
+```
+
+用户模拟提示词禁止直接陈述性格、优缺点、心理弱点或测试目的。若仍出现这类句式，会要求模型改写为具体选择、经历或当下反应；连续失败则终止测试，不把违规消息送入画像队列。

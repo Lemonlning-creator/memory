@@ -194,21 +194,33 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
         with self.assertRaises(ProfileUpdateError):
             validate_patch(patch, {"m1"})
 
+        patch["layers"]["core"]["summary"]["value"] = "深层价值收敛为长期信任与人格底色。"
+        with self.assertRaises(ProfileUpdateError):
+            validate_patch(patch, {"m1"})
+
+        patch["layers"]["core"]["summary"]["value"] = "对方重视长期信任，也愿意持续成长。"
+        with self.assertRaises(ProfileUpdateError):
+            validate_patch(patch, {"m1"})
+
 
     def test_system_prompt_enforces_agent_viewpoint(self):
         from src.profile_batch_updater import SYSTEM_PROMPT
 
         for required in [
             "它正在陪伴的这个人是什么样的人",
-            "站在 agent 观察对方的视角",
-            "不要写成报告元话语",
+            "最终文字要像已写入画像的直接判断",
+            "优先把相邻属性自然合成一句",
+            "只归纳同层、已有证据支持的属性",
+            "五层 summary 风格严格参照 deployment 分支预设画像",
+            "面对压力时容易产生焦虑，但通常不会停下行动",
+            "思考方式偏务实，关注现实可行性",
             "不要直接搬运用户的自我描述或任务要求",
             "从自然话题中的选择、反应、偏好、取舍和反复出现的行为中归纳",
             "测试验收",
         ]:
             self.assertIn(required, SYSTEM_PROMPT)
 
-        for banned_example in ["最终画像呈现为", "用户表示自己是", "用户自称", "总结来说"]:
+        for banned_example in ["最终画像呈现为", "深层价值收敛为", "人格底色是", "用户表示自己是", "总结来说", "可见其", "说明对方"]:
             self.assertIn(banned_example, SYSTEM_PROMPT)
 
     def test_prompt_payload_uses_raw_dialogue_without_assistant_replies(self):

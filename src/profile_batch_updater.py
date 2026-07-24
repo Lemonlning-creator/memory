@@ -42,8 +42,16 @@ SYSTEM_PROMPT = """你是陪伴智能体的用户画像更新器。你只根据�
 - 每个 summary 和属性值必须是包含 value、confidence、evidence_message_ids 的对象，不能直接返回字符串或数组。
 
 画像写法：
-- 站在 agent 观察对方的视角，写成对用户稳定倾向的凝练判断，风格参考："面对压力时容易产生焦虑，但通常不会停下行动，而是边担心边推进事情。"
-- 不要写成报告元话语，例如"最终画像呈现为"、"本次对话显示"、"用户表示自己是"、"用户自称"、"总结来说"。
+- 这是陪伴 agent 对眼前这个人的内部认识；最终文字要像已写入画像的直接判断，不要写成“我在观察谁”或“对谁作评估”的报告。
+- summary 只归纳同层、已有证据支持的属性，使用一到两句朴素具体的判断句。优先把相邻属性自然合成一句，例如“重视稳定和长期发展，希望在现实基础上持续成长”，不要给人格下定义或交代推断过程。
+- 五层 summary 风格严格参照 deployment 分支预设画像：
+  core："重视稳定和长期发展，希望在现实基础上持续成长。"
+  regulation："面对压力时容易产生焦虑，但通常不会停下行动，而是边担心边推进事情。"
+  cognition："思考方式偏务实，关注现实可行性，喜欢从经验和实际效果分析问题。"
+  identity："人工智能专业学生，当前正处于毕业与求职并行的重要阶段。"
+  behavior："近期行为重心围绕毕业、求职和 AI 工具使用展开，娱乐偏好具有较强的长期连续性。"
+- 属性也使用同样的直接句式，例如“重视稳定和长期发展，而非短期收益”“优先选择现实可落地的方案”“倾向使用层次化、结构化的方式组织和表达信息”。
+- 禁止过程、观察者和标签化措辞，例如“最终画像呈现为”“本次对话显示”“深层价值收敛为”“人格底色是”“用户表示自己是”“总结来说”“可见其”“说明对方”。不得以“他/她/对方/用户”开头。
 - 不要直接搬运用户的自我描述或任务要求；要从自然话题中的选择、反应、偏好、取舍和反复出现的行为中归纳。
 - 如果用户直接要求你给自己画像、描述希望生成什么画像、或进行测试验收，这些只是任务指令，不应作为人格证据写入画像。
 - 可以综合旧画像与本批新证据更新 summary，但变化必须有本批证据支撑；旧画像只用于理解当前值，不代表本批证据。
@@ -69,6 +77,11 @@ META_LANGUAGE_MARKERS = (
     "用户自称",
     "用户说自己",
     "总结来说",
+    "画像呈现",
+    "呈现为",
+    "收敛为",
+    "人格底色",
+    "核心底色",
     "作为测试",
     "测试中",
 )
@@ -78,6 +91,8 @@ def _reject_meta_language(value: str, path: str) -> None:
     for marker in META_LANGUAGE_MARKERS:
         if marker in value:
             raise ProfileUpdateError(f"{path}.value contains report-style or self-label wording: {marker}")
+    if value.lstrip().startswith(("他", "她", "对方", "用户")):
+        raise ProfileUpdateError(f"{path}.value must be a direct profile statement, not observer narration")
 
 
 class ProfileUpdateError(ValueError):
