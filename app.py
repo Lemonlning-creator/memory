@@ -18,7 +18,7 @@ load_dotenv()
 
 from src.agent import StateDrivenCompanionAgent
 from src.logger import logger
-from src.profile_utils import create_empty_profile
+from src.profile_schema import create_empty_static_profile, normalize_bare_profile, validate_bare_profile
 from src.utils import save_json, load_json
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
@@ -70,7 +70,7 @@ def ensure_user_profile(profile_id: str) -> dict:
     WORKING_PROFILE_DIR.mkdir(parents=True, exist_ok=True)
     path = _working_profile_path(profile_id)
     if not path.exists():
-        save_json(str(path), create_empty_profile())
+        save_json(str(path), create_empty_static_profile())
 
     profile_info = {
         "id": profile_id,
@@ -141,21 +141,8 @@ AGENT_PERSONAS = discover_agent_personas()
 
 
 def _wrap_dataset_profile(raw: dict) -> dict:
-    """Wrap a raw 5-layer dataset profile into the state_axis format the agent expects."""
-    if "state_axis" in raw:
-        return raw
-    return {
-        "state_axis": {
-            "static_profile": raw,
-            "current_state": {},
-            "projected_state": {},
-        },
-        "context_axis": {
-            "current_context": "",
-            "context_detail": "",
-            "inferred_at_turn": 0,
-        },
-    }
+    """Normalize dataset or legacy input to the persisted bare five-layer profile."""
+    return normalize_bare_profile(raw)
 
 def finalize_agent_session() -> dict:
     if agent is None:
@@ -715,7 +702,8 @@ def get_profile():
     agent_error = require_agent()
     if agent_error:
         return agent_error
-    return jsonify(agent.user_profile), 200
+    profile = normalize_bare_profile(agent.user_profile)
+    return jsonify(profile), 200
 
 
 @app.route("/api/profile", methods=["POST"])
@@ -726,9 +714,12 @@ def update_profile():
 
     data = request.json or {}
     try:
-        agent.user_profile.update(data)
-        save_json(agent.profile_path, agent.user_profile)
-        return jsonify({"message": "profile updated", "profile": agent.user_profile}), 200
+        profile = validate_bare_profile(data)
+        agent._on_profile_updated(profile)
+        save_json(agent.profile_path, profile)
+        return jsonify({"message": "profile updated", "profile": profile}), 200
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
