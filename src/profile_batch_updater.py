@@ -7,12 +7,23 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
+from dotenv import load_dotenv
+
 from .logger import logger
 from .utils import load_json
+
+load_dotenv()
+
+PROFILE_TIMEZONE = timezone(timedelta(hours=8))
+
+
+def _now_iso() -> str:
+    return datetime.now(PROFILE_TIMEZONE).isoformat()
+
 
 PROFILE_LAYERS = ("core", "regulation", "cognition", "identity", "behavior")
 PROFILE_FIELDS: Dict[str, tuple[str, ...]] = {
@@ -321,7 +332,7 @@ def merge_patch(profile: Mapping[str, Any], patch: Mapping[str, Any], turns: Ite
                 "evidence": evidence,
                 "evidence_message_ids": evidence_ids,
                 "memory_ids": memory_ids,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": _now_iso(),
             }
     return result
 
@@ -360,7 +371,7 @@ class ProfileBatchUpdater:
         _atomic_save_json(self.queue_path, queue)
 
     def submit_turn(self, user: str) -> str:
-        now = datetime.now(timezone.utc).isoformat()
+        now = _now_iso()
         turn = RawDialogueTurn(uuid.uuid4().hex, user.strip(), now)
         with self._lock:
             queue = self._load_queue()
