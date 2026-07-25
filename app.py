@@ -18,7 +18,6 @@ load_dotenv()
 
 from src.agent import StateDrivenCompanionAgent
 from src.logger import logger
-from src.profile_schema import create_empty_static_profile, normalize_bare_profile, validate_bare_profile
 from src.utils import save_json, load_json
 
 app = Flask(__name__, static_folder="frontend", static_url_path="")
@@ -39,6 +38,82 @@ WORKING_PROFILE_DIR = Path("data/active_profiles")
 ALLOW_CREATE_USER_PROFILES = os.getenv(
     "MEMORY_ALLOW_CREATE_USER_PROFILES", "true"
 ).lower() in ("1", "true", "yes", "on")
+
+STATIC_PROFILE_SKELETON = {
+    "core": {
+        "summary": None,
+        "values": [],
+        "motivations": [],
+        "concerns": [],
+    },
+    "regulation": {
+        "summary": None,
+        "stress_response": [],
+        "conflict_style": [],
+        "emotion_regulation": [],
+    },
+    "cognition": {
+        "summary": None,
+        "thinking_style": [],
+        "decision_style": [],
+        "technology_view": [],
+    },
+    "identity": {
+        "summary": None,
+        "current_stage": [],
+        "professional_identity": [],
+        "social_identity": [],
+    },
+    "behavior": {
+        "summary": None,
+        "learning": [],
+        "tool_usage": [],
+        "interests": [],
+        "interaction_preference": [],
+    },
+}
+
+
+def create_empty_profile_with_skeleton() -> dict:
+    return {
+        "state_axis": {
+            "static_profile": copy.deepcopy(STATIC_PROFILE_SKELETON),
+            "current_state": {},
+            "projected_state": {},
+        },
+        "context_axis": {
+            "current_context": "",
+            "context_detail": "",
+            "inferred_at_turn": 0,
+        },
+    }
+
+
+def ensure_profile_skeleton(profile: dict) -> tuple[dict, bool]:
+    changed = False
+    state_axis_obj = profile.setdefault("state_axis", {})
+    static_profile = state_axis_obj.setdefault("static_profile", {})
+    state_axis_obj.setdefault("current_state", {})
+    state_axis_obj.setdefault("projected_state", {})
+
+    for layer, fields in STATIC_PROFILE_SKELETON.items():
+        layer_profile = static_profile.setdefault(layer, {})
+        if layer_profile is None:
+            static_profile[layer] = {}
+            layer_profile = static_profile[layer]
+            changed = True
+        if not isinstance(layer_profile, dict):
+            continue
+        for field, default_value in fields.items():
+            if field not in layer_profile:
+                layer_profile[field] = copy.deepcopy(default_value)
+                changed = True
+
+    context_axis_obj = profile.setdefault("context_axis", {})
+    context_axis_obj.setdefault("current_context", "")
+    context_axis_obj.setdefault("context_detail", "")
+    context_axis_obj.setdefault("inferred_at_turn", 0)
+    return profile, changed
 
 
 def _humanize(name: str) -> str:
@@ -70,7 +145,11 @@ def ensure_user_profile(profile_id: str) -> dict:
     WORKING_PROFILE_DIR.mkdir(parents=True, exist_ok=True)
     path = _working_profile_path(profile_id)
     if not path.exists():
-        save_json(str(path), create_empty_static_profile())
+        save_json(str(path), create_empty_profile_with_skeleton())
+    else:
+        profile, changed = ensure_profile_skeleton(load_json(str(path)))
+        if changed:
+            save_json(str(path), profile)
 
     profile_info = {
         "id": profile_id,
@@ -187,7 +266,12 @@ def build_agent_for_character(profile_id: str, persona_id: str) -> StateDrivenCo
     WORKING_PROFILE_DIR.mkdir(parents=True, exist_ok=True)
     working_profile_path = _working_profile_path(profile_id)
     if not working_profile_path.exists():
-        save_json(str(working_profile_path), copy.deepcopy(wrapped))
+        profile, _ = ensure_profile_skeleton(copy.deepcopy(wrapped))
+        save_json(str(working_profile_path), profile)
+    else:
+        profile, changed = ensure_profile_skeleton(load_json(str(working_profile_path)))
+        if changed:
+            save_json(str(working_profile_path), profile)
 
     return StateDrivenCompanionAgent(
         profile_path=str(working_profile_path),
