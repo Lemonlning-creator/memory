@@ -11,7 +11,8 @@ from .llm_client import LLMClient
 from .logger import logger
 from .memory_os_local import MemoryOSLocal
 from .profile_batch_updater import ProfileBatchUpdater
-from .profile_utils import state_axis, context_axis, create_empty_profile, migrate_profile
+from .profile_schema import create_empty_static_profile, normalize_bare_profile
+from .profile_utils import state_axis, context_axis, migrate_profile, runtime_profile_from_bare
 from .utils import load_json, save_json, parse_json
 from .prompts.prompt_loader import (
     DIRECT_RESPONSE_SYSTEM_PROMPT,
@@ -75,11 +76,9 @@ class StateDrivenCompanionAgent:
         self.profile_path = profile_path or self._profile_path_for_user(user_name)
         self.user_profile = self._load_or_create_user_profile(self.profile_path)
         self.persona_path = persona_path or DEFAULT_PERSONA_PATH
-        state_axis_obj = self.user_profile.setdefault("state_axis", {})
-        state_axis_obj.setdefault("current_state", {})
-        state_axis_obj.setdefault("projected_state", {})
-        self.user_profile.setdefault("context_axis", {})
-        save_json(self.profile_path, self.user_profile)
+        # The persisted profile is the bare five-layer document. state_axis()
+        # provides a runtime compatibility view for existing readers; do not
+        # write legacy wrappers back into the profile file here.
         self.epistemic_tracker = EpistemicDecayTracker(mode=exploration_mode)
         self.last_empathy_state: Dict[str, Any] = {}
         self.last_prediction: Dict[str, Any] = {}
@@ -98,7 +97,13 @@ class StateDrivenCompanionAgent:
         self._background_generation = 0
 
     def _on_profile_updated(self, profile: Dict[str, Any]) -> None:
-        self.user_profile = profile
+        # Keep runtime-only current/context state intact while refreshing the
+        # persisted static profile produced by ProfileBatchUpdater.
+        state_axis(self.user_profile)["static_profile"] = normalize_bare_profile(profile)
+
+    def _save_profile(self) -> None:
+        """Persist only the public bare five-layer Profile contract."""
+        save_json(self.profile_path, normalize_bare_profile(state_axis(self.user_profile).get("static_profile", {})))
 
     def _profile_path_for_user(self, user_name: str) -> str:
         name = re.sub(r"[^0-9A-Za-z_\-一-鿿]+", "_", user_name).strip("_")
@@ -108,15 +113,17 @@ class StateDrivenCompanionAgent:
         path = Path(profile_path)
 
         if path.exists():
-            profile = load_json(str(path))
-            if "static_profile" in profile:
-                profile = migrate_profile(profile)
-                save_json(str(path), profile)
-            return profile
+            stored = load_json(str(path))
+            # Migrate legacy wrapper/leaf documents once, then keep the main
+            # profile file in the fixed bare five-layer contract.
+            bare = migrate_profile(stored)
+            if stored != bare:
+                save_json(str(path), bare)
+            return runtime_profile_from_bare(bare)
 
-        profile = create_empty_profile()
-        save_json(str(path), profile)
-        return profile
+        bare = create_empty_static_profile()
+        save_json(str(path), bare)
+        return runtime_profile_from_bare(bare)
     # ---------- prompt builders ----------
     def _prompt_context(
         self,
@@ -205,7 +212,7 @@ class StateDrivenCompanionAgent:
                 lambda: self._evolve_profile_from_long_term(long_term_memory_id),
             )
             if profile_updated:
-                save_json(self.profile_path, self.user_profile)
+                self._save_profile()
 
     def _evolve_profile_from_long_term(self, long_term_memory_id: str) -> bool:
         """Evolve profile based on update_mode.
@@ -520,14 +527,14 @@ class StateDrivenCompanionAgent:
         long_term_memory_id = self.memory_manager.extract_long_term_memory(self.llm)
         if long_term_memory_id and self.profile_batch_updater is None:
             if self._evolve_profile_from_long_term(long_term_memory_id):
-                save_json(self.profile_path, self.user_profile)
+                self._save_profile()
 
         self._sessions_since_last_rebuild += 1
         if (self.update_mode == "periodic_rebuild"
                 and self._sessions_since_last_rebuild >= self.periodic_rebuild_interval):
             all_messages = self.memory_manager.get_recent_messages(limit=100)
             self.rebuild_profile_from_conversations(all_messages)
-            save_json(self.profile_path, self.user_profile)
+            self._save_profile()
             self._sessions_since_last_rebuild = 0
 
         return {

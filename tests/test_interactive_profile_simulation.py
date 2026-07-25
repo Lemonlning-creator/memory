@@ -43,25 +43,12 @@ class DeterministicExtractor:
 
     def extract(self, current_profile, turns):
         self.batches.append([turn["message_id"] for turn in turns])
-        evidence_ids = [turn["message_id"] for turn in turns]
         return {
-            "layers": {
-                "core": {
-                    "summary": {
-                        "value": "重视把事情弄清楚后再作决定。",
-                        "confidence": 0.82,
-                        "evidence_message_ids": evidence_ids,
-                    },
-                    "attributes": {
-                        "values": {
-                            "value": "重视事实核对和稳妥选择。",
-                            "confidence": 0.82,
-                            "evidence_message_ids": evidence_ids,
-                        }
-                    },
-                },
-                **{layer: {"summary": None, "attributes": {}} for layer in PROFILE_LAYERS if layer != "core"},
-            }
+            "core": {
+                "summary": "重视把事情弄清楚后再作决定。",
+                "values": ["重视事实核对和稳妥选择。"],
+            },
+            **{layer: {} for layer in PROFILE_LAYERS if layer != "core"},
         }
 
 
@@ -112,7 +99,7 @@ class InteractiveProfileSimulationTests(unittest.TestCase):
             self.assertIn("agent-reply-1", agent.calls[1][1][-1]["content"])
             self.assertIn("private_trait", user.calls[0][0])
             self.assertNotIn("private_trait", agent.calls[0][0])
-            self.assertEqual(record["final_profile"]["state_axis"]["static_profile"]["core"]["summary"]["value"], "重视把事情弄清楚后再作决定。")
+            self.assertEqual(record["final_profile"]["core"]["summary"], "重视把事情弄清楚后再作决定。")
 
     def test_direct_self_description_is_regenerated_as_concrete_response(self):
         with tempfile.TemporaryDirectory() as temp_dir:

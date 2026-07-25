@@ -14,6 +14,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 from dotenv import load_dotenv
 
 from .logger import logger
+from .profile_schema import PROFILE_FIELDS, PROFILE_LAYERS, normalize_bare_profile
 from .utils import load_json
 
 load_dotenv()
@@ -79,35 +80,70 @@ SYSTEM_PROMPT = """你是陪伴智能体的用户画像更新器。你只根据�
 - 所有 evidence_message_ids 必须来自本批用户消息。绝对不要复用旧画像里的证据 ID；不要复制旧画像中没有新证据支持的变化。"""
 
 META_LANGUAGE_MARKERS = (
-    "最终画像",
-    "本次对话",
-    "这次对话",
-    "本批对话",
-    "本批消息",
-    "用户表示自己",
-    "用户自称",
-    "用户说自己",
-    "总结来说",
-    "画像呈现",
-    "呈现为",
-    "收敛为",
-    "人格底色",
-    "核心底色",
-    "作为测试",
-    "测试中",
+    "最终画像", "本次对话", "这次对话", "本批对话", "本批消息", "用户表示",
+    "用户自称", "用户说自己", "总结来说", "画像呈现", "呈现为", "收敛为",
+    "人格底色", "核心底色", "作为测试", "测试中",
 )
+
+
+class ProfileUpdateError(ValueError):
+    pass
 
 
 def _reject_meta_language(value: str, path: str) -> None:
     for marker in META_LANGUAGE_MARKERS:
         if marker in value:
-            raise ProfileUpdateError(f"{path}.value contains report-style or self-label wording: {marker}")
-    if value.lstrip().startswith(("他", "她", "对方", "用户")):
-        raise ProfileUpdateError(f"{path}.value must be a direct profile statement, not observer narration")
+            raise ProfileUpdateError(f"{path} contains report-style wording: {marker}")
+    if value.lstrip().startswith(("他", "她", "对方")):
+        raise ProfileUpdateError(f"{path} must be a direct profile statement")
 
 
-class ProfileUpdateError(ValueError):
-    pass
+def _nullable_string_array_schema() -> Dict[str, Any]:
+    return {
+        "anyOf": [
+            {"type": "null"},
+            {
+                "type": "array",
+                "minItems": 1,
+                "items": {"type": "string", "minLength": 1},
+            },
+        ]
+    }
+
+
+def build_profile_response_format() -> Dict[str, Any]:
+    """Strict fixed-field response schema. Evidence is not part of model output."""
+    layer_properties: Dict[str, Any] = {}
+    for layer in PROFILE_LAYERS:
+        layer_properties[layer] = {
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "summary": {"anyOf": [{"type": "null"}, {"type": "string", "minLength": 1}]},
+                **{field: _nullable_string_array_schema() for field in PROFILE_FIELDS[layer]},
+            },
+            "required": ["summary", *PROFILE_FIELDS[layer]],
+        }
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "profile_patch",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "layers": {
+                        "type": "object",
+                        "additionalProperties": False,
+                        "properties": layer_properties,
+                        "required": list(PROFILE_LAYERS),
+                    }
+                },
+                "required": ["layers"],
+            },
+        },
+    }
 
 
 def _atomic_save_json(path: Path, data: Mapping[str, Any]) -> None:
@@ -131,34 +167,70 @@ class RawDialogueTurn:
     created_at: str
 
     def as_dict(self) -> Dict[str, str]:
-        return {
-            "message_id": self.message_id,
-            "user": self.user,
-            "created_at": self.created_at,
-        }
+        return {"message_id": self.message_id, "user": self.user, "created_at": self.created_at}
 
 
-def compact_profile_for_prompt(static_profile: Mapping[str, Any]) -> Dict[str, Any]:
-    compact: Dict[str, Any] = {}
-    for layer, fields in static_profile.items():
-        if not isinstance(fields, Mapping):
-            compact[layer] = fields
-            continue
-        compact[layer] = {}
-        for field, raw in fields.items():
-            if isinstance(raw, Mapping) and "value" in raw:
-                item: Dict[str, Any] = {"value": raw.get("value")}
-                confidence = raw.get("confidence")
-                if isinstance(confidence, (int, float)) and not isinstance(confidence, bool):
-                    item["confidence"] = confidence
-                compact[layer][field] = item
-            else:
-                compact[layer][field] = raw
-    return compact
+def _clean_string(value: Any, path: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ProfileUpdateError(f"{path} must be a non-empty string")
+    result = value.strip()
+    _reject_meta_language(result, path)
+    return result
+
+
+def _clean_values(value: Any, path: str) -> List[str]:
+    if not isinstance(value, list) or not value:
+        raise ProfileUpdateError(f"{path} must be a non-empty string array")
+    if len(value) > 12:
+        raise ProfileUpdateError(f"{path} has too many values")
+    cleaned: List[str] = []
+    for index, item in enumerate(value):
+        item_value = _clean_string(item, f"{path}[{index}]")
+        if len(item_value) > 240:
+            raise ProfileUpdateError(f"{path}[{index}] is too long")
+        if item_value not in cleaned:
+            cleaned.append(item_value)
+    return cleaned
+
+
+def validate_patch(data: Any) -> Dict[str, Dict[str, Any]]:
+    if not isinstance(data, Mapping) or set(data) != {"layers"}:
+        raise ProfileUpdateError("patch must contain only layers")
+    layers = data.get("layers")
+    if not isinstance(layers, Mapping) or set(layers) != set(PROFILE_LAYERS):
+        raise ProfileUpdateError("patch must contain exactly the fixed five layers")
+
+    result: Dict[str, Dict[str, Any]] = {}
+    for layer in PROFILE_LAYERS:
+        section = layers[layer]
+        required = {"summary", *PROFILE_FIELDS[layer]}
+        if not isinstance(section, Mapping) or set(section) != required:
+            raise ProfileUpdateError(f"layers.{layer} has invalid fields")
+        normalized: Dict[str, Any] = {}
+        summary = section["summary"]
+        if summary is not None:
+            normalized["summary"] = _clean_string(summary, f"layers.{layer}.summary")
+        for field in PROFILE_FIELDS[layer]:
+            raw = section[field]
+            if raw is not None:
+                normalized[field] = _clean_values(raw, f"layers.{layer}.{field}")
+        result[layer] = normalized
+    return result
+
+
+def merge_patch(profile: Mapping[str, Any], patch: Mapping[str, Mapping[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """Apply only explicit field updates and keep every other stored value."""
+    merged = normalize_bare_profile(profile)
+    for layer in PROFILE_LAYERS:
+        updates = patch.get(layer, {})
+        for field in ("summary", *PROFILE_FIELDS[layer]):
+            if field in updates:
+                merged[layer][field] = copy.deepcopy(updates[field])
+    return merged
 
 
 class KimiProfileExtractor:
-    """Independent OpenAI-compatible profile extractor with task-local correction retries."""
+    """Independent OpenAI-compatible Profile extractor with task-local retries."""
 
     def __init__(
         self,
@@ -185,19 +257,17 @@ class KimiProfileExtractor:
     def available(self) -> bool:
         return self.client is not None
 
-    def extract(self, current_profile: Mapping[str, Any], turns: Iterable[Mapping[str, str]]) -> Dict[str, Any]:
+    def extract(self, current_profile: Mapping[str, Any], turns: Iterable[Mapping[str, str]]) -> Dict[str, Dict[str, Any]]:
         if not self.available:
             raise ProfileUpdateError("PROFILE_API_KEY is not configured")
-
         turn_list = list(turns)
-        allowed_ids = {turn["message_id"] for turn in turn_list}
         payload = {
-            "field_whitelist": {key: list(value) for key, value in PROFILE_FIELDS.items()},
-            "current_static_profile": compact_profile_for_prompt(current_profile),
+            "field_whitelist": {layer: list(PROFILE_FIELDS[layer]) for layer in PROFILE_LAYERS},
+            "current_profile": normalize_bare_profile(current_profile),
             "raw_dialogue_batch": turn_list,
             "output_example": {
                 "layers": {
-                    layer: {"summary": None, "attributes": {}}
+                    layer: {"summary": None, **{field: None for field in PROFILE_FIELDS[layer]}}
                     for layer in PROFILE_LAYERS
                 }
             },
@@ -207,7 +277,6 @@ class KimiProfileExtractor:
             {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
         ]
         last_error: Optional[Exception] = None
-
         for attempt in range(1, self.max_attempts + 1):
             raw = ""
             try:
@@ -216,22 +285,18 @@ class KimiProfileExtractor:
                     messages=messages,
                     temperature=0.6,
                     max_tokens=3000,
-                    response_format={"type": "json_object"},
+                    response_format=build_profile_response_format(),
                     extra_body={"thinking": {"type": "disabled"}},
                 )
                 raw = (response.choices[0].message.content or "").strip()
-                parsed = normalize_patch_field_names(json.loads(raw))
-                return validate_patch(parsed, allowed_ids)
+                return validate_patch(json.loads(raw))
             except Exception as exc:
                 last_error = exc
                 logger.warning("[PROFILE_BATCH] attempt=%s/%s failed: %s", attempt, self.max_attempts, exc)
                 if attempt < self.max_attempts:
                     if raw:
                         messages.append({"role": "assistant", "content": raw[:12000]})
-                    messages.append({
-                        "role": "user",
-                        "content": "上次输出校验失败：" + str(exc)[:1200] + "。请仅返回修正后的完整 JSON。",
-                    })
+                    messages.append({"role": "user", "content": "上次输出校验失败：" + str(exc)[:1200] + "。请仅返回修正后的完整 JSON。"})
         raise ProfileUpdateError(f"profile extraction failed after {self.max_attempts} attempts: {last_error}")
 
 
@@ -338,7 +403,7 @@ def merge_patch(profile: Mapping[str, Any], patch: Mapping[str, Any], turns: Ite
 
 
 class ProfileBatchUpdater:
-    """Small persistent raw-dialogue queue; triggers by count or age and removes turns only after success."""
+    """Persistent raw-dialogue queue. Only this Profile path performs noise judgement."""
 
     def __init__(
         self,
@@ -404,8 +469,7 @@ class ProfileBatchUpdater:
                 elapsed = max(0.0, time.time() - datetime.fromisoformat(first).timestamp())
             except ValueError:
                 pass
-        delay = max(0.05, self.max_wait_seconds - elapsed)
-        self._timer = threading.Timer(delay, self._timer_elapsed)
+        self._timer = threading.Timer(max(0.05, self.max_wait_seconds - elapsed), self._timer_elapsed)
         self._timer.daemon = True
         self._timer.start()
 
@@ -418,8 +482,7 @@ class ProfileBatchUpdater:
         if self._running:
             return
         self._running = True
-        thread = threading.Thread(target=self._worker, daemon=True)
-        thread.start()
+        threading.Thread(target=self._worker, daemon=True).start()
 
     def _worker(self) -> None:
         succeeded = False
@@ -448,26 +511,20 @@ class ProfileBatchUpdater:
         if not self.extractor.available:
             logger.warning("[PROFILE_BATCH] pending turns kept because PROFILE_API_KEY is not configured")
             return False
-
         consumed_ids = {turn["message_id"] for turn in turns}
         try:
             current = load_json(str(self.profile_path)) if self.profile_path.exists() else {}
-            static_profile = current.get("state_axis", {}).get("static_profile", {})
-            patch = self.extractor.extract(static_profile, turns)
-            merged = merge_patch(current, patch, turns)
+            patch = self.extractor.extract(normalize_bare_profile(current), turns)
+            merged = merge_patch(current, patch)
             _atomic_save_json(self.profile_path, merged)
         except Exception as exc:
             logger.exception("[PROFILE_BATCH] batch failed; pending turns retained: %s", exc)
             return False
-
         with self._lock:
             latest = self._load_queue()
             remaining = [turn for turn in latest["turns"] if turn.get("message_id") not in consumed_ids]
-            self._save_queue({
-                "first_enqueued_at": remaining[0]["created_at"] if remaining else None,
-                "turns": remaining,
-            })
+            self._save_queue({"first_enqueued_at": remaining[0]["created_at"] if remaining else None, "turns": remaining})
         if self.on_profile_updated:
             self.on_profile_updated(merged)
-        logger.info("[PROFILE_BATCH] updated profile from %s raw dialogue turns", len(turns))
+        logger.info("[PROFILE_BATCH] processed %s raw dialogue turns", len(turns))
         return True
