@@ -175,6 +175,37 @@ class ProfileBoundaryTests(unittest.TestCase):
                 response = client.post("/api/profile", json={"core": {}})
                 self.assertEqual(response.status_code, 400)
 
+    def test_chat_accepts_frontend_character_id_and_rejects_identity_mismatch(self):
+        import app as app_module
+
+        class ChatAgent:
+            user_profile = create_empty_static_profile()
+
+            def chat_stream(self, message, ablate_dimension=None):
+                yield {"type": "done", "response": f"echo:{message}"}
+
+        with patch.object(app_module, "agent", ChatAgent()), patch.object(
+            app_module, "active_profile_id", "user"
+        ), patch.object(app_module, "active_persona_id", "persona"), patch.object(
+            app_module, "active_chat_count", 0
+        ):
+            client = app_module.app.test_client()
+            response = client.post("/api/chat", json={
+                "message": "hello",
+                "character_id": "user",
+                "persona_id": "persona",
+            })
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('"message": "echo:hello"', response.get_data(as_text=True))
+
+            response = client.post("/api/chat", json={
+                "message": "hello",
+                "profile_id": "other",
+                "persona_id": "persona",
+            })
+            self.assertEqual(response.status_code, 409)
+            self.assertEqual(response.get_json()["error"], "character selection mismatch")
+
     def test_new_user_profile_is_created_as_bare_contract(self):
         import app as app_module
 

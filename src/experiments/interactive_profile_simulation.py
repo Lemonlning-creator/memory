@@ -57,7 +57,7 @@ class ChatModel(Protocol):
 
 
 class ProfileUpdater(Protocol):
-    def submit_turn(self, user: str) -> str:
+    def submit_turn(self, user: str, assistant: str) -> str:
         ...
 
 
@@ -221,7 +221,7 @@ class InteractiveProfileSimulation:
             })
 
             user_reply = self._generate_user_reply(topic, transcript)
-            message_id = self.updater.submit_turn(user_reply)
+            message_id = self.updater.submit_turn(user_reply, agent_reply)
             transcript.append({
                 "turn": turn_index + 1,
                 "speaker": "user",

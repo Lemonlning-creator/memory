@@ -113,8 +113,18 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
         current = create_empty_static_profile()
         current["core"]["values"] = ["重视稳定。"]
         turns = [
-            {"message_id": "m1", "user": "我希望毕业后有稳定的发展。", "created_at": "2026-07-25T00:00:00+00:00"},
-            {"message_id": "m2", "user": "我也愿意长期学习。", "created_at": "2026-07-25T00:01:00+00:00"},
+            {
+                "message_id": "m1",
+                "user": "我希望毕业后有稳定的发展。",
+                "assistant": "你更看重稳定性还是成长空间？",
+                "created_at": "2026-07-25T00:00:00+00:00",
+            },
+            {
+                "message_id": "m2",
+                "user": "我也愿意长期学习。",
+                "assistant": "持续学习会帮助你兼顾这两个目标。",
+                "created_at": "2026-07-25T00:01:00+00:00",
+            },
         ]
         extractor.extract(current, turns)
         request = fake.chat.completions.requests[0]
@@ -141,14 +151,14 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
 
                 def extract(self, current_profile, turns):
                     result = super().extract(current_profile, turns)
-                    self.updater.submit_turn("处理中新增")
+                    self.updater.submit_turn("处理中新增", "这是处理中新增的助手回复。")
                     return result
 
             extractor = ConcurrentExtractor()
             updater = ProfileBatchUpdater(str(profile_path), extractor=extractor, min_user_messages=99, max_wait_seconds=9999)
             extractor.updater = updater
-            updater.submit_turn("第一条")
-            updater.submit_turn("第二条")
+            updater.submit_turn("第一条", "第一条助手回复")
+            updater.submit_turn("第二条", "第二条助手回复")
             self.assertTrue(updater.process_pending())
             saved = json.loads(profile_path.read_text(encoding="utf-8"))
             self.assertEqual(set(saved), set(PROFILE_LAYERS))
@@ -165,7 +175,7 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
             profile_path.write_text(json.dumps(original), encoding="utf-8")
             empty_patch = {layer: {} for layer in PROFILE_LAYERS}
             updater = ProfileBatchUpdater(str(profile_path), extractor=StaticExtractor(patch=empty_patch), min_user_messages=99, max_wait_seconds=9999)
-            updater.submit_turn("嗯嗯嗯嗯")
+            updater.submit_turn("嗯嗯嗯嗯", "我先听着，你可以慢慢说。")
             self.assertTrue(updater.process_pending())
             self.assertEqual(updater._load_queue()["turns"], [])
             self.assertEqual(json.loads(profile_path.read_text(encoding="utf-8")), original)
@@ -177,11 +187,60 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
             profile_path = Path(temp_dir) / "u_profile.json"
             profile_path.write_text(json.dumps(create_empty_static_profile()), encoding="utf-8")
             updater = ProfileBatchUpdater(str(profile_path), extractor=StaticExtractor(error=RuntimeError("down")), min_user_messages=99, max_wait_seconds=9999)
-            updater.submit_turn("需要保留")
+            updater.submit_turn("需要保留", "这条回复也需要保留。")
             self.assertFalse(updater.process_pending())
-            self.assertEqual(len(updater._load_queue()["turns"]), 1)
+            pending = updater._load_queue()["turns"]
+            self.assertEqual(len(pending), 1)
+            self.assertEqual(pending[0]["assistant"], "这条回复也需要保留。")
             if updater._timer:
                 updater._timer.cancel()
+
+    def test_submit_turn_requires_both_sides_and_persists_assistant_context(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            profile_path = Path(temp_dir) / "u_profile.json"
+            profile_path.write_text(json.dumps(create_empty_static_profile()), encoding="utf-8")
+            updater = ProfileBatchUpdater(
+                str(profile_path),
+                extractor=StaticExtractor(),
+                min_user_messages=99,
+                max_wait_seconds=9999,
+            )
+            with self.assertRaises(ValueError):
+                updater.submit_turn("只有用户", "")
+            message_id = updater.submit_turn("用户原话", "助手上下文")
+            pending = updater._load_queue()["turns"]
+            self.assertEqual(pending, [{
+                "message_id": message_id,
+                "user": "用户原话",
+                "assistant": "助手上下文",
+                "created_at": pending[0]["created_at"],
+            }])
+            updater.close()
+
+    def test_legacy_pending_turn_without_assistant_is_normalized(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            profile_path = Path(temp_dir) / "u_profile.json"
+            profile_path.write_text(json.dumps(create_empty_static_profile()), encoding="utf-8")
+            queue_path = profile_path.with_suffix(profile_path.suffix + ".pending.json")
+            queue_path.write_text(json.dumps({
+                "first_enqueued_at": "2026-07-25T00:00:00+00:00",
+                "turns": [{
+                    "message_id": "legacy",
+                    "user": "旧结构",
+                    "created_at": "2026-07-25T00:00:00+00:00",
+                }],
+            }), encoding="utf-8")
+            updater = ProfileBatchUpdater(
+                str(profile_path),
+                extractor=StaticExtractor(),
+                min_user_messages=99,
+                max_wait_seconds=9999,
+            )
+            pending = updater._load_queue()["turns"]
+            self.assertEqual(len(pending), 1)
+            self.assertEqual(pending[0]["assistant"], "")
+            self.assertEqual(json.loads(queue_path.read_text(encoding="utf-8"))["turns"], pending)
+            updater.close()
 
 
 if __name__ == "__main__":

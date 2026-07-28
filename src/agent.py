@@ -599,7 +599,7 @@ class StateDrivenCompanionAgent:
         self.epistemic_tracker.increment()
         if self.profile_batch_updater is not None:
             try:
-                self.profile_batch_updater.submit_turn(user_input)
+                self.profile_batch_updater.submit_turn(user_input, response)
             except Exception as exc:
                 logger.exception(f"[PROFILE_BATCH_ENQUEUE_ERROR] error={exc}")
         self._start_background(self._memory_pipeline, ())
