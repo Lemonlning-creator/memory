@@ -29,6 +29,9 @@ agent = None
 active_profile_id = None
 active_persona_id = None
 conversation_history = []
+agent_state_condition = threading.Condition(threading.RLock())
+agent_chat_lock = threading.Lock()
+active_chat_count = 0
 
 DATASET_OUTPUT_DIR = Path(os.getenv("MEMORY_DATASET_OUTPUT_DIR", "dataset/output_zh"))
 DATASET_USER_DIR = DATASET_OUTPUT_DIR / "user"
@@ -62,7 +65,13 @@ def ensure_user_profile(profile_id: str) -> dict:
     profile_id = _validate_profile_id(profile_id)
     profile_info = USER_PROFILES.get(profile_id)
     if profile_info:
-        return profile_info
+        source_path = Path(profile_info["source_path"])
+        if source_path.exists():
+            return profile_info
+        logger.error(
+            f"[PROFILE_INIT] registered profile source is missing: "
+            f"profile_id={profile_id} path={source_path}"
+        )
 
     if not ALLOW_CREATE_USER_PROFILES:
         raise ValueError(f"unknown user profile: {profile_id}")
@@ -71,6 +80,10 @@ def ensure_user_profile(profile_id: str) -> dict:
     path = _working_profile_path(profile_id)
     if not path.exists():
         save_json(str(path), create_empty_static_profile())
+        logger.info(
+            f"[PROFILE_INIT] created empty five-layer profile: "
+            f"profile_id={profile_id} path={path}"
+        )
 
     profile_info = {
         "id": profile_id,
@@ -135,7 +148,6 @@ def discover_agent_personas() -> dict:
             }
     return personas
 
-
 USER_PROFILES = discover_user_profiles()
 AGENT_PERSONAS = discover_agent_personas()
 
@@ -155,6 +167,9 @@ def finalize_agent_session() -> dict:
 
 def finalize_agent_instance(agent_instance: StateDrivenCompanionAgent) -> None:
     try:
+        updater = getattr(agent_instance, "profile_batch_updater", None)
+        if updater is not None:
+            updater.close()
         agent_instance.finalize_session()
     except Exception as e:
         logger.error(f"[FINALIZE_AGENT] error: {e}")
@@ -250,55 +265,82 @@ def select_character():
 
     if not profile_id:
         return jsonify({"error": "profile_id is required"}), 400
-
     if not persona_id:
-        if AGENT_PERSONAS:
-            persona_id = list(AGENT_PERSONAS.keys())[0]
-        else:
-            return jsonify({"error": "no agent personas available"}), 400
+        return jsonify({"error": "persona_id is required"}), 400
 
-    if profile_id == active_profile_id and persona_id == active_persona_id and agent is not None:
-        return jsonify({
-            "message": "character already active",
-            "profile": agent.user_profile,
-            "profile_name": USER_PROFILES[profile_id]["display_name"],
-            "persona_name": AGENT_PERSONAS[persona_id]["display_name"],
-        }), 200
+    with agent_state_condition:
+        while active_chat_count:
+            agent_state_condition.wait()
 
-    try:
-        if agent is not None:
-            threading.Thread(
-                target=finalize_agent_instance,
-                args=(agent,),
-                daemon=True,
-            ).start()
+        if profile_id == active_profile_id and persona_id == active_persona_id and agent is not None:
+            return jsonify({
+                "message": "character already active",
+                "profile_id": active_profile_id,
+                "persona_id": active_persona_id,
+                "profile": agent.user_profile,
+                "profile_name": USER_PROFILES[profile_id]["display_name"],
+                "persona_name": AGENT_PERSONAS[persona_id]["display_name"],
+            }), 200
 
-        agent = build_agent_for_character(profile_id, persona_id)
+        previous_agent = agent
+        agent = None
+        active_profile_id = None
+        active_persona_id = None
+        if previous_agent is not None:
+            finalize_agent_instance(previous_agent)
+
+        try:
+            next_agent = build_agent_for_character(profile_id, persona_id)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 400
+
+        agent = next_agent
         active_profile_id = profile_id
         active_persona_id = persona_id
         conversation_history.clear()
         return jsonify({
             "message": "character selected",
+            "profile_id": active_profile_id,
+            "persona_id": active_persona_id,
             "profile": agent.user_profile,
             "profile_name": USER_PROFILES[profile_id]["display_name"],
             "persona_name": AGENT_PERSONAS[persona_id]["display_name"],
         }), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
 
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    agent_error = require_agent()
-    if agent_error:
-        return agent_error
+    global active_chat_count
 
     data = request.json or {}
+    requested_profile_id = data.get("profile_id") or data.get("character_id")
+    requested_persona_id = data.get("persona_id")
     user_input = data.get("message", "").strip()
     ablate_dimension = data.get("ablate_dimension")
 
+    if not requested_profile_id:
+        return jsonify({"error": "profile_id is required"}), 400
+    if not requested_persona_id:
+        return jsonify({"error": "persona_id is required"}), 400
     if not user_input:
         return jsonify({"error": "message is required"}), 400
+
+    with agent_state_condition:
+        if agent is None:
+            return jsonify({"error": "character is required"}), 409
+        if (
+            requested_profile_id != active_profile_id
+            or requested_persona_id != active_persona_id
+        ):
+            return jsonify({
+                "error": "character selection mismatch",
+                "requested_profile_id": requested_profile_id,
+                "active_profile_id": active_profile_id,
+                "requested_persona_id": requested_persona_id,
+                "active_persona_id": active_persona_id,
+            }), 409
+        local_agent = agent
+        active_chat_count += 1
 
     t_start = time.perf_counter()
 
@@ -307,48 +349,58 @@ def chat():
 
     @stream_with_context
     def generate():
+        global active_chat_count
         first_token_time = None
         try:
-            for event in agent.chat_stream(user_input, ablate_dimension=ablate_dimension):
-                event_type = event.get("type")
+            with agent_chat_lock:
+                for event in local_agent.chat_stream(user_input, ablate_dimension=ablate_dimension):
+                    event_type = event.get("type")
 
-                if event_type == "token":
-                    if first_token_time is None:
-                        first_token_time = time.perf_counter() - t_start
-                    yield encode_event(event)
-                    continue
+                    if event_type == "token":
+                        if first_token_time is None:
+                            first_token_time = time.perf_counter() - t_start
+                        yield encode_event(event)
+                        continue
 
-                if event_type == "profile_activation":
-                    logger.info(
-                        "[PROFILE_ACTIVATION] "
-                        + json.dumps(event, ensure_ascii=False)[:2000]
-                    )
-                    yield encode_event(event)
-                    continue
+                    if event_type == "profile_activation":
+                        logger.info(
+                            "[PROFILE_ACTIVATION] "
+                            + json.dumps(event, ensure_ascii=False)[:2000]
+                        )
+                        yield encode_event(event)
+                        continue
 
-                if event_type == "done":
-                    response = event["response"]
-                    total = time.perf_counter() - t_start
-                    logger.info(f"[CHAT] first_token={first_token_time:.3f}s total={total:.3f}s chars={len(response)}")
+                    if event_type == "done":
+                        response = event["response"]
+                        total = time.perf_counter() - t_start
+                        first_token = first_token_time if first_token_time is not None else total
+                        logger.info(
+                            f"[CHAT] first_token={first_token:.3f}s "
+                            f"total={total:.3f}s chars={len(response)}"
+                        )
 
-                    conversation_history.append({"role": "user", "content": user_input})
-                    conversation_history.append({"role": "assistant", "content": response})
+                        conversation_history.append({"role": "user", "content": user_input})
+                        conversation_history.append({"role": "assistant", "content": response})
 
-                    yield encode_event({
-                        "type": "done",
-                        "message": response,
-                        "profile": agent.user_profile,
-                        "conversation_length": len(conversation_history),
-                        "updated_fields": event.get("updated_fields", ["state_axis.current_state", "state_axis.projected_state"]),
-                        "background_memory_running": event.get("background_memory_running", False),
-                        "model_timing": event.get("model_timing"),
-                        "usage": event.get("usage"),
-                        "ablate_dimension": event.get("ablate_dimension"),
-                        "activated_persona": event.get("activated_persona", {}),
-                        "decision": event.get("decision", {}),
-                    })
+                        yield encode_event({
+                            "type": "done",
+                            "message": response,
+                            "profile": local_agent.user_profile,
+                            "conversation_length": len(conversation_history),
+                            "updated_fields": event.get("updated_fields", ["state_axis.current_state", "state_axis.projected_state"]),
+                            "background_memory_running": event.get("background_memory_running", False),
+                            "model_timing": event.get("model_timing"),
+                            "usage": event.get("usage"),
+                            "ablate_dimension": event.get("ablate_dimension"),
+                            "activated_persona": event.get("activated_persona", {}),
+                            "decision": event.get("decision", {}),
+                        })
         except Exception as e:
             yield encode_event({"type": "error", "error": str(e)})
+        finally:
+            with agent_state_condition:
+                active_chat_count -= 1
+                agent_state_condition.notify_all()
 
     return Response(generate(), mimetype="application/x-ndjson")
 
@@ -416,47 +468,56 @@ def _handle_voice_msg(ws, data):
 
 
 def _run_chat_via_ws(ws, message, system_start_ms, ablate_dimension):
-    """Run agent chat and stream tokens back to the client over the voice WS.
-    Eliminates the frontend round-trip after ASR completes."""
-    agent_error = require_agent()
-    if agent_error is not None:
-        try:
-            ws.send(json.dumps({"type": "chat_error", "error": "agent not ready"}, ensure_ascii=False))
-        except Exception:
-            pass
-        return
+    """Run one voice chat against an immutable snapshot of the active Agent."""
+    global active_chat_count
+
+    with agent_state_condition:
+        if agent is None:
+            try:
+                ws.send(json.dumps({"type": "chat_error", "error": "agent not ready"}, ensure_ascii=False))
+            except Exception:
+                pass
+            return
+        local_agent = agent
+        active_chat_count += 1
+
     t_start = time.perf_counter()
     first_token_time = None
     try:
-        ws.send(json.dumps({"type": "chat_start", "system_start_ms": system_start_ms}, ensure_ascii=False))
-        for event in agent.chat_stream(message, ablate_dimension=ablate_dimension):
-            event_type = event.get("type")
-            if event_type == "token":
-                if first_token_time is None:
-                    first_token_time = time.perf_counter() - t_start
-                    logger.info(f"[CHAT] first_token={first_token_time:.3f}s input={message!r:.50}")
-                try:
-                    ws.send(json.dumps({"type": "chat_token", "content": event.get("content", "")}, ensure_ascii=False))
-                except Exception as e:
-                    logger.error(f"[WS] chat_token send failed: {e}")
-                    return
-            elif event_type == "done":
-                response = event["response"]
-                total = time.perf_counter() - t_start
-                logger.info(f"[CHAT] total={total:.3f}s chars={len(response)}")
-                ws.send(json.dumps({
-                    "type": "chat_done",
-                    "response": response,
-                    "profile": agent.user_profile,
-                    "updated_fields": event.get("updated_fields", []),
-                    "background_memory_running": event.get("background_memory_running", False),
-                }, ensure_ascii=False))
+        with agent_chat_lock:
+            ws.send(json.dumps({"type": "chat_start", "system_start_ms": system_start_ms}, ensure_ascii=False))
+            for event in local_agent.chat_stream(message, ablate_dimension=ablate_dimension):
+                event_type = event.get("type")
+                if event_type == "token":
+                    if first_token_time is None:
+                        first_token_time = time.perf_counter() - t_start
+                        logger.info(f"[CHAT] first_token={first_token_time:.3f}s input={message!r:.50}")
+                    try:
+                        ws.send(json.dumps({"type": "chat_token", "content": event.get("content", "")}, ensure_ascii=False))
+                    except Exception as e:
+                        logger.error(f"[WS] chat_token send failed: {e}")
+                        return
+                elif event_type == "done":
+                    response = event["response"]
+                    total = time.perf_counter() - t_start
+                    logger.info(f"[CHAT] total={total:.3f}s chars={len(response)}")
+                    ws.send(json.dumps({
+                        "type": "chat_done",
+                        "response": response,
+                        "profile": local_agent.user_profile,
+                        "updated_fields": event.get("updated_fields", []),
+                        "background_memory_running": event.get("background_memory_running", False),
+                    }, ensure_ascii=False))
     except Exception as e:
         logger.error(f"[WS] chat stream error: {e}")
         try:
             ws.send(json.dumps({"type": "chat_error", "error": str(e)}, ensure_ascii=False))
         except Exception:
             pass
+    finally:
+        with agent_state_condition:
+            active_chat_count -= 1
+            agent_state_condition.notify_all()
 
 
 class _StreamASRSession:

@@ -16,7 +16,7 @@
 
 画像保持现有五层结构：`core`、`regulation`、`cognition`、`identity`、`behavior`。每层包含一条 `summary`，其他属性只能来自该层的既有字段白名单。
 
-更新只读取本批原始对话，不使用被压缩的中期或长期记忆。默认累计 8 条用户消息或等待 15 分钟，任一条件满足即在后台处理。待处理消息写入画像同目录的 `.pending.json` 文件，只有画像成功校验、合并并保存后才会移出队列。
+更新只读取本批原始对话，不使用被压缩的中期或长期记忆。每条待处理记录同时保存用户原话和对应助手回复；助手回复只提供上下文，不能单独作为画像证据。默认累计 8 个完整对话 turn 或等待 15 分钟，任一条件满足即在后台处理。待处理记录写入画像同目录的 `.pending.json` 文件，只有画像成功校验、合并并保存后才会移出队列；处理失败会保留并按重试间隔再次调度。
 
 新的原始对话批处理只用于默认的 `bayesian_online` 模式。`static` 仍保持不更新，`periodic_rebuild` 仍按原来的会话间隔重建，避免改变实验对照语义。角色工作画像只在首次选择时从数据集种子创建，后续选择和服务重启会继续复用已有画像。
 
@@ -45,6 +45,7 @@ PROFILE_BASE_URL=https://api.moonshot.cn/v1
 PROFILE_MODEL=kimi-k2.6
 PROFILE_BATCH_MESSAGES=8
 PROFILE_BATCH_SECONDS=900
+PROFILE_BATCH_RETRY_SECONDS=60
 ```
 
 不要把真实密钥提交到仓库。项目已忽略 `.env`。
@@ -72,7 +73,7 @@ python -m unittest \
 
 ### 逐轮交互画像模拟
 
-`src/experiments/interactive_profile_simulation.py` 不预写用户的 40 条输入。测试者只提供一份不向 agent 和画像提取器公开的隐藏 persona，以及一个或多个自然话题。每一轮先由 agent 根据此前对话发言，再由用户模拟模型读取这句发言并按照隐藏 persona 即时回应；只有这条新生成的用户原话会进入画像队列。模拟器只等待生产队列自己的后台 worker 完成“画像原子写入且 pending 清空”，不会手动调用处理函数。
+`src/experiments/interactive_profile_simulation.py` 不预写用户的 40 条输入。测试者只提供一份不向 agent 和画像提取器公开的隐藏 persona，以及一个或多个自然话题。每一轮先由 agent 根据此前对话发言，再由用户模拟模型读取这句发言并按照隐藏 persona 即时回应；新生成的用户原话与对应 agent 回复会作为一个完整 turn 进入画像队列。模拟器只等待生产队列自己的后台 worker 完成“画像原子写入且 pending 清空”，不会手动调用处理函数。
 
 隐藏 persona 示例：
 

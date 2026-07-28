@@ -14,16 +14,19 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 from .logger import logger
 from .profile_schema import PROFILE_FIELDS, PROFILE_LAYERS, normalize_bare_profile
 from .utils import load_json
+from dotenv import load_dotenv
 
+load_dotenv()
 
 SYSTEM_PROMPT = """你是陪伴智能体的用户画像更新器。任务只更新固定五层用户画像。
 
 输入会给你两部分：
 1. current_profile：当前已保存的长期画像。它只用于理解既有内容，不是本次更新的证据。
-2. raw_dialogue_batch：最新、尚未处理的一批用户原话。只有其中内容可以支持本次更新。
+2. raw_dialogue_batch：最新、尚未处理的一批对话。每条包含 user 与 assistant；只有 user 内容可以支持本次更新。
 
 重要边界：
-- 不要评估、改写或回复用户；不要处理助手回答；不要改变主对话。
+- assistant 只用于补足 user 碎片的对话上下文，不得作为用户事实或画像证据。
+- 不要评估、改写或回复用户；不要改变主对话。
 - 只输出服务端 JSON Schema 所要求的 JSON，不要 Markdown 或解释。
 - 每层必须输出 summary 和三个固定字段。没有可靠更新时返回 null；不要为了填满字段猜测。
 - summary 是字符串；字段值是字符串数组。文字写成对这个人的直接、具体、长期判断，不写观察报告或推理过程。
@@ -133,10 +136,16 @@ def _atomic_save_json(path: Path, data: Mapping[str, Any]) -> None:
 class RawDialogueTurn:
     message_id: str
     user: str
+    assistant: str
     created_at: str
 
     def as_dict(self) -> Dict[str, str]:
-        return {"message_id": self.message_id, "user": self.user, "created_at": self.created_at}
+        return {
+            "message_id": self.message_id,
+            "user": self.user,
+            "assistant": self.assistant,
+            "created_at": self.created_at,
+        }
 
 
 def _clean_string(value: Any, path: str) -> str:
@@ -285,27 +294,128 @@ class ProfileBatchUpdater:
         self.extractor = extractor or KimiProfileExtractor()
         message_threshold = min_user_messages if min_user_messages is not None else int(os.getenv("PROFILE_BATCH_MESSAGES", "8"))
         wait_threshold = max_wait_seconds if max_wait_seconds is not None else int(os.getenv("PROFILE_BATCH_SECONDS", "900"))
+        retry_threshold = int(os.getenv("PROFILE_BATCH_RETRY_SECONDS", "60"))
         self.min_user_messages = max(1, message_threshold)
         self.max_wait_seconds = max(1, wait_threshold)
+        self.retry_seconds = max(1, retry_threshold)
         self.on_profile_updated = on_profile_updated
         self._lock = threading.RLock()
         self._process_lock = threading.Lock()
         self._running = False
+        self._closed = False
         self._timer: Optional[threading.Timer] = None
         self._schedule_existing_queue()
 
+    @staticmethod
+    def _empty_queue() -> Dict[str, Any]:
+        return {"first_enqueued_at": None, "turns": []}
+
+    def _reset_invalid_queue(self, reason: str) -> Dict[str, Any]:
+        logger.error(
+            "[PROFILE_BATCH] invalid pending queue reset: path=%s reason=%s",
+            self.queue_path,
+            reason,
+        )
+        queue = self._empty_queue()
+        self._save_queue(queue)
+        return queue
+
     def _load_queue(self) -> Dict[str, Any]:
-        data = load_json(str(self.queue_path)) if self.queue_path.exists() else {}
-        turns = data.get("turns", []) if isinstance(data, dict) else []
-        return {"first_enqueued_at": data.get("first_enqueued_at") if isinstance(data, dict) else None, "turns": turns}
+        if not self.queue_path.exists():
+            queue = self._empty_queue()
+            self._save_queue(queue)
+            logger.info("[PROFILE_BATCH] initialized pending queue: %s", self.queue_path)
+            return queue
+
+        try:
+            raw = self.queue_path.read_text(encoding="utf-8")
+        except OSError:
+            logger.exception("[PROFILE_BATCH] failed to read pending queue: %s", self.queue_path)
+            raise
+
+        if not raw.strip():
+            queue = self._empty_queue()
+            self._save_queue(queue)
+            logger.info("[PROFILE_BATCH] normalized blank pending queue: %s", self.queue_path)
+            return queue
+
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            return self._reset_invalid_queue(f"invalid JSON: {exc}")
+
+        if data == {}:
+            queue = self._empty_queue()
+            self._save_queue(queue)
+            return queue
+        if not isinstance(data, dict):
+            return self._reset_invalid_queue("root must be a JSON object")
+
+        turns = data.get("turns", [])
+        if not isinstance(turns, list):
+            return self._reset_invalid_queue("turns must be a JSON array")
+
+        normalized_turns = []
+        for index, turn in enumerate(turns):
+            if not isinstance(turn, dict):
+                return self._reset_invalid_queue(f"turns[{index}] must be an object")
+            normalized = {
+                "message_id": turn.get("message_id"),
+                "user": turn.get("user"),
+                "assistant": turn.get("assistant", ""),
+                "created_at": turn.get("created_at"),
+            }
+            required = (
+                normalized["message_id"],
+                normalized["user"],
+                normalized["created_at"],
+            )
+            if not all(isinstance(value, str) and value.strip() for value in required):
+                return self._reset_invalid_queue(
+                    f"turns[{index}] requires non-empty message_id, user and created_at"
+                )
+            if not isinstance(normalized["assistant"], str):
+                return self._reset_invalid_queue(f"turns[{index}].assistant must be a string")
+            try:
+                datetime.fromisoformat(normalized["created_at"].replace("Z", "+00:00"))
+            except ValueError:
+                return self._reset_invalid_queue(f"turns[{index}].created_at is invalid")
+            normalized_turns.append(normalized)
+
+        first_enqueued_at = data.get("first_enqueued_at")
+        if normalized_turns:
+            if not isinstance(first_enqueued_at, str) or not first_enqueued_at.strip():
+                return self._reset_invalid_queue(
+                    "first_enqueued_at is required when turns are present"
+                )
+            try:
+                datetime.fromisoformat(first_enqueued_at.replace("Z", "+00:00"))
+            except ValueError:
+                return self._reset_invalid_queue("first_enqueued_at is invalid")
+        else:
+            first_enqueued_at = None
+
+        queue = {
+            "first_enqueued_at": first_enqueued_at,
+            "turns": normalized_turns,
+        }
+        if data != queue:
+            self._save_queue(queue)
+        return queue
 
     def _save_queue(self, queue: Mapping[str, Any]) -> None:
         _atomic_save_json(self.queue_path, queue)
 
-    def submit_turn(self, user: str) -> str:
+    def submit_turn(self, user: str, assistant: str) -> str:
+        user_text = str(user or "").strip()
+        assistant_text = str(assistant or "").strip()
+        if not user_text or not assistant_text:
+            raise ValueError("user and assistant are required")
         now = datetime.now(timezone.utc).isoformat()
-        turn = RawDialogueTurn(uuid.uuid4().hex, user.strip(), now)
+        turn = RawDialogueTurn(uuid.uuid4().hex, user_text, assistant_text, now)
         with self._lock:
+            if self._closed:
+                raise RuntimeError("profile batch updater is closed")
             queue = self._load_queue()
             if not queue["turns"]:
                 queue["first_enqueued_at"] = now
@@ -317,16 +427,37 @@ class ProfileBatchUpdater:
                 self._schedule_timer_locked(queue)
         return turn.message_id
 
+    def close(self) -> None:
+        with self._lock:
+            self._closed = True
+            self._cancel_timer_locked()
+        # Wait for an in-flight extraction/commit before another Agent can bind
+        # to the same profile and pending files.
+        with self._process_lock:
+            pass
+
+    def _cancel_timer_locked(self) -> None:
+        timer = self._timer
+        self._timer = None
+        if timer is not None:
+            timer.cancel()
+
     def _schedule_existing_queue(self) -> None:
         with self._lock:
+            if self._closed:
+                return
             queue = self._load_queue()
-            if queue["turns"]:
-                if len(queue["turns"]) >= self.min_user_messages:
-                    self._start_worker_locked()
-                else:
-                    self._schedule_timer_locked(queue)
+            if not queue["turns"]:
+                self._cancel_timer_locked()
+            elif len(queue["turns"]) >= self.min_user_messages:
+                self._start_worker_locked()
+            else:
+                self._schedule_timer_locked(queue)
 
     def _schedule_timer_locked(self, queue: Mapping[str, Any]) -> None:
+        if self._closed or not queue.get("turns"):
+            self._cancel_timer_locked()
+            return
         if self._timer and self._timer.is_alive():
             return
         first = queue.get("first_enqueued_at")
@@ -340,12 +471,32 @@ class ProfileBatchUpdater:
         self._timer.daemon = True
         self._timer.start()
 
+    def _schedule_retry_locked(self) -> None:
+        if self._closed:
+            return
+        self._cancel_timer_locked()
+        self._timer = threading.Timer(self.retry_seconds, self._timer_elapsed)
+        self._timer.daemon = True
+        self._timer.start()
+        logger.warning(
+            "[PROFILE_BATCH] pending batch retry scheduled in %ss: %s",
+            self.retry_seconds,
+            self.queue_path,
+        )
+
     def _timer_elapsed(self) -> None:
         with self._lock:
             self._timer = None
-            self._start_worker_locked()
+            if self._closed:
+                return
+            queue = self._load_queue()
+            if queue["turns"]:
+                self._start_worker_locked()
 
     def _start_worker_locked(self) -> None:
+        if self._closed:
+            return
+        self._cancel_timer_locked()
         if self._running:
             return
         self._running = True
@@ -358,15 +509,24 @@ class ProfileBatchUpdater:
         finally:
             with self._lock:
                 self._running = False
+                if self._closed:
+                    self._cancel_timer_locked()
+                    return
                 queue = self._load_queue()
-                if succeeded and queue["turns"]:
-                    if len(queue["turns"]) >= self.min_user_messages:
-                        self._start_worker_locked()
-                    else:
-                        self._schedule_timer_locked(queue)
+                if not queue["turns"]:
+                    self._cancel_timer_locked()
+                elif not succeeded:
+                    self._schedule_retry_locked()
+                elif len(queue["turns"]) >= self.min_user_messages:
+                    self._start_worker_locked()
+                else:
+                    self._schedule_timer_locked(queue)
 
     def process_pending(self) -> bool:
         with self._process_lock:
+            with self._lock:
+                if self._closed:
+                    return False
             return self._process_pending()
 
     def _process_pending(self) -> bool:
@@ -391,6 +551,8 @@ class ProfileBatchUpdater:
             latest = self._load_queue()
             remaining = [turn for turn in latest["turns"] if turn.get("message_id") not in consumed_ids]
             self._save_queue({"first_enqueued_at": remaining[0]["created_at"] if remaining else None, "turns": remaining})
+            if not remaining:
+                self._cancel_timer_locked()
         if self.on_profile_updated:
             self.on_profile_updated(merged)
         logger.info("[PROFILE_BATCH] processed %s raw dialogue turns", len(turns))
