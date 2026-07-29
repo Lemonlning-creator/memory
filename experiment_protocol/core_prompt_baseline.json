@@ -1,0 +1,12 @@
+{
+  "upstream_repository": "https://github.com/Lemonlning-creator/memory.git",
+  "upstream_branch": "experiment",
+  "baseline_commit": "491145961e5ce51ae144c3bb5d84f62d027e8df8",
+  "protected_files": {
+    "src/prompts/templates.py": "d0c2be076bddbac1f6a3c567d39e4fc8e6de5f2507fc5aa690fd9b16a4f37452",
+    "src/prompts/templates_en.py": "f916daafcaf3d07c57b408798b0be8f005beea04691c1be3702df93353e97b5e",
+    "src/prompts/prompt_loader.py": "fc729ddc2810844bcf1af585b68c0acdc47e771b0dcac2d2fab554570c1bc6c7",
+    "src/agent.py": "5e2fc59dcb1f772627f0f89ba72b4a4d4b4b14ecc28e073663066d9ab3b44493",
+    "src/memory_os_local.py": "8fd99dcd2152aa724ee0d064ad0e5ec5e826ad4fd9321a57060e331d7aeee244"
+  }
+}
