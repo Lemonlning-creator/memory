@@ -127,10 +127,12 @@ class OpenAICompatibleChatBackend:
             try:
                 request: dict[str, Any] = {
                     "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
+                    "messages": (
+                        [{"role": "system", "content": system_prompt}]
+                        if system_prompt.strip()
+                        else []
+                    )
+                    + [{"role": "user", "content": user_prompt}],
                     "max_tokens": max_tokens,
                 }
                 if self.is_kimi_k2:

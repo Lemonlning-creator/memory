@@ -1,0 +1,30 @@
+{
+  "judge": "Kimi K2.6 Pilot Judge",
+  "split": "Published paper case (N=1)",
+  "status_note": "Pipeline smoke test only; not Qwen/DeepSeek, not Random/OOD, and not comparable with PersonaEmp Table 1.",
+  "scale": {
+    "minimum": 1,
+    "maximum": 5,
+    "higher_is_better": true
+  },
+  "series": [
+    {
+      "method": "Ours",
+      "records": 1,
+      "source": "D:\\codex_workspace\\memory-revised-experiments\\data\\personaemp_exp1\\kimi_k26_cn_contract_v2_one_retry_20260729\\evaluations\\pilot\\ours.kimi-pilot.json",
+      "resonation": 4.0,
+      "expression": 5.0,
+      "reception": 3.0,
+      "average_raw_1_to_5": 4.0
+    },
+    {
+      "method": "Base Model",
+      "records": 1,
+      "source": "D:\\codex_workspace\\memory-revised-experiments\\data\\personaemp_exp1\\kimi_k26_cn_contract_v2_one_retry_20260729\\evaluations\\pilot\\base_model.kimi-pilot.json",
+      "resonation": 3.0,
+      "expression": 3.0,
+      "reception": 3.0,
+      "average_raw_1_to_5": 3.0
+    }
+  ]
+}

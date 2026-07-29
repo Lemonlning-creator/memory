@@ -231,6 +231,8 @@ def run_prepare_criteria(args: argparse.Namespace) -> None:
         environment["OPENAI_MODEL"],
         "--concurrency",
         str(args.concurrency),
+        "--temperature",
+        str(args.temperature),
         "--max-retries",
         str(args.max_retries),
         "--resume",
@@ -242,6 +244,21 @@ def run_prepare_criteria(args: argparse.Namespace) -> None:
         cwd=repository / "evaluation",
         env=environment,
         check=True,
+    )
+    if args.limit is not None and args.limit % len(DIMENSIONS) != 0:
+        raise ValueError(
+            "--limit counts criteria jobs and must be a multiple of 3 "
+            "to complete whole queries"
+        )
+    expected_queries = (
+        args.limit // len(DIMENSIONS)
+        if args.limit is not None
+        else None
+    )
+    validate_criteria_alignment(
+        args.dataset,
+        args.output,
+        expected_queries,
     )
 
 
@@ -308,6 +325,7 @@ def _parser() -> argparse.ArgumentParser:
     criteria.add_argument("--env-prefix", default="PERSONAEMP_CRITERIA")
     criteria.add_argument("--python", type=Path, default=Path(sys.executable))
     criteria.add_argument("--concurrency", type=int, default=8)
+    criteria.add_argument("--temperature", type=float, default=0.2)
     criteria.add_argument("--max-retries", type=int, default=6)
     criteria.add_argument("--limit", type=int, default=None)
     criteria.set_defaults(handler=run_prepare_criteria)

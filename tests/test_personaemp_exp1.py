@@ -250,6 +250,18 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
 
         self.assertEqual(output.method, "ours")
         self.assertTrue(output.response)
+        self.assertIn(
+            "five_layer_profile",
+            output.to_record()["qualitative_artifacts"],
+        )
+        self.assertIn(
+            "prediction",
+            output.to_record()["qualitative_artifacts"],
+        )
+        self.assertIn(
+            "exploration",
+            output.to_record()["qualitative_artifacts"],
+        )
         self.assertEqual(base_output.method, "base_model")
         ours_call = backend.calls[-2]
         base_call = backend.calls[-1]

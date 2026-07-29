@@ -64,3 +64,29 @@ python -m src.experiments.personaemp.cli `
 正式指标为 PersonaEmp 的 Resonation、Expression、Reception 与 Average。固定 criteria 后，分别交给论文指定的 Qwen 与 DeepSeek Judge；当前仓库通过固定官方提交的外部 checkout 调用 evaluator，不改写其评分实现。
 
 只有数据 SHA-256 与登记的官方 Table 1 数据指纹一致时，清单才允许标记为可直接比较。论文公开案例或重新生成的数据只能作为流程验证或补充实验。
+
+## 指标可视化
+
+完成 Judge 后，将每个方法的官方结果 JSON 传给可视化器：
+
+```powershell
+python -m src.experiments.personaemp.visualize `
+  --result "Ours=path/to/ours.qwen.json" `
+  --result "Base Model=path/to/base.qwen.json" `
+  --output-dir path/to/visualization `
+  --judge-label "Qwen3-30B-A3B-Instruct" `
+  --split-label "Random Split"
+```
+
+输出包括：
+
+- `personaemp_metrics.png`：Res/Exp/Rec/Avg 分组柱状图；
+- `personaemp_metrics.csv`：适合 Excel 的 UTF-8 表格；
+- `personaemp_metrics.json`：可追溯的结构化数据；
+- `personaemp_metrics.md`：中文结果表。
+
+图表严格使用官方 1--5 分，不把 Token、耗时或人工判断混入主指标。
+
+在正式 Qwen/DeepSeek 接口尚未配置时，可以用
+`tools/run_personaemp_pilot_eval.py` 复用官方 Prompt 调试指标链路。
+Pilot 输出必须明确标注为非正式结果，不可写入 Table 1。

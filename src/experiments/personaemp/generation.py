@@ -173,9 +173,10 @@ class GenerationOutput:
     alignment_hash: str | None
     omega: float | None
     stages: dict[str, StageUsage]
+    qualitative_artifacts: dict[str, Any] | None = None
 
     def to_record(self) -> dict[str, Any]:
-        return {
+        record = {
             "response": self.response,
             "method": self.method,
             "profile_hash": self.profile_hash,
@@ -185,6 +186,9 @@ class GenerationOutput:
                 name: asdict(usage) for name, usage in self.stages.items()
             },
         }
+        if self.qualitative_artifacts is not None:
+            record["qualitative_artifacts"] = self.qualitative_artifacts
+        return record
 
 
 class ProfileCache:
@@ -443,4 +447,11 @@ class DeepEmpathyGenerator:
             alignment_hash=alignment_hash,
             omega=omega,
             stages=stages,
+            qualitative_artifacts={
+                "five_layer_profile": flatten_static_profile(profile),
+                "understanding": alignment.get("understanding", {}),
+                "prediction": alignment.get("prediction", {}),
+                "exploration": alignment.get("exploration", {}),
+                "empathy_state": alignment.get("empathy_state", {}),
+            },
         )
