@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
-from typing import Any
 
 from .client import OpenAICompatibleChatBackend
 from .dataset import PersonaEmpDataset
@@ -15,17 +13,6 @@ from .generation import (
     ProfileCache,
 )
 from .runner import PersonaEmpRunner, RunConfiguration
-
-
-def _load_agent_persona(path: Path | None) -> tuple[dict[str, Any], str | None]:
-    if path is None:
-        return {}, None
-    raw = path.read_bytes()
-    value = json.loads(raw.decode("utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError("--agent-persona must contain a JSON object")
-    return value, hashlib.sha256(raw).hexdigest()
-
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -40,7 +27,6 @@ def _parser() -> argparse.ArgumentParser:
         default=("ours",),
     )
     parser.add_argument("--limit", type=int, default=None)
-    parser.add_argument("--agent-persona", type=Path, default=None)
     parser.add_argument(
         "--dataset-provenance",
         default="unknown",
@@ -91,16 +77,11 @@ def main() -> int:
         return 0
 
     backend = OpenAICompatibleChatBackend.from_env(args.env_prefix)
-    agent_persona, persona_hash = _load_agent_persona(args.agent_persona)
     profile_cache = ProfileCache(args.output_dir / "cache" / "profiles")
     profile_builder = ProfileBuilder(backend, profile_cache)
 
     generators = {
-        "ours": DeepEmpathyGenerator(
-            backend,
-            profile_builder,
-            agent_persona=agent_persona,
-        ),
+        "ours": DeepEmpathyGenerator(backend, profile_builder),
         "base_model": BaseModelGenerator(backend),
     }
     selected_generators = {
@@ -117,7 +98,6 @@ def main() -> int:
             limit=args.limit,
             dataset_provenance=args.dataset_provenance,
             expected_table1_dataset_sha256=args.expected_table1_dataset_sha256,
-            agent_persona_sha256=persona_hash,
             generator_model=backend.model,
             generator_base_url=backend.base_url,
             generator_enable_thinking=backend.enable_thinking,

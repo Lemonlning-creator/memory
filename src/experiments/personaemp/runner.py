@@ -11,10 +11,13 @@ from typing import Any, Iterable
 
 from .dataset import PersonaEmpDataset, PersonaEmpSample
 from .generation import (
-    BASE_MODEL_SYSTEM_PROMPT,
     BASE_MODEL_USER_PROMPT,
-    DIRECT_RESPONSE_SYSTEM_PROMPT,
-    DIRECT_RESPONSE_USER_PROMPT_TEMPLATE,
+    EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
+    EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
+    OURS_USER_PROMPT,
+    PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
+    PROFILE_EXTRACTION_SYSTEM_PROMPT,
+    PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE,
     BaseModelGenerator,
     DeepEmpathyGenerator,
     prompt_hash,
@@ -63,12 +66,23 @@ def _sample_id(
 
 def _generation_prompt_hashes() -> dict[str, str]:
     return {
-        "ours_system": prompt_hash(DIRECT_RESPONSE_SYSTEM_PROMPT),
-        "ours_user_template": prompt_hash(
-            DIRECT_RESPONSE_USER_PROMPT_TEMPLATE
+        "shared_response_system": prompt_hash(
+            PERSONAEMP_RESPONSE_SYSTEM_PROMPT
         ),
-        "base_system": prompt_hash(BASE_MODEL_SYSTEM_PROMPT),
+        "ours_user_template": prompt_hash(OURS_USER_PROMPT),
         "base_user_template": prompt_hash(BASE_MODEL_USER_PROMPT),
+        "profile_extraction_system": prompt_hash(
+            PROFILE_EXTRACTION_SYSTEM_PROMPT
+        ),
+        "profile_extraction_user_template": prompt_hash(
+            PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
+        ),
+        "empathy_alignment_system": prompt_hash(
+            EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT
+        ),
+        "empathy_alignment_user_template": prompt_hash(
+            EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE
+        ),
     }
 
 
@@ -190,13 +204,56 @@ def _profile_preprocessing_summary(output_dir: Path) -> dict[str, Any]:
     }
 
 
+def _online_usage_summary(
+    records: list[dict[str, Any]],
+    methods: tuple[str, ...],
+) -> dict[str, dict[str, Any]]:
+    summary: dict[str, dict[str, Any]] = {}
+    for method in methods:
+        method_records = [
+            record
+            for record in records
+            if record.get("status") == "success"
+            and record.get("method") == method
+        ]
+        stage_rows = [
+            usage
+            for record in method_records
+            for stage_name, usage in (record.get("stages") or {}).items()
+            if stage_name != "profile" and isinstance(usage, dict)
+        ]
+        summary[method] = {
+            "successful_queries": len(method_records),
+            "included_stages": (
+                ["response"]
+                if method == "base_model"
+                else ["alignment", "response"]
+            ),
+            "profile_preprocessing_excluded": True,
+            "prompt_tokens": sum(
+                int(row.get("prompt_tokens", 0)) for row in stage_rows
+            ),
+            "completion_tokens": sum(
+                int(row.get("completion_tokens", 0)) for row in stage_rows
+            ),
+            "latency_seconds": round(
+                sum(float(row.get("latency_seconds", 0.0)) for row in stage_rows),
+                4,
+            ),
+            "attempts": sum(int(row.get("attempts", 0)) for row in stage_rows),
+            "logical_calls": sum(
+                int(row.get("logical_calls", 0)) for row in stage_rows
+            ),
+        }
+    return summary
+
+
 @dataclass(frozen=True)
 class RunConfiguration:
     methods: tuple[str, ...]
     limit: int | None
     dataset_provenance: str
     expected_table1_dataset_sha256: str | None
-    agent_persona_sha256: str | None
     generator_model: str
     generator_base_url: str
     generator_enable_thinking: bool
@@ -212,7 +269,6 @@ class RunConfiguration:
             "limit": self.limit,
             "dataset_provenance": self.dataset_provenance,
             "expected_table1_dataset_sha256": self.expected_table1_dataset_sha256,
-            "agent_persona_sha256": self.agent_persona_sha256,
             "generator_model": self.generator_model,
             "generator_base_url": self.generator_base_url,
             "generator_enable_thinking": self.generator_enable_thinking,
@@ -284,20 +340,49 @@ class PersonaEmpRunner:
                 "paper": "arXiv:2606.00728v1",
             },
             "generation": {
+                "protocol_version": "personaemp_benchmark_adapter_v2",
                 "model": self.config.generator_model,
                 "base_url": self.config.generator_base_url,
                 "enable_thinking": self.config.generator_enable_thinking,
                 "methods": list(self.config.methods),
-                "agent_persona_sha256": self.config.agent_persona_sha256,
                 "model_inputs": {
-                    "shared_evidence": ["extracted_memory", "query"],
+                    "shared_raw_evidence": ["extracted_memory", "query"],
+                    "excluded_generation_metadata": [
+                        "persona",
+                        "scenario",
+                        "category",
+                        "conversation",
+                    ],
+                    "base_model_input": [
+                        "extracted_memory",
+                        "query",
+                    ],
+                    "ours_input": [
+                        "extracted_memory",
+                        "query",
+                        "derived_five_layer_profile",
+                        "derived_deep_empathy_state",
+                    ],
                     "ours_transformation": (
                         "five_layer_profile_and_deep_empathy_alignment"
                     ),
                     "dataset_persona_visible_to_generators": False,
                     "dataset_persona_visible_to_official_judges": True,
+                    "external_agent_persona_visible_to_generators": False,
                 },
-                "core_prompt_policy": "unchanged_from_upstream_experiment",
+                "response_contract": {
+                    "shared_by_all_methods": True,
+                    "same_language_as_query": True,
+                    "paragraphs": 1,
+                    "sentences": "exactly_2_to_4",
+                    "direct_help_before_optional_question": True,
+                    "maximum_follow_up_questions": 1,
+                    "max_tokens": 350,
+                },
+                "core_prompt_policy": (
+                    "production_core_prompts_unchanged; "
+                    "benchmark_response_contract_is_adapter_local"
+                ),
                 "prompt_hashes": generation_prompt_hashes,
             },
         }
@@ -391,6 +476,10 @@ class PersonaEmpRunner:
             "predictions": prediction_paths,
             "profile_preprocessing": _profile_preprocessing_summary(
                 self.output_dir
+            ),
+            "online_inference": _online_usage_summary(
+                all_records,
+                self.config.methods,
             ),
         }
         _atomic_json(self.output_dir / "summary.json", summary)

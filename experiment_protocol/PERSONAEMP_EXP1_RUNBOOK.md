@@ -1,17 +1,19 @@
 # PersonaEmp Exp1 运行说明
 
-## 1. 校验数据
+## 当前实验比较什么
 
-```powershell
-python -m src.experiments.personaemp.cli `
-  --dataset path/to/English.json `
-  --output-dir data/personaemp_exp1/validate `
-  --validate-only
-```
+当前适配器运行两组：
 
-## 2. 配置生成模型
+- `base_model`：读取 `extracted_memory + query`，直接生成回复。
+- `ours`：读取同一份 `extracted_memory + query`，先派生五层画像和 Deep Empathy 状态，再生成回复。
 
-在本地 `.env` 或当前终端设置：
+两组最终回答共享同一个实验回复合同：与用户同语言、2--4 句、先给具体帮助再选择性追问、自然共情、不透露画像或记忆来源。生产系统的核心 Prompt 文件不做修改。
+
+数据集中的 `persona`、`scenario/situation`、`category` 和 `conversation` 不提供给任何生成方法。它们只保留为数据元信息或供官方评审流程使用。
+
+## 配置生成模型
+
+模型通过环境变量配置。本阶段可用 Kimi 验证流程，正式实验再切换指定模型：
 
 ```powershell
 $env:PERSONAEMP_GENERATOR_API_KEY="<local-secret>"
@@ -20,12 +22,20 @@ $env:PERSONAEMP_GENERATOR_MODEL="kimi-k2.6"
 $env:PERSONAEMP_GENERATOR_ENABLE_THINKING="false"
 ```
 
-不要把 Key 写入命令历史、代码、运行清单或实验输出。
+不要把 API Key 写入代码、命令记录、运行清单或实验输出。
 
-`ours` 与 `base_model` 共享相同的 `extracted_memory + query` 原始证据。
-数据集的 persona 和 scenario 不提供给生成器，只供固定版本官方评测器使用。
+## 校验和运行
 
-## 3. 小规模生成
+只校验数据：
+
+```powershell
+python -m src.experiments.personaemp.cli `
+  --dataset path/to/English.json `
+  --output-dir data/personaemp_exp1/validate `
+  --validate-only
+```
+
+小规模生成：
 
 ```powershell
 python -m src.experiments.personaemp.cli `
@@ -36,58 +46,21 @@ python -m src.experiments.personaemp.cli `
   --limit 3
 ```
 
-输出包括：
+重复运行同一命令会从 checkpoint 恢复，不重复计算成功样本。
 
-- `results.jsonl`：逐样本结果和调用统计；
-- `errors.jsonl`：失败记录；
-- `run_manifest.json`：代码、数据、模型和 Prompt 指纹；
-- `evaluation_dataset.json`：本次选择的官方格式数据；
-- `predictions/ours.json`；
-- `predictions/base_model.json`；
-- `summary.json`。
+## 输出
 
-重复运行同一命令会从 checkpoint 恢复，不会重复计算成功样本。
+- `results.jsonl`：逐样本回复、调用次数、Token 和耗时。
+- `errors.jsonl`：失败记录。
+- `run_manifest.json`：代码版本、数据指纹、模型、输入边界和 Prompt 指纹。
+- `evaluation_dataset.json`：本次选中的官方格式数据。
+- `predictions/ours.json` 与 `predictions/base_model.json`：供官方 Judge 使用。
+- `summary.json`：成功率与成本汇总。
 
-## 4. 生成固定 criteria
+`summary.json` 将画像提取列为 `profile_preprocessing`，不把它混入在线回复速度。Ours 的在线成本只比较 alignment 与 response；同时保留完整端到端成本，便于工程分析。
 
-官方代码另行克隆并固定在提交
-`b555447f267b8057039aab39a4be44725718ea7f`。
+## 官方评审
 
-```powershell
-$env:PERSONAEMP_CRITERIA_API_KEY="<local-secret>"
-$env:PERSONAEMP_CRITERIA_BASE_URL="<deepseek-compatible-url>"
-$env:PERSONAEMP_CRITERIA_MODEL="deepseek-v4-flash"
+正式指标为 PersonaEmp 的 Resonation、Expression、Reception 与 Average。固定 criteria 后，分别交给论文指定的 Qwen 与 DeepSeek Judge；当前仓库通过固定官方提交的外部 checkout 调用 evaluator，不改写其评分实现。
 
-python -m src.experiments.personaemp.official_eval prepare-criteria `
-  --official-repo D:\codex_workspace\.references\PersonalizedEmpathy-official `
-  --dataset data/personaemp_exp1/paper_case_smoke/evaluation_dataset.json `
-  --output data/personaemp_exp1/paper_case_smoke/criteria.json `
-  --limit 9
-```
-
-三条查询、三个维度共九次 criteria 调用。
-
-## 5. 运行 Judge
-
-Qwen Judge：
-
-```powershell
-python -m src.experiments.personaemp.official_eval judge `
-  --official-repo D:\codex_workspace\.references\PersonalizedEmpathy-official `
-  --dataset data/personaemp_exp1/paper_case_smoke/evaluation_dataset.json `
-  --predictions data/personaemp_exp1/paper_case_smoke/predictions/ours.json `
-  --criteria data/personaemp_exp1/paper_case_smoke/criteria.json `
-  --output data/personaemp_exp1/paper_case_smoke/evaluations/ours.qwen.json `
-  --judge-name qwen `
-  --env-prefix PERSONAEMP_QWEN_JUDGE
-```
-
-DeepSeek Judge 使用相同命令，将输出名、Judge 名和环境变量前缀改为：
-
-```text
-ours.deepseek.json
-deepseek
-PERSONAEMP_DEEPSEEK_JUDGE
-```
-
-每个 Judge 输出旁会生成 `.summary.json`，同时保留 1–5 原始均分和 0–1 归一化均分。
+只有数据 SHA-256 与登记的官方 Table 1 数据指纹一致时，清单才允许标记为可直接比较。论文公开案例或重新生成的数据只能作为流程验证或补充实验。

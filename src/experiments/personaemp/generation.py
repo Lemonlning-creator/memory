@@ -9,7 +9,6 @@ from typing import Any
 
 from ...epistemic_decay import PROFILE_LAYERS, compute_omega
 from ...profile_utils import flatten_static_profile
-from ...prompts import templates_en
 from ...prompts.templates_en import (
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
@@ -20,21 +19,38 @@ from .client import ChatBackend, ChatResult
 from .dataset import PersonaEmpSample
 
 
-DIRECT_RESPONSE_SYSTEM_PROMPT = getattr(
-    templates_en,
-    "DIRECT_RESPONSE_SYSTEM_PROMPT",
-    templates_en.DDIRECT_RESPONSE_SYSTEM_PROMPT,
-)
-DIRECT_RESPONSE_USER_PROMPT_TEMPLATE = templates_en.DIRECT_RESPONSE_USER_PROMPT_TEMPLATE
+PERSONAEMP_RESPONSE_SYSTEM_PROMPT = """You are a warm, empathetic conversation partner completing a single-turn personalized empathy benchmark.
 
-BASE_MODEL_SYSTEM_PROMPT = (
-    "You are a helpful, warm, and empathetic AI assistant."
-)
+Respond under all of these requirements:
+1. Use the same language as the user's query.
+2. Directly address the user's current need. When the user asks for advice, a decision, wording, or practical help, give at least one actionable suggestion or example phrase before any optional follow-up question.
+3. Write exactly one paragraph containing 2 to 4 concise, natural sentences.
+4. Validate the user's feelings when appropriate, without sounding clinical, formal, or patronizing.
+5. Personalize only from the evidence provided. Do not mention memories, profiles, hidden context, or how the response was generated.
+6. Do not invent user facts and do not describe yourself as an AI.
+7. Ask at most one follow-up question.
+8. Output only the final response."""
+
+RESPONSE_MAX_TOKENS = 350
 BASE_MODEL_USER_PROMPT = """You will be provided with memories extracted from previous dialogue.
-Generate a response to the user's current query.
+Use them as background evidence and generate the final response.
 
-Memories:
+User memory evidence:
 {memory}
+
+User query:
+{query}
+"""
+OURS_USER_PROMPT = """Generate the final response using the following evidence and derived reasoning.
+
+User memory evidence:
+{memory}
+
+Derived five-layer user profile:
+{profile}
+
+Derived deep-empathy state:
+{alignment}
 
 User query:
 {query}
@@ -74,22 +90,12 @@ def _memory_block(sample: PersonaEmpSample) -> str:
 
 
 def _profile_corpus(sample: PersonaEmpSample) -> str:
-    parts = [
-        "Extracted long-term memory evidence:",
-        _memory_block(sample),
-    ]
-    if sample.conversation:
-        parts.extend(
-            [
-                "",
-                "Available dialogue excerpt:",
-                *[
-                    f"{turn.get('role', 'unknown')}: {turn.get('text', '')}"
-                    for turn in sample.conversation
-                ],
-            ]
-        )
-    return "\n".join(parts)
+    return "\n".join(
+        [
+            "Extracted long-term memory evidence:",
+            _memory_block(sample),
+        ]
+    )
 
 
 def _profile_text(profile: dict[str, Any]) -> str:
@@ -255,7 +261,6 @@ class ProfileBuilder:
         payload = {
             "session_id": sample.session_id,
             "memory": sample.memory_items,
-            "conversation": sample.conversation,
             "model": self.backend.model,
             "system_prompt_hash": prompt_hash(PROFILE_EXTRACTION_SYSTEM_PROMPT),
             "user_prompt_hash": prompt_hash(PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE),
@@ -315,13 +320,13 @@ class BaseModelGenerator:
 
     def generate(self, sample: PersonaEmpSample) -> GenerationOutput:
         result = self.backend.chat(
-            BASE_MODEL_SYSTEM_PROMPT,
+            PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
             BASE_MODEL_USER_PROMPT.format(
                 memory=_memory_block(sample),
                 query=sample.query,
             ),
             temperature=0.6,
-            max_tokens=450,
+            max_tokens=RESPONSE_MAX_TOKENS,
         )
         return GenerationOutput(
             response=_strip_reasoning(result.content),
@@ -340,12 +345,10 @@ class DeepEmpathyGenerator:
         self,
         backend: ChatBackend,
         profile_builder: ProfileBuilder,
-        agent_persona: dict[str, Any] | None = None,
         schema_attempts: int = 3,
     ) -> None:
         self.backend = backend
         self.profile_builder = profile_builder
-        self.agent_persona = agent_persona or {}
         self.schema_attempts = schema_attempts
 
     def _alignment(
@@ -354,21 +357,14 @@ class DeepEmpathyGenerator:
         profile: dict[str, Any],
         omega: float,
     ) -> tuple[dict[str, Any], StageUsage]:
-        recent_context = json.dumps(
-            list(sample.conversation[-20:]),
-            ensure_ascii=False,
-        )
         user_prompt = EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE.format(
-            recent_context=recent_context,
+            recent_context=_memory_block(sample),
             user_message=sample.query,
             user_profile=json.dumps(
                 flatten_static_profile(profile),
                 ensure_ascii=False,
             ),
-            agent_persona=json.dumps(
-                self.agent_persona,
-                ensure_ascii=False,
-            ),
+            agent_persona="{}",
             current_state="{}",
             epistemic_omega=omega,
         )
@@ -402,37 +398,21 @@ class DeepEmpathyGenerator:
 
     def generate(self, sample: PersonaEmpSample) -> GenerationOutput:
         profile, profile_usage = self.profile_builder.build(sample)
-        interaction_count = max(len(sample.conversation), len(sample.memory_items))
+        interaction_count = len(sample.memory_items)
         omega = compute_omega(interaction_count, profile)
         alignment, alignment_usage = self._alignment(sample, profile, omega)
 
-        understanding = alignment.get("understanding", {})
-        current_state = {
-            "user_domain": understanding.get("user_domain", {}),
-            "prediction": alignment.get("prediction", {}),
-        }
-        current_context = {
-            "scenario": sample.scenario,
-            "category": sample.category,
-            "empathy_state": alignment.get("empathy_state", {}),
-            "exploration": alignment.get("exploration", {}),
-        }
-        response_prompt = DIRECT_RESPONSE_USER_PROMPT_TEMPLATE.format(
-            user_input=sample.query,
-            static_profile=_profile_text(profile),
-            current_state=json.dumps(current_state, ensure_ascii=False),
-            current_context=json.dumps(current_context, ensure_ascii=False),
-            persona_config=json.dumps(self.agent_persona, ensure_ascii=False),
-            relevant_memory=json.dumps(
-                list(sample.memory_items),
-                ensure_ascii=False,
-            ),
+        response_prompt = OURS_USER_PROMPT.format(
+            memory=_memory_block(sample),
+            profile=_profile_text(profile),
+            alignment=json.dumps(alignment, ensure_ascii=False),
+            query=sample.query,
         )
         response_result = self.backend.chat(
-            DIRECT_RESPONSE_SYSTEM_PROMPT,
+            PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
             response_prompt,
-            temperature=0.4,
-            max_tokens=450,
+            temperature=0.6,
+            max_tokens=RESPONSE_MAX_TOKENS,
         )
 
         stages = {

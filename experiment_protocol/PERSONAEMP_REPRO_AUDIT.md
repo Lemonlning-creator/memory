@@ -1,83 +1,37 @@
-# PersonaEmp 复现审计
+# PersonaEmp Exp1 复现审计
 
-## 审计对象
+## 正式方向
 
-- 论文：[From Empathy to Personalized Empathy](https://arxiv.org/abs/2606.00728)
-- 官方代码：[ZhengWwwq/PersonalizedEmpathy](https://github.com/ZhengWwwq/PersonalizedEmpathy)
-- 官方代码固定提交：`b555447f267b8057039aab39a4be44725718ea7f`
-- 本项目上游基线：`Lemonlning-creator/memory@4911459`
+- 研究问题：Deep Empathy 是否能提升个性化共情回复。
+- 数据：PersonaEmp Random/OOD split。
+- 正式生成模型：按师姐最新设计指定；当前 Kimi 仅用于流程和行为小测。
+- 方法：论文 Table 1 的全部 baseline 加 Ours。
+- 指标：Resonation、Expression、Reception、Average。
+- Judge：固定 criteria，分别由 Qwen 与 DeepSeek 评分。
 
-## 论文确定的正式设置
+## 当前代码已经保证
 
-- PersonaEmp 源自 AlpsBench/WildChat 的长期用户交互。
-- Random Split 按用户 9:1 划分。
-- OOD Split 根据 Big Five 人格特征做 KModes 聚类，并留出一个人格簇测试。
-- 基础生成模型是 Qwen3-8B。
-- 主指标是 Resonation、Expression、Reception 和三者 Average，范围 1–5。
-- 固定 criteria 先由 DeepSeek 为每个查询生成。
-- 同一份固定 criteria 分别交给 Qwen3-30B-A3B-Instruct 和 DeepSeek-v4-flash 评分。
+1. Base 与 Ours 的原始证据完全相同，只有 `extracted_memory + query`。
+2. `persona`、`scenario/situation`、`category`、`conversation` 不进入任何生成 Prompt。
+3. Ours 的五层画像只从 `extracted_memory` 派生，缓存键也不含隐藏对话。
+4. Ours 的 Deep Empathy alignment 只读取共享 memory、当前 query 和派生画像，不使用外部 agent persona。
+5. 两组最终回答使用完全相同的回复 system contract、temperature 和最大输出长度。
+6. 画像预处理成本与在线推理成本分开记录。
+7. 生产核心 Prompt 和 Agent 行为文件没有被修改，并由基线校验脚本保护。
+8. 每次运行记录数据指纹、代码提交、Prompt 指纹、Token、延迟、重试和失败原因。
 
-## 官方仓库实际公开范围
+## 为什么不再直接使用生产 Direct Response Prompt
 
-官方仓库公开了：
+生产 Prompt 服务于持续陪伴系统，包含“不要完全解决问题”“优先维持对话”等产品行为。PersonaEmp 是单轮回复评测，部分问题明确要求建议、决策或措辞；直接使用生产 Prompt 会让 Ours 因任务合同不同而吃亏。
 
-- PersonaEmp 数据过滤、画像、情境和查询生成脚本；
-- 三项查询质量检查；
-- 固定 criteria 生成脚本；
-- Resonation、Expression、Reception 的评分脚本；
-- PereGRM 训练代码。
+因此实验适配层增加共享的 PersonaEmp 回复合同，但不改生产 Prompt。Base 和 Ours 都遵守它，所以人设表达仍可自然温暖，同时不再把“刻意留问题到下一轮”误当成共情不足。
 
-官方仓库没有公开：
+## 与官方论文仍有的边界
 
-- 论文使用的 `English.json`；
-- Random/OOD 的固定样本 ID 或划分文件；
-- Table 1 各 Baseline 的逐样本预测；
-- Table 1 的固定 criteria 文件；
-- Qwen3-8B、Memory、RAG 等方法的完整推理脚本；
-- 数据生成所需的原始 `prepare_dataset/dataset/by_label_json/`。
+官方仓库未公开论文使用的 `English.json`、Random/OOD 固定样本 ID、Table 1 的逐样本预测和固定 criteria。未取得这些资源前：
 
-因此，在获得官方数据和划分前，不能把新生成数据上的 Ours 分数直接作为 Table 1 的新增一行。
+- 不能把 Pilot 或重新生成数据上的 Ours 分数直接追加到原 Table 1；
+- 可以验证输入输出、运行稳定性、官方 evaluator 对接与定性效果；
+- 若只能重新生成数据，所有需要比较的方法必须在同一新数据和同一 Judge 条件下重跑。
 
-## 当前实施策略
-
-1. 输入和输出严格兼容官方 PersonaEmp JSON 结构。
-2. 先使用论文案例构造的 Pilot 数据完成流程测试，该结果不进入论文主表。
-3. 官方数据到位后无需改代码，只替换 `--dataset`。
-4. 若只能重新生成数据，则在同一新数据上补跑必要 Baseline。
-5. 只有数据 SHA-256 与明确登记的 Table 1 数据指纹相同，运行清单才允许标记为可直接比较。
-6. 官方 evaluator 不复制或改写，通过固定提交的外部 checkout 调用。
-
-## 核心 Prompt 保护
-
-Ours 的回复生成继续使用上游已有的：
-
-- 五层画像提取 Prompt；
-- Deep Empathy alignment Prompt；
-- Direct Response System Prompt；
-- Direct Response User Prompt。
-
-生成阶段只把 PersonaEmp 的 `extracted_memory` 和 `query` 映射到现有字段。
-Ours 从同一份 memory 证据生成五层画像，再执行 Deep Empathy 对齐。
-数据集内的 `persona` 与 `scenario` 属于构造和评审元数据，不向任何生成方法披露；
-它们只由固定 criteria 和官方 Judge 使用。
-
-现有英文模板把变量拼写为 `DDIRECT_RESPONSE_SYSTEM_PROMPT`。适配器只兼容读取该变量，没有修改模板内容。核心 Prompt 和 Agent 行为文件仍由 `tools/verify_core_prompt_baseline.py` 校验。
-
-## 当前可执行范围
-
-- 可以验证 PersonaEmp 数据 Schema。
-- 可以用同一个可配置生成模型生成 `base_model` 和 `ours` 回复。
-- 可以断点恢复，并记录网络重试、逻辑重试、Token 和延迟。
-- 可以输出官方 evaluator 需要的 dataset/prediction 对。
-- 可以调用固定版本官方脚本生成 criteria。
-- 可以分别运行 Qwen 与 DeepSeek Judge，避免结果文件互相覆盖。
-- 可以汇总 raw 1–5 和 normalized 0–1 两种结果。
-
-## 尚缺资源
-
-- PersonaEmp 正式 `English.json` 和 Random/OOD 划分；
-- DeepSeek-v4-flash 的可用接口；
-- Qwen3-30B-A3B-Instruct Judge 接口；
-- 运行 Qwen3-8B 的本地权重或兼容 API。
-
-其中 Qwen3-8B 和 Qwen Judge 可以通过兼容服务配置；具体平台只影响运行资源，不影响实验代码。
+当前适配器不是完整 Table 1 复现器：它先实现并验证 `base_model` 与 `ours`。其余 baseline 和正式双 Judge 流程要在数据与模型资源确定后补齐。

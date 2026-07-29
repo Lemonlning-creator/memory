@@ -16,7 +16,9 @@ from src.experiments.personaemp.dataset import (
     PersonaEmpDatasetError,
 )
 from src.experiments.personaemp.generation import (
-    DIRECT_RESPONSE_SYSTEM_PROMPT,
+    RESPONSE_MAX_TOKENS,
+    PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
+    BaseModelGenerator,
     DeepEmpathyGenerator,
     ProfileBuilder,
     ProfileCache,
@@ -41,7 +43,7 @@ class FakeBackend:
     model = "fake-qwen3-8b"
 
     def __init__(self) -> None:
-        self.calls: list[tuple[str, str]] = []
+        self.calls: list[dict[str, object]] = []
 
     def chat(
         self,
@@ -51,8 +53,14 @@ class FakeBackend:
         temperature: float,
         max_tokens: int,
     ) -> ChatResult:
-        del temperature, max_tokens
-        self.calls.append((system_prompt, user_prompt))
+        self.calls.append(
+            {
+                "system": system_prompt,
+                "user": user_prompt,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
+            }
+        )
         if "extracting user profiles" in system_prompt:
             content = json.dumps(
                 {
@@ -227,7 +235,7 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
         self.assertEqual(usage.completion_tokens, 5)
         self.assertEqual(usage.latency_seconds, 0.3)
 
-    def test_uses_unchanged_core_response_prompt(self) -> None:
+    def test_uses_shared_contract_and_only_allowed_raw_evidence(self) -> None:
         dataset = PersonaEmpDataset.load(FIXTURE)
         backend = FakeBackend()
         with tempfile.TemporaryDirectory() as directory:
@@ -236,21 +244,56 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
                 ProfileCache(Path(directory) / "profiles"),
             )
             generator = DeepEmpathyGenerator(backend, builder)
-            output = generator.generate(dataset.samples[0])
+            sample = dataset.samples[0]
+            output = generator.generate(sample)
+            base_output = BaseModelGenerator(backend).generate(sample)
 
         self.assertEqual(output.method, "ours")
         self.assertTrue(output.response)
-        self.assertEqual(backend.calls[-1][0], DIRECT_RESPONSE_SYSTEM_PROMPT)
-        self.assertIn(dataset.samples[0].query, backend.calls[-1][1])
-        self.assertIn("deep friendships", backend.calls[-1][1])
-        self.assertIn("empathy_state", backend.calls[-1][1])
+        self.assertEqual(base_output.method, "base_model")
+        ours_call = backend.calls[-2]
+        base_call = backend.calls[-1]
+        self.assertEqual(
+            ours_call["system"],
+            PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
+        )
+        self.assertEqual(
+            base_call["system"],
+            PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
+        )
+        self.assertIn(
+            "exactly one paragraph containing 2 to 4",
+            str(ours_call["system"]),
+        )
+        self.assertIn(
+            "actionable suggestion or example phrase",
+            str(base_call["system"]),
+        )
+        self.assertEqual(ours_call["max_tokens"], RESPONSE_MAX_TOKENS)
+        self.assertEqual(base_call["max_tokens"], RESPONSE_MAX_TOKENS)
+        self.assertEqual(ours_call["temperature"], base_call["temperature"])
+        self.assertIn(sample.query, str(ours_call["user"]))
+        self.assertIn(sample.query, str(base_call["user"]))
+        self.assertIn("close friend group", str(ours_call["user"]))
+        self.assertIn("close friend group", str(base_call["user"]))
+        self.assertIn("empathy_state", str(ours_call["user"]))
+        self.assertNotIn("empathy_state", str(base_call["user"]))
         profile_prompt = next(
-            user_prompt
-            for system_prompt, user_prompt in backend.calls
-            if "extracting user profiles" in system_prompt
+            str(call["user"])
+            for call in backend.calls
+            if "extracting user profiles" in str(call["system"])
         )
         self.assertIn("Extracted long-term memory evidence", profile_prompt)
-        self.assertNotIn(dataset.samples[0].persona_text, profile_prompt)
+        forbidden_values = (
+            sample.persona_text,
+            sample.scenario,
+            sample.category,
+            sample.conversation[0]["text"],
+        )
+        for call in backend.calls:
+            combined = f"{call['system']}\n{call['user']}"
+            for forbidden in forbidden_values:
+                self.assertNotIn(forbidden, combined)
 
     def test_runner_resumes_without_duplicate_calls(self) -> None:
         dataset = PersonaEmpDataset.load(FIXTURE)
@@ -267,7 +310,6 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
                 limit=1,
                 dataset_provenance="paper_case_pilot",
                 expected_table1_dataset_sha256=None,
-                agent_persona_sha256=None,
                 generator_model=backend.model,
                 generator_base_url="https://example.invalid/v1",
                 generator_enable_thinking=False,
@@ -313,6 +355,15 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
         self.assertEqual(
             summary["profile_preprocessing"]["profiles_with_usage"],
             1,
+        )
+        self.assertEqual(
+            summary["online_inference"]["ours"]["included_stages"],
+            ["alignment", "response"],
+        )
+        self.assertTrue(
+            summary["online_inference"]["ours"][
+                "profile_preprocessing_excluded"
+            ]
         )
 
 
