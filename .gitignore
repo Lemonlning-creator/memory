@@ -5,3 +5,4 @@ memory.json
 user_profile_*.json
 .env
 logs/app.log
+data/personaemp_exp1/
