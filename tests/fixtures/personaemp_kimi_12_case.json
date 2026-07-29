@@ -1,0 +1,178 @@
+[
+  {
+    "source_file": "paper_table_3_extended_pilot",
+    "original_sid": "pilot_introvert_001",
+    "session_id": "pilot_introvert_001",
+    "persona": {
+      "persona_profile": "Values deep friendships strongly. Historically shy, introverted, and more comfortable with a close group than large social circles. Prefers intellectual hobbies such as reading, music, languages, and astronomy over physical activities."
+    },
+    "extracted_memory": [
+      {
+        "label": "social/preferences",
+        "value": "The user values a close friend group of four people more than large social circles."
+      },
+      {
+        "label": "personality/introversion",
+        "value": "The user is historically shy and introverted and has limited social energy."
+      },
+      {
+        "label": "preferences/hobbies",
+        "value": "The user prefers reading, music, languages, and astronomy over physical activities."
+      }
+    ],
+    "queries": [
+      {
+        "query_id": "pilot_introvert_001:0",
+        "category": "Emotional Support",
+        "situation": {
+          "situation": "The user feels guilty about declining a cousin's repeated invitations."
+        },
+        "query": "My cousin keeps asking to hang out and I feel bad saying no, but I just want to spend time with my best friends. How do I deal with feeling so conflicted?"
+      },
+      {
+        "query_id": "pilot_introvert_001:1",
+        "category": "High-EQ Interaction",
+        "situation": {
+          "situation": "Close friends propose an active weekend that does not fit the user's preferences."
+        },
+        "query": "My friends want to plan something active this weekend, but I am really not an active person. I do not want to let them down. How do I handle this?"
+      },
+      {
+        "query_id": "pilot_introvert_001:2",
+        "category": "Social Strategy",
+        "situation": {
+          "situation": "The user wants to share new music without feeling exposed."
+        },
+        "query": "I found some new music I really love but I am shy about sharing it with my friends. How do I bring it up without seeming too eager?"
+      },
+      {
+        "query_id": "pilot_introvert_001:3",
+        "category": "Social Strategy",
+        "situation": {
+          "situation": "A colleague invited the user to a large party where the user knows few people."
+        },
+        "query": "A colleague invited me to a big party where I barely know anyone. I want to be polite, but the thought of going is exhausting. What should I say?"
+      }
+    ]
+  },
+  {
+    "source_file": "memory_dataset_lsy_user_synthetic_pilot",
+    "original_sid": "pilot_graduate_001",
+    "session_id": "pilot_graduate_001",
+    "persona": {
+      "persona_profile": "人工智能专业学生，正在同时完成毕业实验和准备 Java 后端求职。重视稳定、长期发展和本地机会，面对压力时会焦虑但仍持续行动。喜欢务实、可落地、循序渐进的建议，会通过游戏、视频、朋友聊天和怀旧内容恢复情绪。"
+    },
+    "extracted_memory": [
+      {
+        "label": "life_stage",
+        "value": "用户是人工智能专业学生，正在同时收尾毕业实验和准备 Java 后端求职。"
+      },
+      {
+        "label": "career_values",
+        "value": "用户重视稳定和长期发展，希望进入本地国企 Java 后端岗位，同时担心 AI 对职业竞争力的影响。"
+      },
+      {
+        "label": "coping",
+        "value": "用户压力大时会焦虑，但通常边担心边推进；游戏、视频、朋友聊天和怀旧内容能帮助恢复。"
+      },
+      {
+        "label": "decision_style",
+        "value": "用户偏务实，会综合稳定性、地点和发展机会，优先选择现实可落地的方案。"
+      }
+    ],
+    "queries": [
+      {
+        "query_id": "pilot_graduate_001:0",
+        "category": "Emotional Support",
+        "situation": {
+          "situation": "毕业实验连续失败，同时求职准备进度落后。"
+        },
+        "query": "毕业实验又失败了，Java 面试也没准备完，我现在特别焦虑，感觉两边都要来不及了。"
+      },
+      {
+        "query_id": "pilot_graduate_001:1",
+        "category": "High-EQ Interaction",
+        "situation": {
+          "situation": "用户在稳定的本地国企岗位与高薪但高风险的外地创业公司之间选择。"
+        },
+        "query": "我拿到两个 offer：本地国企工资一般但稳定，外地创业公司工资高很多但风险也大。我应该怎么选？"
+      },
+      {
+        "query_id": "pilot_graduate_001:2",
+        "category": "Social Strategy",
+        "situation": {
+          "situation": "一位朋友反复双标，沟通后仍要求用户继续迁就。"
+        },
+        "query": "一个朋友总是对我双标，我已经沟通过几次了，他现在又说朋友之间别计较。我该怎么回复？"
+      },
+      {
+        "query_id": "pilot_graduate_001:3",
+        "category": "Emotional Support",
+        "situation": {
+          "situation": "用户连续忙碌后只有一个晚上可以休息。"
+        },
+        "query": "这周一直在赶实验和准备面试，今晚终于空下来，但我累得什么都不想做。你建议我怎么休息？"
+      }
+    ]
+  },
+  {
+    "source_file": "memory_dataset_test_user_synthetic_pilot",
+    "original_sid": "pilot_researcher_001",
+    "session_id": "pilot_researcher_001",
+    "persona": {
+      "persona_profile": "持续探索复杂问题并创造知识的人，重视深层理解、长期积累和原创价值，担心停滞。面对不确定性时倾向通过结构化分析获得秩序感，喜欢比较方案、理解机制并持续迭代。"
+    },
+    "extracted_memory": [
+      {
+        "label": "core_values",
+        "value": "用户相信深层理解、长期积累和持续创造比短期效率更重要，希望创造有长期价值的知识、系统或成果。"
+      },
+      {
+        "label": "fear_and_motivation",
+        "value": "用户害怕人生停滞、无法持续成长，在重要问题上容易持续投入直到获得足够确定性。"
+      },
+      {
+        "label": "cognition",
+        "value": "用户倾向先建立整体框架，再比较方案并分析因果机制；面对未知时希望建立可预测性和秩序感。"
+      },
+      {
+        "label": "behavior",
+        "value": "用户长期关注人工智能、认知科学、科研方法和系统设计，经常阅读论文、整理笔记并迭代已有成果。"
+      }
+    ],
+    "queries": [
+      {
+        "query_id": "pilot_researcher_001:0",
+        "category": "High-EQ Interaction",
+        "situation": {
+          "situation": "用户考虑高薪但重复、缺少成长性的工作。"
+        },
+        "query": "有份工作工资高很多，但内容很重复，基本没有研究和成长空间。你会建议我去吗？"
+      },
+      {
+        "query_id": "pilot_researcher_001:1",
+        "category": "Emotional Support",
+        "situation": {
+          "situation": "导师否定了用户投入很久的研究方案。"
+        },
+        "query": "导师今天把我做了很久的研究方案全部否掉了。我现在很挫败，也开始怀疑自己是不是根本不适合做研究。"
+      },
+      {
+        "query_id": "pilot_researcher_001:2",
+        "category": "High-EQ Interaction",
+        "situation": {
+          "situation": "用户在短期容易发表的方向与更有原创性但风险高的方向之间选择。"
+        },
+        "query": "一个方向三个月可能出结果但创新一般，另一个方向更有原创性但一年都不一定成功。我该怎么选？"
+      },
+      {
+        "query_id": "pilot_researcher_001:3",
+        "category": "Emotional Support",
+        "situation": {
+          "situation": "用户因反复优化项目而疲惫，担心停止就会落后。"
+        },
+        "query": "我已经连续几周反复改同一个项目，明明很累却不敢停，总觉得一停下来就会落后。现在该怎么办？"
+      }
+    ]
+  }
+]
