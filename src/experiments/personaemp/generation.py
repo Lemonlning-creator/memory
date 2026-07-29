@@ -27,10 +27,10 @@ DIRECT_RESPONSE_SYSTEM_PROMPT = getattr(
 )
 DIRECT_RESPONSE_USER_PROMPT_TEMPLATE = templates_en.DIRECT_RESPONSE_USER_PROMPT_TEMPLATE
 
-BASE_QWEN3_SYSTEM_PROMPT = (
+BASE_MODEL_SYSTEM_PROMPT = (
     "You are a helpful, warm, and empathetic AI assistant."
 )
-BASE_QWEN3_USER_PROMPT = """You will be provided with memories extracted from previous dialogue.
+BASE_MODEL_USER_PROMPT = """You will be provided with memories extracted from previous dialogue.
 Generate a response to the user's current query.
 
 Memories:
@@ -189,22 +189,52 @@ class ProfileCache:
     def _path(self, cache_key: str) -> Path:
         return self.directory / f"{cache_key}.json"
 
-    def load(self, cache_key: str) -> dict[str, Any] | None:
+    def load(
+        self,
+        cache_key: str,
+    ) -> tuple[dict[str, Any], StageUsage | None] | None:
         path = self._path(cache_key)
         if not path.is_file():
             return None
         value = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(value, dict):
             raise ValueError(f"invalid profile cache entry: {path}")
-        _validate_profile(value)
-        return value
+        if value.get("format_version") == 2:
+            profile = value.get("profile")
+            usage_value = value.get("generation_usage")
+            if not isinstance(profile, dict):
+                raise ValueError(f"invalid profile cache entry: {path}")
+            usage = (
+                StageUsage(**usage_value)
+                if isinstance(usage_value, dict)
+                else None
+            )
+        else:
+            profile = value
+            usage = None
+        _validate_profile(profile)
+        return profile, usage
 
-    def save(self, cache_key: str, profile: dict[str, Any]) -> None:
+    def save(
+        self,
+        cache_key: str,
+        profile: dict[str, Any],
+        usage: StageUsage,
+    ) -> None:
         _validate_profile(profile)
         path = self._path(cache_key)
         temporary = path.with_suffix(".tmp")
         temporary.write_text(
-            json.dumps(profile, ensure_ascii=False, indent=2, sort_keys=True),
+            json.dumps(
+                {
+                    "format_version": 2,
+                    "profile": profile,
+                    "generation_usage": asdict(usage),
+                },
+                ensure_ascii=False,
+                indent=2,
+                sort_keys=True,
+            ),
             encoding="utf-8",
         )
         temporary.replace(path)
@@ -245,7 +275,8 @@ class ProfileBuilder:
         cache_key = self.cache_key(sample)
         cached = self.cache.load(cache_key)
         if cached is not None:
-            return cached, None
+            profile, _generation_usage = cached
+            return profile, None
 
         user_prompt = PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE.format(
             user_name="the user",
@@ -264,8 +295,9 @@ class ProfileBuilder:
             try:
                 profile = _parse_json_object(result.content)
                 _validate_profile(profile)
-                self.cache.save(cache_key, profile)
-                return profile, StageUsage.combine(logical_results)
+                usage = StageUsage.combine(logical_results)
+                self.cache.save(cache_key, profile, usage)
+                return profile, usage
             except (ValueError, json.JSONDecodeError) as exc:
                 last_error = exc
 
@@ -275,16 +307,16 @@ class ProfileBuilder:
         )
 
 
-class BaseQwen3Generator:
-    method = "base_qwen3"
+class BaseModelGenerator:
+    method = "base_model"
 
     def __init__(self, backend: ChatBackend) -> None:
         self.backend = backend
 
     def generate(self, sample: PersonaEmpSample) -> GenerationOutput:
         result = self.backend.chat(
-            BASE_QWEN3_SYSTEM_PROMPT,
-            BASE_QWEN3_USER_PROMPT.format(
+            BASE_MODEL_SYSTEM_PROMPT,
+            BASE_MODEL_USER_PROMPT.format(
                 memory=_memory_block(sample),
                 query=sample.query,
             ),

@@ -66,7 +66,7 @@ Ours 从同一份 memory 证据生成五层画像，再执行 Deep Empathy 对�
 ## 当前可执行范围
 
 - 可以验证 PersonaEmp 数据 Schema。
-- 可以用 Qwen3-8B 生成 `base_qwen3` 和 `ours` 回复。
+- 可以用同一个可配置生成模型生成 `base_model` 和 `ours` 回复。
 - 可以断点恢复，并记录网络重试、逻辑重试、Token 和延迟。
 - 可以输出官方 evaluator 需要的 dataset/prediction 对。
 - 可以调用固定版本官方脚本生成 criteria。

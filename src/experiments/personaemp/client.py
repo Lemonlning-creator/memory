@@ -44,6 +44,16 @@ def _retry_after_seconds(exc: Exception) -> float | None:
         return None
 
 
+def _is_retryable(exc: Exception) -> bool:
+    status_code = getattr(exc, "status_code", None)
+    if status_code is None:
+        response = getattr(exc, "response", None)
+        status_code = getattr(response, "status_code", None)
+    if status_code is None:
+        return True
+    return int(status_code) in {408, 409, 429} or int(status_code) >= 500
+
+
 class OpenAICompatibleChatBackend:
     """Small retrying client isolated from the runtime agent configuration."""
 
@@ -67,8 +77,10 @@ class OpenAICompatibleChatBackend:
             raise ValueError("max_attempts must be positive")
 
         self.model = model
+        self.base_url = base_url
         self.max_attempts = max_attempts
         self.enable_thinking = enable_thinking
+        self.is_kimi_k2 = model.startswith(("kimi-k2.5", "kimi-k2.6"))
         try:
             from openai import OpenAI
         except ImportError as exc:
@@ -93,7 +105,7 @@ class OpenAICompatibleChatBackend:
         return cls(
             api_key=env("API_KEY", os.getenv("API_KEY", "")),
             base_url=env("BASE_URL", os.getenv("BASE_URL", "")),
-            model=env("MODEL", "qwen3-8b"),
+            model=env("MODEL", "kimi-k2.6"),
             timeout_seconds=float(env("TIMEOUT_SECONDS", "180")),
             max_attempts=int(env("MAX_ATTEMPTS", "6")),
             enable_thinking=env("ENABLE_THINKING", "false").lower()
@@ -119,11 +131,25 @@ class OpenAICompatibleChatBackend:
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
-                    "temperature": temperature,
                     "max_tokens": max_tokens,
                 }
-                if self.enable_thinking:
-                    request["extra_body"] = {"enable_thinking": True}
+                if self.is_kimi_k2:
+                    request["temperature"] = (
+                        1.0 if self.enable_thinking else 0.6
+                    )
+                    request["extra_body"] = {
+                        "thinking": {
+                            "type": (
+                                "enabled"
+                                if self.enable_thinking
+                                else "disabled"
+                            )
+                        }
+                    }
+                else:
+                    request["temperature"] = temperature
+                    if self.enable_thinking:
+                        request["extra_body"] = {"enable_thinking": True}
 
                 response = self.client.chat.completions.create(**request)
                 content = (response.choices[0].message.content or "").strip()
@@ -143,7 +169,7 @@ class OpenAICompatibleChatBackend:
                 )
             except Exception as exc:
                 last_error = exc
-                if attempt >= self.max_attempts:
+                if attempt >= self.max_attempts or not _is_retryable(exc):
                     break
                 retry_after = _retry_after_seconds(exc)
                 wait_seconds = (
@@ -155,5 +181,5 @@ class OpenAICompatibleChatBackend:
 
         assert last_error is not None
         raise RuntimeError(
-            f"model call failed after {self.max_attempts} attempts: {last_error}"
+            f"model call failed after {attempt} attempts: {last_error}"
         ) from last_error

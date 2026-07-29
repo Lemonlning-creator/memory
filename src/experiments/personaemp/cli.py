@@ -9,7 +9,7 @@ from typing import Any
 from .client import OpenAICompatibleChatBackend
 from .dataset import PersonaEmpDataset
 from .generation import (
-    BaseQwen3Generator,
+    BaseModelGenerator,
     DeepEmpathyGenerator,
     ProfileBuilder,
     ProfileCache,
@@ -36,7 +36,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--methods",
         nargs="+",
-        choices=("ours", "base_qwen3"),
+        choices=("ours", "base_model"),
         default=("ours",),
     )
     parser.add_argument("--limit", type=int, default=None)
@@ -101,7 +101,7 @@ def main() -> int:
             profile_builder,
             agent_persona=agent_persona,
         ),
-        "base_qwen3": BaseQwen3Generator(backend),
+        "base_model": BaseModelGenerator(backend),
     }
     selected_generators = {
         method: generators[method] for method in args.methods
@@ -119,6 +119,8 @@ def main() -> int:
             expected_table1_dataset_sha256=args.expected_table1_dataset_sha256,
             agent_persona_sha256=persona_hash,
             generator_model=backend.model,
+            generator_base_url=backend.base_url,
+            generator_enable_thinking=backend.enable_thinking,
         ),
         generators=selected_generators,
     )

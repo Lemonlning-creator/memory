@@ -4,8 +4,13 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
-from src.experiments.personaemp.client import ChatResult
+from src.experiments.personaemp.client import (
+    ChatResult,
+    OpenAICompatibleChatBackend,
+    _is_retryable,
+)
 from src.experiments.personaemp.dataset import (
     PersonaEmpDataset,
     PersonaEmpDatasetError,
@@ -120,6 +125,61 @@ class FakeBackend:
         )
 
 
+class RecordingCompletions:
+    def __init__(self) -> None:
+        self.request: dict[str, object] | None = None
+
+    def create(self, **request: object) -> SimpleNamespace:
+        self.request = request
+        return SimpleNamespace(
+            choices=[
+                SimpleNamespace(
+                    message=SimpleNamespace(content="response")
+                )
+            ],
+            usage=SimpleNamespace(
+                prompt_tokens=3,
+                completion_tokens=2,
+            ),
+        )
+
+
+class PersonaEmpClientTests(unittest.TestCase):
+    def test_does_not_retry_authentication_errors(self) -> None:
+        authentication_error = RuntimeError("invalid authentication")
+        authentication_error.status_code = 401
+        rate_limit_error = RuntimeError("rate limited")
+        rate_limit_error.status_code = 429
+
+        self.assertFalse(_is_retryable(authentication_error))
+        self.assertTrue(_is_retryable(rate_limit_error))
+
+    def test_kimi_k26_non_thinking_parameters_follow_official_api(self) -> None:
+        completions = RecordingCompletions()
+        backend = object.__new__(OpenAICompatibleChatBackend)
+        backend.model = "kimi-k2.6"
+        backend.max_attempts = 1
+        backend.enable_thinking = False
+        backend.is_kimi_k2 = True
+        backend.client = SimpleNamespace(
+            chat=SimpleNamespace(completions=completions)
+        )
+
+        backend.chat(
+            "system",
+            "user",
+            temperature=0.2,
+            max_tokens=100,
+        )
+
+        assert completions.request is not None
+        self.assertEqual(completions.request["temperature"], 0.6)
+        self.assertEqual(
+            completions.request["extra_body"],
+            {"thinking": {"type": "disabled"}},
+        )
+
+
 class PersonaEmpDatasetTests(unittest.TestCase):
     def test_loads_official_shape(self) -> None:
         dataset = PersonaEmpDataset.load(FIXTURE)
@@ -209,6 +269,8 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
                 expected_table1_dataset_sha256=None,
                 agent_persona_sha256=None,
                 generator_model=backend.model,
+                generator_base_url="https://example.invalid/v1",
+                generator_enable_thinking=False,
             )
             runner = PersonaEmpRunner(
                 repository_root=ROOT,
@@ -229,6 +291,15 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
             manifest = json.loads(
                 (output_dir / "run_manifest.json").read_text(encoding="utf-8")
             )
+            summary = json.loads(
+                (output_dir / "summary.json").read_text(encoding="utf-8")
+            )
+            cache_entries = list(
+                (output_dir / "cache" / "profiles").glob("*.json")
+            )
+            cached_profile = json.loads(
+                cache_entries[0].read_text(encoding="utf-8")
+            )
 
         self.assertEqual(first_summary["successful_results"], 1)
         self.assertEqual(second_summary["successful_results"], 1)
@@ -237,6 +308,11 @@ class DeepEmpathyGenerationTests(unittest.TestCase):
         self.assertEqual(len(predictions[0]["responses"]), 1)
         self.assertFalse(
             manifest["dataset"]["table1_direct_comparison_allowed"]
+        )
+        self.assertEqual(cached_profile["format_version"], 2)
+        self.assertEqual(
+            summary["profile_preprocessing"]["profiles_with_usage"],
+            1,
         )
 
 

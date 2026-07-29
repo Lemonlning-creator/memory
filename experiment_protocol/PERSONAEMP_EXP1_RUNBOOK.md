@@ -15,14 +15,14 @@ python -m src.experiments.personaemp.cli `
 
 ```powershell
 $env:PERSONAEMP_GENERATOR_API_KEY="<local-secret>"
-$env:PERSONAEMP_GENERATOR_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
-$env:PERSONAEMP_GENERATOR_MODEL="qwen3-8b"
+$env:PERSONAEMP_GENERATOR_BASE_URL="https://api.moonshot.cn/v1"
+$env:PERSONAEMP_GENERATOR_MODEL="kimi-k2.6"
 $env:PERSONAEMP_GENERATOR_ENABLE_THINKING="false"
 ```
 
 不要把 Key 写入命令历史、代码、运行清单或实验输出。
 
-`ours` 与 `base_qwen3` 共享相同的 `extracted_memory + query` 原始证据。
+`ours` 与 `base_model` 共享相同的 `extracted_memory + query` 原始证据。
 数据集的 persona 和 scenario 不提供给生成器，只供固定版本官方评测器使用。
 
 ## 3. 小规模生成
@@ -32,7 +32,7 @@ python -m src.experiments.personaemp.cli `
   --dataset tests/fixtures/personaemp_paper_case.json `
   --output-dir data/personaemp_exp1/paper_case_smoke `
   --dataset-provenance paper_case_pilot `
-  --methods ours base_qwen3 `
+  --methods ours base_model `
   --limit 3
 ```
 
@@ -43,7 +43,7 @@ python -m src.experiments.personaemp.cli `
 - `run_manifest.json`：代码、数据、模型和 Prompt 指纹；
 - `evaluation_dataset.json`：本次选择的官方格式数据；
 - `predictions/ours.json`；
-- `predictions/base_qwen3.json`；
+- `predictions/base_model.json`；
 - `summary.json`。
 
 重复运行同一命令会从 checkpoint 恢复，不会重复计算成功样本。

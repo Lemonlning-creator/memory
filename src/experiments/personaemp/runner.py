@@ -11,11 +11,11 @@ from typing import Any, Iterable
 
 from .dataset import PersonaEmpDataset, PersonaEmpSample
 from .generation import (
-    BASE_QWEN3_SYSTEM_PROMPT,
-    BASE_QWEN3_USER_PROMPT,
+    BASE_MODEL_SYSTEM_PROMPT,
+    BASE_MODEL_USER_PROMPT,
     DIRECT_RESPONSE_SYSTEM_PROMPT,
     DIRECT_RESPONSE_USER_PROMPT_TEMPLATE,
-    BaseQwen3Generator,
+    BaseModelGenerator,
     DeepEmpathyGenerator,
     prompt_hash,
 )
@@ -67,8 +67,8 @@ def _generation_prompt_hashes() -> dict[str, str]:
         "ours_user_template": prompt_hash(
             DIRECT_RESPONSE_USER_PROMPT_TEMPLATE
         ),
-        "base_system": prompt_hash(BASE_QWEN3_SYSTEM_PROMPT),
-        "base_user_template": prompt_hash(BASE_QWEN3_USER_PROMPT),
+        "base_system": prompt_hash(BASE_MODEL_SYSTEM_PROMPT),
+        "base_user_template": prompt_hash(BASE_MODEL_USER_PROMPT),
     }
 
 
@@ -159,6 +159,37 @@ def _prediction_rows(
     return output
 
 
+def _profile_preprocessing_summary(output_dir: Path) -> dict[str, Any]:
+    cache_dir = output_dir / "cache" / "profiles"
+    cache_entries = list(cache_dir.glob("*.json")) if cache_dir.is_dir() else []
+    usage_rows: list[dict[str, Any]] = []
+    legacy_entries = 0
+    for path in cache_entries:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        usage = value.get("generation_usage") if isinstance(value, dict) else None
+        if isinstance(usage, dict):
+            usage_rows.append(usage)
+        else:
+            legacy_entries += 1
+    return {
+        "unique_profiles": len(cache_entries),
+        "profiles_with_usage": len(usage_rows),
+        "profiles_missing_usage": legacy_entries,
+        "prompt_tokens": sum(int(row.get("prompt_tokens", 0)) for row in usage_rows),
+        "completion_tokens": sum(
+            int(row.get("completion_tokens", 0)) for row in usage_rows
+        ),
+        "latency_seconds": round(
+            sum(float(row.get("latency_seconds", 0.0)) for row in usage_rows),
+            4,
+        ),
+        "attempts": sum(int(row.get("attempts", 0)) for row in usage_rows),
+        "logical_calls": sum(
+            int(row.get("logical_calls", 0)) for row in usage_rows
+        ),
+    }
+
+
 @dataclass(frozen=True)
 class RunConfiguration:
     methods: tuple[str, ...]
@@ -167,6 +198,8 @@ class RunConfiguration:
     expected_table1_dataset_sha256: str | None
     agent_persona_sha256: str | None
     generator_model: str
+    generator_base_url: str
+    generator_enable_thinking: bool
 
     def identity(
         self,
@@ -181,6 +214,8 @@ class RunConfiguration:
             "expected_table1_dataset_sha256": self.expected_table1_dataset_sha256,
             "agent_persona_sha256": self.agent_persona_sha256,
             "generator_model": self.generator_model,
+            "generator_base_url": self.generator_base_url,
+            "generator_enable_thinking": self.generator_enable_thinking,
             "prompt_hashes": prompt_hashes,
         }
         return hashlib.sha256(
@@ -199,7 +234,7 @@ class PersonaEmpRunner:
         dataset: PersonaEmpDataset,
         output_dir: Path,
         config: RunConfiguration,
-        generators: dict[str, BaseQwen3Generator | DeepEmpathyGenerator],
+        generators: dict[str, BaseModelGenerator | DeepEmpathyGenerator],
     ) -> None:
         self.repository_root = repository_root
         self.dataset = dataset
@@ -250,6 +285,8 @@ class PersonaEmpRunner:
             },
             "generation": {
                 "model": self.config.generator_model,
+                "base_url": self.config.generator_base_url,
+                "enable_thinking": self.config.generator_enable_thinking,
                 "methods": list(self.config.methods),
                 "agent_persona_sha256": self.config.agent_persona_sha256,
                 "model_inputs": {
@@ -352,6 +389,9 @@ class PersonaEmpRunner:
             ),
             "evaluation_dataset": str(evaluation_dataset_path),
             "predictions": prediction_paths,
+            "profile_preprocessing": _profile_preprocessing_summary(
+                self.output_dir
+            ),
         }
         _atomic_json(self.output_dir / "summary.json", summary)
         return summary
