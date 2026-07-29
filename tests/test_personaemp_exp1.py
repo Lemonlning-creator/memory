@@ -1,0 +1,316 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from src.experiments.personaemp.client import ChatResult
+from src.experiments.personaemp.dataset import (
+    PersonaEmpDataset,
+    PersonaEmpDatasetError,
+)
+from src.experiments.personaemp.generation import (
+    DIRECT_RESPONSE_SYSTEM_PROMPT,
+    DeepEmpathyGenerator,
+    ProfileBuilder,
+    ProfileCache,
+    StageUsage,
+)
+from src.experiments.personaemp.runner import (
+    PersonaEmpRunner,
+    RunConfiguration,
+)
+from src.experiments.personaemp.official_eval import (
+    summarize_official_results,
+    validate_criteria_alignment,
+    validate_prediction_alignment,
+)
+
+
+ROOT = Path(__file__).resolve().parents[1]
+FIXTURE = ROOT / "tests" / "fixtures" / "personaemp_paper_case.json"
+
+
+class FakeBackend:
+    model = "fake-qwen3-8b"
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    def chat(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        *,
+        temperature: float,
+        max_tokens: int,
+    ) -> ChatResult:
+        del temperature, max_tokens
+        self.calls.append((system_prompt, user_prompt))
+        if "extracting user profiles" in system_prompt:
+            content = json.dumps(
+                {
+                    "core": {
+                        "social_values": {
+                            "value": "deep friendships and autonomy",
+                            "confidence": 0.9,
+                        }
+                    },
+                    "regulation": {
+                        "coping": {
+                            "value": "quiet intellectual hobbies",
+                            "confidence": 0.8,
+                        }
+                    },
+                    "cognition": {
+                        "communication": {
+                            "value": "gentle and non-pressuring",
+                            "confidence": 0.8,
+                        }
+                    },
+                    "identity": {
+                        "self_view": {
+                            "value": "introverted",
+                            "confidence": 0.9,
+                        }
+                    },
+                    "behavior": {
+                        "social_pattern": {
+                            "value": "prefers a close friend group",
+                            "confidence": 0.9,
+                        }
+                    },
+                }
+            )
+        elif "empathy alignment reasoning module" in system_prompt:
+            content = json.dumps(
+                {
+                    "understanding": {
+                        "user_domain": {
+                            "current_emotion": "conflicted",
+                            "underlying_need": "permission to protect social energy",
+                        }
+                    },
+                    "prediction": {
+                        "projected_trend": "continued guilt",
+                    },
+                    "exploration": {
+                        "decision": "balanced",
+                        "exploration_focus": "preferred boundary wording",
+                    },
+                    "empathy_state": {
+                        "empathy_level": "high",
+                        "activated_tone": "warm and validating",
+                    },
+                }
+            )
+        else:
+            content = (
+                "It makes sense to protect the small circle that helps you recharge. "
+                "Would a kind, honest boundary feel more comfortable than forcing yourself?"
+            )
+        return ChatResult(
+            content=content,
+            model=self.model,
+            prompt_tokens=10,
+            completion_tokens=5,
+            latency_seconds=0.01,
+            attempts=1,
+        )
+
+
+class PersonaEmpDatasetTests(unittest.TestCase):
+    def test_loads_official_shape(self) -> None:
+        dataset = PersonaEmpDataset.load(FIXTURE)
+        self.assertEqual(len(dataset.raw_sessions), 1)
+        self.assertEqual(len(dataset.samples), 3)
+        self.assertEqual(dataset.samples[0].category, "Emotional Support")
+        self.assertEqual(len(dataset.fingerprint), 64)
+
+    def test_rejects_duplicate_query_ids(self) -> None:
+        raw = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        raw[0]["queries"][1]["query_id"] = raw[0]["queries"][0]["query_id"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "duplicate.json"
+            path.write_text(json.dumps(raw), encoding="utf-8")
+            with self.assertRaises(PersonaEmpDatasetError):
+                PersonaEmpDataset.load(path)
+
+
+class DeepEmpathyGenerationTests(unittest.TestCase):
+    def test_stage_usage_includes_all_logical_schema_attempts(self) -> None:
+        usage = StageUsage.combine(
+            [
+                ChatResult(
+                    content="invalid",
+                    model="fake-qwen3-8b",
+                    prompt_tokens=7,
+                    completion_tokens=2,
+                    latency_seconds=0.1,
+                    attempts=2,
+                ),
+                ChatResult(
+                    content="valid",
+                    model="fake-qwen3-8b",
+                    prompt_tokens=8,
+                    completion_tokens=3,
+                    latency_seconds=0.2,
+                    attempts=1,
+                ),
+            ]
+        )
+
+        self.assertEqual(usage.logical_calls, 2)
+        self.assertEqual(usage.attempts, 3)
+        self.assertEqual(usage.prompt_tokens, 15)
+        self.assertEqual(usage.completion_tokens, 5)
+        self.assertEqual(usage.latency_seconds, 0.3)
+
+    def test_uses_unchanged_core_response_prompt(self) -> None:
+        dataset = PersonaEmpDataset.load(FIXTURE)
+        backend = FakeBackend()
+        with tempfile.TemporaryDirectory() as directory:
+            builder = ProfileBuilder(
+                backend,
+                ProfileCache(Path(directory) / "profiles"),
+            )
+            generator = DeepEmpathyGenerator(backend, builder)
+            output = generator.generate(dataset.samples[0])
+
+        self.assertEqual(output.method, "ours")
+        self.assertTrue(output.response)
+        self.assertEqual(backend.calls[-1][0], DIRECT_RESPONSE_SYSTEM_PROMPT)
+        self.assertIn(dataset.samples[0].query, backend.calls[-1][1])
+        self.assertIn("deep friendships", backend.calls[-1][1])
+        self.assertIn("empathy_state", backend.calls[-1][1])
+        profile_prompt = next(
+            user_prompt
+            for system_prompt, user_prompt in backend.calls
+            if "extracting user profiles" in system_prompt
+        )
+        self.assertIn("Extracted long-term memory evidence", profile_prompt)
+        self.assertNotIn(dataset.samples[0].persona_text, profile_prompt)
+
+    def test_runner_resumes_without_duplicate_calls(self) -> None:
+        dataset = PersonaEmpDataset.load(FIXTURE)
+        backend = FakeBackend()
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory) / "run"
+            builder = ProfileBuilder(
+                backend,
+                ProfileCache(output_dir / "cache" / "profiles"),
+            )
+            generator = DeepEmpathyGenerator(backend, builder)
+            config = RunConfiguration(
+                methods=("ours",),
+                limit=1,
+                dataset_provenance="paper_case_pilot",
+                expected_table1_dataset_sha256=None,
+                agent_persona_sha256=None,
+                generator_model=backend.model,
+            )
+            runner = PersonaEmpRunner(
+                repository_root=ROOT,
+                dataset=dataset,
+                output_dir=output_dir,
+                config=config,
+                generators={"ours": generator},
+            )
+            first_summary = runner.run()
+            call_count = len(backend.calls)
+            second_summary = runner.run()
+
+            predictions = json.loads(
+                (output_dir / "predictions" / "ours.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            manifest = json.loads(
+                (output_dir / "run_manifest.json").read_text(encoding="utf-8")
+            )
+
+        self.assertEqual(first_summary["successful_results"], 1)
+        self.assertEqual(second_summary["successful_results"], 1)
+        self.assertEqual(len(backend.calls), call_count)
+        self.assertEqual(len(predictions), 1)
+        self.assertEqual(len(predictions[0]["responses"]), 1)
+        self.assertFalse(
+            manifest["dataset"]["table1_direct_comparison_allowed"]
+        )
+
+
+class OfficialEvaluationAdapterTests(unittest.TestCase):
+    def test_rejects_misaligned_or_incomplete_criteria(self) -> None:
+        dataset = PersonaEmpDataset.load(FIXTURE)
+        criteria = [
+            {
+                "session_id": dataset.raw_sessions[0]["session_id"],
+                "criterias": [
+                    {
+                        "query_id": sample.query_id,
+                        "resonation": "criterion",
+                        "expression": "criterion",
+                        "reception": "criterion",
+                    }
+                    for sample in dataset.samples
+                ],
+            }
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            criteria_path = Path(directory) / "criteria.json"
+            criteria_path.write_text(json.dumps(criteria), encoding="utf-8")
+            self.assertEqual(
+                validate_criteria_alignment(FIXTURE, criteria_path),
+                3,
+            )
+
+            criteria[0]["criterias"][1]["query_id"] = "wrong-query"
+            criteria_path.write_text(json.dumps(criteria), encoding="utf-8")
+            with self.assertRaises(ValueError):
+                validate_criteria_alignment(FIXTURE, criteria_path)
+
+    def test_validates_prediction_alignment_and_summarizes_scores(self) -> None:
+        dataset = PersonaEmpDataset.load(FIXTURE)
+        predictions = dataset.prediction_template()
+        for session in predictions:
+            for response in session["responses"]:
+                response["response"] = "A non-empty empathetic response."
+
+        official_results = [
+            {
+                "session_id": sample.session_id,
+                "query_id": sample.query_id,
+                "resonation": {"score": 4.0},
+                "expression": {"score": 3.0},
+                "reception": {"score": 5.0},
+            }
+            for sample in dataset.samples
+        ]
+
+        with tempfile.TemporaryDirectory() as directory:
+            prediction_path = Path(directory) / "predictions.json"
+            result_path = Path(directory) / "results.json"
+            prediction_path.write_text(
+                json.dumps(predictions),
+                encoding="utf-8",
+            )
+            result_path.write_text(
+                json.dumps(official_results),
+                encoding="utf-8",
+            )
+            sessions, queries = validate_prediction_alignment(
+                FIXTURE,
+                prediction_path,
+            )
+            summary = summarize_official_results(result_path)
+
+        self.assertEqual(sessions, 1)
+        self.assertEqual(queries, 3)
+        self.assertEqual(summary["average_raw_1_to_5"], 4.0)
+        self.assertEqual(summary["average_normalized_0_to_1"], 0.8)
+        self.assertEqual(summary["invalid_scores"], [])
+
+
+if __name__ == "__main__":
+    unittest.main()

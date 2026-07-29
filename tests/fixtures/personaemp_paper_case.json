@@ -1,0 +1,60 @@
+[
+  {
+    "source_file": "paper_table_3",
+    "original_sid": "paper_case_001",
+    "session_id": "paper_case_001",
+    "persona": {
+      "persona_profile": "Values deep friendships strongly. Historically shy, introverted, and more comfortable with a close group than large social circles. Prefers intellectual hobbies such as reading, music, languages, and astronomy. Emotionally expressive about caring for friends."
+    },
+    "conversation": [
+      {
+        "role": "user",
+        "text": "I am not an active person and I usually prefer reading or listening to music."
+      },
+      {
+        "role": "assistant",
+        "text": "Those sound like meaningful ways for you to recharge."
+      }
+    ],
+    "extracted_memory": [
+      {
+        "label": "social/preferences",
+        "value": "The user values a close friend group of four people more than large social circles."
+      },
+      {
+        "label": "personality/introversion",
+        "value": "The user is historically shy and introverted."
+      },
+      {
+        "label": "preferences/hobbies",
+        "value": "The user prefers reading, music, languages, and astronomy over physical activities."
+      }
+    ],
+    "queries": [
+      {
+        "query_id": "paper_case_001:0",
+        "category": "Emotional Support",
+        "situation": {
+          "situation": "The user feels conflicted between a cousin's invitation and spending limited social energy with close friends."
+        },
+        "query": "My cousin keeps asking to hang out and I feel bad saying no, but I just want to spend time with my best friends. How do I deal with feeling so conflicted?"
+      },
+      {
+        "query_id": "paper_case_001:1",
+        "category": "High-EQ Interaction",
+        "situation": {
+          "situation": "Close friends propose an active weekend that does not fit the user's preferences."
+        },
+        "query": "My friends want to plan something active this weekend, but I am really not an active person. I do not want to let them down. How do I handle this?"
+      },
+      {
+        "query_id": "paper_case_001:2",
+        "category": "Social Strategy",
+        "situation": {
+          "situation": "The user wants to share new music while feeling shy about seeming too eager."
+        },
+        "query": "I found some new music I really love but I am shy about sharing it with my friends. How do I bring it up without seeming too eager?"
+      }
+    ]
+  }
+]
