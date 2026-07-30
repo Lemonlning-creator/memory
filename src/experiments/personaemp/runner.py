@@ -14,12 +14,18 @@ from .generation import (
     BASE_MODEL_USER_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
     EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
+    MEMORY_RESPONSE_USER_PROMPT,
+    MEMORY_SUMMARY_SYSTEM_PROMPT,
+    MEMORY_SUMMARY_USER_PROMPT,
     OURS_USER_PROMPT,
     PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
     PROFILE_EXTRACTION_SYSTEM_PROMPT,
     PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE,
+    RAG_RESPONSE_USER_PROMPT,
     BaseModelGenerator,
     DeepEmpathyGenerator,
+    MemoryGenerator,
+    RAGGenerator,
     prompt_hash,
 )
 
@@ -71,6 +77,10 @@ def _generation_prompt_hashes() -> dict[str, str]:
         ),
         "ours_user_template": prompt_hash(OURS_USER_PROMPT),
         "base_user_template": prompt_hash(BASE_MODEL_USER_PROMPT),
+        "memory_summary_system": prompt_hash(MEMORY_SUMMARY_SYSTEM_PROMPT),
+        "memory_summary_user": prompt_hash(MEMORY_SUMMARY_USER_PROMPT),
+        "memory_response_user": prompt_hash(MEMORY_RESPONSE_USER_PROMPT),
+        "rag_response_user": prompt_hash(RAG_RESPONSE_USER_PROMPT),
         "profile_extraction_system": prompt_hash(
             PROFILE_EXTRACTION_SYSTEM_PROMPT
         ),
@@ -204,6 +214,28 @@ def _profile_preprocessing_summary(output_dir: Path) -> dict[str, Any]:
     }
 
 
+def _json_cache_summary(directory: Path) -> dict[str, Any]:
+    entries = list(directory.glob("*.json")) if directory.is_dir() else []
+    usage_rows: list[dict[str, Any]] = []
+    for path in entries:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        usage = value.get("generation_usage") if isinstance(value, dict) else None
+        if isinstance(usage, dict):
+            usage_rows.append(usage)
+    return {
+        "entries": len(entries),
+        "entries_with_llm_usage": len(usage_rows),
+        "prompt_tokens": sum(int(row.get("prompt_tokens", 0)) for row in usage_rows),
+        "completion_tokens": sum(
+            int(row.get("completion_tokens", 0)) for row in usage_rows
+        ),
+        "latency_seconds": round(
+            sum(float(row.get("latency_seconds", 0.0)) for row in usage_rows),
+            4,
+        ),
+    }
+
+
 def _online_usage_summary(
     records: list[dict[str, Any]],
     methods: tuple[str, ...],
@@ -220,15 +252,15 @@ def _online_usage_summary(
             usage
             for record in method_records
             for stage_name, usage in (record.get("stages") or {}).items()
-            if stage_name != "profile" and isinstance(usage, dict)
+            if stage_name not in {"profile", "summary"}
+            and isinstance(usage, dict)
         ]
         summary[method] = {
             "successful_queries": len(method_records),
             "included_stages": (
-                ["response"]
-                if method == "base_model"
-                else ["alignment", "response"]
+                ["alignment", "response"] if method == "ours" else ["response"]
             ),
+            "offline_preprocessing_excluded": True,
             "profile_preprocessing_excluded": True,
             "prompt_tokens": sum(
                 int(row.get("prompt_tokens", 0)) for row in stage_rows
@@ -257,6 +289,7 @@ class RunConfiguration:
     generator_model: str
     generator_base_url: str
     generator_enable_thinking: bool
+    balanced_per_category: int | None = None
 
     def identity(
         self,
@@ -272,6 +305,7 @@ class RunConfiguration:
             "generator_model": self.generator_model,
             "generator_base_url": self.generator_base_url,
             "generator_enable_thinking": self.generator_enable_thinking,
+            "balanced_per_category": self.balanced_per_category,
             "prompt_hashes": prompt_hashes,
         }
         return hashlib.sha256(
@@ -290,7 +324,13 @@ class PersonaEmpRunner:
         dataset: PersonaEmpDataset,
         output_dir: Path,
         config: RunConfiguration,
-        generators: dict[str, BaseModelGenerator | DeepEmpathyGenerator],
+        generators: dict[
+            str,
+            BaseModelGenerator
+            | MemoryGenerator
+            | RAGGenerator
+            | DeepEmpathyGenerator,
+        ],
     ) -> None:
         self.repository_root = repository_root
         self.dataset = dataset
@@ -357,6 +397,14 @@ class PersonaEmpRunner:
                         "extracted_memory",
                         "query",
                     ],
+                    "memory_input": [
+                        "derived_flat_memory_summary",
+                        "query",
+                    ],
+                    "rag_input": [
+                        "top_3_retrieved_memory_items",
+                        "query",
+                    ],
                     "ours_input": [
                         "extracted_memory",
                         "query",
@@ -383,6 +431,12 @@ class PersonaEmpRunner:
                     "production_core_prompts_unchanged; "
                     "benchmark_response_contract_is_adapter_local"
                 ),
+                "rag": {
+                    "encoder": "intfloat/e5-base-v2",
+                    "similarity": "cosine_on_normalized_embeddings",
+                    "top_k": 3,
+                    "dataset_relevant_mem_used_for_retrieval": False,
+                },
                 "prompt_hashes": generation_prompt_hashes,
             },
         }
@@ -400,7 +454,16 @@ class PersonaEmpRunner:
         _atomic_json(self.manifest_path, manifest)
 
     def run(self) -> dict[str, Any]:
-        samples = list(self.dataset.iter_samples(self.config.limit))
+        if self.config.balanced_per_category is not None:
+            if self.config.limit is not None:
+                raise ValueError(
+                    "limit and balanced_per_category cannot be used together"
+                )
+            samples = list(
+                self.dataset.iter_balanced(self.config.balanced_per_category)
+            )
+        else:
+            samples = list(self.dataset.iter_samples(self.config.limit))
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self._prepare_manifest(len(samples))
 
@@ -476,6 +539,12 @@ class PersonaEmpRunner:
             "predictions": prediction_paths,
             "profile_preprocessing": _profile_preprocessing_summary(
                 self.output_dir
+            ),
+            "memory_summary_preprocessing": _json_cache_summary(
+                self.output_dir / "cache" / "memory_summaries"
+            ),
+            "rag_embedding_preprocessing": _json_cache_summary(
+                self.output_dir / "cache" / "rag_embeddings"
             ),
             "online_inference": _online_usage_summary(
                 all_records,

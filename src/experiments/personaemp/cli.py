@@ -9,8 +9,14 @@ from .dataset import PersonaEmpDataset
 from .generation import (
     BaseModelGenerator,
     DeepEmpathyGenerator,
+    JsonCache,
+    MemoryGenerator,
+    MemorySummaryBuilder,
     ProfileBuilder,
     ProfileCache,
+    RAGGenerator,
+    RAGRetriever,
+    SentenceTransformerEncoder,
 )
 from .runner import PersonaEmpRunner, RunConfiguration
 
@@ -23,16 +29,23 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--methods",
         nargs="+",
-        choices=("ours", "base_model"),
-        default=("ours",),
+        choices=("base_model", "memory", "rag", "ours"),
+        default=("base_model", "memory", "rag", "ours"),
     )
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument(
+        "--balanced-per-category",
+        type=int,
+        default=None,
+        help="Select this many ES, HEQ and SS queries for a balanced pilot.",
+    )
     parser.add_argument(
         "--dataset-provenance",
         default="unknown",
         choices=(
             "official",
             "regenerated",
+            "public_reconstruction",
             "paper_case_pilot",
             "unknown",
         ),
@@ -79,11 +92,21 @@ def main() -> int:
     backend = OpenAICompatibleChatBackend.from_env(args.env_prefix)
     profile_cache = ProfileCache(args.output_dir / "cache" / "profiles")
     profile_builder = ProfileBuilder(backend, profile_cache)
-
+    summary_builder = MemorySummaryBuilder(
+        backend,
+        JsonCache(args.output_dir / "cache" / "memory_summaries"),
+    )
     generators = {
         "ours": DeepEmpathyGenerator(backend, profile_builder),
         "base_model": BaseModelGenerator(backend),
+        "memory": MemoryGenerator(backend, summary_builder),
     }
+    if "rag" in args.methods:
+        retriever = RAGRetriever(
+            SentenceTransformerEncoder("intfloat/e5-base-v2"),
+            JsonCache(args.output_dir / "cache" / "rag_embeddings"),
+        )
+        generators["rag"] = RAGGenerator(backend, retriever)
     selected_generators = {
         method: generators[method] for method in args.methods
     }
@@ -101,6 +124,7 @@ def main() -> int:
             generator_model=backend.model,
             generator_base_url=backend.base_url,
             generator_enable_thinking=backend.enable_thinking,
+            balanced_per_category=args.balanced_per_category,
         ),
         generators=selected_generators,
     )

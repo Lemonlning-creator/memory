@@ -41,6 +41,33 @@ User memory evidence:
 User query:
 {query}
 """
+MEMORY_SUMMARY_SYSTEM_PROMPT = """You summarize user characteristics from
+long-term memory evidence for personalized conversation. Produce a concise,
+flat summary of stable traits, preferences, experiences, emotional needs, and
+support preferences that are grounded in the supplied memories. Do not use a
+hierarchical profile, predict a future state, propose exploration, or invent
+facts. Output only the summary."""
+MEMORY_SUMMARY_USER_PROMPT = """User memory evidence:
+{memory}
+"""
+MEMORY_RESPONSE_USER_PROMPT = """Generate the final response using the flat
+user-characteristic summary as background evidence.
+
+Flat user-characteristic summary:
+{summary}
+
+User query:
+{query}
+"""
+RAG_RESPONSE_USER_PROMPT = """Generate the final response using only the three
+retrieved memory items as background evidence.
+
+Retrieved user memory evidence:
+{memory}
+
+User query:
+{query}
+"""
 OURS_USER_PROMPT = """Generate the final response using the following evidence and derived reasoning.
 
 User memory evidence:
@@ -250,6 +277,33 @@ class ProfileCache:
         temporary.replace(path)
 
 
+class JsonCache:
+    def __init__(self, directory: str | Path) -> None:
+        self.directory = Path(directory)
+        self.directory.mkdir(parents=True, exist_ok=True)
+
+    def _path(self, cache_key: str) -> Path:
+        return self.directory / f"{cache_key}.json"
+
+    def load(self, cache_key: str) -> dict[str, Any] | None:
+        path = self._path(cache_key)
+        if not path.is_file():
+            return None
+        value = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(value, dict):
+            raise ValueError(f"invalid cache entry: {path}")
+        return value
+
+    def save(self, cache_key: str, value: dict[str, Any]) -> None:
+        path = self._path(cache_key)
+        temporary = path.with_suffix(".tmp")
+        temporary.write_text(
+            json.dumps(value, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        temporary.replace(path)
+
+
 class ProfileBuilder:
     def __init__(
         self,
@@ -339,6 +393,229 @@ class BaseModelGenerator:
             alignment_hash=None,
             omega=None,
             stages={"response": StageUsage.from_result(result)},
+        )
+
+
+class MemorySummaryBuilder:
+    def __init__(self, backend: ChatBackend, cache: JsonCache) -> None:
+        self.backend = backend
+        self.cache = cache
+
+    def cache_key(self, sample: PersonaEmpSample) -> str:
+        value = {
+            "memory": sample.memory_items,
+            "model": self.backend.model,
+            "system_prompt": prompt_hash(MEMORY_SUMMARY_SYSTEM_PROMPT),
+            "user_prompt": prompt_hash(MEMORY_SUMMARY_USER_PROMPT),
+        }
+        return hashlib.sha256(
+            json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+
+    def build(self, sample: PersonaEmpSample) -> tuple[str, StageUsage | None]:
+        cache_key = self.cache_key(sample)
+        cached = self.cache.load(cache_key)
+        if cached is not None:
+            summary = str(cached.get("summary") or "").strip()
+            if not summary:
+                raise ValueError("cached memory summary is empty")
+            return summary, None
+        result = self.backend.chat(
+            MEMORY_SUMMARY_SYSTEM_PROMPT,
+            MEMORY_SUMMARY_USER_PROMPT.format(memory=_memory_block(sample)),
+            temperature=0.2,
+            max_tokens=900,
+        )
+        summary = _strip_reasoning(result.content)
+        if not summary:
+            raise ValueError("memory summary is empty")
+        usage = StageUsage.from_result(result)
+        self.cache.save(
+            cache_key,
+            {
+                "format_version": 1,
+                "summary": summary,
+                "generation_usage": asdict(usage),
+            },
+        )
+        return summary, usage
+
+
+class MemoryGenerator:
+    method = "memory"
+
+    def __init__(
+        self,
+        backend: ChatBackend,
+        summary_builder: MemorySummaryBuilder,
+    ) -> None:
+        self.backend = backend
+        self.summary_builder = summary_builder
+
+    def generate(self, sample: PersonaEmpSample) -> GenerationOutput:
+        summary, summary_usage = self.summary_builder.build(sample)
+        result = self.backend.chat(
+            PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
+            MEMORY_RESPONSE_USER_PROMPT.format(
+                summary=summary,
+                query=sample.query,
+            ),
+            temperature=0.6,
+            max_tokens=RESPONSE_MAX_TOKENS,
+        )
+        stages = {"response": StageUsage.from_result(result)}
+        if summary_usage is not None:
+            stages["summary"] = summary_usage
+        return GenerationOutput(
+            response=_strip_reasoning(result.content),
+            method=self.method,
+            profile_hash=None,
+            alignment_hash=None,
+            omega=None,
+            stages=stages,
+            qualitative_artifacts={
+                "flat_memory_summary_sha256": hashlib.sha256(
+                    summary.encode("utf-8")
+                ).hexdigest()
+            },
+        )
+
+
+class SentenceTransformerEncoder:
+    def __init__(self, model_name: str = "intfloat/e5-base-v2") -> None:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except ImportError as exc:
+            raise RuntimeError(
+                "sentence-transformers is required for the RAG baseline"
+            ) from exc
+        self.model_name = model_name
+        self.model = SentenceTransformer(model_name)
+
+    def encode_query(self, query: str) -> list[float]:
+        vector = self.model.encode(
+            [f"query: {query}"],
+            normalize_embeddings=True,
+        )[0]
+        return [float(value) for value in vector]
+
+    def encode_memories(self, memories: tuple[str, ...]) -> list[list[float]]:
+        vectors = self.model.encode(
+            [f"passage: {memory}" for memory in memories],
+            normalize_embeddings=True,
+        )
+        return [[float(value) for value in vector] for vector in vectors]
+
+
+def _dot(left: list[float], right: list[float]) -> float:
+    if len(left) != len(right):
+        raise ValueError("embedding dimensions do not match")
+    return sum(a * b for a, b in zip(left, right))
+
+
+class RAGRetriever:
+    def __init__(
+        self,
+        encoder: Any,
+        cache: JsonCache,
+        top_k: int = 3,
+    ) -> None:
+        if top_k != 3:
+            raise ValueError("PersonaEmp RAG must retrieve exactly three memories")
+        self.encoder = encoder
+        self.cache = cache
+        self.top_k = top_k
+
+    def _memory_key(self, sample: PersonaEmpSample) -> str:
+        value = {
+            "memory": sample.memory_items,
+            "encoder": self.encoder.model_name,
+        }
+        return hashlib.sha256(
+            json.dumps(value, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+
+    def _memory_vectors(self, sample: PersonaEmpSample) -> list[list[float]]:
+        key = self._memory_key(sample)
+        cached = self.cache.load(key)
+        if cached is not None:
+            vectors = cached.get("vectors")
+            if isinstance(vectors, list):
+                return [[float(value) for value in row] for row in vectors]
+        vectors = self.encoder.encode_memories(sample.memory_items)
+        self.cache.save(
+            key,
+            {
+                "format_version": 1,
+                "encoder": self.encoder.model_name,
+                "vectors": vectors,
+            },
+        )
+        return vectors
+
+    def retrieve(
+        self,
+        sample: PersonaEmpSample,
+    ) -> tuple[tuple[int, str, float], ...]:
+        memory_vectors = self._memory_vectors(sample)
+        query_vector = self.encoder.encode_query(sample.query)
+        ranked = sorted(
+            (
+                (index + 1, memory, _dot(query_vector, vector))
+                for index, (memory, vector) in enumerate(
+                    zip(sample.memory_items, memory_vectors)
+                )
+            ),
+            key=lambda value: (-value[2], value[0]),
+        )
+        return tuple(ranked[: min(self.top_k, len(ranked))])
+
+
+class RAGGenerator:
+    method = "rag"
+
+    def __init__(self, backend: ChatBackend, retriever: RAGRetriever) -> None:
+        self.backend = backend
+        self.retriever = retriever
+
+    def generate(self, sample: PersonaEmpSample) -> GenerationOutput:
+        retrieved = self.retriever.retrieve(sample)
+        memory = "\n".join(
+            f"{rank}. {text}" for rank, (_index, text, _score) in enumerate(
+                retrieved,
+                1,
+            )
+        )
+        result = self.backend.chat(
+            PERSONAEMP_RESPONSE_SYSTEM_PROMPT,
+            RAG_RESPONSE_USER_PROMPT.format(
+                memory=memory,
+                query=sample.query,
+            ),
+            temperature=0.6,
+            max_tokens=RESPONSE_MAX_TOKENS,
+        )
+        retrieved_indices = [index for index, _text, _score in retrieved]
+        relevant = set(sample.relevant_memory_indices)
+        recall = (
+            len(relevant.intersection(retrieved_indices)) / len(relevant)
+            if relevant
+            else None
+        )
+        return GenerationOutput(
+            response=_strip_reasoning(result.content),
+            method=self.method,
+            profile_hash=None,
+            alignment_hash=None,
+            omega=None,
+            stages={"response": StageUsage.from_result(result)},
+            qualitative_artifacts={
+                "retrieved_memory_indices": retrieved_indices,
+                "retrieval_scores": [
+                    round(score, 8) for _index, _text, score in retrieved
+                ],
+                "recall_at_3": recall,
+            },
         )
 
 
