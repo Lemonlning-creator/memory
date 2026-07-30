@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -13,6 +14,14 @@ from typing import Any
 
 OFFICIAL_COMMIT = "b555447f267b8057039aab39a4be44725718ea7f"
 DIMENSIONS = ("resonation", "expression", "reception")
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def load_json(path: Path) -> Any:
@@ -260,6 +269,25 @@ def run_prepare_criteria(args: argparse.Namespace) -> None:
         args.output,
         expected_queries,
     )
+    manifest = {
+        "protocol": "personaemp_official_fixed_criteria_v1",
+        "official_commit": OFFICIAL_COMMIT,
+        "model": environment["OPENAI_MODEL"],
+        "dataset": {
+            "path": str(args.dataset.resolve()),
+            "sha256": _sha256(args.dataset),
+        },
+        "criteria": {
+            "path": str(args.output.resolve()),
+            "sha256": _sha256(args.output),
+        },
+        "temperature": args.temperature,
+        "limit_jobs": args.limit,
+    }
+    args.output.with_suffix(".manifest.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
 
 def run_judge(args: argparse.Namespace) -> None:
@@ -305,9 +333,81 @@ def run_judge(args: argparse.Namespace) -> None:
     summary = summarize_official_results(args.output)
     summary["judge_model"] = environment["EVAL_MODEL"]
     summary["judge_name"] = args.judge_name
+    summary["official_commit"] = OFFICIAL_COMMIT
+    summary["inputs"] = {
+        "dataset_sha256": _sha256(args.dataset),
+        "predictions_sha256": _sha256(args.predictions),
+        "criteria_sha256": _sha256(args.criteria),
+        "results_sha256": _sha256(args.output),
+    }
     summary_path = args.output.with_suffix(".summary.json")
     summary_path.write_text(
         json.dumps(summary, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+
+def _judge_spec(value: str) -> tuple[str, str]:
+    name, separator, prefix = value.partition(":")
+    if not separator or not name.strip() or not prefix.strip():
+        raise ValueError("--judge must use NAME:ENV_PREFIX")
+    return name.strip(), prefix.strip()
+
+
+def run_suite(args: argparse.Namespace) -> None:
+    methods = ("base_model", "memory", "rag", "ours")
+    judges = [_judge_spec(value) for value in args.judge]
+    outputs: dict[str, dict[str, str]] = {}
+    for judge_name, env_prefix in judges:
+        judge_outputs: dict[str, str] = {}
+        for method in methods:
+            predictions = args.predictions_dir / f"{method}.json"
+            if not predictions.is_file():
+                raise FileNotFoundError(
+                    f"missing {method} predictions: {predictions}"
+                )
+            output = (
+                args.output_dir
+                / args.split_name
+                / judge_name
+                / f"{method}.json"
+            )
+            run_judge(
+                argparse.Namespace(
+                    official_repo=args.official_repo,
+                    dataset=args.dataset,
+                    predictions=predictions,
+                    criteria=args.criteria,
+                    output=output,
+                    judge_name=judge_name,
+                    env_prefix=env_prefix,
+                    python=args.python,
+                    concurrency=args.concurrency,
+                    temperature=args.temperature,
+                    limit=args.limit,
+                )
+            )
+            judge_outputs[method] = str(output)
+        outputs[judge_name] = judge_outputs
+    manifest = {
+        "protocol": "personaemp_official_dual_judge_suite_v1",
+        "official_commit": OFFICIAL_COMMIT,
+        "split": args.split_name,
+        "dataset": str(args.dataset.resolve()),
+        "dataset_sha256": _sha256(args.dataset),
+        "criteria": str(args.criteria.resolve()),
+        "criteria_sha256": _sha256(args.criteria),
+        "judges": outputs,
+        "judge_models": {
+            judge_name: os.getenv(f"{env_prefix}_MODEL", "").strip()
+            for judge_name, env_prefix in judges
+        },
+        "methods": list(methods),
+    }
+    manifest_path = args.output_dir / args.split_name / "evaluation_manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
 
@@ -343,6 +443,25 @@ def _parser() -> argparse.ArgumentParser:
     judge.add_argument("--temperature", type=float, default=0.3)
     judge.add_argument("--limit", type=int, default=None)
     judge.set_defaults(handler=run_judge)
+
+    suite = subparsers.add_parser("suite")
+    suite.add_argument("--official-repo", type=Path, required=True)
+    suite.add_argument("--dataset", type=Path, required=True)
+    suite.add_argument("--predictions-dir", type=Path, required=True)
+    suite.add_argument("--criteria", type=Path, required=True)
+    suite.add_argument("--output-dir", type=Path, required=True)
+    suite.add_argument("--split-name", choices=("random", "ood"), required=True)
+    suite.add_argument(
+        "--judge",
+        action="append",
+        required=True,
+        help="NAME:ENV_PREFIX; pass once for Qwen and once for DeepSeek.",
+    )
+    suite.add_argument("--python", type=Path, default=Path(sys.executable))
+    suite.add_argument("--concurrency", type=int, default=8)
+    suite.add_argument("--temperature", type=float, default=0.3)
+    suite.add_argument("--limit", type=int, default=None)
+    suite.set_defaults(handler=run_suite)
     return parser
 
 
