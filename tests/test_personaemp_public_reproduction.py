@@ -22,6 +22,7 @@ from src.experiments.personaemp.generation import (
 from src.experiments.personaemp.reconstruction import (
     IntentCache,
     IntentReconstructor,
+    apply_official_model_compatibility,
     adapt_alpsbench,
 )
 from src.experiments.personaemp.report import build_report, paired_user_bootstrap
@@ -264,6 +265,35 @@ class PersonaEmpPublicReproductionTests(unittest.TestCase):
 
         self.assertEqual(first_backend.calls, 1)
         self.assertEqual(second_backend.calls, 1)
+
+    def test_kimi_official_compatibility_changes_transport_only(self) -> None:
+        source = """resp = await client.chat.completions.create(
+                        temperature=temperature,
+                        # top_p=top_p,
+                    )
+"""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            prepare_dir = root / "prepare_dataset"
+            prepare_dir.mkdir()
+            api_client = prepare_dir / "api_call.py"
+            api_client.write_text(source, encoding="utf-8")
+            apply_official_model_compatibility(
+                prepare_dir,
+                model="kimi-k2.6",
+                output_dir=root,
+            )
+            patched = api_client.read_text(encoding="utf-8")
+            manifest = json.loads(
+                (root / "model_compatibility.json").read_text(encoding="utf-8")
+            )
+
+        self.assertIn("PERSONAEMP_KIMI_NONTHINKING_COMPAT", patched)
+        self.assertIn('"type": "disabled"', patched)
+        self.assertNotIn("prompt", patched.lower())
+        self.assertTrue(manifest["transport_only"])
+        self.assertFalse(manifest["prompt_or_protocol_changed"])
+        self.assertTrue(manifest["kimi_nonthinking_patch_active"])
 
     def test_dataset_normalizes_hei_and_keeps_relevant_memory_for_diagnostics(self) -> None:
         raw = json.loads(FIXTURE.read_text(encoding="utf-8"))

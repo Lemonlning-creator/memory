@@ -59,6 +59,18 @@ OpenAI-compatible 模型使用 `response_format=json_schema`。两条路径都�
 
 仅检查适配结果、不运行官方 query 流水线时使用 `--adapt-only`。
 
+需要先验证 10--20 条正式 pilot 时，可增加：
+
+```powershell
+--source-limit 60
+```
+
+它按公开数据固定顺序只处理前 N 条原始记录，但仍完整经过 intent、
+官方 filter、persona、query、inspection 和 final filter。该参数只用于
+pilot；全量正式重建必须省略。Kimi K2.5/2.6 在官方隔离 worktree 中仅
+增加 non-thinking 传输参数兼容，补丁哈希写入
+`model_compatibility.json`，不会修改官方 prompt 或实验协议。
+
 ## 2. 生成 Random/OOD 划分
 
 正式 OOD 的 Big Five 标签应使用 DeepSeek-v4-flash：

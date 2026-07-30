@@ -126,6 +126,7 @@ def _official_pipeline_summary(output_dir: Path, final_path: Path) -> dict[str, 
         "inspected": trainset / "inspection_results.json",
         "stage_debug": trainset / "generation_stage_debug.json",
         "usage": trainset / "query_usage_summary.json",
+        "model_compatibility": output_dir / "model_compatibility.json",
         "final": final_path,
     }
     missing = [name for name, path in files.items() if not path.is_file()]
@@ -320,7 +321,11 @@ class IntentReconstructor:
 def adapt_alpsbench(
     pairs: Iterable[tuple[Path, Path]],
     classifier: IntentReconstructor,
+    *,
+    source_limit: int | None = None,
 ) -> tuple[list[dict[str, Any]], ReconstructionStats]:
+    if source_limit is not None and source_limit <= 0:
+        raise ValueError("source_limit must be a positive integer")
     output: list[dict[str, Any]] = []
     input_rows = joined_rows = missing_references = memory_items = 0
     seen: set[str] = set()
@@ -330,6 +335,8 @@ def adapt_alpsbench(
             for row in _load_jsonl(reference_path)
         }
         for row in _load_jsonl(input_path):
+            if source_limit is not None and input_rows >= source_limit:
+                break
             input_rows += 1
             benchmark_id = str(row.get("benchmark_id") or "")
             if not benchmark_id or benchmark_id in seen:
@@ -371,6 +378,8 @@ def adapt_alpsbench(
             )
             joined_rows += 1
             memory_items += len(memories)
+        if source_limit is not None and input_rows >= source_limit:
+            break
     return output, ReconstructionStats(
         input_rows=input_rows,
         joined_rows=joined_rows,
@@ -410,6 +419,59 @@ def verify_official_checkout(repository: Path) -> None:
         raise RuntimeError(
             f"official checkout must be pinned to {OFFICIAL_COMMIT}, got {head}"
         )
+
+
+def apply_official_model_compatibility(
+    prepare_dir: Path,
+    *,
+    model: str,
+    output_dir: Path,
+) -> None:
+    """Patch only transport parameters in the isolated official worktree."""
+    api_client = prepare_dir / "api_call.py"
+    source = api_client.read_text(encoding="utf-8")
+    marker = "# PERSONAEMP_KIMI_NONTHINKING_COMPAT"
+    applied = False
+    if model.startswith(("kimi-k2.5", "kimi-k2.6")) and marker not in source:
+        original = """                        temperature=temperature,
+                        # top_p=top_p,
+"""
+        replacement = """                        # PERSONAEMP_KIMI_NONTHINKING_COMPAT
+                        **(
+                            {
+                                "temperature": 0.6,
+                                "extra_body": {
+                                    "thinking": {"type": "disabled"}
+                                },
+                            }
+                            if model_name.startswith(("kimi-k2.5", "kimi-k2.6"))
+                            else {"temperature": temperature}
+                        ),
+                        # top_p=top_p,
+"""
+        if original not in source:
+            raise RuntimeError(
+                "cannot apply Kimi compatibility patch to official api_call.py"
+            )
+        api_client.write_text(
+            source.replace(original, replacement, 1),
+            encoding="utf-8",
+        )
+        applied = True
+    compatibility = {
+        "model": model,
+        "transport_only": True,
+        "prompt_or_protocol_changed": False,
+        "kimi_nonthinking_patch_applied_this_run": applied,
+        "kimi_nonthinking_patch_active": marker
+        in api_client.read_text(encoding="utf-8"),
+        "patched_file": str(api_client),
+        "patched_file_sha256": _sha256(api_client),
+    }
+    (output_dir / "model_compatibility.json").write_text(
+        json.dumps(compatibility, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
 
 
 def run_official_pipeline(
@@ -468,6 +530,11 @@ def run_official_pipeline(
         raise RuntimeError(
             f"set {env_prefix}_API_KEY and {env_prefix}_BASE_URL"
         )
+    apply_official_model_compatibility(
+        prepare_dir,
+        model=model,
+        output_dir=output_dir,
+    )
     process_env = dict(os.environ)
     process_env.update(
         {
@@ -501,6 +568,15 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--download-dir", type=Path)
     parser.add_argument("--env-prefix", default="PERSONAEMP_GENERATOR")
     parser.add_argument("--adapt-only", action="store_true")
+    parser.add_argument(
+        "--source-limit",
+        type=int,
+        default=None,
+        help=(
+            "Deterministically process only the first N public source rows. "
+            "Intended for protocol-faithful pilot runs; omit for the full 932."
+        ),
+    )
     return parser
 
 
@@ -518,7 +594,11 @@ def main() -> int:
         backend,
         IntentCache(output_dir / "cache" / "intents.jsonl"),
     )
-    records, stats = adapt_alpsbench(pairs, classifier)
+    records, stats = adapt_alpsbench(
+        pairs,
+        classifier,
+        source_limit=args.source_limit,
+    )
     adapted_path = output_dir / "by_label_json" / "public_reconstruction.json"
     adapted_path.parent.mkdir(parents=True, exist_ok=True)
     adapted_path.write_text(
@@ -557,6 +637,7 @@ def main() -> int:
             ),
         },
         "stats": asdict(stats),
+        "source_limit": args.source_limit,
         "adapted_records": len(records),
         "adapted_path": str(adapted_path),
         "final_dataset": str(final_path) if final_path else None,
