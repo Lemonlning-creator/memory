@@ -27,6 +27,7 @@ class ChatBackend(Protocol):
         *,
         temperature: float,
         max_tokens: int,
+        response_schema: dict[str, Any] | None = None,
     ) -> ChatResult: ...
 
 
@@ -119,6 +120,7 @@ class OpenAICompatibleChatBackend:
         *,
         temperature: float,
         max_tokens: int,
+        response_schema: dict[str, Any] | None = None,
     ) -> ChatResult:
         started = time.perf_counter()
         last_error: Exception | None = None
@@ -152,9 +154,53 @@ class OpenAICompatibleChatBackend:
                     request["temperature"] = temperature
                     if self.enable_thinking:
                         request["extra_body"] = {"enable_thinking": True}
+                if response_schema is not None:
+                    if self.is_kimi_k2:
+                        schema_name = str(response_schema.get("name") or "").strip()
+                        schema = response_schema.get("schema")
+                        if not schema_name or not isinstance(schema, dict):
+                            raise ValueError(
+                                "Kimi structured output requires schema name and schema"
+                            )
+                        request["tools"] = [
+                            {
+                                "type": "function",
+                                "function": {
+                                    "name": schema_name,
+                                    "description": (
+                                        "Return the validated structured result."
+                                    ),
+                                    "parameters": schema,
+                                },
+                            }
+                        ]
+                        request["tool_choice"] = {
+                            "type": "function",
+                            "function": {"name": schema_name},
+                        }
+                    else:
+                        request["response_format"] = {
+                            "type": "json_schema",
+                            "json_schema": response_schema,
+                        }
 
                 response = self.client.chat.completions.create(**request)
-                content = (response.choices[0].message.content or "").strip()
+                message = response.choices[0].message
+                if response_schema is not None and self.is_kimi_k2:
+                    tool_calls = list(message.tool_calls or [])
+                    if (
+                        len(tool_calls) != 1
+                        or tool_calls[0].function.name
+                        != response_schema["name"]
+                    ):
+                        raise RuntimeError(
+                            "Kimi did not return the required structured tool call"
+                        )
+                    content = str(
+                        tool_calls[0].function.arguments or ""
+                    ).strip()
+                else:
+                    content = (message.content or "").strip()
                 if not content:
                     raise RuntimeError("model returned an empty response")
 

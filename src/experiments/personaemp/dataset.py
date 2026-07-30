@@ -40,6 +40,34 @@ def _scenario_text(query: dict[str, Any]) -> str:
     return str(situation or "").strip()
 
 
+def canonical_category(value: Any) -> str:
+    text = str(value or "unknown").strip()
+    aliases = {
+        "hei": "High-EQ Interaction",
+        "heq": "High-EQ Interaction",
+        "high-eq interaction": "High-EQ Interaction",
+        "emotional support": "Emotional Support",
+        "es": "Emotional Support",
+        "social strategy": "Social Strategy",
+        "ss": "Social Strategy",
+    }
+    return aliases.get(text.lower(), text)
+
+
+def _relevant_memory_indices(value: Any) -> tuple[int, ...]:
+    if not isinstance(value, list):
+        return ()
+    indices: list[int] = []
+    for item in value:
+        try:
+            index = int(item)
+        except (TypeError, ValueError):
+            continue
+        if index >= 1 and index not in indices:
+            indices.append(index)
+    return tuple(indices)
+
+
 @dataclass(frozen=True)
 class PersonaEmpSample:
     session_id: str
@@ -50,6 +78,7 @@ class PersonaEmpSample:
     persona_text: str
     memory_items: tuple[str, ...]
     conversation: tuple[dict[str, str], ...]
+    relevant_memory_indices: tuple[int, ...]
     session_index: int
     query_index: int
 
@@ -168,10 +197,13 @@ class PersonaEmpDataset:
                         query_id=query_id,
                         query=query,
                         scenario=scenario,
-                        category=str(query_item.get("category") or "unknown").strip(),
+                        category=canonical_category(query_item.get("category")),
                         persona_text=persona_text,
                         memory_items=memory_items,
                         conversation=tuple(conversation),
+                        relevant_memory_indices=_relevant_memory_indices(
+                            query_item.get("relevant_mem")
+                        ),
                         session_index=session_index,
                         query_index=query_index,
                     )
@@ -187,6 +219,37 @@ class PersonaEmpDataset:
     def iter_samples(self, limit: int | None = None) -> Iterator[PersonaEmpSample]:
         samples = self.samples if limit is None else self.samples[: max(limit, 0)]
         yield from samples
+
+    def iter_balanced(
+        self,
+        per_category: int,
+    ) -> Iterator[PersonaEmpSample]:
+        if per_category < 1:
+            raise ValueError("per_category must be positive")
+        categories = (
+            "Emotional Support",
+            "High-EQ Interaction",
+            "Social Strategy",
+        )
+        grouped = {
+            category: [
+                sample for sample in self.samples if sample.category == category
+            ]
+            for category in categories
+        }
+        missing = [
+            category
+            for category, samples in grouped.items()
+            if len(samples) < per_category
+        ]
+        if missing:
+            raise ValueError(
+                "not enough samples for balanced selection: "
+                + ", ".join(missing)
+            )
+        for index in range(per_category):
+            for category in categories:
+                yield grouped[category][index]
 
     def prediction_template(self) -> list[dict[str, Any]]:
         predictions: list[dict[str, Any]] = []

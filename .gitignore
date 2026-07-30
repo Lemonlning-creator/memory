@@ -6,3 +6,4 @@ user_profile_*.json
 .env
 logs/app.log
 data/personaemp_exp1/
+data/personaemp_public_reproduction/
