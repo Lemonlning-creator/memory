@@ -95,11 +95,13 @@ TOPIC_REFERENCE_SYSTEM_PROMPT = """Identify the concise main topic of one observ
 
 Use prior dialogue only to resolve references. Judge the observed message itself."""
 
-# REALTALK reports this exact task wording. The baseline receives no additional
+# REALTALK Appendix D.1 prompt. The baseline receives no additional
 # user-model instruction.
-REALTALK_CONTINUATION_SYSTEM_PROMPT = "You are {speaker}. Continue the conversation."
+REALTALK_CONTINUATION_SYSTEM_PROMPT = """You are {speaker}. Continue the conversation.
+Output only the message, not the speaker name."""
 
 OURS_CONTINUATION_SYSTEM_PROMPT = """You are {speaker}. Continue the conversation.
+Output only the message, not the speaker name.
 
 Internalize the supplied five-layer user profile when deciding what this person
 would naturally say next. Preserve their conversational style and do not mention
@@ -491,14 +493,14 @@ def _cached_continuation(
         if method == ZERO_SHOT
         else OURS_CONTINUATION_SYSTEM_PROMPT
     ).format(speaker=speaker)
-    prompt = f"CONVERSATION HISTORY:\n{history or '(none)'}\n"
+    prompt = f"{history}\n" if history else ""
     if profile:
         prompt += (
-            "\nFIVE-LAYER USER PROFILE:\n"
+            "FIVE-LAYER USER PROFILE:\n"
             + json.dumps(profile, ensure_ascii=False, indent=2)
             + "\n"
         )
-    prompt += f"\nGenerate only {speaker}'s natural next message."
+    prompt += speaker
     key = "continuation:" + stable_hash({
         "result_id": result_id,
         "method": method,

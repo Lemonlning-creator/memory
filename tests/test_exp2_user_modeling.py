@@ -166,6 +166,12 @@ class RevisedExp2Tests(unittest.TestCase):
             ours_prompt = continuation_calls[1][1]
             self.assertNotIn("FIVE-LAYER USER PROFILE", baseline_prompt)
             self.assertIn("FIVE-LAYER USER PROFILE", ours_prompt)
+            self.assertEqual(baseline_prompt, "Emi")
+            self.assertTrue(ours_prompt.endswith("Emi"))
+            self.assertIn(
+                "Output only the message, not the speaker name.",
+                continuation_calls[0][0],
+            )
 
             output = Path(config.output_dir)
             lines = (output / "results.jsonl").read_text(
