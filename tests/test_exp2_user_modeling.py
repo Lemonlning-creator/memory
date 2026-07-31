@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from src.experiments.user_modeling.runner import (
     FINE_TUNED,
@@ -10,7 +11,12 @@ from src.experiments.user_modeling.runner import (
     Exp2UserModelingConfig,
     run_user_modeling_evaluation,
 )
-from src.experiments.user_modeling.schemas import normalize_current_state
+from src.experiments.user_modeling.schemas import (
+    normalize_current_state,
+    normalize_empathy,
+    normalize_grounding,
+    normalize_reflectiveness,
+)
 
 
 class FakeLLM:
@@ -39,6 +45,16 @@ class FakeLLM:
             })
         if schema == "exp2_reference_topic":
             return json.dumps({"topic": "work"})
+        if schema == "exp2_realtalk_reflectiveness":
+            return json.dumps({"reflective": True})
+        if schema == "exp2_realtalk_grounding":
+            return json.dumps({"grounding": False})
+        if schema == "exp2_realtalk_epitome_empathy":
+            return json.dumps({
+                "emotional_reaction": 1,
+                "interpretation": 1,
+                "exploration": 0,
+            })
         if system_prompt.startswith("You are Emi. Continue"):
             return "I feel good about the work update."
         return json.dumps({
@@ -93,6 +109,32 @@ class RevisedExp2Tests(unittest.TestCase):
         self.assertEqual(normalize_current_state(state), state)
         with self.assertRaisesRegex(ValueError, "must contain"):
             normalize_current_state({**state, "extra": True})
+        self.assertEqual(
+            normalize_reflectiveness({"reflective": True}),
+            {"reflective": True},
+        )
+        self.assertEqual(
+            normalize_grounding({"grounding": False}),
+            {"grounding": False},
+        )
+        self.assertEqual(
+            normalize_empathy({
+                "emotional_reaction": 1,
+                "interpretation": 2,
+                "exploration": 0,
+            }),
+            {
+                "emotional_reaction": 1,
+                "interpretation": 2,
+                "exploration": 0,
+            },
+        )
+        with self.assertRaisesRegex(ValueError, "in \\[0, 2\\]"):
+            normalize_empathy({
+                "emotional_reaction": 3,
+                "interpretation": 0,
+                "exploration": 0,
+            })
 
     def test_two_tracks_are_causal_complete_and_resumable(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -112,16 +154,22 @@ class RevisedExp2Tests(unittest.TestCase):
                 output_dir=str(root / "output"),
                 speaker_filter=["Emi"],
                 max_eval_points_per_speaker=2,
+                compute_bertscore=True,
             )
             llm = FakeLLM()
             evaluator = FakeLabels()
-            summary = run_user_modeling_evaluation(
-                config, llm=llm, label_evaluator=evaluator
-            )
-            first_call_count = len(llm.calls)
-            resumed = run_user_modeling_evaluation(
-                config, llm=llm, label_evaluator=evaluator
-            )
+            with patch(
+                "src.experiments.user_modeling.runner.compute_bertscore_f1",
+                return_value=[0.8, 0.8, 0.8, 0.8],
+            ) as bertscore:
+                summary = run_user_modeling_evaluation(
+                    config, llm=llm, label_evaluator=evaluator
+                )
+                first_call_count = len(llm.calls)
+                resumed = run_user_modeling_evaluation(
+                    config, llm=llm, label_evaluator=evaluator
+                )
+                self.assertEqual(bertscore.call_count, 1)
 
             self.assertEqual(summary["num_eval_points"], 2)
             self.assertEqual(resumed["num_eval_points"], 2)
@@ -135,6 +183,17 @@ class RevisedExp2Tests(unittest.TestCase):
                 {ZERO_SHOT, OURS},
             )
             self.assertNotIn(FINE_TUNED, summary["future_understanding"])
+            future_scores = summary["future_understanding"][OURS][
+                "speaker_macro"
+            ]
+            self.assertEqual(future_scores["bertscore_f1"], 0.8)
+            self.assertIn("reflectiveness_accuracy", future_scores)
+            self.assertIn("grounding_accuracy", future_scores)
+            self.assertIn("empathy_absolute_difference", future_scores)
+            self.assertEqual(
+                [item["session_count"] for item in summary["profile_evolution"]["Emi"]],
+                [1, 2, 3],
+            )
 
             current_calls = [
                 user_prompt
@@ -150,6 +209,39 @@ class RevisedExp2Tests(unittest.TestCase):
             ]
             self.assertEqual(len(current_calls), 4)
             self.assertEqual(len(continuation_calls), 4)
+            metric_schema_calls = [
+                (kwargs.get("response_schema") or {}).get("name")
+                for _, _, kwargs in llm.calls
+                if (kwargs.get("response_schema") or {}).get("name", "").startswith(
+                    "exp2_realtalk_"
+                )
+            ]
+            self.assertEqual(
+                metric_schema_calls.count("exp2_realtalk_reflectiveness"),
+                6,
+            )
+            self.assertEqual(
+                metric_schema_calls.count("exp2_realtalk_grounding"),
+                6,
+            )
+            self.assertEqual(
+                metric_schema_calls.count("exp2_realtalk_epitome_empathy"),
+                6,
+            )
+            empathy_prompts = [
+                user_prompt
+                for _, user_prompt, kwargs in llm.calls
+                if (kwargs.get("response_schema") or {}).get("name")
+                == "exp2_realtalk_epitome_empathy"
+            ]
+            self.assertIn(
+                "current speaker's own self-disclosure cannot count",
+                empathy_prompts[0],
+            )
+            self.assertIn(
+                "No prior partner message exists",
+                empathy_prompts[0],
+            )
 
             # Current-state inference observes the target.
             self.assertIn("test work update 1", current_calls[0])
@@ -168,9 +260,22 @@ class RevisedExp2Tests(unittest.TestCase):
             self.assertIn("FIVE-LAYER USER PROFILE", ours_prompt)
             self.assertEqual(baseline_prompt, "Emi")
             self.assertTrue(ours_prompt.endswith("Emi"))
+            self.assertIn("END PRIVATE PROFILE.", ours_prompt)
+            self.assertIn(
+                "No current-partner conversation history is available",
+                ours_prompt,
+            )
             self.assertIn(
                 "Output only the message, not the speaker name.",
                 continuation_calls[0][0],
+            )
+            self.assertIn(
+                "private background, not as shared history",
+                continuation_calls[1][0],
+            )
+            self.assertIn(
+                "never address yourself as Emi",
+                continuation_calls[1][0],
             )
 
             output = Path(config.output_dir)
@@ -180,6 +285,7 @@ class RevisedExp2Tests(unittest.TestCase):
             self.assertEqual(len(lines), 2)
             self.assertTrue((output / "summary.json").exists())
             self.assertTrue((output / "run_manifest.json").exists())
+            self.assertTrue((output / "profile_evolution.json").exists())
 
 
 if __name__ == "__main__":

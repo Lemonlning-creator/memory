@@ -10,7 +10,8 @@
 ## 1. 数据与因果边界
 
 - 使用 REALTALK Table 8 的说话人级跨对话划分。
-- `Ca` 前 3 个 session 只用于建立固定五层画像。
+- `Ca` 前 1/2/3 个 session 分别独立重建画像，用于画像进化诊断；前 3 个
+  session 的画像作为正式实验固定画像。
 - `Cb` 前 3 个 session 按“合并后的同说话人消息”逐点测试。
 - 当前理解轨道可以看到当前真实用户消息。
 - 未来理解轨道只能看到目标消息之前的真实历史，不能看到目标消息。
@@ -36,12 +37,20 @@
 新版设计稿写作“下一 Session”，但 REALTALK Table 2 的可复现单位是下一条合并后的
 说话人消息。正式实现采用论文单位，否则不能与 Table 2 构成同一实验协议。
 
-- `realtalk_zero_shot`：使用论文原始任务句
-  `You are {speaker}. Continue the conversation.`
-- `ours`：相同任务与历史，额外加入由 `Ca` 生成的五层画像。
-- 主指标：Emotion Accuracy、Intimacy Absolute Difference。
-- 原始生成消息、真实消息、Sentiment 和词面相似度一并保存，便于后续补算
-  REALTALK Table 2 的其余指标。
+- `realtalk_zero_shot`：严格使用论文附录 D.1 的 system prompt 和说话人 cue：
+  `You are {speaker}. Continue the conversation.`、
+  `Output only the message, not the speaker name.`，user prompt 末尾为 `{speaker}`。
+- `ours`：相同任务与历史，额外加入由 `Ca` 生成的五层画像；画像只表示说话者的
+  私人背景，不视为其与 `Cb` 当前伙伴的共同经历，也不把无关画像细节强行写入回复。
+- REALTALK Table 2 指标：ROUGE-L、BERTScore、Reflectiveness Accuracy、
+  Grounding Accuracy、Sentiment Accuracy、Emotion Accuracy、
+  Intimacy Absolute Difference、Empathy Absolute Difference。
+- Emotion、Sentiment、Intimacy 使用固定 Cardiff 模型；Reflectiveness、
+  Grounding 和 EPITOME 按 REALTALK Appendix C 分别使用独立的严格
+  Schema 评价调用，避免不同判定任务互相干扰。
+- BERTScore 使用 `roberta-large` 批量计算；开发小测可关闭，但正式运行必须使用
+  `--bertscore`。
+- 原始生成消息、真实消息和完整逐消息 EI 标签始终保存，所有指标可复算。
 
 REALTALK 的 `w/ fine-tune` 需要逐说话人训练模型。当前 API 模型不能等价复现，
 因此 runner 只接受外部逐样本预测文件；没有提供时明确标记为 unavailable，不用
@@ -53,10 +62,12 @@ REALTALK 的 `w/ fine-tune` 需要逐说话人训练模型。当前 API 模型�
 - `summary.json`：speaker-macro 主结果、micro 诊断与官方参考表。
 - `run_manifest.json`：模型、分类器 revision、Schema、prompt hash、切分和配置。
 - `checkpoint.json`：按输入哈希缓存的断点数据；失败不会记为 0 分。
+- `profile_evolution.json`：每位说话人在 `Ca` 前 1/2/3 个 session 上独立重建的
+  完整画像、画像熵和完整度。
 
 Persona Consistency 使用 REALTALK Table 8 已发布的跨对话诊断值，并与方法主排名分开。
-每位说话人的固定五层画像熵也会保存，为后续画像进化曲线提供原始数据；本阶段不启用
-Bayesian Updating。
+画像进化采用独立前缀重建，只用于 Additional Analysis；不把 `Cb` 测试消息回灌，
+本阶段不启用 Bayesian Updating。
 
 运行示例：
 
@@ -65,5 +76,6 @@ uv run python -m src.experiments.user_modeling.runner `
   --dataset-dir dataset `
   --speaker Emi `
   --max-eval-points-per-speaker 2 `
+  --bertscore `
   --output-dir data/exp2_user_modeling_smoke
 ```

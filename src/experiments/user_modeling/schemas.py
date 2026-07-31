@@ -33,6 +33,63 @@ TOPIC_REFERENCE_SCHEMA: dict[str, Any] = {
     },
 }
 
+REFLECTIVENESS_SCHEMA: dict[str, Any] = {
+    "name": "exp2_realtalk_reflectiveness",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "reflective": {"type": "boolean"},
+        },
+        "required": ["reflective"],
+        "additionalProperties": False,
+    },
+}
+
+GROUNDING_SCHEMA: dict[str, Any] = {
+    "name": "exp2_realtalk_grounding",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "grounding": {"type": "boolean"},
+        },
+        "required": ["grounding"],
+        "additionalProperties": False,
+    },
+}
+
+EMPATHY_SCHEMA: dict[str, Any] = {
+    "name": "exp2_realtalk_epitome_empathy",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "properties": {
+            "emotional_reaction": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2,
+            },
+            "interpretation": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2,
+            },
+            "exploration": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2,
+            },
+        },
+        "required": [
+            "emotional_reaction",
+            "interpretation",
+            "exploration",
+        ],
+        "additionalProperties": False,
+    },
+}
+
 
 def normalize_current_state(value: Any) -> dict[str, str]:
     if not isinstance(value, dict) or set(value) != {
@@ -58,3 +115,34 @@ def normalize_topic_reference(value: Any) -> dict[str, str]:
     if not topic:
         raise ValueError("topic must not be empty")
     return {"topic": topic}
+
+
+def normalize_reflectiveness(value: Any) -> dict[str, bool]:
+    if not isinstance(value, dict) or set(value) != {"reflective"}:
+        raise ValueError("reflectiveness result must contain exactly reflective")
+    if not isinstance(value["reflective"], bool):
+        raise ValueError("reflective must be boolean")
+    return {"reflective": value["reflective"]}
+
+
+def normalize_grounding(value: Any) -> dict[str, bool]:
+    if not isinstance(value, dict) or set(value) != {"grounding"}:
+        raise ValueError("grounding result must contain exactly grounding")
+    if not isinstance(value["grounding"], bool):
+        raise ValueError("grounding must be boolean")
+    return {"grounding": value["grounding"]}
+
+
+def normalize_empathy(value: Any) -> dict[str, int]:
+    fields = {"emotional_reaction", "interpretation", "exploration"}
+    if not isinstance(value, dict) or set(value) != fields:
+        raise ValueError("empathy result must contain all EPITOME components")
+    normalized = {}
+    for field in fields:
+        score = value[field]
+        if isinstance(score, bool) or not isinstance(score, int):
+            raise ValueError(f"{field} must be an integer")
+        if not 0 <= score <= 2:
+            raise ValueError(f"{field} must be in [0, 2]")
+        normalized[field] = score
+    return normalized
