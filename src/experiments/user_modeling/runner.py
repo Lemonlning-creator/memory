@@ -123,8 +123,9 @@ REALTALK TARGET-SPEAKER BINDING:
 - Cognition attributes about observable expression style may use any line
   spoken by {user_name}, but still may not attribute the partner's life facts
   to {user_name}.
-- Every evidence field must begin with "{user_name}:" and then quote or
-  closely paraphrase evidence from that speaker's own dialogue line.
+- Every evidence field must begin with "{user_name}:" and then contain one
+  continuous, verbatim quote from that speaker's own dialogue line. Do not
+  paraphrase, combine multiple turns, add ellipses, or relabel a partner quote.
 - If an attribute cannot be supported by {user_name}'s own lines, omit it.
 """
 
@@ -440,7 +441,13 @@ def run_user_modeling_evaluation(
                     raise
 
     results = sorted(
-        checkpoint.result_values(), key=lambda item: item["result_id"]
+        checkpoint.result_values(),
+        key=lambda item: (
+            str(item["speaker"]).casefold(),
+            str(item["test_chat_file"]).casefold(),
+            int(item["message_level_index"]),
+            str(item["result_id"]),
+        ),
     )
     if config.compute_bertscore:
         _add_batched_bertscore(checkpoint, results, config)
@@ -1051,7 +1058,14 @@ def _cached_profile(
         ))
 
     def validate(value: Any) -> dict[str, Any]:
-        return _normalize_target_profile(value, user_speaker)
+        target_utterances = [
+            str(turn["content"])
+            for turn in profile_corpus["turns"]
+            if str(turn["speaker"]).casefold() == user_speaker.casefold()
+        ]
+        return _normalize_target_profile(
+            value, user_speaker, target_utterances
+        )
 
     return checkpoint.execute(
         key,
@@ -1075,7 +1089,9 @@ def _normalize_explicit_profile(value: Any) -> dict[str, Any]:
 
 
 def _normalize_target_profile(
-    value: Any, user_speaker: str
+    value: Any,
+    user_speaker: str,
+    target_utterances: list[str] | None = None,
 ) -> dict[str, Any]:
     profile = _normalize_explicit_profile(value)
     expected_prefix = f"{user_speaker}:".casefold()
@@ -1086,6 +1102,10 @@ def _normalize_target_profile(
     )
     retained = 0
     removed: list[str] = []
+    normalized_utterances = [
+        _normalize_evidence_text(utterance)
+        for utterance in (target_utterances or [])
+    ]
     for layer in PROFILE_LAYERS:
         for attribute, detail in list(profile[layer].items()):
             evidence = (
@@ -1094,12 +1114,19 @@ def _normalize_target_profile(
                 else ""
             )
             evidence_body = evidence[len(expected_prefix):].strip()
+            normalized_evidence = _normalize_evidence_text(evidence_body)
             lacks_self_disclosure = (
                 layer != "cognition" and not first_person.search(evidence_body)
+            )
+            lacks_source_match = bool(normalized_utterances) and not any(
+                len(normalized_evidence) >= 8
+                and normalized_evidence in utterance
+                for utterance in normalized_utterances
             )
             if (
                 not evidence.casefold().startswith(expected_prefix)
                 or lacks_self_disclosure
+                or lacks_source_match
             ):
                 del profile[layer][attribute]
                 removed.append(f"{layer}.{attribute}")
@@ -1115,6 +1142,13 @@ def _normalize_target_profile(
             f"removed={len(removed)} unsupported attributes"
         )
     return profile
+
+
+def _normalize_evidence_text(value: str) -> str:
+    return " ".join(
+        value.strip().strip("\"'\N{LEFT DOUBLE QUOTATION MARK}"
+                            "\N{RIGHT DOUBLE QUOTATION MARK}").casefold().split()
+    )
 
 
 def _aggregate_current(

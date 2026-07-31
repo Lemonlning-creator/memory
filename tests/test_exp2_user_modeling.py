@@ -65,7 +65,7 @@ class FakeLLM:
                 "item": {
                     "value": f"{layer}-value",
                     "confidence": 0.8,
-                    "evidence": "Emi: training conversation",
+                    "evidence": "Emi: train work update 1",
                 }
             }
             for layer in ("core", "regulation", "cognition", "identity", "behavior")
@@ -179,7 +179,11 @@ class RevisedExp2Tests(unittest.TestCase):
             "confidence": 0.8,
             "evidence": "Emi: How are you coping with the move?",
         }
-        normalized = _normalize_target_profile(profile, "Emi")
+        normalized = _normalize_target_profile(
+            profile,
+            "Emi",
+            ["I enjoy hiking.", "How are you coping with the move?"],
+        )
         self.assertIn("target_trait", normalized["core"])
         self.assertNotIn("partner_trait", normalized["core"])
         self.assertNotIn("partner_reflection", normalized["core"])
@@ -350,6 +354,10 @@ class RevisedExp2Tests(unittest.TestCase):
                 encoding="utf-8"
             ).splitlines()
             self.assertEqual(len(lines), 2)
+            self.assertEqual(
+                [json.loads(line)["message_level_index"] for line in lines],
+                [0, 1],
+            )
             self.assertTrue((output / "summary.json").exists())
             self.assertTrue((output / "run_manifest.json").exists())
             self.assertTrue((output / "profile_evolution.json").exists())
