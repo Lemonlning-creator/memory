@@ -9,6 +9,8 @@ from src.experiments.user_modeling.runner import (
     OURS,
     ZERO_SHOT,
     Exp2UserModelingConfig,
+    _normalize_explicit_profile,
+    _normalize_target_profile,
     run_user_modeling_evaluation,
 )
 from src.experiments.user_modeling.schemas import (
@@ -63,7 +65,7 @@ class FakeLLM:
                 "item": {
                     "value": f"{layer}-value",
                     "confidence": 0.8,
-                    "evidence": "training conversation",
+                    "evidence": "Emi: training conversation",
                 }
             }
             for layer in ("core", "regulation", "cognition", "identity", "behavior")
@@ -146,6 +148,43 @@ class RevisedExp2Tests(unittest.TestCase):
                 "exploration": 0,
             })
 
+    def test_profile_shape_validation_rejects_missing_layers(self):
+        with self.assertRaisesRegex(ValueError, "missing layers"):
+            _normalize_explicit_profile({"core": {}})
+
+    def test_target_profile_drops_partner_evidence(self):
+        profile = {
+            layer: {}
+            for layer in ("core", "regulation", "cognition", "identity", "behavior")
+        }
+        profile["core"] = {
+            "target_trait": {
+                "value": "likes hiking",
+                "confidence": 0.8,
+                "evidence": "Emi: I enjoy hiking.",
+            },
+            "partner_trait": {
+                "value": "lives in New York",
+                "confidence": 0.9,
+                "evidence": "Paola: I moved to New York.",
+            },
+            "partner_reflection": {
+                "value": "fears relocation",
+                "confidence": 0.8,
+                "evidence": "Emi: It must have been hard for you to move.",
+            },
+        }
+        profile["cognition"]["questioning_style"] = {
+            "value": "asks supportive questions",
+            "confidence": 0.8,
+            "evidence": "Emi: How are you coping with the move?",
+        }
+        normalized = _normalize_target_profile(profile, "Emi")
+        self.assertIn("target_trait", normalized["core"])
+        self.assertNotIn("partner_trait", normalized["core"])
+        self.assertNotIn("partner_reflection", normalized["core"])
+        self.assertIn("questioning_style", normalized["cognition"])
+
     def test_two_tracks_are_causal_complete_and_resumable(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -203,6 +242,24 @@ class RevisedExp2Tests(unittest.TestCase):
             self.assertEqual(
                 [item["session_count"] for item in summary["profile_evolution"]["Emi"]],
                 [1, 2, 3],
+            )
+            profile_calls = [
+                system_prompt
+                for system_prompt, _, _ in llm.calls
+                if "REALTALK TARGET-SPEAKER BINDING" in system_prompt
+            ]
+            self.assertEqual(len(profile_calls), 3)
+            self.assertIn(
+                'speaker label is exactly "Emi:"',
+                profile_calls[0],
+            )
+            self.assertIn(
+                "the partner's identity, experiences, preferences, or traits",
+                profile_calls[0],
+            )
+            self.assertIn(
+                "distinguish self-disclosure from partner-directed",
+                profile_calls[0],
             )
 
             current_calls = [

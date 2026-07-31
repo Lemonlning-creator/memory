@@ -102,6 +102,32 @@ REALTALK_TABLE8_PERSONA_CONSISTENCY = {
 
 PROFILE_LAYERS = ("core", "regulation", "cognition", "identity", "behavior")
 
+PROFILE_TARGET_SPEAKER_BINDING = """
+REALTALK TARGET-SPEAKER BINDING:
+- The profile subject is exactly {user_name}.
+- Attribute only information expressed or evidenced by dialogue lines whose
+  speaker label is exactly "{user_name}:".
+- Lines from every other speaker are conversational context only. Never copy
+  the partner's identity, experiences, preferences, or traits into
+  {user_name}'s profile.
+- In {user_name}'s lines, distinguish self-disclosure from partner-directed
+  reflection: first-person statements may support {user_name}'s experiences
+  and preferences, while questions, acknowledgements, or paraphrases about
+  "you" describe the partner. Such partner-directed content may support only
+  {user_name}'s communication style, never their core traits, identity,
+  preferences, possessions, relationships, or life events.
+- For core, regulation, identity, and behavior attributes, the evidence must
+  contain {user_name}'s own first-person self-disclosure (for example I, I'm,
+  I've, me, my, mine, we, us, or our). A partner-directed question or
+  acknowledgement alone is never valid evidence for those four layers.
+- Cognition attributes about observable expression style may use any line
+  spoken by {user_name}, but still may not attribute the partner's life facts
+  to {user_name}.
+- Every evidence field must begin with "{user_name}:" and then quote or
+  closely paraphrase evidence from that speaker's own dialogue line.
+- If an attribute cannot be supported by {user_name}'s own lines, omit it.
+"""
+
 CURRENT_STATE_SYSTEM_PROMPT = """Infer the state expressed by the user's current observed message.
 
 Use the prior conversation only as context. Do not predict a future turn.
@@ -992,9 +1018,19 @@ def _cached_profile(
     user_speaker: str,
     _profile_type: str = "explicit",
 ) -> tuple[dict[str, Any], str]:
+    target_binding = PROFILE_TARGET_SPEAKER_BINDING.format(
+        user_name=user_speaker
+    )
+    system_prompt = (
+        PROFILE_EXTRACTION_SYSTEM_PROMPT.format(user_name=user_speaker)
+        + target_binding
+    )
+    user_prompt = PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE.format(
+        user_name=user_speaker,
+        corpus=profile_corpus["text"],
+    )
     prompt_hash = stable_hash(
-        PROFILE_EXTRACTION_SYSTEM_PROMPT
-        + PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
+        system_prompt + PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
     )
     key = ":".join((
         "exp2_profile",
@@ -1008,19 +1044,19 @@ def _cached_profile(
 
     def operation() -> dict[str, Any]:
         return robust_parse_json(llm.chat(
-            PROFILE_EXTRACTION_SYSTEM_PROMPT.format(user_name=user_speaker),
-            PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE.format(
-                user_name=user_speaker,
-                corpus=profile_corpus["text"],
-            ),
+            system_prompt,
+            user_prompt,
             temperature=0.3,
             max_tokens=config.profile_max_tokens,
         ))
 
+    def validate(value: Any) -> dict[str, Any]:
+        return _normalize_target_profile(value, user_speaker)
+
     return checkpoint.execute(
         key,
         operation,
-        _normalize_explicit_profile,
+        validate,
         config.operation_max_attempts,
         usage_supplier=lambda: dict(getattr(llm, "token_usage", {})),
     ), key
@@ -1036,6 +1072,49 @@ def _normalize_explicit_profile(value: Any) -> dict[str, Any]:
     if missing:
         raise ValueError(f"explicit profile is missing layers: {missing}")
     return value
+
+
+def _normalize_target_profile(
+    value: Any, user_speaker: str
+) -> dict[str, Any]:
+    profile = _normalize_explicit_profile(value)
+    expected_prefix = f"{user_speaker}:".casefold()
+    first_person = re.compile(
+        r"\b(?:i|i['\N{RIGHT SINGLE QUOTATION MARK}](?:m|ve|d|ll)|me|my|mine|"
+        r"myself|we|us|our|ours|ourselves)\b",
+        re.IGNORECASE,
+    )
+    retained = 0
+    removed: list[str] = []
+    for layer in PROFILE_LAYERS:
+        for attribute, detail in list(profile[layer].items()):
+            evidence = (
+                str(detail.get("evidence", "")).strip()
+                if isinstance(detail, dict)
+                else ""
+            )
+            evidence_body = evidence[len(expected_prefix):].strip()
+            lacks_self_disclosure = (
+                layer != "cognition" and not first_person.search(evidence_body)
+            )
+            if (
+                not evidence.casefold().startswith(expected_prefix)
+                or lacks_self_disclosure
+            ):
+                del profile[layer][attribute]
+                removed.append(f"{layer}.{attribute}")
+            else:
+                retained += 1
+    if not retained:
+        raise ValueError(
+            f"profile contains no evidence bound to {user_speaker}"
+        )
+    if removed:
+        print(
+            f"[profile evidence filter] speaker={user_speaker} "
+            f"removed={len(removed)} unsupported attributes"
+        )
+    return profile
 
 
 def _aggregate_current(
@@ -1248,6 +1327,7 @@ def _prompt_hashes() -> dict[str, str]:
         "five_layer_profile": stable_hash(
             PROFILE_EXTRACTION_SYSTEM_PROMPT
             + PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE
+            + PROFILE_TARGET_SPEAKER_BINDING
         ),
     }
 
