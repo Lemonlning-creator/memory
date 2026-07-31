@@ -1,4 +1,5 @@
 import unittest
+from types import SimpleNamespace
 
 from src.llm_client import LLMClient
 
@@ -44,3 +45,62 @@ class LLMRetryTests(unittest.TestCase):
         self.assertEqual(client._call_with_retry(operation, "test"), "accepted")
         self.assertEqual(calls["count"], 3)
         self.assertEqual(client.last_request_attempts, 3)
+
+    def test_dashscope_qwen_schema_uses_required_tool_call(self):
+        captured = {}
+
+        def create(**request):
+            captured.update(request)
+            return SimpleNamespace(
+                choices=[SimpleNamespace(message=SimpleNamespace(
+                    content=None,
+                    tool_calls=[SimpleNamespace(function=SimpleNamespace(
+                        name="state_schema",
+                        arguments='{"emotion":"joy"}',
+                    ))],
+                ))],
+                usage=SimpleNamespace(prompt_tokens=3, completion_tokens=2),
+            )
+
+        client = object.__new__(LLMClient)
+        client.model = "qwen3-30b-a3b-instruct-2507"
+        client.base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        client.enable_thinking = False
+        client.max_retries = 1
+        client.retry_base_seconds = 0
+        client.retry_max_seconds = 0
+        client.last_request_attempts = 0
+        client.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "calls": 0,
+        }
+        client.client = SimpleNamespace(
+            chat=SimpleNamespace(
+                completions=SimpleNamespace(create=create)
+            )
+        )
+        schema = {
+            "name": "state_schema",
+            "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {"emotion": {"type": "string"}},
+                "required": ["emotion"],
+                "additionalProperties": False,
+            },
+        }
+
+        result = client.chat(
+            "system",
+            "user",
+            temperature=0.0,
+            max_tokens=100,
+            response_schema=schema,
+        )
+
+        self.assertEqual(result, '{"emotion":"joy"}')
+        self.assertIn("tools", captured)
+        self.assertIn("tool_choice", captured)
+        self.assertNotIn("response_format", captured)
+        self.assertNotIn("extra_body", captured)

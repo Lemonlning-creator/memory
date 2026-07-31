@@ -4,8 +4,10 @@ import configparser
 import os
 import random
 import time
+from collections.abc import Callable, Generator
 from time import perf_counter
-from typing import Any, Callable, Dict, Generator, TypeVar
+from typing import Any, TypeVar
+
 from dotenv import load_dotenv
 from openai import OpenAI
 
@@ -39,7 +41,7 @@ class LLMClient:
             # Retry accounting must remain visible to experiment checkpoints.
             max_retries=0,
         )
-        self.last_model_timing: Dict[str, float | None] = {"first_char_seconds": None}
+        self.last_model_timing: dict[str, float | None] = {"first_char_seconds": None}
         self.last_request_attempts = 0
         self.token_usage = {
             "prompt_tokens": 0,
@@ -53,9 +55,9 @@ class LLMClient:
         user_prompt: str,
         temperature: float = 0.6,
         max_tokens: int | None = None,
-        response_schema: Dict[str, Any] | None = None,
+        response_schema: dict[str, Any] | None = None,
     ) -> str:
-        request: Dict[str, Any] = {
+        request: dict[str, Any] = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
@@ -67,10 +69,30 @@ class LLMClient:
         if extra_body:
             request["extra_body"] = extra_body
         if response_schema is not None:
-            request["response_format"] = {
-                "type": "json_schema",
-                "json_schema": response_schema,
-            }
+            if self._uses_required_tool_schema():
+                schema_name = str(response_schema.get("name") or "").strip()
+                schema = response_schema.get("schema")
+                if not schema_name or not isinstance(schema, dict):
+                    raise ValueError(
+                        "structured output requires schema name and schema"
+                    )
+                request["tools"] = [{
+                    "type": "function",
+                    "function": {
+                        "name": schema_name,
+                        "description": "Return the validated structured result.",
+                        "parameters": schema,
+                    },
+                }]
+                request["tool_choice"] = {
+                    "type": "function",
+                    "function": {"name": schema_name},
+                }
+            else:
+                request["response_format"] = {
+                    "type": "json_schema",
+                    "json_schema": response_schema,
+                }
         if max_tokens is not None:
             request["max_tokens"] = max_tokens
         response = self._call_with_retry(
@@ -78,7 +100,19 @@ class LLMClient:
             operation="chat",
         )
         self._record_usage(response)
-        content = response.choices[0].message.content
+        message = response.choices[0].message
+        if response_schema is not None and self._uses_required_tool_schema():
+            tool_calls = list(message.tool_calls or [])
+            if (
+                len(tool_calls) != 1
+                or tool_calls[0].function.name != response_schema["name"]
+            ):
+                raise ValueError(
+                    "LLM did not return the required structured tool call"
+                )
+            content = tool_calls[0].function.arguments
+        else:
+            content = message.content
         if not content:
             raise ValueError("LLM returned an empty response")
         return content.strip()
@@ -90,7 +124,7 @@ class LLMClient:
         temperature: float = 0.6,
         max_tokens: int | None = None,
     ) -> Generator[str, None, None]:
-        request: Dict[str, Any] = {
+        request: dict[str, Any] = {
             "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
@@ -191,10 +225,10 @@ class LLMClient:
         except (TypeError, ValueError):
             return None
 
-    def _provider_extra_body(self) -> Dict[str, Any]:
+    def _provider_extra_body(self) -> dict[str, Any]:
         host = self.base_url.lower()
         if "dashscope" in host:
-            return {"enable_thinking": self.enable_thinking}
+            return {"enable_thinking": True} if self.enable_thinking else {}
         if "moonshot" in host or "kimi" in host:
             return {
                 "thinking": {
@@ -209,6 +243,13 @@ class LLMClient:
         ):
             return 0.6
         return requested
+
+    def _uses_required_tool_schema(self) -> bool:
+        """Use forced tool arguments where provider JSON Schema is not strict."""
+        return (
+            "dashscope.aliyuncs.com" in self.base_url.lower()
+            and str(self.model).lower().startswith("qwen")
+        )
 
     def _record_usage(self, response) -> None:
         usage = getattr(response, "usage", None)
