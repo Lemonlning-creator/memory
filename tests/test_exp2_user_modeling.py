@@ -17,6 +17,7 @@ from src.experiments.user_modeling.schemas import (
     normalize_grounding,
     normalize_reflectiveness,
 )
+from src.experiments.exp2_generation import bertscore_runtime_metadata
 
 
 class FakeLLM:
@@ -100,6 +101,15 @@ def _chat(first_speaker, second_speaker, prefix):
 
 
 class RevisedExp2Tests(unittest.TestCase):
+    def test_bertscore_uses_fixed_inference_only_english_configuration(self):
+        metadata = bertscore_runtime_metadata()
+        self.assertEqual(metadata["model"], "roberta-large")
+        self.assertEqual(metadata["num_layers"], 17)
+        self.assertEqual(metadata["language"], "en")
+        self.assertFalse(metadata["idf"])
+        self.assertFalse(metadata["rescale_with_baseline"])
+        self.assertFalse(metadata["requires_training"])
+
     def test_current_schema_is_strict(self):
         state = {
             "emotion": "joy",

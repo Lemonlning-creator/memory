@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from importlib.metadata import PackageNotFoundError, version
 from typing import Any, Dict, List, Optional, Sequence
 
 from ..llm_client import LLMClient
@@ -13,6 +14,9 @@ from .persona_simulation import condense_persona, condense_profile
 RESPONSE_MAX_TOKENS = 300
 BERTSCORE_MODEL = "roberta-large"
 BERTSCORE_NUM_LAYERS = 17
+BERTSCORE_LANGUAGE = "en"
+BERTSCORE_IDF = False
+BERTSCORE_RESCALE_WITH_BASELINE = False
 
 _HISTORY_BLOCK = """CONVERSATION HISTORY:
 {history}
@@ -185,14 +189,42 @@ def compute_bertscore_f1(
     _, _, f1 = score(
         list(candidates),
         list(references),
-        lang="en",
+        lang=BERTSCORE_LANGUAGE,
         model_type=BERTSCORE_MODEL,
         num_layers=BERTSCORE_NUM_LAYERS,
-        idf=False,
-        rescale_with_baseline=False,
+        idf=BERTSCORE_IDF,
+        rescale_with_baseline=BERTSCORE_RESCALE_WITH_BASELINE,
         verbose=False,
     )
     return [float(value) for value in f1.tolist()]
+
+
+def bertscore_runtime_metadata() -> Dict[str, Any]:
+    """Describe the fixed, inference-only REALTALK semantic metric."""
+    try:
+        bert_score_version = version("bert-score")
+    except PackageNotFoundError:
+        bert_score_version = None
+    try:
+        transformers_version = version("transformers")
+    except PackageNotFoundError:
+        transformers_version = None
+    return {
+        "metric": "BERTScore F1",
+        "language": BERTSCORE_LANGUAGE,
+        "model": BERTSCORE_MODEL,
+        "num_layers": BERTSCORE_NUM_LAYERS,
+        "idf": BERTSCORE_IDF,
+        "rescale_with_baseline": BERTSCORE_RESCALE_WITH_BASELINE,
+        "bert_score_version": bert_score_version,
+        "transformers_version": transformers_version,
+        "requires_training": False,
+        "paper_disclosure": (
+            "REALTALK reports BERTScore but does not publish its package "
+            "version or checkpoint revision; this is the standard English "
+            "bert-score configuration."
+        ),
+    }
 
 
 def add_batched_bertscore(results: List[Dict[str, Any]]) -> None:

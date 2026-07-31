@@ -36,7 +36,11 @@ from ..exp1_schema import (
     EMOTION_LABELS,
     SENTIMENT_LABELS,
 )
-from ..exp2_generation import compute_bertscore_f1, compute_response_scores
+from ..exp2_generation import (
+    bertscore_runtime_metadata,
+    compute_bertscore_f1,
+    compute_response_scores,
+)
 from ..experiment_utils import robust_parse_json
 from ..operation_checkpoint import OperationCheckpoint
 from ..realtalk_evaluator import RealTalkLabelEvaluator
@@ -496,9 +500,9 @@ def run_user_modeling_evaluation(
         },
         "bertscore": {
             "enabled": config.compute_bertscore,
-            "model": "roberta-large",
-            "num_layers": 17,
+            **bertscore_runtime_metadata(),
             "raw_response_pairs_preserved": True,
+            "can_be_recomputed_without_generation": True,
         },
         "profile_evolution": {
             "mode": "independent Ca prefix rebuild",
