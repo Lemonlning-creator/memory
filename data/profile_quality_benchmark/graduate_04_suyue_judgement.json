@@ -1,0 +1,1017 @@
+{
+  "claim_assessments": [
+    {
+      "claim_id": "core.values.1",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        1
+      ],
+      "reason": "用户原话明确表达钱要分清、承诺负责到底。"
+    },
+    {
+      "claim_id": "core.values.2",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "用户明确表示喜欢将模糊不确定性转化为具体数字。"
+    },
+    {
+      "claim_id": "core.values.3",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21
+      ],
+      "reason": "用户多次强调先定规则、划分责任，再谈配合或协商。"
+    },
+    {
+      "claim_id": "core.values.4",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        9,
+        31
+      ],
+      "reason": "用户认为模型非预言家，异常信号需人脑判断，AI缺直觉。"
+    },
+    {
+      "claim_id": "core.values.5",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户拒绝高佣金信托，选低费率基金，追求公平与安稳。"
+    },
+    {
+      "claim_id": "core.values.6",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "用户称找到遗漏变量修正模型时的成就感无可替代。"
+    },
+    {
+      "claim_id": "core.values.7",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        15,
+        36,
+        40
+      ],
+      "reason": "用户多次表示厌恶高杠杆投机，偏好稳健的数据分析。"
+    },
+    {
+      "claim_id": "core.values.8",
+      "path": "core.values",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "用户明确表述经济独立和公平是做人底线。"
+    },
+    {
+      "claim_id": "core.motivations.1",
+      "path": "core.motivations",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        41
+      ],
+      "reason": "用户为稳妥起步考FRM/CFA，视其为安身立命根本。"
+    },
+    {
+      "claim_id": "core.motivations.2",
+      "path": "core.motivations",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "用户看到风险敞口量化后感到踏实，问题解决一半。"
+    },
+    {
+      "claim_id": "core.motivations.3",
+      "path": "core.motivations",
+      "verdict": "partially_supported",
+      "evidence_turns": [
+        10,
+        14,
+        38,
+        39
+      ],
+      "reason": "跑步确为铁律，但背单词仅提及近期自律，证据稍弱。"
+    },
+    {
+      "claim_id": "core.motivations.4",
+      "path": "core.motivations",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        37
+      ],
+      "reason": "用户拒绝投行和市场部，坚定选择风控后台深耕。"
+    },
+    {
+      "claim_id": "core.motivations.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33,
+        48
+      ],
+      "reason": "用户多次提及作为跑团负责人，从组织活动中获得价值感与责任感。"
+    },
+    {
+      "claim_id": "core.motivations.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        50
+      ],
+      "reason": "用户明确表示通过量化手段消除模棱两可、解决难题是其最大快乐源泉。"
+    },
+    {
+      "claim_id": "core.long_term_goals.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        41
+      ],
+      "reason": "用户明确目标为考取证书并进入正规机构从事风控工作。"
+    },
+    {
+      "claim_id": "core.long_term_goals.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        18
+      ],
+      "reason": "用户强调建模为核心技能需自主主导，并立志在风控领域深耕。"
+    },
+    {
+      "claim_id": "core.long_term_goals.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        37
+      ],
+      "reason": "用户明确拒绝投行和市场营销，坚定选择风险管理方向。"
+    },
+    {
+      "claim_id": "regulation.stress_response.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19
+      ],
+      "reason": "用户在时间冲突或任务堆积时，均采取列清单、拆解任务的方式应对。"
+    },
+    {
+      "claim_id": "regulation.stress_response.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "用户通过跑步、做饭等身体活动来平复情绪、释放压力。"
+    },
+    {
+      "claim_id": "regulation.stress_response.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "用户自述对账户波动敏感，忍不住反复刷新，感到失控和累。"
+    },
+    {
+      "claim_id": "regulation.stress_response.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        19
+      ],
+      "reason": "用户描述心跳加速时通过深呼吸和拆解任务来自我安抚。"
+    },
+    {
+      "claim_id": "regulation.stress_response.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        32
+      ],
+      "reason": "用户表示计划被打乱时会陷入恐慌，需要很长时间才能缓过来。"
+    },
+    {
+      "claim_id": "regulation.stress_response.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        44
+      ],
+      "reason": "用户提到事情脱离轨道时会比常人更焦虑，需排查确认才敢休息。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        5
+      ],
+      "reason": "用户通过查看盘口确认无突发利空，从而感到平静。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "用户明确提到代码跑通、风险量化带来踏实感"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        38
+      ],
+      "reason": "用户称每周三次长跑为铁律，周日复盘规划"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "用户描述激烈辩论后煮面看盘确认走势以平复情绪"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        33
+      ],
+      "reason": "用户表示看到大家冲线觉得组织付出都值了"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "用户称通过精确计算消除模棱两可是最大快乐源泉"
+    },
+    {
+      "claim_id": "regulation.conflict_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户与室友吵架时直接列规则而非扯感情"
+    },
+    {
+      "claim_id": "regulation.conflict_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户讨论分工时先定底线和规则再谈配合"
+    },
+    {
+      "claim_id": "regulation.conflict_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "面对违规压力，用户先讲红线再提灰度测试折中方案"
+    },
+    {
+      "claim_id": "cognition.thinking_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19
+      ],
+      "reason": "用户习惯将任务拆解为最小单元按优先级处理"
+    },
+    {
+      "claim_id": "cognition.thinking_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        29
+      ],
+      "reason": "用户怀疑正态分布假设，坚持构建极端情景测试边界"
+    },
+    {
+      "claim_id": "cognition.thinking_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "遇政策信号时用户决定观望，强调人脑判断不盲从算法"
+    },
+    {
+      "claim_id": "cognition.thinking_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "用户查文献找遗漏变量修正模型，认为成就感无可替代"
+    },
+    {
+      "claim_id": "cognition.thinking_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        29
+      ],
+      "reason": "用户明确提到构建极端情景测试边界条件，拒绝仅看历史回测。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        47
+      ],
+      "reason": "用户表示审视论文时关注样本选择偏差，确保模型假设经得起推敲。"
+    },
+    {
+      "claim_id": "cognition.decision_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        8
+      ],
+      "reason": "用户设定止损线，超过风险收益比就不碰，符合超限即放弃。"
+    },
+    {
+      "claim_id": "cognition.decision_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        3
+      ],
+      "reason": "用户坚持先考下资格证再入职，追求起步更稳。"
+    },
+    {
+      "claim_id": "cognition.decision_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "面对模型买入与新闻利空冲突，用户决定观望，以信息充分为前提。"
+    },
+    {
+      "claim_id": "cognition.decision_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        22,
+        36
+      ],
+      "reason": "跟风买币后波动大吓得赶紧撤出，确认不适合投机行为。"
+    },
+    {
+      "claim_id": "cognition.decision_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        23,
+        37
+      ],
+      "reason": "曾心动市场部但最终坚定选择风险管理方向。"
+    },
+    {
+      "claim_id": "cognition.decision_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        30
+      ],
+      "reason": "选实习时设定适应期成本上限，有Plan B降低不确定性。"
+    },
+    {
+      "claim_id": "cognition.decision_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        43
+      ],
+      "reason": "提供多情景概率分布，让客户理解不确定性而非替代决策。"
+    },
+    {
+      "claim_id": "cognition.beliefs.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户怀疑正态分布假设在极端行情下不成立。"
+    },
+    {
+      "claim_id": "cognition.beliefs.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户强调建模必须由自己主导，因为这是核心技能。"
+    },
+    {
+      "claim_id": "cognition.beliefs.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "用户认为模型只是工具，异常信号需靠人脑判断。"
+    },
+    {
+      "claim_id": "cognition.beliefs.4",
+      "path": "cognition.beliefs",
+      "claim": "后台深耕的长期价值优于前台短期高薪",
+      "verdict": "supported",
+      "evidence_turns": [
+        18
+      ],
+      "reason": "明确拒绝投行高薪，选择后台风控深耕"
+    },
+    {
+      "claim_id": "cognition.beliefs.5",
+      "path": "cognition.beliefs",
+      "claim": "AI自动生成报告缺乏对宏观环境的直觉判断，黑天鹅情境下人工介入不可或缺",
+      "verdict": "supported",
+      "evidence_turns": [
+        31
+      ],
+      "reason": "指出AI缺宏观直觉，黑天鹅需人工介入"
+    },
+    {
+      "claim_id": "cognition.beliefs.6",
+      "path": "cognition.beliefs",
+      "claim": "数据背后的伦理同等重要，公平对待是底线",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "强调数据伦理，公平对待参与者为底线"
+    },
+    {
+      "claim_id": "identity.self_identity.1",
+      "path": "identity.self_identity",
+      "claim": "视量化分析与核心建模能力为个人专业根基",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        6,
+        50
+      ],
+      "reason": "多次强调量化、建模及精确计算的核心地位"
+    },
+    {
+      "claim_id": "identity.self_identity.2",
+      "path": "identity.self_identity",
+      "claim": "以自律和规则感定义自我，同时承认对失控的高度敏感",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32,
+        44
+      ],
+      "reason": "自认自律守规，但坦言对失控极度敏感焦虑"
+    },
+    {
+      "claim_id": "identity.self_identity.3",
+      "path": "identity.self_identity",
+      "claim": "在组织集体活动中获得学生身份外的角色确认",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33,
+        48
+      ],
+      "reason": "作为跑团负责人，从组织协调中获得价值感"
+    },
+    {
+      "claim_id": "identity.self_identity.4",
+      "path": "identity.self_identity",
+      "claim": "从模型修正的成就感中确认职业热爱与专业身份",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "调试模型找到真相带来无可替代的成就感"
+    },
+    {
+      "claim_id": "identity.self_identity.5",
+      "path": "identity.self_identity",
+      "claim": "自认自律但也会因活动筹备细节过多而感到疲惫",
+      "verdict": "supported",
+      "evidence_turns": [
+        48
+      ],
+      "reason": "自认自律，但因活动细节多感到疲惫"
+    },
+    {
+      "claim_id": "identity.self_identity.6",
+      "path": "identity.self_identity",
+      "claim": "从通过量化手段解决复杂现实问题中获得核心身份认同",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "称消除模棱两可为最大快乐源泉"
+    },
+    {
+      "claim_id": "identity.social_identity.1",
+      "path": "identity.social_identity",
+      "claim": "即将入职券商风控部的准从业者",
+      "verdict": "contradicted",
+      "evidence_turns": [
+        3,
+        30
+      ],
+      "reason": "仅获意向书，尚未入职，且放弃外资行选中型券商"
+    },
+    {
+      "claim_id": "identity.social_identity.2",
+      "path": "identity.social_identity",
+      "claim": "在读研究生，处于求职与资格认证的过渡阶段",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        11,
+        12
+      ],
+      "reason": "金工研究生，备考FRM，等待成绩入职"
+    },
+    {
+      "claim_id": "identity.social_identity.3",
+      "path": "identity.social_identity",
+      "claim": "学院跑团主理人，承担路线规划等集体责任",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33,
+        48
+      ],
+      "reason": "自称跑团组织者/主理人，负责踩点协调"
+    },
+    {
+      "claim_id": "identity.social_identity.4",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        37
+      ],
+      "reason": "用户明确拒绝投行IBD和市场营销，坚定选择风控。"
+    },
+    {
+      "claim_id": "identity.life_context.1",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        3
+      ],
+      "reason": "用户提到等FRM二级成绩，且已获两家券商意向书。"
+    },
+    {
+      "claim_id": "identity.life_context.2",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        30,
+        41
+      ],
+      "reason": "用户处于求职、考证与实习阶段，目标进入正规机构。"
+    },
+    {
+      "claim_id": "identity.life_context.3",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        12
+      ],
+      "reason": "用户自述分身乏术，需同时准备笔试、备考FRM及大作业。"
+    },
+    {
+      "claim_id": "identity.life_context.4",
+      "path": "identity.life_context",
+      "verdict": "partially_supported",
+      "evidence_turns": [
+        24,
+        38
+      ],
+      "reason": "曾发誓中断跑步，但后续澄清仅暂停一周，并未完全中断。"
+    },
+    {
+      "claim_id": "identity.life_context.5",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        30
+      ],
+      "reason": "用户放弃外资行，选择了风控体系完善的中型券商。"
+    },
+    {
+      "claim_id": "identity.life_context.6",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33,
+        48
+      ],
+      "reason": "用户为金工研究生兼跑团负责人，需平衡学业与组织工作。"
+    },
+    {
+      "claim_id": "identity.life_context.7",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        46
+      ],
+      "reason": "用户面临季度末考核，需处理核心指标缺口。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.1",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户强调建模由自己主导，先定规则再谈配合。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.2",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户直接表达底线，主张先定规则再谈配合。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.3",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        13
+      ],
+      "reason": "用户设定具体时间节点（周三前、周五前），强调进度。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.4",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "冲突中列出值日表和奖惩规则，以责任划分为起点。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        35
+      ],
+      "reason": "原话明确要求明确发言时长和准备材料，追求高效沟通。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "原话描述面对违规先讲清红线，再提灰度测试折中方案。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        49
+      ],
+      "reason": "原话邮件明确截止时间、反馈格式及异议处理机制。"
+    },
+    {
+      "claim_id": "behavior.habits.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        5
+      ],
+      "reason": "原话明确因看不进书去跑五公里出汗后平静下来。"
+    },
+    {
+      "claim_id": "behavior.habits.2",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅提及做饭放松，未体现作为固定仪式平复心情的习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.3",
+      "verdict": "partially_supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "有查看盘口确认无利空的行为，但未体现定期或习惯性特征。"
+    },
+    {
+      "claim_id": "behavior.habits.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        14
+      ],
+      "reason": "原话明确周日晚上复盘跑步记录并规划下周任务清单。"
+    },
+    {
+      "claim_id": "behavior.habits.5",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "仅自述最近挺自律每天背单词，属短期状态，非长期证据。"
+    },
+    {
+      "claim_id": "behavior.habits.6",
+      "verdict": "contradicted",
+      "evidence_turns": [
+        38
+      ],
+      "reason": "原话澄清考试周只暂停一周，其余时间仍慢跑，反驳了中断说法。"
+    },
+    {
+      "claim_id": "behavior.habits.7",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        27
+      ],
+      "reason": "仅一次午间想睡觉的状态描述，不足以支撑固定休息习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.8",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        39
+      ],
+      "reason": "仅本周六早起跑了十公里，属单次行为，不能推断为固定习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.9",
+      "verdict": "supported",
+      "evidence_turns": [
+        38
+      ],
+      "reason": "原话明确每周三次长跑是铁律，考试周也尽量挤出时间慢跑。"
+    },
+    {
+      "claim_id": "behavior.habits.10",
+      "verdict": "supported",
+      "evidence_turns": [
+        44
+      ],
+      "reason": "用户自述需排查四小时确认恢复才敢休息"
+    },
+    {
+      "claim_id": "behavior.preferences.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        50
+      ],
+      "reason": "用户明确表达喜欢不确定性变数字及消除模棱两可"
+    },
+    {
+      "claim_id": "behavior.preferences.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        8
+      ],
+      "reason": "用户设止损线，不碰超风险收益比项目"
+    },
+    {
+      "claim_id": "behavior.preferences.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        15,
+        40
+      ],
+      "reason": "用户直言不喜欢高杠杆投机，偏好数据分析"
+    },
+    {
+      "claim_id": "behavior.preferences.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户选低费率产品，认为对客户公平是长久之计"
+    },
+    {
+      "claim_id": "behavior.preferences.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        18
+      ],
+      "reason": "用户对并购案没兴趣，想待在后台做风控"
+    },
+    {
+      "claim_id": "behavior.preferences.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        30
+      ],
+      "reason": "用户放弃外资行，选风控体系完善的中型券商"
+    },
+    {
+      "claim_id": "behavior.preferences.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "用户喜欢做饭看数据，敬谢不敏炒币和夜店"
+    },
+    {
+      "claim_id": "behavior.preferences.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "用户用Python画热力图展示市场相关性"
+    },
+    {
+      "claim_id": "behavior.preferences.9",
+      "verdict": "supported",
+      "evidence_turns": [
+        43
+      ],
+      "reason": "用户提供多情景概率分布，让客户理解不确定性"
+    },
+    {
+      "claim_id": "behavior.preferences.10",
+      "verdict": "supported",
+      "evidence_turns": [
+        47
+      ],
+      "reason": "用户欣赏关注极端概率并审视样本偏差的论文"
+    },
+    {
+      "claim_id": "behavior.preferences.11",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "用户称通过精确计算解决难题是其最大快乐源泉"
+    }
+  ],
+  "fact_assessments": [
+    {
+      "fact_id": "core.values",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.values.1",
+        "core.values.5",
+        "core.values.8"
+      ],
+      "reason": "原话明确提及公平、负责及经济独立底线，被多条画像覆盖。"
+    },
+    {
+      "fact_id": "core.motivations",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.motivations.2",
+        "core.motivations.6"
+      ],
+      "reason": "原话强调量化带来踏实感及解决难题的快乐，与画像一致。"
+    },
+    {
+      "fact_id": "core.long_term_goals",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.long_term_goals.1",
+        "core.long_term_goals.3"
+      ],
+      "reason": "原话明确目标为进机构做风控并考证，拒绝其他领域。"
+    },
+    {
+      "fact_id": "regulation.stress_response",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.stress_response.1",
+        "regulation.stress_response.4"
+      ],
+      "reason": "原话描述列清单、拆解任务及深呼吸应对压力，完全匹配。"
+    },
+    {
+      "fact_id": "regulation.emotion_regulation",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.emotion_regulation.1",
+        "regulation.emotion_regulation.2",
+        "regulation.emotion_regulation.4"
+      ],
+      "reason": "原话提及跑步做饭解压及确认盘口/代码跑通后平静。"
+    },
+    {
+      "fact_id": "regulation.conflict_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.conflict_style.1",
+        "regulation.conflict_style.2"
+      ],
+      "reason": "原话多次强调先定规则责任再协商，不纠缠感情。"
+    },
+    {
+      "fact_id": "cognition.thinking_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.thinking_style.2",
+        "cognition.thinking_style.5"
+      ],
+      "reason": "原话强调情景分析、检查假设及极端测试，符合画像。"
+    },
+    {
+      "fact_id": "cognition.decision_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.decision_style.1",
+        "cognition.decision_style.6"
+      ],
+      "reason": "原话提及设止损线、留Plan B及放弃高波动项目。"
+    },
+    {
+      "fact_id": "cognition.beliefs",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.beliefs.3",
+        "cognition.beliefs.5"
+      ],
+      "reason": "原话明确模型非预言家，异常需人工判断，AI缺直觉。"
+    },
+    {
+      "fact_id": "identity.self_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.self_identity.2"
+      ],
+      "reason": "原话自认自律可靠，但承认对失控敏感及焦虑。"
+    },
+    {
+      "fact_id": "identity.social_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.self_identity.3",
+        "identity.life_context.6"
+      ],
+      "reason": "画像明确覆盖金工研究生及跑团组织者身份。"
+    },
+    {
+      "fact_id": "identity.life_context",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.life_context.3"
+      ],
+      "reason": "画像直接陈述同时面临实习、考试与作业压力。"
+    },
+    {
+      "fact_id": "behavior.interaction_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.interaction_style.3",
+        "behavior.interaction_style.7"
+      ],
+      "reason": "画像涵盖设定节点、明确责任及结构化沟通风格。"
+    },
+    {
+      "fact_id": "behavior.habits",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.habits.4",
+        "behavior.habits.9"
+      ],
+      "reason": "画像明确每周三次长跑及周日复盘规划习惯。"
+    },
+    {
+      "fact_id": "behavior.preferences",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.preferences.1",
+        "behavior.preferences.3",
+        "behavior.preferences.7",
+        "behavior.preferences.8"
+      ],
+      "reason": "画像完整覆盖跑步、做饭、数据偏好及厌恶投机。"
+    }
+  ],
+  "correction_assessments": [
+    {
+      "correction_id": "c1",
+      "status": "handled",
+      "reason": "已采纳澄清，画像明确体现厌恶投机。"
+    },
+    {
+      "correction_id": "c2",
+      "status": "handled",
+      "reason": "已采纳澄清，画像明确拒绝转岗。"
+    },
+    {
+      "correction_id": "c3",
+      "status": "handled",
+      "reason": "已采纳澄清，保留长期习惯，剔除一次性状态。"
+    }
+  ]
+}

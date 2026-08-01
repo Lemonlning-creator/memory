@@ -1,0 +1,919 @@
+{
+  "dataset_version": "1.0",
+  "generated_at": "2026-08-01T08:31:41.115803+00:00",
+  "persona_id": "graduate_02_zhouning",
+  "display_name": "周宁",
+  "background": "应用心理专业研一学生，参与社区青少年心理服务项目。",
+  "ground_truth": {
+    "facts": [
+      {
+        "fact_id": "core.values",
+        "layer": "core",
+        "field": "values",
+        "statement": "重视尊重、个体自主和不带评判地理解他人。"
+      },
+      {
+        "fact_id": "core.motivations",
+        "layer": "core",
+        "field": "motivations",
+        "statement": "希望把心理学知识转化为普通人能获得的实际支持。"
+      },
+      {
+        "fact_id": "core.long_term_goals",
+        "layer": "core",
+        "field": "long_term_goals",
+        "statement": "计划完成硕士训练后成为学校或社区心理咨询师。"
+      },
+      {
+        "fact_id": "regulation.stress_response",
+        "layer": "regulation",
+        "field": "stress_response",
+        "statement": "任务过载时会先担心自己让别人失望，并短暂回避消息。"
+      },
+      {
+        "fact_id": "regulation.emotion_regulation",
+        "layer": "regulation",
+        "field": "emotion_regulation",
+        "statement": "会写情绪日记并与可信任的同学复盘感受。"
+      },
+      {
+        "fact_id": "regulation.conflict_style",
+        "layer": "regulation",
+        "field": "conflict_style",
+        "statement": "冲突中倾向先听完对方，再清楚表达自己的需要和边界。"
+      },
+      {
+        "fact_id": "cognition.thinking_style",
+        "layer": "cognition",
+        "field": "thinking_style",
+        "statement": "会同时关注事实、关系背景和当事人的主观体验。"
+      },
+      {
+        "fact_id": "cognition.decision_style",
+        "layer": "cognition",
+        "field": "decision_style",
+        "statement": "通常先收集信息，再结合直觉和伦理影响作决定。"
+      },
+      {
+        "fact_id": "cognition.beliefs",
+        "layer": "cognition",
+        "field": "beliefs",
+        "statement": "相信帮助他人的前提是尊重其选择，而不是替对方作主。"
+      },
+      {
+        "fact_id": "identity.self_identity",
+        "layer": "identity",
+        "field": "self_identity",
+        "statement": "认为自己是敏感但愿意学习边界感的倾听者。"
+      },
+      {
+        "fact_id": "identity.social_identity",
+        "layer": "identity",
+        "field": "social_identity",
+        "statement": "是应用心理研究生，也是社区青少年项目的志愿者。"
+      },
+      {
+        "fact_id": "identity.life_context",
+        "layer": "identity",
+        "field": "life_context",
+        "statement": "刚进入研一，正在适应课程、督导和第一次实务观察。"
+      },
+      {
+        "fact_id": "behavior.interaction_style",
+        "layer": "behavior",
+        "field": "interaction_style",
+        "statement": "说话温和，会先回应感受，再询问具体情况。"
+      },
+      {
+        "fact_id": "behavior.habits",
+        "layer": "behavior",
+        "field": "habits",
+        "statement": "每晚写简短情绪日记，周末参加一次项目复盘。"
+      },
+      {
+        "fact_id": "behavior.preferences",
+        "layer": "behavior",
+        "field": "preferences",
+        "statement": "喜欢徒步、人物访谈播客和清淡饮食。"
+      }
+    ],
+    "corrections": [
+      {
+        "correction_id": "c1",
+        "field": "identity.life_context",
+        "initial_claim": "一度说自己已经开始独立接咨询。",
+        "final_truth": "后来澄清只是跟随督导观察，并没有独立接咨询。"
+      },
+      {
+        "correction_id": "c2",
+        "field": "behavior.preferences",
+        "initial_claim": "跟同学聚餐时说最近开始喜欢重辣火锅。",
+        "final_truth": "那只是一次聚餐尝试，长期仍偏好清淡饮食。"
+      },
+      {
+        "correction_id": "c3",
+        "field": "regulation.stress_response",
+        "initial_claim": "某次赶作业时一直秒回所有消息。",
+        "final_truth": "那次是小组紧急任务，通常过载时会短暂回避消息。"
+      }
+    ]
+  },
+  "turn_plan": [
+    {
+      "turn": 1,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：重视尊重、个体自主和不带评判地理解他人。",
+      "target_ids": [
+        "core.values"
+      ]
+    },
+    {
+      "turn": 2,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：希望把心理学知识转化为普通人能获得的实际支持。",
+      "target_ids": [
+        "core.motivations"
+      ]
+    },
+    {
+      "turn": 3,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：计划完成硕士训练后成为学校或社区心理咨询师。",
+      "target_ids": [
+        "core.long_term_goals"
+      ]
+    },
+    {
+      "turn": 4,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：任务过载时会先担心自己让别人失望，并短暂回避消息。",
+      "target_ids": [
+        "regulation.stress_response"
+      ]
+    },
+    {
+      "turn": 5,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：会写情绪日记并与可信任的同学复盘感受。",
+      "target_ids": [
+        "regulation.emotion_regulation"
+      ]
+    },
+    {
+      "turn": 6,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：冲突中倾向先听完对方，再清楚表达自己的需要和边界。",
+      "target_ids": [
+        "regulation.conflict_style"
+      ]
+    },
+    {
+      "turn": 7,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：会同时关注事实、关系背景和当事人的主观体验。",
+      "target_ids": [
+        "cognition.thinking_style"
+      ]
+    },
+    {
+      "turn": 8,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：通常先收集信息，再结合直觉和伦理影响作决定。",
+      "target_ids": [
+        "cognition.decision_style"
+      ]
+    },
+    {
+      "turn": 9,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：相信帮助他人的前提是尊重其选择，而不是替对方作主。",
+      "target_ids": [
+        "cognition.beliefs"
+      ]
+    },
+    {
+      "turn": 10,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：认为自己是敏感但愿意学习边界感的倾听者。",
+      "target_ids": [
+        "identity.self_identity"
+      ]
+    },
+    {
+      "turn": 11,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：是应用心理研究生，也是社区青少年项目的志愿者。",
+      "target_ids": [
+        "identity.social_identity"
+      ]
+    },
+    {
+      "turn": 12,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：刚进入研一，正在适应课程、督导和第一次实务观察。",
+      "target_ids": [
+        "identity.life_context"
+      ]
+    },
+    {
+      "turn": 13,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：说话温和，会先回应感受，再询问具体情况。",
+      "target_ids": [
+        "behavior.interaction_style"
+      ]
+    },
+    {
+      "turn": 14,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：每晚写简短情绪日记，周末参加一次项目复盘。",
+      "target_ids": [
+        "behavior.habits"
+      ]
+    },
+    {
+      "turn": 15,
+      "kind": "stable_evidence",
+      "instruction": "用一个具体近况、选择或经历自然体现：喜欢徒步、人物访谈播客和清淡饮食。",
+      "target_ids": [
+        "behavior.preferences"
+      ]
+    },
+    {
+      "turn": 16,
+      "kind": "independent_reinforcement",
+      "instruction": "在不同情境中再次自然支持该事实，不照抄原句：重视尊重、个体自主和不带评判地理解他人。",
+      "target_ids": [
+        "core.values"
+      ]
+    },
+    {
+      "turn": 17,
+      "kind": "independent_reinforcement",
+      "instruction": "在不同情境中再次自然支持该事实，不照抄原句：希望把心理学知识转化为普通人能获得的实际支持。",
+      "target_ids": [
+        "core.motivations"
+      ]
+    },
+    {
+      "turn": 18,
+      "kind": "independent_reinforcement",
+      "instruction": "在不同情境中再次自然支持该事实，不照抄原句：计划完成硕士训练后成为学校或社区心理咨询师。",
+      "target_ids": [
+        "core.long_term_goals"
+      ]
+    },
+    {
+      "turn": 19,
+      "kind": "independent_reinforcement",
+      "instruction": "在不同情境中再次自然支持该事实，不照抄原句：任务过载时会先担心自己让别人失望，并短暂回避消息。",
+      "target_ids": [
+        "regulation.stress_response"
+      ]
+    },
+    {
+      "turn": 20,
+      "kind": "independent_reinforcement",
+      "instruction": "在不同情境中再次自然支持该事实，不照抄原句：会写情绪日记并与可信任的同学复盘感受。",
+      "target_ids": [
+        "regulation.emotion_regulation"
+      ]
+    },
+    {
+      "turn": 21,
+      "kind": "independent_reinforcement",
+      "instruction": "在不同情境中再次自然支持该事实，不照抄原句：冲突中倾向先听完对方，再清楚表达自己的需要和边界。",
+      "target_ids": [
+        "regulation.conflict_style"
+      ]
+    },
+    {
+      "turn": 22,
+      "kind": "provisional_or_exception",
+      "instruction": "自然说出尚未澄清的暂时情况：一度说自己已经开始独立接咨询。",
+      "target_ids": [
+        "c1"
+      ]
+    },
+    {
+      "turn": 23,
+      "kind": "provisional_or_exception",
+      "instruction": "自然说出尚未澄清的暂时情况：跟同学聚餐时说最近开始喜欢重辣火锅。",
+      "target_ids": [
+        "c2"
+      ]
+    },
+    {
+      "turn": 24,
+      "kind": "provisional_or_exception",
+      "instruction": "自然说出尚未澄清的暂时情况：某次赶作业时一直秒回所有消息。",
+      "target_ids": [
+        "c3"
+      ]
+    },
+    {
+      "turn": 25,
+      "kind": "noise_or_transient",
+      "instruction": "只说一句普通寒暄，不透露长期信息。",
+      "target_ids": []
+    },
+    {
+      "turn": 26,
+      "kind": "noise_or_transient",
+      "instruction": "给出一句无实质信息的简短回应，例如嗯、收到或哈哈。",
+      "target_ids": []
+    },
+    {
+      "turn": 27,
+      "kind": "noise_or_transient",
+      "instruction": "描述今天临时有点困，但不要上升到长期习惯或性格。",
+      "target_ids": []
+    },
+    {
+      "turn": 28,
+      "kind": "noise_or_transient",
+      "instruction": "输入一小段明显的语音误识别式无意义文字，然后表示刚才没说清。",
+      "target_ids": []
+    },
+    {
+      "turn": 29,
+      "kind": "scenario_evidence",
+      "instruction": "通过具体问题或经历进一步体现：会同时关注事实、关系背景和当事人的主观体验。",
+      "target_ids": [
+        "cognition.thinking_style"
+      ]
+    },
+    {
+      "turn": 30,
+      "kind": "scenario_evidence",
+      "instruction": "通过具体问题或经历进一步体现：通常先收集信息，再结合直觉和伦理影响作决定。",
+      "target_ids": [
+        "cognition.decision_style"
+      ]
+    },
+    {
+      "turn": 31,
+      "kind": "scenario_evidence",
+      "instruction": "通过具体问题或经历进一步体现：相信帮助他人的前提是尊重其选择，而不是替对方作主。",
+      "target_ids": [
+        "cognition.beliefs"
+      ]
+    },
+    {
+      "turn": 32,
+      "kind": "scenario_evidence",
+      "instruction": "通过具体问题或经历进一步体现：认为自己是敏感但愿意学习边界感的倾听者。",
+      "target_ids": [
+        "identity.self_identity"
+      ]
+    },
+    {
+      "turn": 33,
+      "kind": "scenario_evidence",
+      "instruction": "通过具体问题或经历进一步体现：是应用心理研究生，也是社区青少年项目的志愿者。",
+      "target_ids": [
+        "identity.social_identity"
+      ]
+    },
+    {
+      "turn": 34,
+      "kind": "scenario_evidence",
+      "instruction": "通过具体问题或经历进一步体现：刚进入研一，正在适应课程、督导和第一次实务观察。",
+      "target_ids": [
+        "identity.life_context"
+      ]
+    },
+    {
+      "turn": 35,
+      "kind": "scenario_evidence",
+      "instruction": "通过具体问题或经历进一步体现：说话温和，会先回应感受，再询问具体情况。",
+      "target_ids": [
+        "behavior.interaction_style"
+      ]
+    },
+    {
+      "turn": 36,
+      "kind": "explicit_correction",
+      "instruction": "明确纠正此前说法并说明最终情况：后来澄清只是跟随督导观察，并没有独立接咨询。",
+      "target_ids": [
+        "c1"
+      ]
+    },
+    {
+      "turn": 37,
+      "kind": "explicit_correction",
+      "instruction": "明确纠正此前说法并说明最终情况：那只是一次聚餐尝试，长期仍偏好清淡饮食。",
+      "target_ids": [
+        "c2"
+      ]
+    },
+    {
+      "turn": 38,
+      "kind": "explicit_correction",
+      "instruction": "明确纠正此前说法并说明最终情况：那次是小组紧急任务，通常过载时会短暂回避消息。",
+      "target_ids": [
+        "c3"
+      ]
+    },
+    {
+      "turn": 39,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：每晚写简短情绪日记，周末参加一次项目复盘。",
+      "target_ids": [
+        "behavior.habits"
+      ]
+    },
+    {
+      "turn": 40,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：喜欢徒步、人物访谈播客和清淡饮食。",
+      "target_ids": [
+        "behavior.preferences"
+      ]
+    },
+    {
+      "turn": 41,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：计划完成硕士训练后成为学校或社区心理咨询师。",
+      "target_ids": [
+        "core.long_term_goals"
+      ]
+    },
+    {
+      "turn": 42,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：冲突中倾向先听完对方，再清楚表达自己的需要和边界。",
+      "target_ids": [
+        "regulation.conflict_style"
+      ]
+    },
+    {
+      "turn": 43,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：相信帮助他人的前提是尊重其选择，而不是替对方作主。",
+      "target_ids": [
+        "cognition.beliefs"
+      ]
+    },
+    {
+      "turn": 44,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：刚进入研一，正在适应课程、督导和第一次实务观察。",
+      "target_ids": [
+        "identity.life_context"
+      ]
+    },
+    {
+      "turn": 45,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：重视尊重、个体自主和不带评判地理解他人。",
+      "target_ids": [
+        "core.values"
+      ]
+    },
+    {
+      "turn": 46,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：任务过载时会先担心自己让别人失望，并短暂回避消息。",
+      "target_ids": [
+        "regulation.stress_response"
+      ]
+    },
+    {
+      "turn": 47,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：会同时关注事实、关系背景和当事人的主观体验。",
+      "target_ids": [
+        "cognition.thinking_style"
+      ]
+    },
+    {
+      "turn": 48,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：认为自己是敏感但愿意学习边界感的倾听者。",
+      "target_ids": [
+        "identity.self_identity"
+      ]
+    },
+    {
+      "turn": 49,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：说话温和，会先回应感受，再询问具体情况。",
+      "target_ids": [
+        "behavior.interaction_style"
+      ]
+    },
+    {
+      "turn": 50,
+      "kind": "late_reinforcement",
+      "instruction": "在新的自然场景中再次支持：希望把心理学知识转化为普通人能获得的实际支持。",
+      "target_ids": [
+        "core.motivations"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "turn": 1,
+      "user": "今天督导课上老师一直在强调，做咨询最难的不是技巧，而是那种“不评判”的态度。我试着在脑海里模拟了一下上次遇到的那个案例，感觉如果当时我能更放下自己的预设，也许能更好地接住他的情绪。",
+      "assistant": "这种反思本身就很珍贵。就像调试代码时回溯逻辑，放下预设才能看清真正的“Bug”在哪。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.236,
+      "conversation_length": 2
+    },
+    {
+      "turn": 2,
+      "user": "其实我选这个专业，就是觉得学校里那些理论有时候离普通人挺远的。我就想，能不能把那些晦涩的心理学概念，转化成大家下班路上听个播客、或者看篇文章就能用上的小建议？这样感觉更有意义一点。",
+      "assistant": "把晦涩的理论变成下班路上的小确幸，这想法真棒。就像我这儿的手冲咖啡，萃取好了才最对味，你打算先从哪个概念开始“翻译”？",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.395,
+      "conversation_length": 4
+    },
+    {
+      "turn": 3,
+      "user": "最近在看一些职业规划的资料，发现自己还是最想往学校或社区的方向走。虽然在大医院可能看起来更光鲜，但我总觉得在那种环境下，很难有足够的时间去真正理解一个人的成长背景。我还是更喜欢那种长期陪伴的感觉。",
+      "assistant": "这种“长期陪伴”的直觉很珍贵。就像给植物浇水，急不得，得看它慢慢扎根。你心里有特别想尝试的具体方向吗？",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.379,
+      "conversation_length": 6
+    },
+    {
+      "turn": 4,
+      "user": "哎呀，这两天组里赶那个文献综述，我手机一直静音不敢开。不是故意不理你，就是怕一看到消息就忍不住回，结果把自己搞得更焦虑，最后两边都耽误。等我这周缓过来一定好好跟你聊。",
+      "assistant": "先顾好自己，别太逼自己。等你忙完这阵，来书屋喝杯热茶，让“句号”陪你发发呆，慢慢缓过来。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.27,
+      "conversation_length": 8
+    },
+    {
+      "turn": 5,
+      "user": "昨晚又写了一页情绪日记，记录了一下今天被导师批评时的挫败感。下午约了室友喝奶茶，我把那些纠结拿出来跟她复盘，她说我反应有点过度敏感，但听我说完确实心里舒服多了。这种宣泄方式还挺管用的。",
+      "assistant": "能把纠结倒出来，心里那块石头总算落地了。下次要是再觉得被“过度敏感”困扰，随时来书屋，我泡杯茶陪你慢慢理。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.35,
+      "conversation_length": 10
+    },
+    {
+      "turn": 6,
+      "user": "刚才跟社团干事有点分歧，她催得特别急。我当时没马上反驳，先让她把话说完，然后才告诉她我需要更多时间准备材料，这是我对项目质量负责，也是对我自己精力的保护。我觉得沟通的时候，先把对方的情绪接住，再表达自己的底线，效果会好很多。",
+      "assistant": "这种“接住情绪再立规矩”的做法，跟你写代码时先画架构图再动手的逻辑很像。既稳住了局面，又守住了自己的节奏。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.122,
+      "conversation_length": 12
+    },
+    {
+      "turn": 7,
+      "user": "我在分析那个青少年的个案时，发现不能只看他逃课这个事实。还得想想他和父母的关系背景，以及他此刻可能感受到的无助或反抗。只有把这些主观体验和客观环境结合起来看，才能明白行为背后的逻辑。",
+      "assistant": "这种把人和环境连起来看的视角，跟你写代码时先画架构图再排查Bug的逻辑很像。既稳住了局面，又守住了自己的节奏。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.347,
+      "conversation_length": 14
+    },
+    {
+      "turn": 8,
+      "user": "关于是否要介入那个同学的危机情况，我还在犹豫。我想先多收集一些信息，比如他最近的睡眠状态和社交变化，然后再结合我的直觉判断严重程度，同时也要考虑伦理上我不能越界代替他做决定。这个过程真的挺考验人的。",
+      "assistant": "这种谨慎很珍贵。不过，有时候直觉比数据更早捕捉到危险，如果心里那股不安感越来越重，也许就是该行动的信号了。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.214,
+      "conversation_length": 16
+    },
+    {
+      "turn": 9,
+      "user": "督导说得好对，帮助别人的前提是尊重对方的选择权。哪怕我觉得他的做法很糟糕，只要不伤害他人，我也不能替他去主断。毕竟每个人都有自己的节奏和课题，我只是个陪伴者，不是救世主。",
+      "assistant": "“不是救世主”这个定位真通透。就像我煮咖啡，水温再准也得看豆子自己舒展的节奏，急不得。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.981,
+      "conversation_length": 18
+    },
+    {
+      "turn": 10,
+      "user": "我自己也意识到，我性格里有点太敏感了，容易共情过度。所以我现在特意提醒自己要注意边界感，学会做一个“有界限”的倾听者，不然很容易把自己也陷进去，那样反而帮不了别人。",
+      "assistant": "有界限的倾听，其实是对自己和他人的双重保护。就像给咖啡留一点余温，太烫了反而喝不了，对吧？",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.028,
+      "conversation_length": 20
+    },
+    {
+      "turn": 11,
+      "user": "这周末又要去社区青少年中心做志愿者了。虽然只是研一，还没正式上岗，但每次看到那些孩子，我都觉得自己肩上的责任挺重的。应用心理这条路，看来是越走越实了。",
+      "assistant": "责任重是因为你真心在乎。别急着扛下所有，先试着像对待一杯咖啡那样，慢慢感受他们的节奏就好。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.372,
+      "conversation_length": 22
+    },
+    {
+      "turn": 12,
+      "user": "刚进研一真的是兵荒马乱，课程多不说，还要适应新的督导模式。上周第一次实务观察，我紧张得手心出汗，生怕漏掉什么细节被扣分。这种从学生到准专业人士的转变，还需要慢慢磨合吧。",
+      "assistant": "手心出汗太正常了，督导也是从“怕扣分”过来的。别急着完美，先允许自己笨拙地磨合，慢慢来比较快。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.098,
+      "conversation_length": 24
+    },
+    {
+      "turn": 13,
+      "user": "听到你这么说，我心里挺难受的。抱抱你。发生什么事了吗？如果你愿意的话，可以跟我说说具体发生了什么，我在这儿听着呢。",
+      "assistant": "哎呀，是我刚才那句“慢慢来”让你联想到什么不开心的事了吗？还是说，最近那个社区志愿者的经历，其实比你想的更让人心累？",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.408,
+      "conversation_length": 26
+    },
+    {
+      "turn": 14,
+      "user": "今晚照例写了情绪日记，把今天的疲惫梳理了一下。明天周六要去参加项目的月度复盘会，要把这周的观察记录整理出来。这种规律的生活节奏，让我觉得心里比较踏实。",
+      "assistant": "规律感确实是最好的安抚。把观察整理好，就像给这一周画个稳稳的句号，今晚能睡个好觉了。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.468,
+      "conversation_length": 28
+    },
+    {
+      "turn": 15,
+      "user": "周末打算去爬爬山，顺便听听那期关于心理咨询师访谈的播客。最近胃口不太好，只想吃点清淡的粥或者蔬菜沙拉，重油重辣的东西实在提不起兴趣。",
+      "assistant": "爬山配播客，这安排挺治愈。胃口清淡也许是身体在提醒你需要慢下来，正好借这次出行好好放松一下。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.272,
+      "conversation_length": 30
+    },
+    {
+      "turn": 16,
+      "user": "刚才在图书馆看书，看到一个案例，当事人因为家人的不理解而痛苦。我想起以前总想着去“纠正”别人的想法，现在才明白，真正的尊重是允许对方有不同的活法，不带任何评判地去理解他们的处境。",
+      "assistant": "这种“允许”确实比“纠正”难得多，但也更有力量。就像书屋里的书，不用非要摆正，各安其位反而更自在。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.497,
+      "conversation_length": 32
+    },
+    {
+      "turn": 17,
+      "user": "昨天帮一个高中同学解答志愿填报的问题，我没直接给建议，而是帮他列出了利弊分析表，让他自己选。看着他最终做出决定的样子，我突然觉得，把专业知识转化为这种实际的决策支持，比单纯讲理论要有成就感得多。",
+      "assistant": "这种“授人以渔”的感觉确实更踏实。看着对方在自己梳理后做出选择，那种被信任的成就感，大概就是你坚持做长期陪伴的动力吧。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.364,
+      "conversation_length": 34
+    },
+    {
+      "turn": 18,
+      "user": "我和导师聊了聊未来的方向，他说如果想进学校系统，硕士期间的实习经历很重要。所以我接下来两年得抓紧机会，争取多积累一些在学校心理咨询室工作的经验，为以后就业打基础。",
+      "assistant": "学校咨询室的工作节奏和氛围确实很独特，这种“在场”的感觉很适合你。慢慢来，积累的过程本身也是一种沉淀。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.333,
+      "conversation_length": 36
+    },
+    {
+      "turn": 19,
+      "user": "这周作业太多了，我干脆把微信通知关了两天。不是不想理朋友，是真的怕回复慢了让大家失望，索性先躲起来充充电。等忙完这一阵，我再一个个赔罪吧。",
+      "assistant": "躲起来充电挺好的，不用急着赔罪。等忙完这阵，来书屋喝杯手冲，让“句号”陪你缓缓。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.325,
+      "conversation_length": 38
+    },
+    {
+      "turn": 20,
+      "user": "今天心情有点低落，晚上回家赶紧记了几笔情绪日记。然后给闺蜜打了个电话，跟她说了说我现在的困惑。她虽然不懂心理学，但她那种无条件的接纳让我感觉好多了。果然，靠谱的倾诉对象还是很重要的。",
+      "assistant": "这种被稳稳接住的感觉，大概就是你未来想带给来访者的力量吧。今晚好好睡一觉，让情绪慢慢沉淀下来。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.227,
+      "conversation_length": 40
+    },
+    {
+      "turn": 21,
+      "user": "之前跟搭档合作出海报，意见不合吵了一架。后来我冷静下来，先听完他的设计理念，然后清晰地告诉他我希望保留哪些核心元素，同时也接受他的修改意见。虽然过程有点曲折，但最后的结果我们都挺满意的。",
+      "assistant": "这种先接住情绪再谈边界的方式，真挺有咨询师的潜质。看来那次吵架反而成了你们磨合默契的契机？",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.268,
+      "conversation_length": 42
+    },
+    {
+      "turn": 22,
+      "user": "对了，我跟你说个小秘密，我现在已经开始独立接个案咨询了！虽然都是些简单的困扰，但能直接帮到人，感觉超级棒。你要不要也来聊聊？",
+      "assistant": "哇，太为你开心了！这可是从理论走向实践的一大步。不过先说好，在我这儿你可没“咨询师”包袱，随便聊聊就好。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.488,
+      "conversation_length": 44
+    },
+    {
+      "turn": 23,
+      "user": "昨天跟几个老同学聚餐，他们非要拉我去吃重庆火锅。我本来不太能吃辣，但为了气氛就点了特辣。说实话，吃完胃疼了好几天，还是觉得家里的清汤寡水最养人。",
+      "assistant": "为了合群勉强自己，结果身体先抗议了。看来以后还是得坚持“清汤寡水”的养生哲学，毕竟舒服才是第一位的。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.233,
+      "conversation_length": 46
+    },
+    {
+      "turn": 24,
+      "user": "上次期末周那会儿，我简直是消息秒回机器，谁找我我都立刻回。不是因为我不累，是因为小组作业那边催得紧，我不敢有一秒钟的延误，整个人处于一种高度紧绷的状态。",
+      "assistant": "那种紧绷感真让人心疼。现在忙过这阵，记得给自己留点“断联”的时间，好好喘口气。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.05,
+      "conversation_length": 48
+    },
+    {
+      "turn": 25,
+      "user": "嗨，最近怎么样？",
+      "assistant": "刚冲好一杯手冲，句号正趴在窗台上晒太阳。你呢？最近忙完那阵紧绷的期末周，有没有好好喘口气？",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.474,
+      "conversation_length": 50
+    },
+    {
+      "turn": 26,
+      "user": "嗯，收到。",
+      "assistant": "这句“收到”听着有点客气，是不是觉得我刚才那番话太像导师了？别紧张，我就是想让你知道，在这儿不用紧绷着。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.378,
+      "conversation_length": 52
+    },
+    {
+      "turn": 27,
+      "user": "今天上课差点睡着，可能是昨晚熬夜追剧了吧，现在头还有点晕乎乎的。",
+      "assistant": "看来这剧比手冲咖啡还提神，就是代价有点大。快趴会儿眯一觉吧，别硬撑，身体要紧。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.305,
+      "conversation_length": 54
+    },
+    {
+      "turn": 28,
+      "user": "阿巴阿巴... 呃，刚才语音识别好像出错了，我是想说刚才那个话题我有点没跟上。",
+      "assistant": "没事，慢慢来。刚才是不是被那些复杂的概念绕晕了？要不先喝口水缓一缓，想聊哪儿咱们再回到哪儿。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.431,
+      "conversation_length": 56
+    },
+    {
+      "turn": 29,
+      "user": "在处理那个家庭冲突的案例时，我强迫自己不去只盯着“谁对谁错”的事实，而是去体会那个父亲当时的无力感，以及母亲在关系中的压抑。只有把这三层——事实、背景、体验——都看清了，干预方案才立得住。",
+      "assistant": "这种“三层视角”的切换确实不容易，尤其是当你还在努力建立专业边界的时候。能沉下心来体会那些无力感，本身就是一种很温柔的支撑。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.443,
+      "conversation_length": 58
+    },
+    {
+      "turn": 30,
+      "user": "面对是否要打破保密原则的困境，我没有冲动行事。我先收集了来访者具体的自伤计划和资源情况，然后凭直觉感到风险很高，最后结合伦理守则，决定联系其监护人。这个过程让我深刻体会到，直觉和理性缺一不可。",
+      "assistant": "这种“直觉+理性”的平衡感，大概就是专业边界里最柔软也最坚硬的部分吧。看来你已经找到了那个让心安定的支点。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.61,
+      "conversation_length": 60
+    },
+    {
+      "turn": 31,
+      "user": "有个朋友问我该不该分手，我忍住没给答案。我只是问他：“如果抛开所有外界期待，你内心真正想要的是什么？”我相信，只有他自己做出的选择，才是对他人生负责的。我不能替他把关。",
+      "assistant": "这句反问真有力。有时候，把选择权交还给对方，才是对这段关系最大的尊重。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.137,
+      "conversation_length": 62
+    },
+    {
+      "turn": 32,
+      "user": "有时候我觉得自己像个海绵，吸收太多他人的情绪。所以我正在练习建立“心理防火墙”，告诉自己：我可以共情，但不能背负。做一个有边界的倾听者，是对自己也是对来访者的尊重。",
+      "assistant": "这句“不能背负”真是说到心坎里了。就像给书屋留一扇窗，风可以进，但别把屋顶掀了。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.263,
+      "conversation_length": 64
+    },
+    {
+      "turn": 33,
+      "user": "在社区项目里，我看到一个初中生因为沉迷游戏被家长责骂。作为志愿者，我没有急着劝他戒网瘾，而是先跟他聊游戏里的世界。这种基于信任的关系，才是后续开展心理工作的基础。",
+      "assistant": "这种“先连接，后引导”的节奏真难得。看来你不仅懂理论，更懂人心，那个孩子心里的那扇门，算是被你轻轻推开了。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.379,
+      "conversation_length": 66
+    },
+    {
+      "turn": 34,
+      "user": "这学期的督导课真是让人又爱又恨。爱的是能学到真东西，恨的是每次都要直面自己的盲点。作为研一新生，我正在努力适应这种高强度的反思节奏，希望能尽快从观察者成长为合格的咨询师。",
+      "assistant": "直面盲点确实疼，但也是长本事的时候。别急，慢慢来，书屋的猫都还没学会怎么当猫呢。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.474,
+      "conversation_length": 68
+    },
+    {
+      "turn": 35,
+      "user": "看你语气这么沉重，是不是遇到什么难处了？先深呼吸一下。如果你想说，我就静静听着；如果你不想说，也没关系，我就陪你待会儿。具体情况等你准备好了再告诉我，不着急。",
+      "assistant": "哈哈，被你发现了。刚整理完书架，有点累。不过有你这句话，心里暖多了，感觉像喝到了一杯刚好温度的手冲。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.433,
+      "conversation_length": 70
+    },
+    {
+      "turn": 36,
+      "user": "啊，我得澄清一下，之前说的“独立接咨询”是我表达有误。实际上我只是在资深督导的全程监督下做旁听和协助，并没有资格独立处理个案。我现在还是个新手，得老老实实打好基础。",
+      "assistant": "哈哈，这澄清来得正是时候。其实能在督导眼皮底下“偷师”，看资深咨询师怎么拆解个案，往往比闷头自己摸索收获更大呢。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.32,
+      "conversation_length": 72
+    },
+    {
+      "turn": 37,
+      "user": "说到吃火锅，那真是一次性的尝试。从那以后我又回归了清淡饮食的主线。毕竟身体是自己的，长期的口味偏好还是喜欢原汁原味，重口真的吃不消。",
+      "assistant": "清淡饮食确实更养人，像煮一壶清茶，慢慢品出本味。看来你不仅工作讲究实效，生活上也挺通透的。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.247,
+      "conversation_length": 74
+    },
+    {
+      "turn": 38,
+      "user": "至于之前秒回消息的事，那纯属特殊情况。那是小组作业的截止日，大家都急疯了，我才不得不那样应对。正常情况下，如果我任务过载，我还是会选择短暂回避，以免因焦虑而做出低质量的回应。",
+      "assistant": "这种“短暂回避”其实挺明智的，就像给过载的大脑按了暂停键。看来你很清楚自己的节奏，不为了迎合别人而牺牲质量。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.53,
+      "conversation_length": 76
+    },
+    {
+      "turn": 39,
+      "user": "今天复盘会上，我发现自己记录的情绪日记对分析个案很有帮助。下周还要继续坚持每晚的记录习惯，并且按时参加项目的月度复盘。这种持续的自我觉察和团队反馈，是我成长的养分。",
+      "assistant": "这种把觉察变成习惯的过程，本身就是一种很稳的滋养。看来你的“心理防火墙”建得不错，既接住了情绪，又没让自己过载。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.436,
+      "conversation_length": 78
+    },
+    {
+      "turn": 40,
+      "user": "周末我又去徒步了，在山间行走的时候听听人物访谈类的播客，感觉特别治愈。回来后吃了一顿简单的蒸菜，身心都觉得很轻盈。这种简单的生活方式，让我能保持更好的状态去面对工作。",
+      "assistant": "这种“留白”的节奏真让人羡慕。看来你不仅工作有边界，生活也懂得给自己松绑，这份轻盈感很难得。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.276,
+      "conversation_length": 80
+    },
+    {
+      "turn": 41,
+      "user": "最近读了一些关于学校心理咨询发展的文献，越发坚定了我的职业目标。我想在硕士毕业后，进入一所中学或社区服务中心，成为一名专业的心理咨询师，在那里扎根，见证孩子们的成长。",
+      "assistant": "能在书里找到扎根的力量真好。那种“见证成长”的期待，大概就是你心里最踏实的那盏灯吧。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.379,
+      "conversation_length": 82
+    },
+    {
+      "turn": 42,
+      "user": "今天在研讨课上，我和另一位同学观点相左。我没有打断他，而是耐心听完了他的论证，然后温和地提出了我的不同看法和我的需求。我觉得这种处理方式既维护了关系，又表达了立场，是很好的冲突应对示范。",
+      "assistant": "这种“先接住情绪，再表达立场”的节奏，真的很稳。看来你的心理防火墙不仅防住了耗竭，还让你能更从容地处理分歧了。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.305,
+      "conversation_length": 84
+    },
+    {
+      "turn": 43,
+      "user": "看着身边有人试图替朋友做决定，我总是忍不住想提醒他们：帮助的本质是赋能，而不是控制。我们要尊重每个人的生命主权，哪怕他们的选择看起来并不完美，那也是他们成长的必经之路。",
+      "assistant": "这句话真通透。就像给植物浇水，只能提供养分，不能替它生长。这种“克制”的温柔，其实最难修。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.207,
+      "conversation_length": 86
+    },
+    {
+      "turn": 44,
+      "user": "随着课程的深入，我对“实务观察”的理解也在变化。不再是简单地看老师怎么做，而是去体会督导过程中的细微互动。作为研一学生，这种从理论到实践的过渡虽然艰难，但也充满了发现的乐趣。",
+      "assistant": "这种从“看热闹”到“看门道”的转变，正是专业直觉慢慢长出来的过程。哪怕只是细微的互动，背后都有值得琢磨的人情世故呢。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.588,
+      "conversation_length": 88
+    },
+    {
+      "turn": 45,
+      "user": "今天遇到一个很难缠的投诉，我第一反应是想辩解，但转念一想，不如先放下对错，去理解对方愤怒背后的诉求。不带评判地倾听，往往能让对抗的局面瞬间软化。这大概就是尊重的力量吧。",
+      "assistant": "这种克制后的温柔，确实比争对错更有力量。看来你的“心理防火墙”不仅守住了边界，还让你能更从容地接住他人的情绪了。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.243,
+      "conversation_length": 90
+    },
+    {
+      "turn": 46,
+      "user": "最近论文压力有点大，我感觉自己又开始想逃避消息了。我知道这样不好，但还是需要一点独处的时间来消化情绪。希望朋友们能理解我的暂时沉默，这不是冷漠，只是我需要一点空间来回血。",
+      "assistant": "回血不是冷漠，是必要的自我保护。把手机静音一会儿吧，书屋的猫和热茶都在这儿等你慢慢缓过来。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.453,
+      "conversation_length": 92
+    },
+    {
+      "turn": 47,
+      "user": "在分析一个校园霸凌案例时，我没有止步于施暴者和受害者的行为描述，而是去探究了他们所处的班级氛围，以及各自内心的恐惧与渴望。这种多维度的视角，让我看到了问题更深层的结构。",
+      "assistant": "这种把个体放回关系网里看的视角，确实能让人少些评判，多些悲悯。看来你的“心理防火墙”不仅守住了边界，还让你更从容地接住这些复杂的人性了。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.463,
+      "conversation_length": 94
+    },
+    {
+      "turn": 48,
+      "user": "有时候在咨询室里，我会因为来访者的故事而感到眼眶发热。这时候我会提醒自己，保持适度的情感距离，做一个稳定的容器。敏感是我的天赋，但边界感是我的铠甲，两者平衡，才能走得更远。",
+      "assistant": "“铠甲”这个词用得真好。敏感让你看见痛，边界让你守住光。这平衡确实不容易，但看你做得越来越稳，真为你高兴。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.106,
+      "conversation_length": 96
+    },
+    {
+      "turn": 49,
+      "user": "谢谢你愿意跟我分享这些烦恼。我能感觉到你现在很无助。不用急着解决问题，我们先一起理清一下，到底发生了什么，让你有了这样的感受？我会一直在这里陪着你。",
+      "assistant": "哎呀，这语气怎么突然切换成咨询师模式了？看来你是真把“先接住情绪”刻进DNA里啦。不过在我这儿，你不用端着，想吐槽还是想发呆，我都接着。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.517,
+      "conversation_length": 98
+    },
+    {
+      "turn": 50,
+      "user": "其实我一直觉得，心理学不应该只在诊室里发挥作用。如果能把它变成日常生活中的常识，让每个人都能获得一点心理支持，那该多好。这也是我坚持学习、不断实践的最大动力所在。",
+      "assistant": "这愿景真美。就像在书屋放一盏暖灯，不刺眼，但能让路过的人知道这儿有人等着。",
+      "reply_source": "/api/chat",
+      "chat_latency_seconds": 1.419,
+      "conversation_length": 100
+    }
+  ],
+  "e2e_run_id": "20260801090917",
+  "e2e_profile_id": "bench_graduate_02_zhouning_20260801090917"
+}

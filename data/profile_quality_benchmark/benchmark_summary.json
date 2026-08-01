@@ -1,0 +1,91 @@
+{
+  "generated_at": "2026-08-01T09:57:41.298478+00:00",
+  "sample_people": 5,
+  "dialogue_turns": 250,
+  "profile_model": "kimi-k2.6",
+  "reply_and_judge_model": "qwen3.6-flash",
+  "metrics": {
+    "profile_accuracy_percent": 93.4,
+    "hallucination_percent": 6.17,
+    "key_fact_recall_percent": 98.0,
+    "correction_handling_percent": 100.0,
+    "five_layer_completeness_percent": 100.0,
+    "fixed_field_coverage_percent": 100.0,
+    "profile_average_latency_seconds": 70.57
+  },
+  "total_profile_api_calls": 35,
+  "per_person": [
+    {
+      "persona_id": "graduate_01_linran",
+      "profile_claim_count": 85,
+      "profile_accuracy_percent": 94.71,
+      "hallucination_percent": 4.71,
+      "key_fact_recall_percent": 96.67,
+      "correction_handling_percent": 100.0,
+      "five_layer_completeness_percent": 100.0,
+      "fixed_field_coverage_percent": 100.0,
+      "profile_api_calls": 7,
+      "profile_total_latency_seconds": 358.6,
+      "profile_average_latency_seconds": 51.229
+    },
+    {
+      "persona_id": "graduate_02_zhouning",
+      "profile_claim_count": 90,
+      "profile_accuracy_percent": 92.22,
+      "hallucination_percent": 7.78,
+      "key_fact_recall_percent": 96.67,
+      "correction_handling_percent": 100.0,
+      "five_layer_completeness_percent": 100.0,
+      "fixed_field_coverage_percent": 100.0,
+      "profile_api_calls": 7,
+      "profile_total_latency_seconds": 407.896,
+      "profile_average_latency_seconds": 58.271
+    },
+    {
+      "persona_id": "graduate_03_chenyu",
+      "profile_claim_count": 107,
+      "profile_accuracy_percent": 93.46,
+      "hallucination_percent": 6.54,
+      "key_fact_recall_percent": 100.0,
+      "correction_handling_percent": 100.0,
+      "five_layer_completeness_percent": 100.0,
+      "fixed_field_coverage_percent": 100.0,
+      "profile_api_calls": 7,
+      "profile_total_latency_seconds": 466.08,
+      "profile_average_latency_seconds": 66.583
+    },
+    {
+      "persona_id": "graduate_04_suyue",
+      "profile_claim_count": 96,
+      "profile_accuracy_percent": 92.19,
+      "hallucination_percent": 6.25,
+      "key_fact_recall_percent": 100.0,
+      "correction_handling_percent": 100.0,
+      "five_layer_completeness_percent": 100.0,
+      "fixed_field_coverage_percent": 100.0,
+      "profile_api_calls": 7,
+      "profile_total_latency_seconds": 617.032,
+      "profile_average_latency_seconds": 88.147
+    },
+    {
+      "persona_id": "graduate_05_hanze",
+      "profile_claim_count": 108,
+      "profile_accuracy_percent": 94.44,
+      "hallucination_percent": 5.56,
+      "key_fact_recall_percent": 96.67,
+      "correction_handling_percent": 100.0,
+      "five_layer_completeness_percent": 100.0,
+      "fixed_field_coverage_percent": 100.0,
+      "profile_api_calls": 7,
+      "profile_total_latency_seconds": 620.406,
+      "profile_average_latency_seconds": 88.629
+    }
+  ],
+  "metric_notes": {
+    "profile_accuracy_percent": "画像条目逐条证据审计；部分支持按0.5计。",
+    "hallucination_percent": "无用户证据或与最终澄清矛盾的画像条目占比。",
+    "key_fact_recall_percent": "预设的15项关键稳定事实被画像覆盖的比例；部分覆盖按0.5计。",
+    "correction_handling_percent": "每人3项前后纠正被最终画像正确处理的比例；部分处理按0.5计。",
+    "five_layer_completeness_percent": "五层中至少一个固定字段有内容的层数占比。"
+  }
+}

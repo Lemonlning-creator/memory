@@ -1,0 +1,916 @@
+{
+  "claim_assessments": [
+    {
+      "claim_id": "core.values.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        1
+      ],
+      "reason": "用户明确拒绝风口项目，强调基础不牢地动山摇。"
+    },
+    {
+      "claim_id": "core.values.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "用户认为系统跑不通无意义，成就感强于挂名第一作者。"
+    },
+    {
+      "claim_id": "core.values.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "多次评估风险，坚持风险可控路线，婉拒高风险合作。"
+    },
+    {
+      "claim_id": "core.values.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        9,
+        31,
+        43
+      ],
+      "reason": "多次强调工具仅提效，关键责任与判断必须靠人。"
+    },
+    {
+      "claim_id": "core.values.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "明确表示喜欢能沉下心做产品、注重长期积累的团队。"
+    },
+    {
+      "claim_id": "core.values.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        32
+      ],
+      "reason": "自比工匠打磨代码，不追求一夜成名，态度务实。"
+    },
+    {
+      "claim_id": "core.values.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        38
+      ],
+      "reason": "购物前比较风险、可逆性，冲动消费后退货并反思。"
+    },
+    {
+      "claim_id": "core.values.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "认为学校理论基础是根基，不应牺牲系统性学习。"
+    },
+    {
+      "claim_id": "core.motivations.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "明确表达想做能扛高并发、低延迟系统的愿望。"
+    },
+    {
+      "claim_id": "core.motivations.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        17
+      ],
+      "reason": "认为做出好用系统、解决实际问题带来成就感。"
+    },
+    {
+      "claim_id": "core.motivations.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "享受慢慢打磨技术过程，看重系统稳定后的踏实感。"
+    },
+    {
+      "claim_id": "core.motivations.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        32
+      ],
+      "reason": "认为务实打磨让自己一步步变强，而非浮于表面。"
+    },
+    {
+      "claim_id": "core.motivations.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        48
+      ],
+      "reason": "用户明确表达希望成为经得起时间考验的务实技术人员。"
+    },
+    {
+      "claim_id": "core.motivations.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "用户称看到用户因推荐变高效是持续投入的最大动力。"
+    },
+    {
+      "claim_id": "core.long_term_goals.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        36
+      ],
+      "reason": "用户明确表示目标去杭州软件企业做后端或推荐开发。"
+    },
+    {
+      "claim_id": "core.long_term_goals.2",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        1
+      ],
+      "reason": "仅提及当前想调稳模型，属短期任务，非长期人生目标。"
+    },
+    {
+      "claim_id": "core.long_term_goals.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户表示喜欢能沉下心做产品、注重长期积累的团队氛围。"
+    },
+    {
+      "claim_id": "core.long_term_goals.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        18
+      ],
+      "reason": "用户认为杭州生活成本低，存钱买房可能性更大，长远合适。"
+    },
+    {
+      "claim_id": "core.long_term_goals.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        41
+      ],
+      "reason": "面试时表达希望长期深耕技术，而非频繁跳槽。"
+    },
+    {
+      "claim_id": "regulation.stress_response.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        46
+      ],
+      "reason": "多次描述高压下过度准备、压缩休息并陷入焦虑循环。"
+    },
+    {
+      "claim_id": "regulation.stress_response.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        46
+      ],
+      "reason": "用户明确提到越急越乱，效率反而下降。"
+    },
+    {
+      "claim_id": "regulation.stress_response.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        12,
+        34,
+        44
+      ],
+      "reason": "多次描述研二下学期论文与秋招并行，感觉时间不够用。"
+    },
+    {
+      "claim_id": "regulation.stress_response.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        19
+      ],
+      "reason": "用户自述焦虑时睡不到6小时，过度规划挤占执行时间。"
+    },
+    {
+      "claim_id": "regulation.stress_response.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        27
+      ],
+      "reason": "用户明确说熬夜跑实验后次日头昏脑涨、有点困。"
+    },
+    {
+      "claim_id": "regulation.stress_response.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        46
+      ],
+      "reason": "用户明确提到赶Deadline列过多子任务导致睡眠不足效率下降。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "用户多次提到通过跑步释放压力，让身体放松。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "用户提到听爵士乐（Miles Davis/Chet Baker）帮助冷静平复情绪。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "用户提到更新清单划掉任务能带来掌控感和安心感。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        19
+      ],
+      "reason": "用户明确提到需提醒自己适度休息也是工作的一部分。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        46
+      ],
+      "reason": "用户提到需学会控制过度准备冲动，给自己留缓冲空间。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户提到面对隐私协议底线问题直接拒绝，不退让。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户提到核对事实后，对产品经理无理取闹的需求变更直接拒绝。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户提到面对实习生反复试探底线时，明确告知原则问题无商量余地。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户提到遇到bug先在纸上画流程图，把数据流向拆分成几个模块。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户提到将数据流向拆分成几个模块，单独验证每个环节。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户提到写了小脚本单独验证每个环节的输入输出。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        29
+      ],
+      "reason": "用户明确提到重构代码前习惯性画架构图理清微服务关系。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        29
+      ],
+      "reason": "用户描述针对核心链路写单元测试模拟极端流量进行验证。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        47
+      ],
+      "reason": "用户详述排查内存泄漏时先画图拆解GC再用Profiler定位。"
+    },
+    {
+      "claim_id": "cognition.decision_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30,
+        38
+      ],
+      "reason": "多次评估可逆性与风险，如拒绝不可逆方向及冲动消费后反思。"
+    },
+    {
+      "claim_id": "cognition.decision_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        8
+      ],
+      "reason": "因增量学习方向可逆性差、发展空间有限而拒绝导师建议。"
+    },
+    {
+      "claim_id": "cognition.decision_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21
+      ],
+      "reason": "面对数据共享和需求变更，均先核对事实再做出回应或拒绝。"
+    },
+    {
+      "claim_id": "cognition.decision_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        13
+      ],
+      "reason": "用户明确提出方案不可行，建议先做小规模原型验证再全面上线。"
+    },
+    {
+      "claim_id": "cognition.decision_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        36
+      ],
+      "reason": "经咨询后明确放弃读博，目标转为毕业后去杭州做工程开发。"
+    },
+    {
+      "claim_id": "cognition.decision_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        30
+      ],
+      "reason": "权衡外校合作项目风险大于收益且不可逆，决定婉拒专注主线。"
+    },
+    {
+      "claim_id": "cognition.decision_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        38
+      ],
+      "description": "用户自述购物习惯比较风险、耐用性和退换货政策（可逆性）。"
+    },
+    {
+      "claim_id": "cognition.decision_style.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "认为不能以牺牲系统性学习为代价换取短期实习经历。"
+    },
+    {
+      "claim_id": "cognition.beliefs.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户通过拆分问题并验证得出结论，认为拆分问题真好用。"
+    },
+    {
+      "claim_id": "cognition.beliefs.2",
+      "path": "cognition.beliefs",
+      "claim": "工具只能辅助，关键判断必须靠人",
+      "verdict": "supported",
+      "evidence_turns": [
+        9,
+        31,
+        43
+      ],
+      "reason": "多轮明确表达工具仅提效，核心逻辑与责任需人工把控。"
+    },
+    {
+      "claim_id": "cognition.beliefs.3",
+      "path": "cognition.beliefs",
+      "claim": "AI生成的代码存在业务盲区，关键责任必须由人承担",
+      "verdict": "supported",
+      "evidence_turns": [
+        31
+      ],
+      "reason": "Turn 31指出AI不懂业务约束且代码有隐患，强调人工审查负责。"
+    },
+    {
+      "claim_id": "cognition.beliefs.4",
+      "path": "cognition.beliefs",
+      "claim": "耐心打磨技术是程序员的基本素养",
+      "verdict": "supported",
+      "evidence_turns": [
+        48
+      ],
+      "reason": "Turn 48直接陈述该观点为基本素养。"
+    },
+    {
+      "claim_id": "cognition.beliefs.5",
+      "path": "cognition.beliefs",
+      "claim": "稳定扎实的知识结构是长期发展的根基",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "Turn 45强调理论基础是根基，反对牺牲学习换实习。"
+    },
+    {
+      "claim_id": "identity.self_identity.1",
+      "path": "identity.self_identity",
+      "claim": "工程导向的研究者，重视系统真实可用性",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2,
+        17,
+        50
+      ],
+      "reason": "多次强调拒绝风口、追求高并发低延迟系统及解决实际问题。"
+    },
+    {
+      "claim_id": "identity.self_identity.2",
+      "path": "identity.self_identity",
+      "claim": "对扎实基础有执念",
+      "verdict": "supported",
+      "evidence_turns": [
+        1
+      ],
+      "reason": "Turn 1直言“基础不牢地动山摇”，优先调稳模型。"
+    },
+    {
+      "claim_id": "identity.self_identity.3",
+      "path": "identity.self_identity",
+      "claim": "自认非天才型选手，享受耐心打磨技术的过程",
+      "verdict": "supported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "Turn 10明确自述非天才，享受慢慢打磨技术。"
+    },
+    {
+      "claim_id": "identity.self_identity.4",
+      "path": "identity.self_identity",
+      "claim": "以工匠态度打磨代码，追求踏实而非浮于表面",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32
+      ],
+      "reason": "Turn 10/32用修文物/工匠比喻，追求细节与踏实感。"
+    },
+    {
+      "claim_id": "identity.self_identity.5",
+      "path": "identity.self_identity",
+      "claim": "不求快但求稳，希望成为经得起时间考验的务实技术人员",
+      "verdict": "supported",
+      "evidence_turns": [
+        48
+      ],
+      "reason": "Turn 48明确表述“不求快但求稳”及成为务实技术人员。"
+    },
+    {
+      "claim_id": "identity.social_identity.1",
+      "path": "identity.social_identity",
+      "claim": "研究生，从事推荐系统相关课题研究",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "Turn 11/33自述为搞推荐系统的研究生。"
+    },
+    {
+      "claim_id": "identity.social_identity.2",
+      "path": "identity.social_identity",
+      "claim": "与隔壁组同学有数据协作关系",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "Turn 6中用户拒绝了隔壁组的请求，不存在实质协作关系。"
+    },
+    {
+      "claim_id": "identity.social_identity.3",
+      "path": "identity.social_identity",
+      "claim": "家中第一个读研的人，父母特别支持并引以为傲",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "Turn 11/33确认是家里第一个读研，父母支持且骄傲。"
+    },
+    {
+      "claim_id": "identity.life_context.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        12,
+        34,
+        44
+      ],
+      "reason": "用户多次提及研二下学期、秋招及毕业去向，证据充分。"
+    },
+    {
+      "claim_id": "identity.life_context.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        22,
+        36
+      ],
+      "reason": "用户明确对比后决定不读博，选择工程落地，证据确凿。"
+    },
+    {
+      "claim_id": "identity.life_context.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        36,
+        41
+      ],
+      "reason": "用户多次明确表示目标为杭州后端或推荐系统开发。"
+    },
+    {
+      "claim_id": "identity.life_context.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        12,
+        34,
+        44
+      ],
+      "reason": "用户描述论文与秋招并行，时间不够用，压力显著。"
+    },
+    {
+      "claim_id": "identity.life_context.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        41
+      ],
+      "reason": "用户提到面试杭州公司并表达长期深耕意愿，直接支持。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21
+      ],
+      "reason": "用户在数据共享和需求变更中均先核对事实再拒绝。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21,
+        30,
+        42
+      ],
+      "reason": "用户面对底线问题直接拒绝，态度明确不绕弯子。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        13,
+        35,
+        49
+      ],
+      "reason": "用户总结观点时结构清晰，先结论后依据再步骤。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.4",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "用户原话为“直接告诉他不行”，未体现温和语气。"
+    },
+    {
+      "claim_id": "behavior.habits.1",
+      "verdict": "partially_supported",
+      "evidence_turns": [
+        4,
+        14,
+        39
+      ],
+      "reason": "用户列计划表但承认导致效率低，且主要更新Notion清单。"
+    },
+    {
+      "claim_id": "behavior.habits.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20,
+        37
+      ],
+      "reason": "用户多次在压力大或心情不好时通过跑步释放压力。"
+    },
+    {
+      "claim_id": "behavior.habits.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        15,
+        20,
+        40
+      ],
+      "reason": "用户多次听爵士乐放松身心，营造专注环境。"
+    },
+    {
+      "claim_id": "behavior.habits.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        37,
+        39
+      ],
+      "reason": "用户明确放弃晨跑，回归每周三次夜跑习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        14
+      ],
+      "reason": "用户提到将实验数据和TODO更新到Notion。"
+    },
+    {
+      "claim_id": "behavior.habits.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        15,
+        40
+      ],
+      "reason": "多次描述手冲咖啡配音乐营造专注环境。"
+    },
+    {
+      "claim_id": "behavior.habits.7",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        27
+      ],
+      "reason": "仅提及一次熬夜，属一次性状态，非长期习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        29,
+        47
+      ],
+      "reason": "多次描述画图拆解、小实验验证的排查习惯。"
+    },
+    {
+      "claim_id": "behavior.preferences.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        15
+      ],
+      "reason": "明确提到听Miles Davis爵士乐放松。"
+    },
+    {
+      "claim_id": "behavior.preferences.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18
+      ],
+      "reason": "明确表示倾向杭州生活节奏，不想去北京卷。"
+    },
+    {
+      "claim_id": "behavior.preferences.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30,
+        38
+      ],
+      "reason": "多次强调评估可逆性与风险，拒绝高风险路径。"
+    },
+    {
+      "claim_id": "behavior.preferences.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        15
+      ],
+      "reason": "明确提到手冲耶加雪咖啡。"
+    },
+    {
+      "claim_id": "behavior.preferences.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        15
+      ],
+      "reason": "明确提到躲到自习室角落安静处写代码。"
+    },
+    {
+      "claim_id": "behavior.preferences.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "明确提到心情不好时听Chet Baker的歌。"
+    },
+    {
+      "claim_id": "behavior.preferences.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "明确提到在咖啡馆安静环境思考架构设计。"
+    },
+    {
+      "claim_id": "behavior.preferences.8",
+      "path": "behavior.preferences",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "用户原话明确提到放着Bill Evans的钢琴曲，直接支持该偏好。"
+    }
+  ],
+  "fact_assessments": [
+    {
+      "fact_id": "core.values",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.values.1",
+        "core.values.3",
+        "core.values.5"
+      ],
+      "reason": "多轮对话明确体现稳健、风险可控及长期积累价值观。"
+    },
+    {
+      "fact_id": "core.motivations",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.motivations.2",
+        "core.motivations.6"
+      ],
+      "reason": "用户多次强调做出可用系统及用户高效带来的满足感。"
+    },
+    {
+      "fact_id": "core.long_term_goals",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.long_term_goals.1",
+        "core.long_term_goals.4"
+      ],
+      "reason": "明确放弃读博，坚定选择杭州后端/推荐系统开发路径。"
+    },
+    {
+      "fact_id": "regulation.stress_response",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.stress_response.1",
+        "regulation.stress_response.2"
+      ],
+      "reason": "多次描述压力大时过度列计划、压缩睡眠导致效率下降。"
+    },
+    {
+      "fact_id": "regulation.emotion_regulation",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.emotion_regulation.1",
+        "regulation.emotion_regulation.2"
+      ],
+      "reason": "通过夜跑和听爵士乐缓解焦虑是反复出现的应对模式。"
+    },
+    {
+      "fact_id": "regulation.conflict_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.conflict_style.1",
+        "regulation.conflict_style.3"
+      ],
+      "reason": "面对数据隐私和底线试探均先核实事实后直接拒绝。"
+    },
+    {
+      "fact_id": "cognition.thinking_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.thinking_style.1",
+        "cognition.thinking_style.6"
+      ],
+      "reason": "习惯画图拆解模块、生命周期，并通过小实验验证逻辑。"
+    },
+    {
+      "fact_id": "cognition.decision_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.decision_style.1",
+        "cognition.decision_style.7"
+      ],
+      "reason": "决策时综合评估可逆性、风险与发展空间，如拒合作与购物。"
+    },
+    {
+      "fact_id": "cognition.beliefs",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.beliefs.2",
+        "cognition.beliefs.3"
+      ],
+      "reason": "认为AI仅辅助，关键业务逻辑与责任必须由人承担。"
+    },
+    {
+      "fact_id": "identity.self_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.self_identity.3",
+        "identity.self_identity.5"
+      ],
+      "reason": "自认非天才，享受打磨过程，追求成为务实技术人员。"
+    },
+    {
+      "fact_id": "identity.social_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.self_identity.3",
+        "identity.social_identity.1",
+        "identity.social_identity.3"
+      ],
+      "reason": "画像覆盖推荐系统研究生及家中首读研事实。"
+    },
+    {
+      "fact_id": "identity.life_context",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.life_context.4"
+      ],
+      "reason": "画像明确提及研二下论文与秋招并行的背景。"
+    },
+    {
+      "fact_id": "behavior.interaction_style",
+      "status": "partial",
+      "profile_claim_ids": [
+        "behavior.interaction_style.3"
+      ],
+      "reason": "仅覆盖汇报场景，未覆盖日常交流先讲结论的习惯。"
+    },
+    {
+      "fact_id": "behavior.habits",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.habits.4",
+        "behavior.habits.5"
+      ],
+      "reason": "画像完整覆盖每周夜跑三次及清单记录习惯。"
+    },
+    {
+      "fact_id": "behavior.preferences",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.preferences.1",
+        "behavior.preferences.4",
+        "behavior.preferences.5"
+      ],
+      "reason": "画像完整覆盖爵士乐、手冲咖啡及安静环境偏好。"
+    }
+  ],
+  "correction_assessments": [
+    {
+      "correction_id": "c1",
+      "status": "handled",
+      "reason": "已明确不读博，画像未保留旧说法"
+    },
+    {
+      "correction_id": "c2",
+      "status": "handled",
+      "reason": "已修正为夜跑，未保留晨跑习惯"
+    },
+    {
+      "correction_id": "c3",
+      "status": "handled",
+      "reason": "已排除冲动消费，强调风险评估"
+    }
+  ]
+}

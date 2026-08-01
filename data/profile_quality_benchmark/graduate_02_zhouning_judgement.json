@@ -1,0 +1,927 @@
+{
+  "claim_assessments": [
+    {
+      "claim_id": "core.values.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "用户明确表示希望将晦涩概念转化为大众易用的建议。"
+    },
+    {
+      "claim_id": "core.values.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        6,
+        16
+      ],
+      "reason": "多次强调不评判、放下预设及尊重不同活法。"
+    },
+    {
+      "claim_id": "core.values.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        3
+      ],
+      "reason": "用户明确表达更喜欢长期陪伴而非大医院的短期环境。"
+    },
+    {
+      "claim_id": "core.values.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        9,
+        31
+      ],
+      "reason": "强调尊重对方选择权，反对替他人做主断。"
+    },
+    {
+      "claim_id": "core.values.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "明确指出真正的尊重是允许不同活法，不带评判。"
+    },
+    {
+      "claim_id": "core.values.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "认为转化为实际决策支持比单纯讲理论更有成就感。"
+    },
+    {
+      "claim_id": "core.values.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        43
+      ],
+      "reason": "明确提出帮助本质是赋能而非控制，尊重生命主权。"
+    },
+    {
+      "claim_id": "core.motivations.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "用户表示想将晦涩概念转化为大众易用的内容。"
+    },
+    {
+      "claim_id": "core.motivations.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        3
+      ],
+      "reason": "用户提到在大医院难有时间理解成长背景，倾向社区学校。"
+    },
+    {
+      "claim_id": "core.motivations.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        3
+      ],
+      "reason": "用户认为转化知识更有意义，且觉得大医院光鲜但难深入。"
+    },
+    {
+      "claim_id": "core.motivations.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32
+      ],
+      "reason": "用户主动提醒注意边界感，避免共情过度陷进去。"
+    },
+    {
+      "claim_id": "core.motivations.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "用户从帮同学列利弊表自主决定中获得成就感。"
+    },
+    {
+      "claim_id": "core.motivations.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "用户明确表达这是坚持学习与实践的最大动力。"
+    },
+    {
+      "claim_id": "core.long_term_goals.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        41
+      ],
+      "reason": "用户明确表示硕士毕业后想进入中学或社区扎根。"
+    },
+    {
+      "claim_id": "core.long_term_goals.2",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅提及转化概念的想法，未确立为此职业目标。"
+    },
+    {
+      "claim_id": "core.long_term_goals.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        18
+      ],
+      "reason": "用户计划两年内积累学校咨询室经验以就业。"
+    },
+    {
+      "claim_id": "core.long_term_goals.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        41
+      ],
+      "reason": "用户提到要在目标岗位见证孩子成长。"
+    },
+    {
+      "claim_id": "regulation.stress_response.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        38
+      ],
+      "reason": "多次在高压时关闭通知或静音以隔离信息。"
+    },
+    {
+      "claim_id": "regulation.stress_response.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        4
+      ],
+      "reason": "用户明确担心回复消息导致两边都耽误。"
+    },
+    {
+      "claim_id": "regulation.stress_response.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        12
+      ],
+      "reason": "用户描述实务观察时紧张到手心出汗。"
+    },
+    {
+      "claim_id": "regulation.stress_response.4",
+      "verdict": "contradicted",
+      "evidence_turns": [
+        24,
+        38
+      ],
+      "reason": "用户澄清秒回是特殊情况，常态是过载时回避。"
+    },
+    {
+      "claim_id": "regulation.stress_response.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        38
+      ],
+      "reason": "用户明确表示任务过载时会选择短暂回避。"
+    },
+    {
+      "claim_id": "regulation.stress_response.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        46
+      ],
+      "reason": "用户表示论文压力大时想逃避消息需独处。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        14,
+        20,
+        39
+      ],
+      "reason": "用户多次记录情绪日记以梳理和复盘情绪。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "用户多次提及向室友或闺蜜倾诉复盘以缓解情绪。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32
+      ],
+      "reason": "用户明确提到提醒自己注意边界感，避免共情过度导致自我耗竭。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "用户提到给闺蜜打电话，其无条件接纳让用户感觉好多了。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        32
+      ],
+      "reason": "用户明确表示正在练习建立心理防火墙，区分共情与背负。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.6",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅提及咨询室中眼眶发热及保持距离，未提及具体因来访者故事而发热的实例。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21
+      ],
+      "reason": "用户在社团分歧和合作冲突中均先让对方说完，再表达需求。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户明确提出沟通时要先接住对方情绪，再表达底线。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户在与搭档合作冲突中冷静后清晰表达需求并接受修改意见。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "用户面对投诉时放下对错，不带评判倾听诉求以软化对抗。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户分析个案时将主观体验与客观环境结合看行为逻辑。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        29
+      ],
+      "reason": "用户强调从父母关系、背景等脉络理解个体行为。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户反思自己从想纠正他人转变为允许不同活法。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "用户明确提到帮同学列利弊分析表辅助决策。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        29
+      ],
+      "reason": "用户描述处理家庭冲突时运用事实、背景、体验三层视角。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        47
+      ],
+      "reason": "用户分析霸凌案例时探究班级氛围及内心恐惧渴望。"
+    },
+    {
+      "claim_id": "cognition.decision_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "用户在危机干预中强调先收集睡眠社交等信息再判断。"
+    },
+    {
+      "claim_id": "cognition.decision_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "用户明确表示结合信息收集与直觉判断严重程度。"
+    },
+    {
+      "claim_id": "cognition.decision_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "用户提及考虑伦理边界，不越界代替做决定或联系监护人。"
+    },
+    {
+      "claim_id": "cognition.decision_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        17,
+        31
+      ],
+      "reason": "用户通过列表和提问引导他人自主决策，拒绝直接代劳。"
+    },
+    {
+      "claim_id": "cognition.decision_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        30
+      ],
+      "reason": "用户面对保密困境时收集风险信息并结合直觉与伦理守则。"
+    },
+    {
+      "claim_id": "cognition.beliefs.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户认为需结合主观体验和客观环境才能明白行为逻辑。"
+    },
+    {
+      "claim_id": "cognition.beliefs.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户认为真正的尊重是允许不同活法，不带评判理解处境。"
+    },
+    {
+      "claim_id": "cognition.beliefs.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "用户自述只是陪伴者，不是救世主，尊重对方选择权。"
+    },
+    {
+      "claim_id": "cognition.beliefs.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        30
+      ],
+      "reason": "用户深刻体会到在伦理决策中直觉和理性缺一不可。"
+    },
+    {
+      "claim_id": "cognition.beliefs.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        31
+      ],
+      "reason": "用户明确表示只有他自己做出的选择才是对他人生负责的。"
+    },
+    {
+      "claim_id": "cognition.beliefs.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        43
+      ],
+      "reason": "用户直言帮助本质是赋能而非控制，尊重生命主权。"
+    },
+    {
+      "claim_id": "identity.self_identity.1",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "用户仅表达转化知识的愿望，未自视为翻译者身份。"
+    },
+    {
+      "claim_id": "identity.self_identity.2",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "仅体现对质量负责，未明确对比质量与效率的价值观。"
+    },
+    {
+      "claim_id": "identity.self_identity.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        34,
+        39
+      ],
+      "reason": "用户提及努力适应反思节奏，视复盘为成长养分。"
+    },
+    {
+      "claim_id": "identity.self_identity.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "用户自认敏感易共情过度，正练习做有界限倾听者。"
+    },
+    {
+      "claim_id": "identity.self_identity.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "用户自称只是陪伴者，不是救世主。"
+    },
+    {
+      "claim_id": "identity.self_identity.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        32
+      ],
+      "reason": "用户明确提到正在练习建立心理防火墙。"
+    },
+    {
+      "claim_id": "identity.self_identity.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        48
+      ],
+      "reason": "用户将敏感视为天赋，边界感视为铠甲，追求平衡。"
+    },
+    {
+      "claim_id": "identity.social_identity.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        12
+      ],
+      "reason": "用户提及督导课、实务观察及研一学生身份。"
+    },
+    {
+      "claim_id": "identity.social_identity.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户提及社团干事分歧及对项目质量负责。"
+    },
+    {
+      "claim_id": "identity.social_identity.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        41
+      ],
+      "reason": "用户明确倾向学校或社区方向，并坚定此职业目标。"
+    },
+    {
+      "claim_id": "identity.social_identity.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        11
+      ],
+      "reason": "用户明确提到去社区青少年中心做志愿者，且未正式上岗。"
+    },
+    {
+      "claim_id": "identity.social_identity.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        36
+      ],
+      "reason": "用户澄清仅在督导监督下旁听协助，无独立处理个案资格。"
+    },
+    {
+      "claim_id": "identity.life_context.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        41
+      ],
+      "reason": "多次提及职业规划方向及硕士毕业后进入学校系统的目标。"
+    },
+    {
+      "claim_id": "identity.life_context.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        12,
+        46
+      ],
+      "reason": "提及赶文献综述、被导师批评及论文压力大等具体学业压力。"
+    },
+    {
+      "claim_id": "identity.life_context.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        8,
+        30
+      ],
+      "reason": "详细描述分析个案、危机介入及伦理决策的具体实践过程。"
+    },
+    {
+      "claim_id": "identity.life_context.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        12,
+        34
+      ],
+      "reason": "自述研一适应期，经历从学生到准专业人士的转变与磨合。"
+    },
+    {
+      "claim_id": "identity.life_context.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "坚持写情绪日记和参加月度复盘，认为这带来踏实感。"
+    },
+    {
+      "claim_id": "identity.life_context.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        18
+      ],
+      "reason": "明确表示接下来两年要积累学校心理咨询室实习经验。"
+    },
+    {
+      "claim_id": "identity.life_context.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        41
+      ],
+      "reason": "坚定硕士毕业后进入中学或社区服务中心长期扎根的目标。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21,
+        42
+      ],
+      "reason": "多次描述先倾听对方再表达自己需求或观点的沟通方式。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        14,
+        39
+      ],
+      "reason": "通过写情绪日记复盘事件，并定期参加项目复盘会。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2,
+        10
+      ],
+      "reason": "主动分享咨询模拟、专业选择动机及自我反思体验。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "用户明确提到帮同学列利弊分析表辅助其自主决策。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        31
+      ],
+      "reason": "用户通过提问引导朋友回归内心需求，而非直接给答案。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "用户描述面对投诉时放下对错，倾听愤怒背后的诉求。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户描述在研讨课上耐心听完对方论证后温和提出看法。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        13,
+        35,
+        49
+      ],
+      "reason": "多轮对话中用户均使用先接纳情绪、陪伴倾听的咨询师式表达。"
+    },
+    {
+      "claim_id": "behavior.habits.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        14,
+        39
+      ],
+      "reason": "用户多次提及写情绪日记并视其为持续习惯和成长养分。"
+    },
+    {
+      "claim_id": "behavior.habits.2",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "静音仅因赶文献综述，属特定情境应对，非长期高压习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "用户多次向室友或闺蜜倾诉复盘以缓解压力和困惑。"
+    },
+    {
+      "claim_id": "behavior.habits.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "用户明确提到参加月度复盘会并整理观察记录作为常规。"
+    },
+    {
+      "claim_id": "behavior.habits.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "用户周末去社区青少年中心做志愿者是持续性活动。"
+    },
+    {
+      "claim_id": "behavior.habits.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        19,
+        38
+      ],
+      "reason": "用户澄清任务过载时会选择关闭通知回避，这是常态策略。"
+    },
+    {
+      "claim_id": "behavior.habits.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "用户明确表示下周继续坚持每晚记录情绪日记的习惯。"
+    },
+    {
+      "claim_id": "behavior.preferences.1",
+      "path": "behavior.preferences",
+      "verdict": "supported",
+      "evidence_turns": [
+        3
+      ],
+      "reason": "用户明确表示更喜欢学校或社区方向，因能长期陪伴。"
+    },
+    {
+      "claim_id": "behavior.preferences.2",
+      "path": "behavior.preferences",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅提及怕多线程耽误事而静音，未体现偏好单一任务。"
+    },
+    {
+      "claim_id": "behavior.preferences.3",
+      "path": "behavior.preferences",
+      "verdict": "supported",
+      "evidence_turns": [
+        2
+      ],
+      "reason": "用户表示想把晦涩概念转化为大众易用的建议。"
+    },
+    {
+      "claim_id": "behavior.preferences.4",
+      "path": "behavior.preferences",
+      "verdict": "supported",
+      "evidence_turns": [
+        15,
+        37
+      ],
+      "reason": "多次提及偏好清淡饮食，重口吃不消。"
+    },
+    {
+      "claim_id": "behavior.preferences.5",
+      "path": "behavior.preferences",
+      "verdict": "supported",
+      "evidence_turns": [
+        15,
+        40
+      ],
+      "reason": "明确提到周末爬山、听播客感到治愈和放松。"
+    },
+    {
+      "claim_id": "behavior.preferences.6",
+      "path": "behavior.preferences",
+      "verdict": "supported",
+      "evidence_turns": [
+        23,
+        37
+      ],
+      "reason": "吃辣胃疼后回归清淡，确认身体耐受偏好。"
+    }
+  ],
+  "fact_assessments": [
+    {
+      "fact_id": "core.values",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.values.1",
+        "core.values.2",
+        "core.values.4",
+        "core.values.5"
+      ],
+      "reason": "多轮对话明确体现不评判、尊重自主及理解他人处境。"
+    },
+    {
+      "fact_id": "core.motivations",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.motivations.1",
+        "core.motivations.3",
+        "core.motivations.6"
+      ],
+      "reason": "用户多次提及将晦涩理论转化为大众易懂内容，追求有意义助人。"
+    },
+    {
+      "fact_id": "core.long_term_goals",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.long_term_goals.1",
+        "core.long_term_goals.3",
+        "core.long_term_goals.4"
+      ],
+      "reason": "明确计划硕士后进入学校或社区，积累相关实习经验并扎根。"
+    },
+    {
+      "fact_id": "regulation.stress_response",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.stress_response.1",
+        "regulation.stress_response.4",
+        "regulation.stress_response.5"
+      ],
+      "reason": "提到高压时关通知、怕让人失望而回避，需独处恢复精力。"
+    },
+    {
+      "fact_id": "regulation.emotion_regulation",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.emotion_regulation.1",
+        "regulation.emotion_regulation.2"
+      ],
+      "reason": "坚持写情绪日记，并与闺蜜/室友复盘倾诉以缓解压力。"
+    },
+    {
+      "fact_id": "regulation.conflict_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.conflict_style.1",
+        "regulation.conflict_style.2"
+      ],
+      "reason": "冲突中先让对方说完，再表达底线和需求，注重接住情绪。"
+    },
+    {
+      "fact_id": "cognition.thinking_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.thinking_style.1",
+        "cognition.thinking_style.2",
+        "cognition.thinking_style.5"
+      ],
+      "reason": "分析案例时结合主观体验、客观环境及关系背景，运用三层视角。"
+    },
+    {
+      "fact_id": "cognition.decision_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.decision_style.1",
+        "cognition.decision_style.2",
+        "cognition.decision_style.3"
+      ],
+      "reason": "决策前收集信息，结合直觉与伦理守则，考虑权限边界。"
+    },
+    {
+      "fact_id": "cognition.beliefs",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.beliefs.3",
+        "cognition.beliefs.5"
+      ],
+      "reason": "认为帮助本质是赋能，尊重对方选择权，不做救世主替人决定。"
+    },
+    {
+      "fact_id": "identity.self_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.self_identity.4",
+        "identity.self_identity.6",
+        "identity.self_identity.7"
+      ],
+      "reason": "自认敏感易共情过度，正练习建立边界感，做有界限的倾听者。"
+    },
+    {
+      "fact_id": "identity.social_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.social_identity.1",
+        "identity.social_identity.4"
+      ],
+      "reason": "用户明确提及研一身份及社区青少年中心志愿者经历。"
+    },
+    {
+      "fact_id": "identity.life_context",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.life_context.4"
+      ],
+      "reason": "用户描述刚进研一，适应课程、督导模式及实务观察。"
+    },
+    {
+      "fact_id": "behavior.interaction_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.interaction_style.8"
+      ],
+      "reason": "用户多次展示先回应感受再询问具体情况的沟通风格。"
+    },
+    {
+      "fact_id": "behavior.habits",
+      "status": "partial",
+      "profile_claim_ids": [
+        "behavior.habits.1",
+        "behavior.habits.7"
+      ],
+      "reason": "覆盖日记习惯，但未覆盖周末参加项目复盘这一事实。"
+    },
+    {
+      "fact_id": "behavior.preferences",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.preferences.5"
+      ],
+      "reason": "用户明确提及喜欢徒步、人物访谈播客和清淡饮食。"
+    }
+  ],
+  "correction_assessments": [
+    {
+      "correction_id": "c1",
+      "status": "handled",
+      "reason": "已修正为旁听协助，未保留独立接案说法。"
+    },
+    {
+      "correction_id": "c2",
+      "status": "handled",
+      "reason": "已明确为一次性尝试，长期偏好清淡。"
+    },
+    {
+      "correction_id": "c3",
+      "status": "handled",
+      "reason": "已澄清为特殊情况，常态为过载回避。"
+    }
+  ]
+}

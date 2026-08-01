@@ -1,0 +1,13 @@
+{
+  "persona_id": "graduate_04_suyue",
+  "profile_claim_count": 96,
+  "profile_accuracy_percent": 92.19,
+  "hallucination_percent": 6.25,
+  "key_fact_recall_percent": 100.0,
+  "correction_handling_percent": 100.0,
+  "five_layer_completeness_percent": 100.0,
+  "fixed_field_coverage_percent": 100.0,
+  "profile_api_calls": 7,
+  "profile_total_latency_seconds": 617.032,
+  "profile_average_latency_seconds": 88.147
+}

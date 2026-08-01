@@ -1,0 +1,1133 @@
+{
+  "claim_assessments": [
+    {
+      "claim_id": "core.values.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "用户明确表达需区分事实、记忆与价值判断。"
+    },
+    {
+      "claim_id": "core.values.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2
+      ],
+      "reason": "用户认为生活痕迹比统计有意思，大叙事隔层。"
+    },
+    {
+      "claim_id": "core.values.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21
+      ],
+      "reason": "用户强调看原始材料，证据不足要谨慎。"
+    },
+    {
+      "claim_id": "core.values.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户指出文化保存急不得，保留信息很重要。"
+    },
+    {
+      "claim_id": "core.values.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "用户认为普通人的叹息也是历史，值得记录。"
+    },
+    {
+      "claim_id": "core.values.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "用户视保护载体和知识分享为这一代人的责任。"
+    },
+    {
+      "claim_id": "core.values.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        35,
+        49
+      ],
+      "reason": "用户主张用具体故事而非抽象词概括城市变迁。"
+    },
+    {
+      "claim_id": "core.motivations.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        50
+      ],
+      "reason": "用户研究动力来自还原普通人真实生活经验。"
+    },
+    {
+      "claim_id": "core.motivations.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "用户享受坐在桌前梳理线索的过程。"
+    },
+    {
+      "claim_id": "core.motivations.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        11
+      ],
+      "reason": "用户觉得在公共场合传播正确历史知识有意义。"
+    },
+    {
+      "claim_id": "core.motivations.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "看到普通人抱怨让用户的动力再次涌现。"
+    },
+    {
+      "claim_id": "core.motivations.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        32
+      ],
+      "reason": "用户喜欢像修表匠一样清理灰尘调整零件。"
+    },
+    {
+      "claim_id": "core.motivations.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32,
+        48
+      ],
+      "reason": "用户多次自比工匠/整理者，明确表示清晰讲述历史带来满足感。"
+    },
+    {
+      "claim_id": "core.motivations.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "用户明确提到看到小朋友眼睛发亮时觉得工作有价值。"
+    },
+    {
+      "claim_id": "core.motivations.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户指导实习时认为培养严谨态度比知识本身更重要。"
+    },
+    {
+      "claim_id": "core.motivations.9",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "用户表示从平民日记还原普通人经验感觉很棒。"
+    },
+    {
+      "claim_id": "core.long_term_goals.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        36,
+        41
+      ],
+      "reason": "用户多次确认想读博并进入高校或博物馆从事研究。"
+    },
+    {
+      "claim_id": "core.long_term_goals.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18
+      ],
+      "reason": "用户明确表达想在高校教书或在博物馆做策展人。"
+    },
+    {
+      "claim_id": "core.long_term_goals.3",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "用户未提及将研究与公共教育结合的具体长期目标。"
+    },
+    {
+      "claim_id": "regulation.stress_response.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        46
+      ],
+      "reason": "用户多次描述截止前肾上腺素飙升、效率陡增的现象。"
+    },
+    {
+      "claim_id": "regulation.stress_response.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        46
+      ],
+      "reason": "用户承认存在拖延循环，直到最后时刻才动笔。"
+    },
+    {
+      "claim_id": "regulation.stress_response.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        12,
+        34
+      ],
+      "reason": "用户表示多任务并行时感到时间紧、焦虑。"
+    },
+    {
+      "claim_id": "regulation.stress_response.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        22,
+        36
+      ],
+      "reason": "用户因答辩受打击想过放弃，后冷静下来重新确认方向。"
+    },
+    {
+      "claim_id": "regulation.stress_response.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        24,
+        38
+      ],
+      "reason": "用户提到有外部节点约束时能提前完成报告。"
+    },
+    {
+      "claim_id": "regulation.stress_response.6",
+      "path": "regulation.stress_response",
+      "verdict": "supported",
+      "evidence_turns": [
+        38
+      ],
+      "reason": "用户明确说明个人写作仍会拖延至最后时刻赶工。"
+    },
+    {
+      "claim_id": "regulation.stress_response.7",
+      "path": "regulation.stress_response",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅提及需调整状态，未描述具体应对行动。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.1",
+      "path": "regulation.emotion_regulation",
+      "verdict": "supported",
+      "evidence_turns": [
+        5
+      ],
+      "reason": "用户提到脑子乱时去楼下走走来平复心情。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.2",
+      "path": "regulation.emotion_regulation",
+      "verdict": "supported",
+      "evidence_turns": [
+        5
+      ],
+      "reason": "用户提到买茶叶泡茶帮助平静下来。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.3",
+      "path": "regulation.emotion_regulation",
+      "verdict": "supported",
+      "evidence_turns": [
+        5
+      ],
+      "reason": "用户整理老照片后心里平静了。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.4",
+      "path": "regulation.emotion_regulation",
+      "verdict": "supported",
+      "evidence_turns": [
+        14
+      ],
+      "reason": "用户重排卡片觉得踏实，获得秩序感。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.5",
+      "path": "regulation.emotion_regulation",
+      "verdict": "supported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "用户去植物园散步买花调节低落情绪。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.6",
+      "path": "regulation.emotion_regulation",
+      "verdict": "supported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "用户翻看小时候老照片让自己放松。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.1",
+      "path": "regulation.conflict_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户未直接反驳导师，而是翻出契约佐证。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.2",
+      "path": "regulation.conflict_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户主张看原始材料，保持谨慎克制。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.3",
+      "path": "regulation.conflict_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户拿不准时请教导师并查找电报原件。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.4",
+      "path": "regulation.conflict_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户建议学生争议时请教资深专家。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        29
+      ],
+      "reason": "用户多次明确提到将不同叙述放在时间线上对比。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32
+      ],
+      "reason": "用户自述享受梳理线索、拼凑碎片的过程。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2,
+        50
+      ],
+      "reason": "用户强调从细枝末节和具体生存压力中理解历史。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        13,
+        35
+      ],
+      "reason": "用户通过讲故事（如小县城搬家）来解释抽象概念。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        35,
+        49
+      ],
+      "reason": "用户认为不能用简单词汇概括，需呈现个体生活变化。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        47
+      ],
+      "reason": "用户通过对照官方与民间记录发现系统性落差。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        49
+      ],
+      "reason": "用户认为个体经历比简单概括更能说明城市变迁。"
+    },
+    {
+      "claim_id": "cognition.decision_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "用户做决定前会查资料、问学长姐并咨询导师。"
+    },
+    {
+      "claim_id": "cognition.decision_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "用户明确表示需要冷静期，避免冲动做决定。"
+    },
+    {
+      "claim_id": "cognition.decision_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        12
+      ],
+      "reason": "用户准备调研时列详细清单以梳理任务。"
+    },
+    {
+      "claim_id": "cognition.decision_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户拿不准时请教导师并查找电报原件再判断。"
+    },
+    {
+      "claim_id": "cognition.decision_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        24,
+        38
+      ],
+      "reason": "用户承认有外部节点约束时能提前完成报告。"
+    },
+    {
+      "claim_id": "cognition.decision_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        38,
+        46
+      ],
+      "reason": "用户多次自述个人写作拖延至截止前赶工，且明确确认此习惯。"
+    },
+    {
+      "claim_id": "cognition.beliefs.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        29,
+        47
+      ],
+      "reason": "用户多次对比官方与私人记录差异，强调交叉验证以接近真实。"
+    },
+    {
+      "claim_id": "cognition.beliefs.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21
+      ],
+      "reason": "用户主张证据不足时保持谨慎，反对主观臆断和空谈。"
+    },
+    {
+      "claim_id": "cognition.beliefs.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        7,
+        29,
+        47
+      ],
+      "reason": "用户坚持通过对比不同立场材料来理清历史真相。"
+    },
+    {
+      "claim_id": "cognition.beliefs.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        13
+      ],
+      "reason": "用户用县城搬迁后保留旧地名的例子说明空间变记忆留。"
+    },
+    {
+      "claim_id": "cognition.beliefs.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "用户明确提出需剥离后人附加的英雄光环以还原底层真相。"
+    },
+    {
+      "claim_id": "cognition.beliefs.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户强调有依据才能说话，否则易成空谈。"
+    },
+    {
+      "claim_id": "cognition.beliefs.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        9,
+        31
+      ],
+      "reason": "用户主张区分事实、记忆重构与当下意义，视为严谨做法。"
+    },
+    {
+      "claim_id": "cognition.beliefs.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        31,
+        43
+      ],
+      "reason": "用户指出口述史中情感色彩需小心剥离，避免被带偏。"
+    },
+    {
+      "claim_id": "identity.self_identity.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21,
+        29
+      ],
+      "reason": "用户多次强调看原始材料、以证据说话，体现实证主义立场。"
+    },
+    {
+      "claim_id": "identity.self_identity.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2,
+        17,
+        50
+      ],
+      "reason": "用户认为细枝末节和生活痕迹最打动人心，体现此擅长点。"
+    },
+    {
+      "claim_id": "identity.self_identity.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32,
+        48
+      ],
+      "reason": "用户自比修表匠或工匠，享受梳理线索和拼接碎片的过程。"
+    },
+    {
+      "claim_id": "identity.self_identity.4",
+      "path": "identity.self_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "用户自述享受梳理线索过程，讲给更多人听"
+    },
+    {
+      "claim_id": "identity.self_identity.5",
+      "path": "identity.self_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        17
+      ],
+      "reason": "用户从普通店员叹息中重获研究动力"
+    },
+    {
+      "claim_id": "identity.self_identity.6",
+      "path": "identity.self_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        32
+      ],
+      "reason": "用户自比修表匠，清理灰尘调整零件还原历史"
+    },
+    {
+      "claim_id": "identity.self_identity.7",
+      "path": "identity.self_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "用户称传播正确历史知识是历史学子的责任"
+    },
+    {
+      "claim_id": "identity.self_identity.8",
+      "path": "identity.self_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户认为培养学生严谨态度比知识本身更重要"
+    },
+    {
+      "claim_id": "identity.social_identity.1",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        11
+      ],
+      "reason": "用户明确自称中国史研究生且研二课业重"
+    },
+    {
+      "claim_id": "identity.social_identity.2",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        12,
+        18
+      ],
+      "reason": "用户多次提及准备博士申请及筛选学校"
+    },
+    {
+      "claim_id": "identity.social_identity.3",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        41
+      ],
+      "reason": "用户明确表示未来想在高校或博物馆工作"
+    },
+    {
+      "claim_id": "identity.social_identity.4",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "用户周末去市博物馆当志愿者讲解员"
+    },
+    {
+      "claim_id": "identity.social_identity.5",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户提到最近在指导学生实习"
+    },
+    {
+      "claim_id": "identity.life_context.1",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        12,
+        34
+      ],
+      "reason": "用户提及研二课业、博士申请及外地调研"
+    },
+    {
+      "claim_id": "identity.life_context.2",
+      "path": "identity.social_identity",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "未提及处于职业路径早期建构阶段这一抽象描述"
+    },
+    {
+      "claim_id": "identity.life_context.3",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2,
+        6,
+        11
+      ],
+      "reason": "用户多次提及档案研究、开题报告、组会讨论及博物馆志愿讲解。"
+    },
+    {
+      "claim_id": "identity.life_context.4",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "用户明确描述周末整理卡片和走访老城区的规律节奏。"
+    },
+    {
+      "claim_id": "identity.life_context.5",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        22,
+        36
+      ],
+      "reason": "用户提到开题答辩受打击想放弃，后冷静确认继续读博。"
+    },
+    {
+      "claim_id": "identity.life_context.6",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        30
+      ],
+      "reason": "用户明确表示正在考虑是否推迟毕业时间去实习。"
+    },
+    {
+      "claim_id": "identity.life_context.7",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        39
+      ],
+      "reason": "用户称规律性的档案索引整理与老城散步带来掌控感。"
+    },
+    {
+      "claim_id": "identity.life_context.8",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        44
+      ],
+      "reason": "用户提到收到两所目标院校审核通知，需准备面试。"
+    },
+    {
+      "claim_id": "identity.life_context.9",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        44
+      ],
+      "reason": "用户表示下周打包行李出发去调研地点进行档案馆调研。"
+    },
+    {
+      "claim_id": "identity.life_context.10",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        46
+      ],
+      "reason": "用户坦言期末临近，个人写作任务再次进入拖延状态。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.1",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        6
+      ],
+      "reason": "用户未直接反驳导师，而是翻出民间契约作为证据委婉表达。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.2",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2,
+        6,
+        7
+      ],
+      "reason": "用户习惯引用地契、账本、日记等具体史料支撑观点。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.3",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        13,
+        35,
+        49
+      ],
+      "reason": "用户通过讲故事（如县城搬家、老街居民）阐释抽象概念。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.4",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "用户提到面对观众反应有成就感，特别是小朋友提问时。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户明确提到与同门争论后请教导师，并依据电报原件判断。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户描述指导学生时引导查阅档案，建议争议时请教专家。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        35,
+        49
+      ],
+      "reason": "用户主张用具体人物故事替代抽象概括来阐释城市变迁。"
+    },
+    {
+      "claim_id": "behavior.habits.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2
+      ],
+      "reason": "用户提及复印地契、阅读家庭账本等民间文献的行为。"
+    },
+    {
+      "claim_id": "behavior.habits.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "用户多次提到按年份重排卡片及做索引的规律性习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        5
+      ],
+      "reason": "用户明确提到整理老城区拆迁前的老照片。"
+    },
+    {
+      "claim_id": "behavior.habits.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        46
+      ],
+      "reason": "用户多次承认在截止日期前集中爆发式写作。"
+    },
+    {
+      "claim_id": "behavior.habits.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "用户提到周日早上去老城区转悠观察未拆老房子。"
+    },
+    {
+      "claim_id": "behavior.habits.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户帮朋友整理相册时查报纸推断日期以保留原始信息。"
+    },
+    {
+      "claim_id": "behavior.habits.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        24,
+        38
+      ],
+      "reason": "用户确认有外部节点约束时提前一个月完成报告。"
+    },
+    {
+      "claim_id": "behavior.habits.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        39
+      ],
+      "reason": "用户明确提到周六晚上为新收集档案卡片做索引。"
+    },
+    {
+      "claim_id": "behavior.habits.9",
+      "verdict": "supported",
+      "evidence_turns": [
+        39
+      ],
+      "reason": "用户明确提到周日上午去老城区散步观察新旧建筑细节。"
+    },
+    {
+      "claim_id": "behavior.habits.10",
+      "verdict": "supported",
+      "evidence_turns": [
+        47
+      ],
+      "reason": "用户明确提到按月份排列信件并与政府公报对照。"
+    },
+    {
+      "claim_id": "behavior.habits.11",
+      "verdict": "supported",
+      "evidence_turns": [
+        31,
+        43
+      ],
+      "reason": "用户多次描述处理口述史时剥离情感与事实的做法。"
+    },
+    {
+      "claim_id": "behavior.habits.12",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "用户提到整理平民日记并从中还原普通人生活经验。"
+    },
+    {
+      "claim_id": "behavior.preferences.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2
+      ],
+      "reason": "用户明确表示对地契手迹和家庭账本等生活痕迹感兴趣。"
+    },
+    {
+      "claim_id": "behavior.preferences.2",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅提及买茶叶泡茶，未提及偏好茶叶而非其他饮品。"
+    },
+    {
+      "claim_id": "behavior.preferences.3",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "未提及消费水平低，且散步地点为老城区非胡同。"
+    },
+    {
+      "claim_id": "behavior.preferences.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        15
+      ],
+      "reason": "用户明确提到迷上冷门地方志和泛黄旧地图。"
+    },
+    {
+      "claim_id": "behavior.preferences.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        15
+      ],
+      "reason": "用户表示喜欢小馆子安静看展，不喜欢挤满游客的大博物馆。"
+    },
+    {
+      "claim_id": "behavior.preferences.6",
+      "verdict": "contradicted",
+      "evidence_turns": [
+        23
+      ],
+      "reason": "用户曾去故宫看稀世珍宝并觉得震撼，未明确排斥热门景点。"
+    },
+    {
+      "claim_id": "behavior.preferences.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        37
+      ],
+      "reason": "用户澄清长期偏爱小众博物馆，去大馆是特例。"
+    },
+    {
+      "claim_id": "behavior.preferences.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "用户计划泡老白茶窝在沙发研究旧地图，视为最爱时光。"
+    },
+    {
+      "claim_id": "behavior.preferences.9",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "用户明确表示比起嘈杂商业区，更喜欢安静的时光。"
+    }
+  ],
+  "fact_assessments": [
+    {
+      "fact_id": "core.values",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.values.1",
+        "core.values.2",
+        "core.values.3",
+        "core.values.4",
+        "core.values.5",
+        "core.values.6"
+      ],
+      "reason": "用户多次强调区分事实记忆、重视原始材料、文化保存及知识分享责任。"
+    },
+    {
+      "fact_id": "core.motivations",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.motivations.1",
+        "core.motivations.4",
+        "core.motivations.9"
+      ],
+      "reason": "用户明确表达从平民日记和个体声音中还原生活经验是研究动力。"
+    },
+    {
+      "fact_id": "core.long_term_goals",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.long_term_goals.1",
+        "core.long_term_goals.2",
+        "core.long_term_goals.3"
+      ],
+      "reason": "用户确认攻读博士，目标为高校或博物馆的研究与公共教育工作。"
+    },
+    {
+      "fact_id": "regulation.stress_response",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.stress_response.2",
+        "regulation.stress_response.6"
+      ],
+      "reason": "用户自述个人写作任务常拖延至最后时刻赶工，并承认此习惯屡教不改。"
+    },
+    {
+      "fact_id": "regulation.emotion_regulation",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.emotion_regulation.1",
+        "regulation.emotion_regulation.2",
+        "regulation.emotion_regulation.3",
+        "regulation.emotion_regulation.5",
+        "regulation.emotion_regulation.6"
+      ],
+      "reason": "用户通过散步、泡茶、整理旧照片等方式缓解焦虑和低落情绪。"
+    },
+    {
+      "fact_id": "regulation.conflict_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.conflict_style.1",
+        "regulation.conflict_style.3"
+      ],
+      "reason": "用户倾向以原始材料委婉表达异议，拿不准时请教导师再下判断。"
+    },
+    {
+      "fact_id": "cognition.thinking_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.thinking_style.1",
+        "cognition.thinking_style.6"
+      ],
+      "reason": "用户习惯将不同来源叙述放入时间线对比，发现官方与民间的落差。"
+    },
+    {
+      "fact_id": "cognition.decision_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.decision_style.1",
+        "cognition.decision_style.2"
+      ],
+      "reason": "用户做决定前查资料、问导师，并给自己几天冷静期沉淀思考。"
+    },
+    {
+      "fact_id": "cognition.beliefs",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.beliefs.7"
+      ],
+      "reason": "用户认为严谨做法需区分客观事实、记忆重构与当下赋予的意义。"
+    },
+    {
+      "fact_id": "identity.self_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.self_identity.3",
+        "identity.self_identity.4",
+        "identity.self_identity.7"
+      ],
+      "reason": "用户自视为耐心整理者，享受拼接碎片，视公共讲解为责任。"
+    },
+    {
+      "fact_id": "identity.social_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.social_identity.1",
+        "identity.social_identity.4"
+      ],
+      "reason": "原话明确提及中国史研究生及博物馆志愿者身份，完全覆盖。"
+    },
+    {
+      "fact_id": "identity.life_context",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.life_context.1",
+        "identity.life_context.8"
+      ],
+      "reason": "原话提及研二、博士申请及外地调研，画像完整覆盖。"
+    },
+    {
+      "fact_id": "behavior.interaction_style",
+      "status": "partial",
+      "profile_claim_ids": [
+        "behavior.interaction_style.3"
+      ],
+      "reason": "画像仅覆盖用故事说明观点，未体现表达节奏慢的特征。"
+    },
+    {
+      "fact_id": "behavior.habits",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.habits.2",
+        "behavior.habits.5",
+        "behavior.habits.8",
+        "behavior.habits.9"
+      ],
+      "reason": "原话多次提及整理卡片索引及周末走访老城区，完全覆盖。"
+    },
+    {
+      "fact_id": "behavior.preferences",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.preferences.4",
+        "behavior.preferences.5",
+        "behavior.preferences.8"
+      ],
+      "reason": "原话明确提及偏好地方志、旧地图、老白茶及安静小馆，完全覆盖。"
+    }
+  ],
+  "correction_assessments": [
+    {
+      "correction_id": "c1",
+      "status": "handled",
+      "reason": "已采纳澄清，未保留动摇读博的旧说法。"
+    },
+    {
+      "correction_id": "c2",
+      "status": "handled",
+      "reason": "已采纳澄清，明确长期偏好小众博物馆。"
+    },
+    {
+      "correction_id": "c3",
+      "status": "handled",
+      "reason": "已区分外部约束与个人习惯，未误判为自律。"
+    }
+  ]
+}

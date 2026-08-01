@@ -133,6 +133,7 @@ class ProfileBatchUpdaterTests(unittest.TestCase):
         self.assertEqual(payload["raw_dialogue_batch"], turns)
         self.assertEqual(request["response_format"], build_profile_response_format())
         self.assertEqual(request["temperature"], 0.6)
+        self.assertEqual(request["extra_body"], {"thinking": {"type": "disabled"}})
 
     def test_system_prompt_directs_model_to_ignore_microphone_noise_without_short_message_rule(self):
         self.assertIn("语音误收音", SYSTEM_PROMPT)

@@ -1,0 +1,1183 @@
+{
+  "claim_assessments": [
+    {
+      "claim_id": "core.values.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "用户原话明确表达设计应像空气一样自然回应需求"
+    },
+    {
+      "claim_id": "core.values.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        9
+      ],
+      "reason": "用户明确表示不喜欢为了打卡拍照硬凹造型的建筑"
+    },
+    {
+      "claim_id": "core.values.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户认为破坏社区生态的创造力是本末倒置"
+    },
+    {
+      "claim_id": "core.values.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户强调设计初衷是让大家公平享受公共空间"
+    },
+    {
+      "claim_id": "core.values.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        17
+      ],
+      "reason": "用户多次表示真实反馈和连接感比奖项更让人开心"
+    },
+    {
+      "claim_id": "core.values.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        31
+      ],
+      "reason": "用户指出设计不应只是照片背景板，要让人愿意停留"
+    },
+    {
+      "claim_id": "core.values.7",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "未提及空间氛围优先于功能堆砌，仅强调回应需求"
+    },
+    {
+      "claim_id": "core.values.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "用户称面对面交流是与居民沟通最宝贵的经历"
+    },
+    {
+      "claim_id": "core.values.9",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "用户坚信设计终极目标是促进社区公平与活力"
+    },
+    {
+      "claim_id": "core.values.10",
+      "verdict": "supported",
+      "evidence_turns": [
+        43
+      ],
+      "reason": "用户认为好设计应无声回应使用者细微需求"
+    },
+    {
+      "claim_id": "core.motivations.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        50
+      ],
+      "reason": "用户表示被使用的反馈和居民感谢是其核心动力"
+    },
+    {
+      "claim_id": "core.motivations.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        3
+      ],
+      "reason": "用户想进城市更新团队做能留住城市记忆的设计"
+    },
+    {
+      "claim_id": "core.motivations.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        13,
+        35,
+        49
+      ],
+      "reason": "多轮提及经典案例引发兴奋，语速加快，灵感迸发。"
+    },
+    {
+      "claim_id": "core.motivations.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        36
+      ],
+      "reason": "明确提到实习经历确认了长期价值归属和方向。"
+    },
+    {
+      "claim_id": "core.motivations.5",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        37
+      ],
+      "reason": "仅解释过去吵架原因，未体现这是持续的情感驱动力。"
+    },
+    {
+      "claim_id": "core.motivations.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        45
+      ],
+      "reason": "明确表述社区花园场景强化了设计信念。"
+    },
+    {
+      "claim_id": "core.motivations.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "居民感谢是核心成就感来源及支撑动力。"
+    },
+    {
+      "claim_id": "core.long_term_goals.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        41
+      ],
+      "reason": "多次表达想进城市更新团队做长期陪伴式设计。"
+    },
+    {
+      "claim_id": "core.long_term_goals.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        36
+      ],
+      "reason": "明确拒绝商业地产，选择需要耐心的社区营造。"
+    },
+    {
+      "claim_id": "core.long_term_goals.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        34
+      ],
+      "reason": "猎头推荐岗位心动但还在犹豫，尚未最终确定。"
+    },
+    {
+      "claim_id": "regulation.stress_response.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "压力大时通过河边散步、打球释放压力。"
+    },
+    {
+      "claim_id": "regulation.stress_response.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        4
+      ],
+      "reason": "被否后脑子空白沉默离开，符合僵滞反应描述。"
+    },
+    {
+      "claim_id": "regulation.stress_response.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        12
+      ],
+      "reason": "毕设与海投双重压力下感到时间管理灾难性焦虑。"
+    },
+    {
+      "claim_id": "regulation.stress_response.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "赶图崩溃时江边溜达风吹缓解紧张。"
+    },
+    {
+      "claim_id": "regulation.stress_response.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        38,
+        39
+      ],
+      "reason": "用户明确说明每周两次羽毛球雷打不动，是稳定的压力清空方式。"
+    },
+    {
+      "claim_id": "regulation.stress_response.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        44
+      ],
+      "reason": "用户自述毕设答辩在即，需同时准备面试材料，处于双重压力下。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        37
+      ],
+      "reason": "多次描述被否定后沉默独处、静坐或躺卧，消化情绪后再行动。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.2",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "未提及通过制作手工模型来转移或消化负面情绪。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        19
+      ],
+      "reason": "用户明确描述评图被尖锐批评后躺卧休息，平复后梳理问题。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "用户描述在便利店门口画路人背影后心情瞬间变好。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        37
+      ],
+      "reason": "用户反思指出遇否定先沉默独处消化，再理性应对是其性格底色。"
+    },
+    {
+      "claim_id": "regulation.emotion_regulation.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        46
+      ],
+      "reason": "用户详细描述方案被毙后独处实验室，晚间拆解意见次日沟通。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        42
+      ],
+      "reason": "用户明确表示避免抽象争论，直接用草图和场景演示沟通分歧。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        23,
+        37
+      ],
+      "reason": "用户承认年轻时曾争辩，现反思认为那是特例，常态是先冷静。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用户描述面对甲方颜色争议时，用使用模拟图替代口头争论。"
+    },
+    {
+      "claim_id": "regulation.conflict_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        37
+      ],
+      "reason": "用户反思保护团队员的激烈争辩是冲动特例，非其性格底色。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户明确表述思维先浮现空间关系和光影。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "用户称需先拉流线理清逻辑，文字描述费劲。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        13
+      ],
+      "reason": "用户提及巴塞罗那案例时语速变快、灵感迸发。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.4",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅提及学习社会学视角，未体现与设计的交叉联想。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21
+      ],
+      "reason": "多次通过草图场景画替代抽象理论沟通。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        29
+      ],
+      "reason": "构思转角时脑海中直接浮现阳光格栅画面。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        35
+      ],
+      "reason": "解读库哈斯案例时深入内部逻辑并讲述故事。"
+    },
+    {
+      "claim_id": "cognition.thinking_style.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        47
+      ],
+      "reason": "以阳光灰尘视觉场景推导楼梯间宽度材质。"
+    },
+    {
+      "claim_id": "cognition.decision_style.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        36
+      ],
+      "reason": "经历纠结后，经实习对比明确选择城市更新。"
+    },
+    {
+      "claim_id": "cognition.decision_style.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        8
+      ],
+      "reason": "大胆构想连廊，先用纸板模型观察人流再推进。"
+    },
+    {
+      "claim_id": "cognition.decision_style.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        10
+      ],
+      "reason": "自认落地细节差点火候，需向师兄请教硬功夫。"
+    },
+    {
+      "claim_id": "cognition.decision_style.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        36
+      ],
+      "reason": "曾考虑商业地产，实习后明确排除该选项。"
+    },
+    {
+      "claim_id": "cognition.decision_style.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "用户明确提到对悬挑平台等高风险元素先做模型实地测试。"
+    },
+    {
+      "claim_id": "cognition.decision_style.6",
+      "verdict": "unsupported",
+      "evidence_turns": [],
+      "reason": "仅表达需向师兄请教，未提及已主动请教的行为事实。"
+    },
+    {
+      "claim_id": "cognition.decision_style.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        12,
+        34
+      ],
+      "reason": "用户表示对猎头岗位心动但还在犹豫，处于评估中。"
+    },
+    {
+      "claim_id": "cognition.decision_style.8",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32,
+        48
+      ],
+      "reason": "用户多次自述落地能力弱，并明确表示要逼自己啃规范工艺。"
+    },
+    {
+      "claim_id": "cognition.beliefs.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21,
+        42
+      ],
+      "reason": "用户多次强调具象草图和场景比抽象理论或口头争论更有效。"
+    },
+    {
+      "claim_id": "cognition.beliefs.2",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        8,
+        30
+      ],
+      "reason": "用户重视被使用的反馈，并通过实地观察人流验证方案价值。"
+    },
+    {
+      "claim_id": "cognition.beliefs.3",
+      "verdict": "supported",
+      "evidence_turns": [
+        16
+      ],
+      "reason": "用户明确批评过度商业化驱逐原住民，认为这是本末倒置。"
+    },
+    {
+      "claim_id": "cognition.beliefs.4",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        36,
+        41
+      ],
+      "reason": "用户多次对比后明确选择社区营造，认为其具有长期价值。"
+    },
+    {
+      "claim_id": "cognition.beliefs.5",
+      "verdict": "supported",
+      "evidence_turns": [
+        9,
+        31
+      ],
+      "reason": "用户反对为拍照硬凹造型，主张设计应让人愿意停留感受温度。"
+    },
+    {
+      "claim_id": "cognition.beliefs.6",
+      "verdict": "supported",
+      "evidence_turns": [
+        29
+      ],
+      "reason": "用户认为只要营造出空间氛围，其他功能细节都是次要的。"
+    },
+    {
+      "claim_id": "cognition.beliefs.7",
+      "verdict": "supported",
+      "evidence_turns": [
+        43
+      ],
+      "reason": "用户引用场所精神概念，认为好设计应无声回应使用者细微需求。"
+    },
+    {
+      "claim_id": "identity.self_identity.1",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        2,
+        10,
+        17
+      ],
+      "reason": "用户强调设计服务于真实生活，并从居民使用中获取职业认同。"
+    },
+    {
+      "claim_id": "identity.self_identity.2",
+      "path": "identity.self_identity",
+      "claim": "重视被需要的感受，从使用反馈中获得核心职业认同",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        17,
+        50
+      ],
+      "reason": "用户多次表示看到设计被真实使用、获得居民感谢是最大动力。"
+    },
+    {
+      "claim_id": "identity.self_identity.3",
+      "path": "identity.self_identity",
+      "claim": "自认点子多、脑洞大，但施工图和材料选型的落地能力仍在成长中",
+      "verdict": "supported",
+      "evidence_turns": [
+        10,
+        32,
+        48
+      ],
+      "reason": "用户自述点子多，但承认在施工图深化和材料选型上差点火候。"
+    },
+    {
+      "claim_id": "identity.self_identity.4",
+      "path": "identity.self_identity",
+      "claim": "明确拒绝商业地产设计师身份，认同社区营造者角色",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        36
+      ],
+      "reason": "用户明确表示不想去商业地产，只想做社区营造和城市更新的长期价值。"
+    },
+    {
+      "claim_id": "identity.self_identity.5",
+      "path": "identity.self_identity",
+      "claim": "擅长发散思维，同时清醒认识到构造节点和成本控制方面需向他人请教提升",
+      "verdict": "supported",
+      "evidence_turns": [
+        32,
+        48
+      ],
+      "reason": "用户自认擅长发散思维，并明确表示要向师兄请教构造和成本硬功夫。"
+    },
+    {
+      "claim_id": "identity.self_identity.6",
+      "path": "identity.self_identity",
+      "claim": "保护团队成员的冲动源于责任感，但日常性格底色是沉默独处后理性应对",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        37,
+        46
+      ],
+      "reason": "用户反思曾为保护组员争辩，但强调常态是先沉默消化情绪再理性应对。"
+    },
+    {
+      "claim_id": "identity.self_identity.7",
+      "path": "identity.self_identity",
+      "claim": "想象力丰富，但意识到必须补足结构规范和施工工艺才能避免成为空想家",
+      "verdict": "supported",
+      "evidence_turns": [
+        48
+      ],
+      "reason": "用户自认想象力丰富，但意识到必须逼自己去啃结构规范和施工工艺。"
+    },
+    {
+      "claim_id": "identity.social_identity.1",
+      "path": "identity.social_identity",
+      "claim": "设计专业研三学生，处于毕业设计阶段",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        12,
+        44
+      ],
+      "reason": "用户自称为研三老油条，正在赶毕设图纸并准备答辩。"
+    },
+    {
+      "claim_id": "identity.social_identity.2",
+      "path": "identity.social_identity",
+      "claim": "有社区调研与口袋公园等实际项目参与经验",
+      "verdict": "supported",
+      "evidence_turns": [
+        2,
+        16,
+        45
+      ],
+      "reason": "用户提到参与设计的口袋公园及社区花园项目，并有社区调研经历。"
+    },
+    {
+      "claim_id": "identity.social_identity.3",
+      "path": "identity.social_identity",
+      "claim": "带领本科生开展社区共创工作坊，具备需求收集与居民沟通经验",
+      "verdict": "supported",
+      "evidence_turns": [
+        11,
+        33
+      ],
+      "reason": "用户作为研三学生带本科生做社区共创工作坊，教他们收集需求。"
+    },
+    {
+      "claim_id": "identity.social_identity.4",
+      "path": "identity.social_identity",
+      "claim": "正在海投微更新方向的设计公司",
+      "verdict": "supported",
+      "evidence_turns": [
+        12,
+        34
+      ],
+      "reason": "用户提到正在海投做微更新的公司，并对猎头推荐的城市更新岗位心动。"
+    },
+    {
+      "claim_id": "identity.social_identity.5",
+      "path": "identity.social_identity",
+      "claim": "曾在城市更新机构实习并据此做出职业方向决策",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        36
+      ],
+      "reason": "用户提到在那家做城市更新的机构实习后，确认了不想搞商业开发。"
+    },
+    {
+      "claim_id": "identity.social_identity.6",
+      "path": "identity.social_identity",
+      "claim": "具备面试地产公司但明确拒绝该路径的经历",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        22
+      ],
+      "reason": "用户面试过地产公司，但明确表示只想做社区营造，拒绝纯商业开发。"
+    },
+    {
+      "claim_id": "identity.social_identity.7",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        33
+      ],
+      "reason": "用户明确提到在社区中心帮居民画意向图"
+    },
+    {
+      "claim_id": "identity.social_identity.8",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        34
+      ],
+      "reason": "猎头推荐岗位，用户表示心动但还在犹豫"
+    },
+    {
+      "claim_id": "identity.social_identity.9",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "用户在工地画草图向施工队演示场景沟通"
+    },
+    {
+      "claim_id": "identity.social_identity.10",
+      "path": "identity.social_identity",
+      "verdict": "supported",
+      "evidence_turns": [
+        50
+      ],
+      "reason": "李奶奶感谢设计的遮雨棚，反馈正面"
+    },
+    {
+      "claim_id": "identity.life_context.1",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        3,
+        18,
+        36
+      ],
+      "reason": "多次表达拒绝商业地产，坚定选择城市更新"
+    },
+    {
+      "claim_id": "identity.life_context.2",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        46
+      ],
+      "reason": "提及导师批评、评图压力及修改方案经历"
+    },
+    {
+      "claim_id": "identity.life_context.3",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        12,
+        44
+      ],
+      "reason": "自述毕设与海投双重压力下时间管理困难"
+    },
+    {
+      "claim_id": "identity.life_context.4",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        18,
+        36
+      ],
+      "reason": "实习后明确排除商业地产，坚定社区营造方向"
+    },
+    {
+      "claim_id": "identity.life_context.5",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        34
+      ],
+      "reason": "用户明确说毕设展板已定稿，明天打印"
+    },
+    {
+      "claim_id": "identity.life_context.6",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        34
+      ],
+      "reason": "猎头推岗，用户心动但仍在犹豫评估中"
+    },
+    {
+      "claim_id": "identity.life_context.7",
+      "path": "identity.life_context",
+      "verdict": "supported",
+      "evidence_turns": [
+        44
+      ],
+      "reason": "答辩在即需准备面试材料，处于双重压力"
+    },
+    {
+      "claim_id": "behavior.interaction_style.1",
+      "path": "behavior.interaction_style",
+      "verdict": "supported",
+      "evidence_turns": [
+        6,
+        21,
+        42
+      ],
+      "reason": "多次用草图和场景模拟替代抽象理论沟通"
+    },
+    {
+      "claim_id": "behavior.interaction_style.2",
+      "path": "behavior.interaction_style",
+      "claim": "偏好通过实地观察和使用反馈来推进方案",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "多次提及做模型放现场观察人流和试坐，验证后再推进。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.3",
+      "path": "behavior.interaction_style",
+      "claim": "带领工作坊时注重与居民的直接对话与需求收集",
+      "verdict": "supported",
+      "evidence_turns": [
+        11
+      ],
+      "reason": "明确提到带本科生教居民聊天收集需求。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.4",
+      "path": "behavior.interaction_style",
+      "claim": "面对甲方争议时直接使用使用场景模拟图进行说服",
+      "verdict": "supported",
+      "evidence_turns": [
+        21
+      ],
+      "reason": "用使用模拟图和场景讲服纠结颜色的甲方。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.5",
+      "path": "behavior.interaction_style",
+      "claim": "在社区中心通过绘制意向图与居民进行面对面需求沟通",
+      "verdict": "supported",
+      "evidence_turns": [
+        33
+      ],
+      "reason": "在社区中心帮居民画意向图并据此发现规范问题。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.6",
+      "path": "behavior.interaction_style",
+      "claim": "与施工队师傅沟通时直接在工地画草图，用具体场景演示替代抽象理念说明",
+      "verdict": "supported",
+      "evidence_turns": [
+        42
+      ],
+      "reason": "在工地画草图演示老人轮椅上下台阶等场景。"
+    },
+    {
+      "claim_id": "behavior.interaction_style.7",
+      "path": "behavior.interaction_style",
+      "claim": "讨论感兴趣的空间案例时语速加快、兴奋度明显升高",
+      "verdict": "supported",
+      "evidence_turns": [
+        13,
+        35,
+        49
+      ],
+      "reason": "多次提到聊到特定案例时语速变快、灵感迸发。"
+    },
+    {
+      "claim_id": "behavior.habits.1",
+      "path": "behavior.habits",
+      "claim": "思考时先在纸上拉流线、画空间关系",
+      "verdict": "supported",
+      "evidence_turns": [
+        7
+      ],
+      "reason": "明确表示先浮现空间光影，再在纸上拉流线理清逻辑。"
+    },
+    {
+      "claim_id": "behavior.habits.2",
+      "path": "behavior.habits",
+      "claim": "制作实体模型进行小尺度现场测试",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "两次提及做纸板/泡沫板模型放现场观察或让路人试坐。"
+    },
+    {
+      "claim_id": "behavior.habits.3",
+      "path": "behavior.habits",
+      "claim": "压力大时进行河边散步、打球、速写等活动",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "压力大会去河边散步、打球出汗或速写缓解。"
+    },
+    {
+      "claim_id": "behavior.habits.4",
+      "path": "behavior.habits",
+      "claim": "出门必带速写本，随时记录观察到的立面比例等空间细节",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "习惯改不掉，地铁记立面，咖啡馆记窗花细节。"
+    },
+    {
+      "claim_id": "behavior.habits.5",
+      "path": "behavior.habits",
+      "claim": "每周两次羽毛球雷打不动",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        38,
+        39
+      ],
+      "reason": "明确提到每周两次羽毛球雷打不动，是稳定节奏。"
+    },
+    {
+      "claim_id": "behavior.habits.6",
+      "path": "behavior.habits",
+      "claim": "偏好沿护城河步行探索城市",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        15
+      ],
+      "reason": "仅一次提及沿护城河走，不足以支撑长期行为偏好画像。"
+    },
+    {
+      "claim_id": "behavior.habits.7",
+      "path": "behavior.habits",
+      "claim": "情绪平复后习惯逐条列出问题并重新梳理逻辑",
+      "verdict": "supported",
+      "evidence_turns": [
+        4,
+        19,
+        46
+      ],
+      "reason": "多轮提及冷静后列问题、理逻辑，属稳定习惯。"
+    },
+    {
+      "claim_id": "behavior.habits.8",
+      "path": "behavior.habits",
+      "claim": "对高风险设计元素先制作局部模型进行实地测试，观察真实使用后再决策",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "两轮均描述做小模型现场测试人流/舒适度后决策。"
+    },
+    {
+      "claim_id": "behavior.habits.9",
+      "path": "behavior.habits",
+      "claim": "在咖啡馆等场合随时掏出速写本记录建筑细节",
+      "verdict": "supported",
+      "evidence_turns": [
+        14,
+        39
+      ],
+      "reason": "明确提到出门必带速写本及在咖啡馆记录细节。"
+    },
+    {
+      "claim_id": "behavior.preferences.1",
+      "path": "behavior.preferences",
+      "claim": "喜欢动手制作纸板模型等实体验证方式",
+      "verdict": "supported",
+      "evidence_turns": [
+        8,
+        30
+      ],
+      "reason": "多次提及用纸板/泡沫板做模型验证方案。"
+    },
+    {
+      "claim_id": "behavior.preferences.2",
+      "path": "behavior.preferences",
+      "claim": "偏好城市更新、老旧小区改造等有人文关怀的设计领域",
+      "verdict": "supported",
+      "evidence_turns": [
+        1,
+        3,
+        18,
+        36,
+        41
+      ],
+      "reason": "多轮表达拒绝商业地产，坚定选择城市更新方向。"
+    },
+    {
+      "claim_id": "behavior.preferences.3",
+      "path": "behavior.preferences",
+      "claim": "喜欢步行探索旧仓库改造等小规模独立展览空间",
+      "verdict": "supported",
+      "evidence_turns": [
+        15,
+        40
+      ],
+      "reason": "明确表达对旧仓库改造展览和步行探索的喜爱。"
+    },
+    {
+      "claim_id": "behavior.preferences.4",
+      "path": "behavior.preferences",
+      "claim": "对巴塞罗那公共浴室、米拉公寓阳台等空间多义性经典案例有强烈偏好",
+      "verdict": "supported",
+      "evidence_turns": [
+        13,
+        35,
+        49
+      ],
+      "reason": "多次兴奋提及这些具体案例及其空间多义性。"
+    },
+    {
+      "claim_id": "behavior.preferences.5",
+      "path": "behavior.preferences",
+      "claim": "倾向于通过江边散步、风吹等自然元素缓解压力",
+      "verdict": "supported",
+      "evidence_turns": [
+        5,
+        20
+      ],
+      "reason": "提及河边散步、江边溜达吹风缓解崩溃情绪。"
+    },
+    {
+      "claim_id": "behavior.preferences.6",
+      "path": "behavior.preferences",
+      "claim": "偏好用新铅笔等工具进行即兴速写",
+      "verdict": "unsupported",
+      "evidence_turns": [
+        20
+      ],
+      "reason": "仅一次买新铅笔随手画，不足以支撑长期偏好画像。"
+    },
+    {
+      "claim_id": "behavior.preferences.7",
+      "path": "behavior.preferences",
+      "claim": "喜欢废弃工厂改造艺术区的粗粝质感与混合氛围",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "明确表达对废弃工厂粗粝质感的着迷。"
+    },
+    {
+      "claim_id": "behavior.preferences.8",
+      "path": "behavior.preferences",
+      "claim": "偏好将旧建筑探访、独立展览与河岸长距离步行结合的周末方式",
+      "verdict": "supported",
+      "evidence_turns": [
+        40
+      ],
+      "reason": "明确描述这是其最喜欢的周末混合活动方式。"
+    }
+  ],
+  "fact_assessments": [
+    {
+      "fact_id": "core.values",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.values.1",
+        "core.values.2",
+        "core.values.3",
+        "core.values.4",
+        "core.values.9",
+        "core.values.10"
+      ],
+      "reason": "多句原话明确支持设计公平、反对打卡及改善真实生活。"
+    },
+    {
+      "fact_id": "core.motivations",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.motivations.1",
+        "core.motivations.7"
+      ],
+      "reason": "原话多次提及居民使用反馈和感谢是核心动力。"
+    },
+    {
+      "fact_id": "core.long_term_goals",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.long_term_goals.1",
+        "core.long_term_goals.2"
+      ],
+      "reason": "原话明确表达进入城市更新团队从事社区设计的意愿。"
+    },
+    {
+      "fact_id": "regulation.stress_response",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.stress_response.2",
+        "regulation.emotion_regulation.5"
+      ],
+      "reason": "原话描述被否后沉默独处，整理情绪后再行动。"
+    },
+    {
+      "fact_id": "regulation.emotion_regulation",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.stress_response.1",
+        "regulation.stress_response.5",
+        "behavior.habits.4"
+      ],
+      "reason": "原话提及散步、打球、速写均为其恢复状态的方式。"
+    },
+    {
+      "fact_id": "regulation.conflict_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "regulation.conflict_style.1",
+        "regulation.conflict_style.3"
+      ],
+      "reason": "原话明确表示用草图和场景解释立场，避免抽象争论。"
+    },
+    {
+      "fact_id": "cognition.thinking_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.thinking_style.1",
+        "cognition.thinking_style.2",
+        "cognition.thinking_style.8"
+      ],
+      "reason": "原话强调视觉意象驱动思维，通过草图理清逻辑。"
+    },
+    {
+      "fact_id": "cognition.decision_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "cognition.decision_style.2",
+        "cognition.decision_style.5"
+      ],
+      "reason": "原话提到大胆构想结合小尺度模型实地验证。"
+    },
+    {
+      "fact_id": "cognition.beliefs",
+      "status": "captured",
+      "profile_claim_ids": [
+        "core.values.1",
+        "core.values.2",
+        "cognition.beliefs.5",
+        "cognition.beliefs.7"
+      ],
+      "reason": "原话多次强调设计应回应使用者而非追求视觉标志。"
+    },
+    {
+      "fact_id": "identity.self_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.self_identity.3",
+        "identity.self_identity.7"
+      ],
+      "reason": "原话自认点子多但落地能力需加强，需补足规范工艺。"
+    },
+    {
+      "fact_id": "identity.social_identity",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.social_identity.1",
+        "identity.social_identity.3"
+      ],
+      "reason": "画像明确覆盖研三身份及带领社区工作坊经历。"
+    },
+    {
+      "fact_id": "identity.life_context",
+      "status": "captured",
+      "profile_claim_ids": [
+        "identity.life_context.5",
+        "identity.life_context.7",
+        "identity.social_identity.4",
+        "identity.social_identity.8"
+      ],
+      "reason": "画像完整覆盖毕设收尾、海投微更新公司及评估猎头岗位状态。"
+    },
+    {
+      "fact_id": "behavior.interaction_style",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.interaction_style.7",
+        "cognition.thinking_style.3",
+        "cognition.thinking_style.7"
+      ],
+      "reason": "画像明确提及讨论案例时语速加快及兴奋表现。"
+    },
+    {
+      "fact_id": "behavior.habits",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.habits.4",
+        "behavior.habits.5",
+        "behavior.habits.9"
+      ],
+      "reason": "画像明确记录出门必带速写本及每周两次固定羽毛球习惯。"
+    },
+    {
+      "fact_id": "behavior.preferences",
+      "status": "captured",
+      "profile_claim_ids": [
+        "behavior.preferences.3",
+        "behavior.preferences.4",
+        "behavior.preferences.5",
+        "behavior.preferences.7",
+        "behavior.preferences.8"
+      ],
+      "reason": "画像详细覆盖对旧建筑、独立展览、步行探索及羽毛球的偏好。"
+    }
+  ],
+  "correction_assessments": [
+    {
+      "correction_id": "c1",
+      "status": "handled",
+      "reason": "已采纳澄清，未保留旧说法"
+    },
+    {
+      "correction_id": "c2",
+      "status": "handled",
+      "reason": "已采纳澄清，未保留旧说法"
+    },
+    {
+      "correction_id": "c3",
+      "status": "handled",
+      "reason": "已采纳澄清，未保留旧说法"
+    }
+  ]
+}

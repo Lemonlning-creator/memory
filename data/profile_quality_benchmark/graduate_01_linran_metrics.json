@@ -1,0 +1,13 @@
+{
+  "persona_id": "graduate_01_linran",
+  "profile_claim_count": 85,
+  "profile_accuracy_percent": 94.71,
+  "hallucination_percent": 4.71,
+  "key_fact_recall_percent": 96.67,
+  "correction_handling_percent": 100.0,
+  "five_layer_completeness_percent": 100.0,
+  "fixed_field_coverage_percent": 100.0,
+  "profile_api_calls": 7,
+  "profile_total_latency_seconds": 358.6,
+  "profile_average_latency_seconds": 51.229
+}

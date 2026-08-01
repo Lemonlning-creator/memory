@@ -1,0 +1,13 @@
+{
+  "persona_id": "graduate_03_chenyu",
+  "profile_claim_count": 107,
+  "profile_accuracy_percent": 93.46,
+  "hallucination_percent": 6.54,
+  "key_fact_recall_percent": 100.0,
+  "correction_handling_percent": 100.0,
+  "five_layer_completeness_percent": 100.0,
+  "fixed_field_coverage_percent": 100.0,
+  "profile_api_calls": 7,
+  "profile_total_latency_seconds": 466.08,
+  "profile_average_latency_seconds": 66.583
+}

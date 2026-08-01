@@ -1,0 +1,13 @@
+{
+  "persona_id": "graduate_02_zhouning",
+  "profile_claim_count": 90,
+  "profile_accuracy_percent": 92.22,
+  "hallucination_percent": 7.78,
+  "key_fact_recall_percent": 96.67,
+  "correction_handling_percent": 100.0,
+  "five_layer_completeness_percent": 100.0,
+  "fixed_field_coverage_percent": 100.0,
+  "profile_api_calls": 7,
+  "profile_total_latency_seconds": 407.896,
+  "profile_average_latency_seconds": 58.271
+}
