@@ -109,6 +109,8 @@ class FakeExp2LLM:
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "calls": 0,
+            "network_attempts": 0,
+            "network_retries": 0,
         }
 
     def chat(self, system_prompt, user_prompt, **kwargs):
@@ -116,6 +118,7 @@ class FakeExp2LLM:
         self.token_usage["prompt_tokens"] += 10
         self.token_usage["completion_tokens"] += 2
         self.token_usage["calls"] += 1
+        self.token_usage["network_attempts"] += 1
         schema_name = (kwargs.get("response_schema") or {}).get("name")
         if schema_name == "exp2_future_user_state":
             return json.dumps(_future_state())
@@ -263,6 +266,14 @@ class Exp2ProtocolTests(unittest.TestCase):
             self.assertEqual(set(summary["comparison"]), set(METHODS))
             self.assertEqual(len(llm.calls), call_count)
             self.assertEqual(resumed["num_eval_points"], 2)
+            self.assertIn("future_state_prediction", summary["stage_usage"])
+            self.assertEqual(
+                summary["stage_usage"]["future_state_prediction"][
+                    "completed_operations"
+                ],
+                2 * len(METHODS),
+            )
+            self.assertEqual(summary["token_usage"]["network_retries"], 0)
             self.assertTrue(all(
                 value["prediction"]["num_evaluations"] == 2
                 and value["generation"]["num_evaluations"] == 2

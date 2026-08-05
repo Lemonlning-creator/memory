@@ -112,5 +112,11 @@ def _now() -> str:
 def _usage_delta(before: Dict[str, int], after: Dict[str, int]) -> Dict[str, int]:
     return {
         key: max(0, int(after.get(key, 0)) - int(before.get(key, 0)))
-        for key in ("prompt_tokens", "completion_tokens", "calls")
+        for key in (
+            "prompt_tokens",
+            "completion_tokens",
+            "calls",
+            "network_attempts",
+            "network_retries",
+        )
     }

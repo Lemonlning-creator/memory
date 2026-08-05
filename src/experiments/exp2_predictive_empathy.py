@@ -500,6 +500,7 @@ def run_exp2(
             key.startswith("sample:") for key in checkpoint.data["failures"]
         ),
         "token_usage": _checkpoint_token_usage(checkpoint),
+        "stage_usage": _checkpoint_stage_usage(checkpoint),
         "primary_aggregation": "speaker_macro",
         "protocol_name": PROTOCOL_NAME,
         "bertscore_status": {
@@ -527,7 +528,8 @@ def run_exp2(
             ),
             "reference": (
                 "pinned REALTALK classifiers label emotion, sentiment, and "
-                "intimacy; Kimi supplies only non-classifier attributes"
+                "intimacy; the configured LLM supplies only non-classifier "
+                "attributes"
             ),
             "generation": (
                 "all four methods answer the same observed target message; "
@@ -604,6 +606,9 @@ def run_exp2(
             ),
             "figures/prediction_error.png": (
                 "prediction error over normalized interaction progress"
+            ),
+            "summary.stage_usage": (
+                "per-stage operation, token, latency, and transport retry totals"
             ),
         },
         "response_generation": {
@@ -1427,8 +1432,10 @@ def _metric_protocol() -> Dict[str, Any]:
             "intimacy_absolute_difference",
         ],
         "prediction_extended_metrics": list(EXTENDED_METRICS),
-        "generation_paper_aligned_metrics": [
-            "style_similarity",
+        "generation_advisor_primary_metrics": list(
+            GENERATION_PRIMARY_METRICS
+        ),
+        "generation_realtalk_aligned_metrics": [
             "rouge_l",
             "bertscore_f1",
             "reflectiveness_accuracy",
@@ -1437,6 +1444,10 @@ def _metric_protocol() -> Dict[str, Any]:
             "emotion_accuracy",
             "intimacy_absolute_difference",
             "empathy_absolute_difference",
+        ],
+        "generation_additional_metrics": [
+            "style_similarity",
+            "lexical_overlap",
             "empathy_component_mae",
             "empathy_vector_accuracy",
         ],
@@ -1557,11 +1568,91 @@ def _run_signature(
 
 
 def _checkpoint_token_usage(checkpoint: OperationCheckpoint) -> Dict[str, int]:
-    total = {"prompt_tokens": 0, "completion_tokens": 0, "calls": 0}
+    total = {
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "calls": 0,
+        "network_attempts": 0,
+        "network_retries": 0,
+    }
     for operation in checkpoint.data["operations"].values():
         for key in total:
             total[key] += int(operation.get("token_usage", {}).get(key, 0))
     return total
+
+
+_OPERATION_STAGE_PREFIXES = {
+    "profile:": "profile_extraction",
+    "persona:": "agent_persona_extraction",
+    "framework_state:": "framework_state",
+    "prediction:": "future_state_prediction",
+    "empathy_alignment:": "empathy_alignment",
+    "generated_response:": "response_generation",
+    "message_ei:": "message_evaluation",
+}
+
+
+def _checkpoint_stage_usage(
+    checkpoint: OperationCheckpoint,
+) -> Dict[str, Dict[str, Any]]:
+    stages: Dict[str, Dict[str, Any]] = {}
+
+    def stage_for(operation_key: str) -> str:
+        return next(
+            (
+                stage
+                for prefix, stage in _OPERATION_STAGE_PREFIXES.items()
+                if operation_key.startswith(prefix)
+            ),
+            "other",
+        )
+
+    for operation_key, operation in checkpoint.data["operations"].items():
+        stage = stage_for(operation_key)
+        record = stages.setdefault(stage, {
+            "completed_operations": 0,
+            "failed_operations": 0,
+            "operation_attempts": 0,
+            "elapsed_seconds": 0.0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "calls": 0,
+            "network_attempts": 0,
+            "network_retries": 0,
+        })
+        record["completed_operations"] += 1
+        record["operation_attempts"] += int(operation.get("attempts", 0))
+        record["elapsed_seconds"] += float(operation.get("elapsed_seconds", 0))
+        usage = operation.get("token_usage", {})
+        for key in (
+            "prompt_tokens",
+            "completion_tokens",
+            "calls",
+            "network_attempts",
+            "network_retries",
+        ):
+            record[key] += int(usage.get(key, 0))
+
+    for operation_key in checkpoint.data["failures"]:
+        if operation_key.startswith("sample:"):
+            continue
+        stage = stage_for(operation_key)
+        record = stages.setdefault(stage, {
+            "completed_operations": 0,
+            "failed_operations": 0,
+            "operation_attempts": 0,
+            "elapsed_seconds": 0.0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "calls": 0,
+            "network_attempts": 0,
+            "network_retries": 0,
+        })
+        record["failed_operations"] += 1
+
+    for record in stages.values():
+        record["elapsed_seconds"] = round(record["elapsed_seconds"], 3)
+    return dict(sorted(stages.items()))
 
 
 def _write_outputs(

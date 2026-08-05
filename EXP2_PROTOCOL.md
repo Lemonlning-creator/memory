@@ -103,7 +103,8 @@ Emotion、Sentiment、Intimacy 的真实标签使用 REALTALK 对应的固定 Ca
 - 重试失败不会记为 0 分；不完整样本保留错误记录并排除汇总。
 - `results.jsonl` 保存逐样本原始结果。
 - `metric_records.jsonl` 保存预测和生成两阶段的长表记录。
-- `summary.json` 保存 speaker-macro、micro 和随测试位置变化的趋势。
+- `summary.json` 保存 speaker-macro、micro、随测试位置变化的趋势，以及按画像、
+  状态、预测、回复和评价阶段汇总的调用次数、token、耗时与网络重试。
 - `run_manifest.json` 保存数据、模型、提示词、Schema、分类器版本和调用统计。
 - `tables/prediction_metrics.csv` 保存师姐要求的预测主指标。
 - `tables/generation_metrics.csv` 保存师姐要求的生成主指标。

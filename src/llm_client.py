@@ -47,6 +47,8 @@ class LLMClient:
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "calls": 0,
+            "network_attempts": 0,
+            "network_retries": 0,
         }
 
     def chat(
@@ -163,6 +165,11 @@ class LLMClient:
         last_error: Exception | None = None
         for attempt in range(1, self.max_retries + 1):
             self.last_request_attempts = attempt
+            usage = getattr(self, "token_usage", None)
+            if isinstance(usage, dict):
+                usage["network_attempts"] = int(
+                    usage.get("network_attempts", 0)
+                ) + 1
             try:
                 return call()
             except Exception as exc:
@@ -182,6 +189,10 @@ class LLMClient:
                     wait_seconds *= random.uniform(0.8, 1.2)
                 else:
                     wait_seconds = min(self.retry_max_seconds, retry_after)
+                if isinstance(usage, dict):
+                    usage["network_retries"] = int(
+                        usage.get("network_retries", 0)
+                    ) + 1
                 print(
                     f"[LLM {operation} retry] attempt={attempt}/{self.max_retries} "
                     f"wait={wait_seconds:.1f}s error={type(exc).__name__}: {exc}"

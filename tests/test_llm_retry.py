@@ -34,6 +34,13 @@ class LLMRetryTests(unittest.TestCase):
         client.retry_base_seconds = 0
         client.retry_max_seconds = 0
         client.last_request_attempts = 0
+        client.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "calls": 0,
+            "network_attempts": 0,
+            "network_retries": 0,
+        }
         calls = {"count": 0}
 
         def operation():
@@ -45,6 +52,8 @@ class LLMRetryTests(unittest.TestCase):
         self.assertEqual(client._call_with_retry(operation, "test"), "accepted")
         self.assertEqual(calls["count"], 3)
         self.assertEqual(client.last_request_attempts, 3)
+        self.assertEqual(client.token_usage["network_attempts"], 3)
+        self.assertEqual(client.token_usage["network_retries"], 2)
 
     def test_dashscope_qwen_schema_uses_required_tool_call(self):
         captured = {}
@@ -74,6 +83,8 @@ class LLMRetryTests(unittest.TestCase):
             "prompt_tokens": 0,
             "completion_tokens": 0,
             "calls": 0,
+            "network_attempts": 0,
+            "network_retries": 0,
         }
         client.client = SimpleNamespace(
             chat=SimpleNamespace(
@@ -104,3 +115,5 @@ class LLMRetryTests(unittest.TestCase):
         self.assertIn("tool_choice", captured)
         self.assertNotIn("response_format", captured)
         self.assertNotIn("extra_body", captured)
+        self.assertEqual(client.token_usage["network_attempts"], 1)
+        self.assertEqual(client.token_usage["network_retries"], 0)

@@ -48,6 +48,46 @@ class OperationCheckpointTests(unittest.TestCase):
             self.assertEqual(calls["count"], 1)
             self.assertEqual(resumed.result_values(), [{"value": 2}])
 
+    def test_usage_delta_preserves_transport_retry_counts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            checkpoint = OperationCheckpoint(Path(directory) / "checkpoint.json", "sig")
+            usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "calls": 0,
+                "network_attempts": 0,
+                "network_retries": 0,
+            }
+
+            def operation():
+                usage.update({
+                    "prompt_tokens": 12,
+                    "completion_tokens": 3,
+                    "calls": 1,
+                    "network_attempts": 3,
+                    "network_retries": 2,
+                })
+                return {"ok": True}
+
+            checkpoint.execute(
+                "prediction:sample",
+                operation,
+                lambda value: value,
+                1,
+                usage_supplier=lambda: dict(usage),
+            )
+
+            self.assertEqual(
+                checkpoint.data["operations"]["prediction:sample"]["token_usage"],
+                {
+                    "prompt_tokens": 12,
+                    "completion_tokens": 3,
+                    "calls": 1,
+                    "network_attempts": 3,
+                    "network_retries": 2,
+                },
+            )
+
     def test_signature_mismatch_fails_instead_of_reusing_results(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "checkpoint.json"
