@@ -342,6 +342,19 @@ USER DOMAIN (User's perspective, reasoned through 5 profile layers):
 - Identity layer: What topics or approaches resonate with them?
 - Social/physical layer: What contextual factors (work, relationships, health) affect their current state?
 
+EVIDENCE AND SALIENCE GATE:
+- The current message and recent conversation are primary evidence. The profile
+  may disambiguate relevant signals, but it must not create a hidden crisis,
+  unmet need, or activated trait that the current turn does not support.
+- A profile layer may be "not activated in this turn". Do not force every layer
+  to produce a psychologically deep interpretation.
+- A greeting, routine check-in, or neutral logistical message normally has low
+  emotional intensity unless the recent conversation contains contrary evidence.
+- Low omega permits using relevant established knowledge; it does not permit
+  injecting unrelated profile facts, shared memories, locations, or activities.
+- Response guidance must remain proportionate to the observed message and must
+  not ask the responder to invent or imply unobserved current facts.
+
 EXPLORATION VS EXPLOITATION:
 The epistemic value decay omega(t) determines how much exploration is warranted:
 - High omega (early relationship, sparse profile): Favor exploration — ask probing questions to learn more.
@@ -376,6 +389,8 @@ STEP 1 - UNDERSTANDING (Self Domain + User Domain):
   - Cognition: How should you adapt communication?
   - Identity: What contextual factors matter?
   - Behavior: What approach will resonate?
+If a layer is not supported or relevant in this turn, explicitly say "not
+activated in this turn" instead of inferring a latent fear, desire, or need.
 
 STEP 2 - PREDICTION:
 Based on the 5-layer understanding, predict the user\'s emotional trajectory. What will happen if you respond with high empathy? With low empathy? What is the risk of misalignment?
@@ -384,6 +399,9 @@ STEP 3 - EXPLORATION (Explore vs Exploit):
 Given omega(t) = {epistemic_omega}, should you explore or exploit?
 - If omega is HIGH: Lean toward exploration — your response should gently probe to learn more about the user.
 - If omega is LOW: Lean toward exploitation — your response should directly apply your accumulated understanding.
+- Exploitation means applying only profile evidence relevant to the current
+  message. It never means mentioning unrelated biography or manufacturing a
+  personalized anecdote.
 - Set exploration_score accordingly (0 = pure exploit, 2 = strong exploration).
 
 STEP 4 - ALIGNMENT + EMPATHY STATE DECISION:

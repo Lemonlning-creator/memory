@@ -1,5 +1,10 @@
 # Exp2 实验协议
 
+**正式协议标识：** `advisor_exp2_predictive_empathy_v1`
+
+本文件是当前唯一活跃的 Exp2 协议。旧的 REALTALK 下一消息模拟仅保留为 legacy
+代码，不继续运行，也不进入本实验结果。
+
 ## 研究问题
 
 Exp2 检验：更完整的用户理解，是否既能提高下一条用户消息的状态预测，也能帮助智能体生成更贴近真实对话的共情回复。
@@ -51,6 +56,10 @@ Exp2 检验：更完整的用户理解，是否既能提高下一条用户消息
 
 这样比较的是用户建模信息带来的增益，而不是某一组额外知道“当前用户说了什么”。
 
+回复阶段只接收共情对齐中的强度、分量、语气和探索/利用决策。完整的
+自由文本推理仍保存在结果中供分析，但不直接下传给回复模型，避免其中
+未经对话支持的自传式建议覆盖共同的事实约束。
+
 ## 指标
 
 ### 未来状态预测
@@ -96,6 +105,13 @@ Emotion、Sentiment、Intimacy 的真实标签使用 REALTALK 对应的固定 Ca
 - `metric_records.jsonl` 保存预测和生成两阶段的长表记录。
 - `summary.json` 保存 speaker-macro、micro 和随测试位置变化的趋势。
 - `run_manifest.json` 保存数据、模型、提示词、Schema、分类器版本和调用统计。
+- `tables/prediction_metrics.csv` 保存师姐要求的预测主指标。
+- `tables/generation_metrics.csv` 保存师姐要求的生成主指标。
+- `tables/prediction_error_trend.csv` 保存归一化交互进度下的预测误差。
+- `figures/prediction_error.png` 是 Exp2 唯一正式趋势图。
+
+没有紧随其后的真实伙伴回复时，该测试点仅进入预测指标，不进入生成指标分母。
+四组中任一生成或评价失败时，整个联合样本排除，不将失败记为 0 分。
 
 ## 与旧实现的区别
 

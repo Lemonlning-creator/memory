@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
+import io
 import json
 import os
 import re
@@ -18,6 +20,7 @@ from ..prediction import (
     FUTURE_STATE_MAX_TOKENS,
     PREDICTION_SYSTEM_PROMPT,
     FutureStatePredictor,
+    build_user_prompt,
     compute_prediction_error,
 )
 from ..prompts.templates_en import (
@@ -66,6 +69,8 @@ from .exp2_generation import (
     RESPONSE_MAX_TOKENS,
     Exp2ResponseGenerator,
     add_batched_bertscore,
+    bertscore_runtime_metadata,
+    build_response_prompt,
     compute_response_scores,
 )
 from .exp2_schema import (
@@ -86,6 +91,7 @@ METHODS = (
     "user_profile",
     "full_framework",
 )
+PROTOCOL_NAME = "advisor_exp2_predictive_empathy_v1"
 PROFILE_LAYERS = ("core", "regulation", "cognition", "identity", "behavior")
 HIGHER_IS_BETTER = (
     "emotion_accuracy",
@@ -110,6 +116,20 @@ RESPONSE_LOWER_IS_BETTER = (
     "empathy_absolute_difference",
     "empathy_component_mae",
 )
+PREDICTION_PRIMARY_METRICS = (
+    "emotion_accuracy",
+    "emotion_macro_f1",
+    "sentiment_accuracy",
+    "sentiment_macro_f1",
+    "intimacy_absolute_difference",
+)
+GENERATION_PRIMARY_METRICS = (
+    "style_similarity",
+    "bertscore_f1",
+    "empathy_absolute_difference",
+    "empathy_component_mae",
+    "empathy_vector_accuracy",
+)
 
 
 @dataclass
@@ -127,6 +147,8 @@ class Exp2Config:
     continue_on_error: bool = True
     run_generation: bool = True
     compute_bertscore: bool = False
+    trend_bins: int = 5
+    write_visualizations: bool = True
     fresh: bool = False
 
 
@@ -136,6 +158,8 @@ def run_exp2(
     label_evaluator: Optional[RealTalkLabelEvaluator] = None,
 ) -> Dict[str, Any]:
     """Run causal prediction and response generation for Experiment 2."""
+    if config.trend_bins < 2:
+        raise ValueError("trend_bins must be at least 2")
     splits = select_realtalk_splits(
         config.dataset_dir, config.chat_filter, config.speaker_filter
     )
@@ -143,6 +167,14 @@ def run_exp2(
         raise ValueError("no REALTALK speaker splits matched the configuration")
     llm = llm or LLMClient()
     label_evaluator = label_evaluator or RealTalkLabelEvaluator()
+    bertscore_metadata = bertscore_runtime_metadata()
+    bertscore_available = bool(bertscore_metadata.get("bert_score_version"))
+    if config.compute_bertscore and not bertscore_available:
+        print(
+            "[Exp2] BERTScore dependency unavailable; generation will run "
+            "normally and raw response pairs will be preserved for deferred "
+            "offline computation."
+        )
     output_dir = Path(config.output_dir)
     checkpoint_path = output_dir / "checkpoint.json"
     if config.fresh and checkpoint_path.exists():
@@ -323,10 +355,10 @@ def run_exp2(
                     for method in METHODS:
                         guidance = None
                         if method == "full_framework":
-                            guidance = {
-                                "state": framework_state,
-                                "empathy_alignment": empathy_alignment,
-                            }
+                            guidance = _generation_guidance(
+                                framework_state,
+                                empathy_alignment,
+                            )
                         generated = _cached_generated_response(
                             checkpoint,
                             response_generators[method],
@@ -368,6 +400,10 @@ def run_exp2(
                                 candidate_ei=generated_ei,
                             ),
                         }
+                generation_eligible = response_reference is not None
+                generation_complete = generation_eligible and all(
+                    methods[method].get("generation") for method in METHODS
+                )
                 result = {
                     "result_id": result_id,
                     "speaker": target_speaker,
@@ -389,6 +425,8 @@ def run_exp2(
                         if response_reference is not None else []
                     ),
                     "ground_truth_response_ei": response_reference_ei,
+                    "generation_eligible": generation_eligible,
+                    "generation_complete": generation_complete,
                     "reference": reference,
                     "recent_complete_exchange": recent_exchange,
                     "framework_state": framework_state,
@@ -425,7 +463,11 @@ def run_exp2(
                         perf_counter() - sample_started, 3
                     ),
                     "completed_at_utc": _now(),
-                    "status": "complete",
+                    "status": (
+                        "complete_joint"
+                        if generation_complete
+                        else "complete_prediction_only"
+                    ),
                 }
                 checkpoint.store_result(result_id, result)
                 rolling_framework_state = framework_state or rolling_framework_state
@@ -448,9 +490,9 @@ def run_exp2(
                     raise
 
     results = sorted(checkpoint.result_values(), key=_result_sort_key)
-    if config.compute_bertscore:
+    if config.compute_bertscore and bertscore_available:
         add_batched_bertscore(results)
-    summary = aggregate_results(results)
+    summary = aggregate_results(results, trend_bins=config.trend_bins)
     summary.update({
         "elapsed_seconds": round(perf_counter() - started, 3),
         "failed_samples_excluded_this_run": run_failures,
@@ -459,6 +501,13 @@ def run_exp2(
         ),
         "token_usage": _checkpoint_token_usage(checkpoint),
         "primary_aggregation": "speaker_macro",
+        "protocol_name": PROTOCOL_NAME,
+        "bertscore_status": {
+            "requested": config.compute_bertscore,
+            "available": bertscore_available,
+            "computed": config.compute_bertscore and bertscore_available,
+            "deferred": config.compute_bertscore and not bertscore_available,
+        },
         "realtalk_alignment": {
             "task": (
                 "predict the state of the next real merged user message from "
@@ -506,10 +555,14 @@ def run_exp2(
         "response_max_tokens": RESPONSE_MAX_TOKENS,
         "label_evaluator": label_evaluator.metadata(),
         "bertscore": {
+            **bertscore_metadata,
             "model_type": BERTSCORE_MODEL,
             "num_layers": BERTSCORE_NUM_LAYERS,
             "idf": False,
             "rescale_with_baseline": False,
+            "requested": config.compute_bertscore,
+            "computed": config.compute_bertscore and bertscore_available,
+            "deferred": config.compute_bertscore and not bertscore_available,
         },
         "metric_protocol": _metric_protocol(),
         "network_retry_max_attempts": getattr(llm, "max_retries", None),
@@ -544,6 +597,14 @@ def run_exp2(
             "summary.json": "speaker-macro and micro aggregate metrics",
             "checkpoint.json": "resumable operation cache",
             "run_manifest.json": "protocol, model, hashes, and retry metadata",
+            "tables/prediction_metrics.csv": "advisor primary prediction table",
+            "tables/generation_metrics.csv": "advisor primary generation table",
+            "tables/prediction_error_trend.csv": (
+                "normalized-progress prediction error records"
+            ),
+            "figures/prediction_error.png": (
+                "prediction error over normalized interaction progress"
+            ),
         },
         "response_generation": {
             "enabled": config.run_generation,
@@ -562,8 +623,17 @@ def run_exp2(
                 "BERTScore is deferred."
             ),
         },
+        "experiment_role": "primary_advisor_exp2",
+        "excluded_training_baselines": ["realtalk_fine_tuned"],
+        "legacy_auxiliary_runner": "src.experiments.user_modeling.runner",
     })
-    _write_outputs(output_dir, results, summary, manifest)
+    _write_outputs(
+        output_dir,
+        results,
+        summary,
+        manifest,
+        write_visualizations=config.write_visualizations,
+    )
     print(f"[Exp2] summary={json.dumps(summary.get('comparison', {}), indent=2)}")
     return summary
 
@@ -694,6 +764,7 @@ def _cached_message_ei(
         "message": message,
         "system": REFERENCE_JUDGE_SYSTEM_PROMPT,
         "schema": REFERENCE_JUDGMENT_SCHEMA,
+        "model": getattr(llm, "model", None),
         "classifier": label_evaluator.metadata(),
     })
     key = f"message_ei:{result_id}:{role}:{input_hash}"
@@ -742,7 +813,11 @@ def _cached_framework_state(
         "profile": profile,
         "persona": persona,
         "previous_state": previous_state,
+        "system": BACKGROUND_REASONING_SYSTEM_PROMPT,
+        "user_template": BACKGROUND_REASONING_USER_PROMPT_TEMPLATE,
         "schema": FRAMEWORK_STATE_RESPONSE_SCHEMA,
+        "model": getattr(llm, "model", None),
+        "max_tokens": FRAMEWORK_STATE_MAX_TOKENS,
     })
     key = f"framework_state:{result_id}:{input_hash}"
     return checkpoint.execute(
@@ -776,21 +851,37 @@ def _cached_prediction(
     method_history = [] if method == "llm_only" else context_turns
     method_exchange = recent_exchange if method == "llm_only" else []
     effective_state = framework_state or None
-    effective_method = method
-    if method == "dialogue_history" and not method_history:
-        effective_method = "llm_only"
-    elif method == "full_framework" and not effective_state:
-        effective_method = "user_profile"
+    recent_text = "\n".join(
+        f"{turn['speaker']}: {turn['content']}" for turn in method_exchange
+    )
+    history_text = "\n".join(
+        f"{turn['speaker']}: {turn['content']}" for turn in method_history
+    )
+    profile_text = (
+        json.dumps(profile, ensure_ascii=False, indent=2) if profile else ""
+    )
+    state_text = (
+        json.dumps(effective_state, ensure_ascii=False, indent=2)
+        if effective_state else ""
+    )
+    user_prompt = build_user_prompt(
+        mode=method,
+        recent_exchange=recent_text,
+        conversation_history=history_text,
+        n_turns=len(method_history),
+        user_profile=profile_text,
+        current_state=state_text,
+    )
     input_hash = stable_hash({
-        "effective_method": effective_method,
-        "recent_exchange": method_exchange,
-        "history": method_history,
-        "profile": profile,
-        "framework_state": effective_state,
+        "method": method,
+        "state_available": effective_state is not None,
         "system": PREDICTION_SYSTEM_PROMPT,
+        "user_prompt": user_prompt,
         "schema": FUTURE_STATE_RESPONSE_SCHEMA,
+        "model": getattr(llm, "model", None),
+        "max_tokens": FUTURE_STATE_MAX_TOKENS,
     })
-    key = f"prediction:{result_id}:{effective_method}:{input_hash}"
+    key = f"prediction:{result_id}:{method}:{input_hash}"
     return checkpoint.execute(
         key,
         lambda: predictor.predict(
@@ -822,6 +913,10 @@ def _cached_empathy_alignment(
         "persona": persona,
         "framework_state": framework_state,
         "interaction_count": point["message_level_index"],
+        "system": EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
+        "user_template": EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
+        "model": getattr(llm, "model", None),
+        "max_tokens": EMPATHY_ALIGNMENT_MAX_TOKENS,
     })
     key = f"empathy_alignment:{result_id}:{input_hash}"
 
@@ -861,13 +956,22 @@ def _cached_generated_response(
     persona: Dict[str, Any],
     framework_guidance: Optional[Dict[str, Any]],
 ) -> str:
+    user_prompt = build_response_prompt(
+        method=method,
+        user_message=point["target_message"],
+        context_turns=point["context_turns"],
+        profile=profile,
+        persona=persona,
+        framework_guidance=framework_guidance,
+        agent_speaker=agent_speaker,
+        user_speaker=user_speaker,
+    )
     input_hash = stable_hash({
         "method": method,
-        "target_message": point["target_message"],
-        "context": point["context_turns"],
-        "profile": profile,
-        "persona": persona,
-        "framework_guidance": framework_guidance,
+        "system": DDIRECT_RESPONSE_SYSTEM_PROMPT,
+        "user_prompt": user_prompt,
+        "model": getattr(llm, "model", None),
+        "max_tokens": RESPONSE_MAX_TOKENS,
     })
     key = f"generated_response:{result_id}:{method}:{input_hash}"
     return checkpoint.execute(
@@ -943,6 +1047,34 @@ def _validate_empathy_alignment(value: Any) -> Dict[str, Any]:
     return value
 
 
+def _generation_guidance(
+    framework_state: Dict[str, Any],
+    empathy_alignment: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Expose alignment controls without forwarding ungrounded free-text advice."""
+    empathy_state = empathy_alignment.get("empathy_state", {})
+    exploration = empathy_alignment.get("exploration", {})
+    alignment = empathy_alignment.get("alignment", {})
+    return {
+        "state": framework_state,
+        "empathy_alignment": {
+            "empathy_level": empathy_state.get("empathy_level"),
+            "emotional_reaction": empathy_state.get("emotional_reaction"),
+            "interpretation": empathy_state.get("interpretation"),
+            "exploration": empathy_state.get("exploration"),
+            "activated_tone": empathy_state.get("activated_tone"),
+            "explore_or_exploit": exploration.get("decision"),
+            "empathy_adjustment": alignment.get("empathy_adjustment"),
+        },
+        "grounding_contract": (
+            "Use these fields only to set tone and empathy intensity. Do not "
+            "invent or imply an activity, location, event, possession, plan, "
+            "preference, memory, or relationship fact that is not directly "
+            "supported by the observed conversation."
+        ),
+    }
+
+
 def _validate_generated_response(value: Any) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError("generated response is empty")
@@ -975,13 +1107,22 @@ def _next_partner_response(
     return response
 
 
-def aggregate_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
+def aggregate_results(
+    results: List[Dict[str, Any]],
+    *,
+    trend_bins: int = 5,
+) -> Dict[str, Any]:
     if not results:
         return {
             "comparison": {},
             "num_eval_points": 0,
             "num_speakers": 0,
             "metric_protocol": _metric_protocol(),
+            "sample_coverage": {
+                "prediction_points": 0,
+                "joint_generation_points": 0,
+                "prediction_only_points": 0,
+            },
         }
     by_speaker: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for result in results:
@@ -997,12 +1138,46 @@ def aggregate_results(results: List[Dict[str, Any]]) -> Dict[str, Any]:
         }
     return {
         "comparison": comparison,
+        "primary_results": _primary_results(comparison),
         "full_framework_improvement": _improvements(comparison),
         "prediction_trend": _prediction_trend(results),
+        "prediction_progress_trend": _prediction_progress_trend(
+            results, trend_bins
+        ),
+        "sample_coverage": {
+            "prediction_points": len(results),
+            "joint_generation_points": sum(
+                bool(item.get("generation_complete")) for item in results
+            ),
+            "prediction_only_points": sum(
+                not bool(item.get("generation_complete")) for item in results
+            ),
+        },
         "num_eval_points": len(results),
         "num_speakers": len(by_speaker),
         "metric_protocol": _metric_protocol(),
     }
+
+
+def _primary_results(comparison: Dict[str, Any]) -> Dict[str, Any]:
+    primary: Dict[str, Any] = {}
+    for method in METHODS:
+        method_data = comparison.get(method, {})
+        prediction = method_data.get("prediction", {}).get("speaker_macro", {})
+        generation = method_data.get("generation", {}).get("speaker_macro", {})
+        primary[method] = {
+            "prediction": {
+                metric: prediction[metric]
+                for metric in PREDICTION_PRIMARY_METRICS
+                if metric in prediction
+            },
+            "generation": {
+                metric: generation[metric]
+                for metric in GENERATION_PRIMARY_METRICS
+                if metric in generation
+            },
+        }
+    return primary
 
 
 def _aggregate_prediction(
@@ -1155,6 +1330,52 @@ def _prediction_trend(results: List[Dict[str, Any]]) -> Dict[str, Any]:
     return trend
 
 
+def _prediction_progress_trend(
+    results: List[Dict[str, Any]],
+    bins: int,
+) -> Dict[str, Any]:
+    if bins < 2:
+        raise ValueError("trend_bins must be at least 2")
+    speaker_max = {
+        speaker: max(int(item["message_level_index"]) for item in items)
+        for speaker, items in _group_by(results, "speaker").items()
+    }
+    trend: Dict[str, Any] = {}
+    for method in METHODS:
+        grouped: Dict[int, List[Dict[str, float]]] = defaultdict(list)
+        for item in results:
+            position = int(item["message_level_index"])
+            maximum = speaker_max[item["speaker"]]
+            progress = 0.0 if maximum <= 0 else position / maximum
+            bin_index = min(int(progress * bins), bins - 1)
+            grouped[bin_index].append(item["methods"][method]["scores"])
+        trend[method] = [
+            {
+                "bin_index": index,
+                "progress_start": round(index / bins, 4),
+                "progress_end": round((index + 1) / bins, 4),
+                "num_samples": len(scores),
+                "emotion_error": round(
+                    1.0 - _mean(score["emotion_accuracy"] for score in scores),
+                    4,
+                ),
+                "sentiment_error": round(
+                    1.0 - _mean(score["sentiment_accuracy"] for score in scores),
+                    4,
+                ),
+                "intimacy_absolute_difference": round(
+                    _mean(
+                        score["intimacy_absolute_difference"]
+                        for score in scores
+                    ),
+                    4,
+                ),
+            }
+            for index, scores in sorted(grouped.items())
+        ]
+    return trend
+
+
 def _improvements(comparison: Dict[str, Any]) -> Dict[str, Any]:
     values: Dict[str, Any] = {"prediction": {}, "generation": {}}
     full_prediction = comparison["full_framework"]["prediction"]["speaker_macro"]
@@ -1231,6 +1452,11 @@ def _metric_protocol() -> Dict[str, Any]:
             "pairs are always preserved for deterministic recomputation"
         ),
         "composite_score": "none; every metric is reported separately",
+        "sample_policy": (
+            "prediction metrics use every causally valid point; generation "
+            "metrics use only points with one immediate real partner reply "
+            "and four complete generated responses"
+        ),
     }
 
 
@@ -1279,6 +1505,8 @@ def _run_signature(
         "fresh",
         "max_eval_points_per_speaker",
         "compute_bertscore",
+        "trend_bins",
+        "write_visualizations",
     ):
         signature_config.pop(key, None)
     source_files = [
@@ -1311,7 +1539,8 @@ def _run_signature(
         chat_files.add(dataset_dir / partner_split["train_chat"])
     chat_files = sorted(chat_files)
     return stable_hash({
-        "schema_version": 2,
+        "schema_version": 3,
+        "protocol_name": PROTOCOL_NAME,
         "model": getattr(llm, "model", None),
         "enable_thinking": getattr(llm, "enable_thinking", None),
         "config": signature_config,
@@ -1340,6 +1569,8 @@ def _write_outputs(
     results: List[Dict[str, Any]],
     summary: Dict[str, Any],
     manifest: Dict[str, Any],
+    *,
+    write_visualizations: bool,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     _atomic_text(
@@ -1355,6 +1586,147 @@ def _write_outputs(
     )
     _atomic_json(output_dir / "summary.json", summary)
     _atomic_json(output_dir / "run_manifest.json", manifest)
+    _write_summary_tables(output_dir, summary)
+    if write_visualizations:
+        _write_prediction_error_figure(output_dir, summary)
+
+
+def _write_summary_tables(output_dir: Path, summary: Dict[str, Any]) -> None:
+    tables_dir = output_dir / "tables"
+    tables_dir.mkdir(parents=True, exist_ok=True)
+    comparison = summary.get("comparison", {})
+    _write_csv(
+        tables_dir / "prediction_metrics.csv",
+        [
+            {
+                "method": method,
+                **{
+                    metric: comparison.get(method, {})
+                    .get("prediction", {})
+                    .get("speaker_macro", {})
+                    .get(metric)
+                    for metric in PREDICTION_PRIMARY_METRICS
+                },
+                "num_evaluations": comparison.get(method, {})
+                .get("prediction", {})
+                .get("num_evaluations", 0),
+            }
+            for method in METHODS
+        ],
+    )
+    _write_csv(
+        tables_dir / "generation_metrics.csv",
+        [
+            {
+                "method": method,
+                **{
+                    metric: comparison.get(method, {})
+                    .get("generation", {})
+                    .get("speaker_macro", {})
+                    .get(metric)
+                    for metric in GENERATION_PRIMARY_METRICS
+                },
+                "num_evaluations": comparison.get(method, {})
+                .get("generation", {})
+                .get("num_evaluations", 0),
+            }
+            for method in METHODS
+        ],
+    )
+    trend_rows: List[Dict[str, Any]] = []
+    for method in METHODS:
+        for point in summary.get("prediction_progress_trend", {}).get(
+            method, []
+        ):
+            trend_rows.append({"method": method, **point})
+    _write_csv(tables_dir / "prediction_error_trend.csv", trend_rows)
+
+
+def _write_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
+    fieldnames: List[str] = []
+    for row in rows:
+        for key in row:
+            if key not in fieldnames:
+                fieldnames.append(key)
+    buffer = io.StringIO(newline="")
+    writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+    _atomic_text(path, buffer.getvalue())
+
+
+def _write_prediction_error_figure(
+    output_dir: Path,
+    summary: Dict[str, Any],
+) -> None:
+    try:
+        import matplotlib
+
+        matplotlib.use("Agg")
+        from matplotlib import pyplot as plt
+    except ImportError as exc:
+        raise RuntimeError(
+            "matplotlib is required to write Exp2 prediction-error figures"
+        ) from exc
+
+    figures_dir = output_dir / "figures"
+    figures_dir.mkdir(parents=True, exist_ok=True)
+    metrics = (
+        ("emotion_error", "Emotion error"),
+        ("sentiment_error", "Sentiment error"),
+        ("intimacy_absolute_difference", "Intimacy AD"),
+    )
+    labels = {
+        "llm_only": "LLM Only",
+        "dialogue_history": "Dialogue History",
+        "user_profile": "User Profile",
+        "full_framework": "Full Framework",
+    }
+    figure, axes = plt.subplots(1, 3, figsize=(13.5, 4.2), sharex=True)
+    progress_trend = summary.get("prediction_progress_trend", {})
+    for axis, (metric, title) in zip(axes, metrics):
+        for method in METHODS:
+            points = progress_trend.get(method, [])
+            if not points:
+                continue
+            x_values = [
+                (item["progress_start"] + item["progress_end"]) / 2
+                for item in points
+            ]
+            axis.plot(
+                x_values,
+                [item[metric] for item in points],
+                marker="o",
+                linewidth=1.8,
+                label=labels[method],
+            )
+        axis.set_title(title)
+        axis.set_xlabel("Normalized interaction progress")
+        axis.grid(alpha=0.25)
+    axes[0].set_ylabel("Prediction error (lower is better)")
+    handles, legend_labels = axes[-1].get_legend_handles_labels()
+    if handles:
+        figure.legend(
+            handles,
+            legend_labels,
+            loc="lower center",
+            ncol=4,
+            frameon=False,
+        )
+    figure.tight_layout(rect=(0, 0.12, 1, 1))
+    target = figures_dir / "prediction_error.png"
+    figure.savefig(target, dpi=180, bbox_inches="tight")
+    plt.close(figure)
+
+
+def _group_by(
+    values: Iterable[Dict[str, Any]],
+    key: str,
+) -> Dict[str, List[Dict[str, Any]]]:
+    grouped: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for value in values:
+        grouped[str(value[key])].append(value)
+    return grouped
 
 
 def _atomic_json(path: Path, value: Any) -> None:
@@ -1408,6 +1780,12 @@ def main() -> None:
         help="Per speaker; 0 runs every merged target message.",
     )
     parser.add_argument("--operation-max-attempts", type=int, default=3)
+    parser.add_argument("--trend-bins", type=int, default=5)
+    parser.add_argument(
+        "--no-visualizations",
+        action="store_true",
+        help="Skip CSV-independent PNG visualization output.",
+    )
     parser.add_argument("--chats", nargs="*", default=None)
     parser.add_argument("--speakers", nargs="*", default=None)
     parser.add_argument(
@@ -1437,6 +1815,8 @@ def main() -> None:
         continue_on_error=not args.fail_fast,
         run_generation=not args.prediction_only,
         compute_bertscore=args.bertscore,
+        trend_bins=args.trend_bins,
+        write_visualizations=not args.no_visualizations,
         fresh=args.fresh,
     ))
 

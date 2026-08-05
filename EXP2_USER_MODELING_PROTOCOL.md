@@ -1,4 +1,8 @@
-# 实验二：用户建模评测协议
+# Legacy 辅助协议：REALTALK Persona Simulation
+
+> 本协议对应已经停止扩展的两方法 REALTALK 下一消息模拟，仅为历史结果和复现保留。
+> 它不是师姐新版 Exp2，不进入四组主表。正式 Exp2 以 `EXP2_PROTOCOL.md` 和
+> `src/experiments/exp2_predictive_empathy.py` 为准。
 
 实验一和实验二位于同一个 `memory` 仓库，共用数据结构、画像实现、模型客户端、
 断点和评价基础设施。实验二在独立开发分支/worktree 中修改，目的是防止未验证代码

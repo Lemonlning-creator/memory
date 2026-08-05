@@ -1,4 +1,8 @@
-"""Revised Experiment 2: current and future user-modeling evaluation."""
+"""Legacy REALTALK persona-simulation auxiliary evaluation.
+
+This runner is not the active advisor Exp2 and must not be included in the
+four-condition predictive-empathy ranking.
+"""
 from __future__ import annotations
 
 import argparse
@@ -1415,7 +1419,9 @@ def _now() -> str:
 
 def parse_args() -> Exp2UserModelingConfig:
     parser = argparse.ArgumentParser(
-        description="Run revised REALTALK user-modeling evaluation"
+        description=(
+            "Run the legacy REALTALK persona-simulation auxiliary evaluation"
+        )
     )
     parser.add_argument("--dataset-dir", default="dataset")
     parser.add_argument("--output-dir", default="data/exp2_user_modeling")
@@ -1451,4 +1457,8 @@ def parse_args() -> Exp2UserModelingConfig:
 
 
 if __name__ == "__main__":
+    print(
+        "[LEGACY AUXILIARY] This is not the active advisor Exp2. "
+        "Use python -m src.experiments.exp2_predictive_empathy instead."
+    )
     run_user_modeling_evaluation(parse_args())

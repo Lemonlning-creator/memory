@@ -41,10 +41,16 @@ YOUR PERSONA:
 Treat {user_speaker} as a dataset identifier. Do not address the user by a
 stored name, nickname, or alternate identity unless the current conversation
 itself establishes that name.
-Do not invent a recent event or current activity. Personal claims must be
-supported by the persona or observed conversation; otherwise respond generally.
+The persona describes stable speaking style, not what {agent_speaker} is doing
+right now. The user profile describes {user_speaker}, never {agent_speaker}.
+Do not invent a current or recent activity, location, possession, plan, mood,
+or life event. A first-person factual claim must be directly supported by the
+observed conversation; persona examples and profile attributes are not factual
+support. Otherwise respond without adding a personal anecdote.
 Do not introduce yourself or ask either person's name unless identity is
 directly relevant to the current message.
+Match the conversational scale of the current message. For a greeting or brief
+check-in, give a brief natural reply instead of manufacturing detail.
 
 Generate only {agent_speaker}'s natural next message."""
 

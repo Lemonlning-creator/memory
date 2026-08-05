@@ -7,6 +7,7 @@ from pathlib import Path
 from src.experiments.exp2_predictive_empathy import (
     Exp2Config,
     METHODS,
+    _prediction_progress_trend,
     _result_sort_key,
     run_exp2,
 )
@@ -164,7 +165,43 @@ def _chat(first_speaker, second_speaker, prefix):
     return chat
 
 
+def _chat_with_unanswered_last_turn(first_speaker, second_speaker, prefix):
+    chat = _chat(first_speaker, second_speaker, prefix)
+    chat["session_3"] = [
+        {
+            "speaker": first_speaker,
+            "clean_text": f"{prefix} unanswered update 3",
+            "dia_id": f"{prefix}-u3",
+        }
+    ]
+    return chat
+
+
 class Exp2ProtocolTests(unittest.TestCase):
+    def test_prediction_progress_trend_uses_zero_based_positions(self):
+        scores = {
+            "emotion_accuracy": 1.0,
+            "sentiment_accuracy": 1.0,
+            "intimacy_absolute_difference": 0.0,
+        }
+        results = [
+            {
+                "speaker": "Emi",
+                "message_level_index": index,
+                "methods": {
+                    method: {"scores": dict(scores)} for method in METHODS
+                },
+            }
+            for index in range(5)
+        ]
+
+        trend = _prediction_progress_trend(results, bins=2)
+
+        self.assertEqual(
+            [point["num_samples"] for point in trend["llm_only"]],
+            [2, 3],
+        )
+
     def test_result_sort_key_uses_numeric_message_order(self):
         results = [
             {
@@ -238,14 +275,14 @@ class Exp2ProtocolTests(unittest.TestCase):
                 if (kwargs.get("response_schema") or {}).get("name")
                 == "exp2_future_user_state"
             ]
-            self.assertEqual(len(future_prompts), 6)
+            self.assertEqual(len(future_prompts), 2 * len(METHODS))
             self.assertTrue(all(
                 "test work update 1" not in prompt
-                for prompt in future_prompts[:2]
+                for prompt in future_prompts[:len(METHODS)]
             ))
             self.assertTrue(all(
                 "test work update 2" not in prompt
-                for prompt in future_prompts[2:]
+                for prompt in future_prompts[len(METHODS):]
             ))
             second_point = future_prompts[-len(METHODS):]
             self.assertIn("test partner reply 1", second_point[0])
@@ -276,8 +313,21 @@ class Exp2ProtocolTests(unittest.TestCase):
             ]
             self.assertEqual(len(generation_prompts), 2 * len(METHODS))
             self.assertTrue(all(
-                "Do not invent a recent event or current activity" in prompt
+                "persona describes stable speaking style" in prompt
                 for prompt in generation_prompts
+            ))
+            self.assertTrue(all(
+                "profile attributes" in prompt and "not factual" in prompt
+                for prompt in generation_prompts
+            ))
+            full_generation_prompts = generation_prompts[3::len(METHODS)]
+            self.assertTrue(all(
+                "grounding_contract" in prompt
+                for prompt in full_generation_prompts
+            ))
+            self.assertTrue(all(
+                "acknowledge and ask one question" not in prompt
+                for prompt in full_generation_prompts
             ))
             self.assertTrue(any(
                 "test work update 1" in prompt for prompt in generation_prompts
@@ -293,6 +343,17 @@ class Exp2ProtocolTests(unittest.TestCase):
                 .splitlines()
             ]
             self.assertEqual(len(results), 2)
+            self.assertTrue(all(
+                item["status"] == "complete_joint" for item in results
+            ))
+            self.assertEqual(
+                summary["sample_coverage"],
+                {
+                    "prediction_points": 2,
+                    "joint_generation_points": 2,
+                    "prediction_only_points": 0,
+                },
+            )
             self.assertTrue(all(
                 set(item["methods"]) == set(METHODS) for item in results
             ))
@@ -323,6 +384,22 @@ class Exp2ProtocolTests(unittest.TestCase):
                 ),
                 2 * len(METHODS) * 2,
             )
+            checkpoint = json.loads(
+                (output / "checkpoint.json").read_text(encoding="utf-8")
+            )
+            prediction_keys = [
+                key for key in checkpoint["operations"]
+                if key.startswith("prediction:")
+            ]
+            self.assertEqual(len(prediction_keys), 2 * len(METHODS))
+            self.assertTrue(all(
+                any(f":{method}:" in key for key in prediction_keys)
+                for method in METHODS
+            ))
+            self.assertTrue((output / "tables" / "prediction_metrics.csv").exists())
+            self.assertTrue((output / "tables" / "generation_metrics.csv").exists())
+            self.assertTrue((output / "tables" / "prediction_error_trend.csv").exists())
+            self.assertTrue((output / "figures" / "prediction_error.png").exists())
             alignment_prompts = [
                 user_prompt
                 for system_prompt, user_prompt, _ in llm.calls
@@ -336,6 +413,10 @@ class Exp2ProtocolTests(unittest.TestCase):
                 "EPISTEMIC VALUE DECAY omega(t): 0.8323",
                 alignment_prompts[1],
             )
+            self.assertTrue(all(
+                "not" in prompt and "activated in this turn" in prompt
+                for prompt in alignment_prompts
+            ))
 
             expanded = run_exp2(
                 replace(config, max_eval_points_per_speaker=3),
@@ -344,6 +425,63 @@ class Exp2ProtocolTests(unittest.TestCase):
             )
             self.assertEqual(expanded["num_eval_points"], 3)
             self.assertGreater(len(llm.calls), call_count)
+
+    def test_unanswered_target_is_prediction_only(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            dataset = root / "dataset"
+            dataset.mkdir()
+            (dataset / "Chat_4_Emi_Paola.json").write_text(
+                json.dumps(_chat("Emi", "Paola", "profile")),
+                encoding="utf-8",
+            )
+            (dataset / "Chat_2_Kevin_Elise.json").write_text(
+                json.dumps(_chat("Kevin", "elise", "persona")),
+                encoding="utf-8",
+            )
+            (dataset / "Chat_1_Emi_Elise.json").write_text(
+                json.dumps(
+                    _chat_with_unanswered_last_turn("Emi", "elise", "test")
+                ),
+                encoding="utf-8",
+            )
+            output = root / "output"
+            summary = run_exp2(
+                Exp2Config(
+                    dataset_dir=str(dataset),
+                    output_dir=str(output),
+                    speaker_filter=["Emi"],
+                    max_eval_points_per_speaker=3,
+                    write_visualizations=False,
+                ),
+                llm=FakeExp2LLM(),
+                label_evaluator=FakeLabelEvaluator(),
+            )
+
+            self.assertEqual(
+                summary["sample_coverage"],
+                {
+                    "prediction_points": 3,
+                    "joint_generation_points": 2,
+                    "prediction_only_points": 1,
+                },
+            )
+            self.assertTrue(all(
+                method["generation"]["num_evaluations"] == 2
+                for method in summary["comparison"].values()
+            ))
+            results = [
+                json.loads(line)
+                for line in (output / "results.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+            ]
+            self.assertEqual(results[-1]["status"], "complete_prediction_only")
+            self.assertFalse(results[-1]["generation_eligible"])
+            self.assertTrue(all(
+                "generation" not in results[-1]["methods"][method]
+                for method in METHODS
+            ))
 
 
 if __name__ == "__main__":
