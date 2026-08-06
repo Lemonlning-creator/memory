@@ -297,7 +297,7 @@ def run_exp2(
                 )
                 methods: Dict[str, Any] = {}
                 for method in METHODS:
-                    prediction = _cached_prediction(
+                    prediction, prediction_provenance = _cached_prediction(
                         checkpoint=checkpoint,
                         predictor=predictors[method],
                         llm=llm,
@@ -316,6 +316,7 @@ def run_exp2(
                     )
                     methods[method] = {
                         "prediction": prediction,
+                        "prediction_provenance": prediction_provenance,
                         "scores": compute_prediction_error(prediction, reference),
                     }
                 response_reference = _next_partner_response(
@@ -619,6 +620,7 @@ def run_exp2(
                 "target_message",
                 "ground_truth_response",
                 "methods.*.prediction",
+                "methods.*.prediction_provenance",
                 "methods.*.generation.response",
                 "methods.*.generation.response_ei",
                 "methods.*.generation.scores",
@@ -852,7 +854,7 @@ def _cached_prediction(
     context_turns: List[Dict[str, Any]],
     profile: Optional[Dict[str, Any]],
     framework_state: Optional[Dict[str, Any]],
-) -> Dict[str, Any]:
+) -> tuple[Dict[str, Any], Dict[str, Any]]:
     method_history = [] if method == "llm_only" else context_turns
     method_exchange = recent_exchange if method == "llm_only" else []
     effective_state = framework_state or None
@@ -885,20 +887,43 @@ def _cached_prediction(
         "schema": FUTURE_STATE_RESPONSE_SCHEMA,
         "model": getattr(llm, "model", None),
         "max_tokens": FUTURE_STATE_MAX_TOKENS,
+        "cache_version": 2,
     })
     key = f"prediction:{result_id}:{method}:{input_hash}"
-    return checkpoint.execute(
-        key,
-        lambda: predictor.predict(
+
+    def operation() -> Dict[str, Any]:
+        prediction = predictor.predict(
             recent_exchange=method_exchange,
             conversation_history=method_history,
             user_profile=profile,
             current_state=effective_state,
-        ),
-        normalize_future_state,
+        )
+        return {
+            "prediction": prediction,
+            "provenance": dict(predictor.last_provenance),
+        }
+
+    bundle = checkpoint.execute(
+        key,
+        operation,
+        _normalize_prediction_bundle,
         max_attempts=config.operation_max_attempts,
         usage_supplier=lambda: dict(getattr(llm, "token_usage", {})),
     )
+    return bundle["prediction"], bundle["provenance"]
+
+
+def _normalize_prediction_bundle(value: Any) -> Dict[str, Any]:
+    if not isinstance(value, dict) or set(value) != {"prediction", "provenance"}:
+        raise ValueError("prediction bundle must contain prediction and provenance")
+    prediction = normalize_future_state(value["prediction"])
+    provenance = value["provenance"]
+    if not isinstance(provenance, dict):
+        raise ValueError("prediction provenance must be an object")
+    return {
+        "prediction": prediction,
+        "provenance": dict(provenance),
+    }
 
 
 def _cached_empathy_alignment(
@@ -1149,6 +1174,7 @@ def aggregate_results(
         "prediction_progress_trend": _prediction_progress_trend(
             results, trend_bins
         ),
+        "prediction_repair_diagnostics": _prediction_repair_diagnostics(results),
         "sample_coverage": {
             "prediction_points": len(results),
             "joint_generation_points": sum(
@@ -1162,6 +1188,34 @@ def aggregate_results(
         "num_speakers": len(by_speaker),
         "metric_protocol": _metric_protocol(),
     }
+
+
+def _prediction_repair_diagnostics(
+    results: List[Dict[str, Any]],
+) -> Dict[str, Dict[str, Any]]:
+    diagnostics: Dict[str, Dict[str, Any]] = {}
+    for method in METHODS:
+        records = [
+            result["methods"][method].get("prediction_provenance", {})
+            for result in results
+        ]
+        available = [record for record in records if record]
+        repaired = [
+            record for record in available if record.get("taxonomy_repaired")
+        ]
+        diagnostics[method] = {
+            "total_predictions": len(records),
+            "provenance_missing": len(records) - len(available),
+            "taxonomy_repairs": len(repaired),
+            "taxonomy_repair_rate": (
+                len(repaired) / len(available) if available else None
+            ),
+            "schema_repair_attempts": sum(
+                int(record.get("schema_repair_attempts", 0))
+                for record in available
+            ),
+        }
+    return diagnostics
 
 
 def _primary_results(comparison: Dict[str, Any]) -> Dict[str, Any]:

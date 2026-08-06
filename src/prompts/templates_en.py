@@ -100,12 +100,16 @@ Requirements:
     1. Return only JSON, do not output explanations, analysis process, or additional text.
     2. Do not fabricate information that the user has not expressed.
     3. current_state represents the user's current state, projected_state represents the possible next trend, not confirmed facts.
+    4. Infer current_state facts, emotion, stress, energy, and need from the TARGET USER MESSAGE below. Existing current state is only a prior and must be updated when the new user evidence differs.
+    5. The CONVERSATION PARTNER REPLY belongs entirely to the other speaker. It may inform projected_state and activated_persona, but it is not evidence of the user's events, opinions, experiences, symptoms, or emotions. Never transfer its first-person statements to the user.
+    6. Do not mechanically copy the previous state. A complaint, worry, refusal, disappointment, fatigue, or other negative evidence in the user input must be reflected even when the prior state was positive or low-stress.
+    7. Write a fresh state_summary grounded in a concrete cue from the TARGET USER MESSAGE. Omit any event or condition absent from that message, even if it appears in the partner reply or previous state.
 """
 BACKGROUND_REASONING_USER_PROMPT_TEMPLATE = """
-User input: {user_input}
-Agent reply: {assistant_response}
+TARGET USER MESSAGE (direct evidence for current_state): {user_input}
+CONVERSATION PARTNER REPLY (other speaker; context only): {assistant_response}
 User long-term profile Static Profile: {static_profile}
-Existing current state Current State: {current_state}
+Prior user state (revise from the target user message): {current_state}
 Previous round context Current Context: {current_context}
 Agent persona Persona Config: {persona_config}
 Relevant memories Relevant Memory: {relevant_memory}

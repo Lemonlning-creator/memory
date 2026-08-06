@@ -12,6 +12,7 @@ from src.experiments.exp2_predictive_empathy import (
     run_exp2,
 )
 from src.experiments.exp2_schema import normalize_future_state
+from src.prediction import FutureStatePredictor
 
 
 def _future_state():
@@ -150,6 +151,24 @@ class FakeExp2LLM:
         })
 
 
+class RepairingPredictionLLM:
+    model = "fake-repair-model"
+
+    def __init__(self):
+        self.prompts = []
+
+    def chat(self, system_prompt, user_prompt, **kwargs):
+        self.prompts.append(user_prompt)
+        if len(self.prompts) == 1:
+            invalid = _future_state()
+            invalid["future_emotion"] = "neutral"
+            return json.dumps(invalid)
+        schema_name = (kwargs.get("response_schema") or {}).get("name")
+        if schema_name == "exp2_future_state_taxonomy_repair":
+            return json.dumps({"emotion_index": 4, "sentiment_index": 0})
+        return json.dumps(_future_state())
+
+
 def _chat(first_speaker, second_speaker, prefix):
     chat = {"name": {"speaker_1": first_speaker, "speaker_2": second_speaker}}
     for index in range(1, 4):
@@ -181,6 +200,34 @@ def _chat_with_unanswered_last_turn(first_speaker, second_speaker, prefix):
 
 
 class Exp2ProtocolTests(unittest.TestCase):
+    def test_prediction_repairs_provider_schema_violation(self):
+        llm = RepairingPredictionLLM()
+        predictor = FutureStatePredictor(llm, mode="llm_only")
+        result = predictor.predict()
+
+        self.assertEqual(result["emotion"], "joy")
+        self.assertEqual(result["sentiment"], "positive")
+        self.assertEqual(len(llm.prompts), 2)
+        self.assertNotIn("Allowed emotion labels", llm.prompts[0])
+        self.assertIn("Predicted emotion label: neutral", llm.prompts[1])
+        self.assertIn("0=anger, 1=anticipation", llm.prompts[1])
+        self.assertEqual(
+            predictor.last_provenance,
+            {
+                "taxonomy_repaired": True,
+                "schema_repair_attempts": 0,
+                "repair_reason": "out_of_taxonomy_label",
+                "raw_invalid_labels": {
+                    "emotion": "neutral",
+                    "sentiment": "positive",
+                },
+                "mapped_labels": {
+                    "emotion": "joy",
+                    "sentiment": "positive",
+                },
+            },
+        )
+
     def test_prediction_progress_trend_uses_zero_based_positions(self):
         scores = {
             "emotion_accuracy": 1.0,
@@ -315,6 +362,28 @@ class Exp2ProtocolTests(unittest.TestCase):
             self.assertIn("test work update 1", state_calls[0])
             self.assertIn("test partner reply 1", state_calls[0])
             self.assertNotIn("test work update 2", state_calls[0])
+            state_system_prompts = [
+                system_prompt
+                for system_prompt, _, kwargs in llm.calls
+                if (kwargs.get("response_schema") or {}).get("name")
+                == "exp2_framework_state"
+            ]
+            self.assertIn(
+                "CONVERSATION PARTNER REPLY belongs entirely",
+                state_system_prompts[0],
+            )
+            self.assertIn(
+                "Do not mechanically copy the previous state",
+                state_system_prompts[0],
+            )
+            self.assertIn(
+                "TARGET USER MESSAGE (direct evidence for current_state)",
+                state_calls[0],
+            )
+            self.assertIn(
+                "CONVERSATION PARTNER REPLY (other speaker; context only)",
+                state_calls[0],
+            )
 
             generation_prompts = [
                 user_prompt
@@ -367,6 +436,17 @@ class Exp2ProtocolTests(unittest.TestCase):
             )
             self.assertTrue(all(
                 set(item["methods"]) == set(METHODS) for item in results
+            ))
+            self.assertTrue(all(
+                item["methods"][method]["prediction_provenance"]
+                ["taxonomy_repaired"] is False
+                for item in results
+                for method in METHODS
+            ))
+            self.assertTrue(all(
+                summary["prediction_repair_diagnostics"][method]
+                ["taxonomy_repairs"] == 0
+                for method in METHODS
             ))
             self.assertTrue(all(
                 set(item["methods"][method]["generation"])
