@@ -23,8 +23,26 @@ def context_axis(profile: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def flatten_static_profile(static_profile: Dict[str, Any]) -> Dict[str, Any]:
-    """Return the bare values used by runtime prompts, accepting legacy leaves."""
+    """Return the complete fixed five-layer profile used by runtime prompts.
+
+    Empty summaries and fields are deliberately preserved so the response model
+    can distinguish known profile content from profile gaps.
+    """
     return normalize_bare_profile(static_profile)
+
+
+def serialize_static_profile_for_prompt(static_profile: Dict[str, Any]) -> str:
+    """Serialize every fixed profile field as grouped text, including empty values."""
+    normalized = flatten_static_profile(static_profile)
+    lines = []
+    for layer in PROFILE_LAYERS:
+        lines.append(f"{layer}:")
+        section = normalized[layer]
+        for field in ("summary", *PROFILE_FIELDS[layer]):
+            value = section[field]
+            text = "；".join(value) if isinstance(value, list) else value
+            lines.append(f"  - {field}: {text}")
+    return "\n".join(lines)
 
 
 def convert_to_flat_profile(static_profile: Dict[str, Any]) -> Dict[str, Any]:

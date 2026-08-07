@@ -10,6 +10,7 @@ from src.profile_utils import (
     count_profile_attributes,
     get_attribute_confidences,
     migrate_profile,
+    serialize_static_profile_for_prompt,
 )
 
 
@@ -34,6 +35,27 @@ class FakeMemory:
 
 
 class ProfileBoundaryTests(unittest.TestCase):
+    def test_prompt_serialization_preserves_grouping_and_all_fields(self):
+        profile = create_empty_static_profile()
+        profile["core"]["summary"] = "重视可靠交付。"
+        profile["core"]["values"] = ["重视证据。", "尊重事实。"]
+
+        serialized = serialize_static_profile_for_prompt(profile)
+        expected_lines = []
+        for layer in PROFILE_LAYERS:
+            expected_lines.append(f"{layer}:")
+            for field in ("summary", *PROFILE_FIELDS[layer]):
+                value = profile[layer][field]
+                text = "；".join(value) if isinstance(value, list) else value
+                expected_lines.append(f"  - {field}: {text}")
+
+        self.assertEqual(serialized, "\n".join(expected_lines))
+        self.assertIn("core:\n  - summary: 重视可靠交付。", serialized)
+        self.assertIn("  - values: 重视证据。；尊重事实。", serialized)
+        self.assertIn("  - motivations: ", serialized)
+        self.assertIn("regulation:\n  - summary: \n  - stress_response: ", serialized)
+        self.assertEqual(len(serialized.splitlines()), 25)
+
     def test_bare_profile_metrics_and_flattening_ignore_summary(self):
         profile = create_empty_static_profile()
         profile["core"]["summary"] = "用户重视证据与长期发展。"
