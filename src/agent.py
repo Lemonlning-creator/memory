@@ -12,7 +12,13 @@ from .logger import logger
 from .memory_os_local import MemoryOSLocal
 from .profile_batch_updater import ProfileBatchUpdater
 from .profile_schema import create_empty_static_profile, normalize_bare_profile
-from .profile_utils import state_axis, context_axis, migrate_profile, runtime_profile_from_bare
+from .profile_utils import (
+    context_axis,
+    migrate_profile,
+    runtime_profile_from_bare,
+    serialize_static_profile_for_prompt,
+    state_axis,
+)
 from .utils import load_json, save_json, parse_json
 from .prompts.prompt_loader import (
     DIRECT_RESPONSE_SYSTEM_PROMPT,
@@ -130,18 +136,11 @@ class StateDrivenCompanionAgent:
         user_input: str,
         relevant_memory: Dict[str, Any],
     ) -> Dict[str, str]:
-        from .profile_utils import flatten_static_profile
         state = state_axis(self.user_profile)
         context = context_axis(self.user_profile)
-        # Use flattened profile (key: value format, no nested JSON)
-        flat_profile = flatten_static_profile(state.get("static_profile", {}))
-        profile_lines = []
-        for layer, attrs in flat_profile.items():
-            if isinstance(attrs, dict):
-                for k, v in attrs.items():
-                    if v:
-                        profile_lines.append(f"- {k}: {v}")
-        profile_text = "\n".join(profile_lines) if profile_lines else json.dumps(flat_profile, ensure_ascii=False)
+        profile_text = serialize_static_profile_for_prompt(
+            state.get("static_profile", {})
+        )
         return {
             "user_input": user_input,
             "static_profile": profile_text,
