@@ -5,3 +5,5 @@ memory.json
 user_profile_*.json
 .env
 logs/app.log
+
+tests/

@@ -12,7 +12,7 @@ Evaluation prompts are in eval_templates.py / eval_templates_en.py.
 # Options: "zh" for Chinese, "en" for English
 # Note: Experiments import directly from templates_en.py / eval_templates_en.py
 # This loader is used by the frontend agent (agent.py) and defaults to Chinese
-PROMPT_LANGUAGE = "zh"
+PROMPT_LANGUAGE = "en"
 
 
 def load_prompts():

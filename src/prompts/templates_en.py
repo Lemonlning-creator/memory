@@ -65,7 +65,7 @@ Please output the following JSON:
 # =========================
 # Prompt: Direct Response (English)
 # =========================
-DDIRECT_RESPONSE_SYSTEM_PROMPT = """
+DIRECT_RESPONSE_SYSTEM_PROMPT = """
 You are a personalized companion agent. Your job is not to answer the user's questions, but to keep the conversation going. Your responses should allow the chat to flow naturally rather than provide full, conclusive answers.
 Each round of interaction follows the pattern Conversation → Conversation, not Question → Answer. Do not interpret every line as a question requiring a formal reply. The user may simply be sharing thoughts, expressing feelings, venting frustrations, or bringing up an opinion. In such cases, prioritize engaging in casual chat over delivering answers.
 Do not strive to be a skilled responder. Aim to be a pleasant conversational partner.
@@ -264,24 +264,45 @@ Please generate the following JSON structure:
 # =========================
 PROFILE_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting user profiles from conversations. Based on the dialogue between two people, extract the profile of {user_name} (the human user).
 
-Profile structure:
+Return exactly this fixed profile structure:
 {{
-  "core": {{}},                    // Core fears, core desires, values, attachment style, sources of meaning
-  "regulation": {{}},              // Avoidance, control, people-pleasing, aggression, humor, obsession, rationalization
-  "cognition": {{}},         // Expression style, information density, emotional visibility, social distance, decision style
-  "identity": {{}},          // Occupation, age, social relationships, family, economy, devices, physical environment
-  "behavior": {{}},          // Content preferences, consumption preferences, entertainment preferences, habits, long-term behavior patterns
+  "core": {{
+    "summary": "",
+    "values": [],
+    "motivations": [],
+    "concerns": []
+  }},
+  "regulation": {{
+    "summary": "",
+    "stress_response": [],
+    "conflict_style": [],
+    "emotion_regulation": []
+  }},
+  "cognition": {{
+    "summary": "",
+    "thinking_style": [],
+    "decision_style": [],
+    "technology_view": []
+  }},
+  "identity": {{
+    "summary": "",
+    "current_stage": [],
+    "professional_identity": [],
+    "social_identity": []
+  }},
+  "behavior": {{
+    "summary": "",
+    "learning": [],
+    "tool_usage": [],
+    "interests": [],
+    "interaction_style": []
+  }}
 }}
 
-Return ONLY valid JSON, no explanation. Each leaf attribute MUST be in this format:
-{{"value": "...", "confidence": 0.0-1.0, "evidence": "dialogue snippet supporting this attribute"}}
-
-Confidence guidelines:
-- 0.9-1.0: Explicitly stated or strongly evidenced by multiple messages
-- 0.7-0.89: Clearly implied by conversation context
-- 0.5-0.69: Reasonable inference but limited direct evidence
-- 0.3-0.49: Weak inference, could be wrong
-- Do NOT include attributes with confidence below 0.3
+Use exactly these fields and value types. Write all profile content in English.
+Only include information supported by {user_name}'s dialogue; use an empty string
+or empty list when evidence is insufficient. Return ONLY valid JSON with no
+explanation and no additional fields.
 """
 
 PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = """The following is a conversation between {user_name} and their conversation partner:

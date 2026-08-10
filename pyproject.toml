@@ -13,6 +13,7 @@ dependencies = [
     "chromadb==1.5.5",
     "pymilvus[milvus-lite]==3.0.0",
     "milvus-lite==3.0; sys_platform == 'win32'",
+    "pyarrow==23.0.1; sys_platform == 'win32'",
     "setuptools>=82.0.1",
     "openpyxl>=3.1.5",
     "matplotlib>=3.10.9",

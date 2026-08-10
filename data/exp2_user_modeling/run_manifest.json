@@ -1,0 +1,43 @@
+{
+  "experiment": "Experiment 2. User Modeling Evaluation",
+  "research_question": "Does explicit user modeling enable better personalized interactions?",
+  "phase": "prepare",
+  "created_at": "2026-08-10T09:58:34.379901+00:00",
+  "dataset_dir": "E:\\01_Research\\03_UserProfile\\memory\\dataset",
+  "train_ratio": 0.9,
+  "model": "qwen3.6-flash",
+  "cases": [
+    {
+      "case_id": "chat_1_emi_elise__emi__to__elise",
+      "dataset_path": "E:\\01_Research\\03_UserProfile\\memory\\dataset\\Chat_1_Emi_Elise.json",
+      "user_speaker": "Emi",
+      "agent_speaker": "elise",
+      "train_sessions": [
+        "session_1",
+        "session_2",
+        "session_3",
+        "session_4",
+        "session_5",
+        "session_6",
+        "session_7",
+        "session_8",
+        "session_9",
+        "session_10",
+        "session_11",
+        "session_12",
+        "session_13",
+        "session_14",
+        "session_15",
+        "session_16",
+        "session_17"
+      ],
+      "test_sessions": [
+        "session_18"
+      ],
+      "dataset_sha256": "0185439c2496303bf7d01e273c6913f485dd146d7d6f4e5fcc87c16e69154a3e"
+    }
+  ],
+  "generated_this_run": {},
+  "figures": {},
+  "evaluation_status": "not_run; raw outputs only"
+}

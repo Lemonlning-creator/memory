@@ -13,7 +13,7 @@ from pymilvus import MilvusClient
 
 load_dotenv()
 
-from .prompts.templates import (
+from .prompts.prompt_loader import (
     MID_TERM_MEMORY_SYSTEM_PROMPT,
     MID_TERM_MEMORY_USER_PROMPT_TEMPLATE,
     LONG_TERM_MEMORY_SYSTEM_PROMPT,
@@ -93,7 +93,11 @@ class MemoryOSLocal:
     # ---------- 嵌入 ----------
     def _embed_text(self, text: str) -> List[float]:
         response = self.embedding_client.embeddings.create(
-            model=self.embedding_model_name, input=text
+            model=self.embedding_model_name,
+            input=text,
+            # openai==1.3.0 predates the typed ``dimensions`` argument.  The
+            # OpenAI-compatible endpoint still accepts it in the JSON body.
+            extra_body={"dimensions": _EMBEDDING_DIM},
         )
         return list(response.data[0].embedding)
 
@@ -241,7 +245,7 @@ class MemoryOSLocal:
             return None
 
         source_mid_terms = mid_terms[-self.long_term_source_summaries:]
-        print("采用当前中期记忆去生成长期记忆" + str(source_mid_terms))
+        print("[Long-Term Memory] source_mid_terms=" + str(source_mid_terms))
         result = parse_json(
             llm.chat(
                 LONG_TERM_MEMORY_SYSTEM_PROMPT,
@@ -252,7 +256,7 @@ class MemoryOSLocal:
                 ),
             )
         )
-        print("生成的长期记忆结果" + str(result))
+        print("[Long-Term Memory] generated=" + str(result))
         self.last_mid_count = len(mid_terms)
         if not result.get("content"):
             return None

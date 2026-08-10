@@ -249,7 +249,7 @@
             "dia_id": "D1:31"
         },
         {
-            "clean_text": "Haha, totally forgot to introduce myself, I'm Kate. What's your name?",
+            "clean_text": "Haha, totally forgot to introduce myself, I'm Emi. What's your name?",
             "speaker": "Emi",
             "date_time": "30.12.2023, 00:48:02",
             "img_file": [],
@@ -351,7 +351,7 @@
             "dia_id": "D1:45"
         },
         {
-            "clean_text": "Wow skiing looks like it so much fun, and you looks absolutely amazing doing it. That’s so cool Kate! How long have you been skiing?",
+            "clean_text": "Wow skiing looks like it so much fun, and you looks absolutely amazing doing it. That’s so cool Emi! How long have you been skiing?",
             "speaker": "elise",
             "date_time": "30.12.2023, 00:54:30",
             "img_file": [],
@@ -447,7 +447,7 @@
             "dia_id": "D1:57"
         },
         {
-            "clean_text": "That is so true Kate! Let’s catch up tomorrow on how your cooking class goes! Enjoy it and hopefully you get to learn to make some nice pasta!",
+            "clean_text": "That is so true Emi! Let’s catch up tomorrow on how your cooking class goes! Enjoy it and hopefully you get to learn to make some nice pasta!",
             "speaker": "elise",
             "date_time": "30.12.2023, 01:00:11",
             "img_file": [],
@@ -466,13 +466,13 @@
     "events_session_1": {
         "agent_a": [
             {
-                "sub-event": "Kate takes an Italian cooking class and makes pasta.",
+                "sub-event": "Emi takes an Italian cooking class and makes pasta.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
             },
             {
-                "sub-event": "Kate plans on going skiing in Colorado during winter break.",
+                "sub-event": "Emi plans on going skiing in Colorado during winter break.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -503,7 +503,7 @@
             "dia_id": "D2:1"
         },
         {
-            "clean_text": "Hey Kate!",
+            "clean_text": "Hey Emi!",
             "speaker": "elise",
             "date_time": "30.12.2023, 22:21:55",
             "img_file": [],
@@ -575,7 +575,7 @@
             "dia_id": "D2:11"
         },
         {
-            "clean_text": "Those look amazing Kate!",
+            "clean_text": "Those look amazing Emi!",
             "speaker": "elise",
             "date_time": "30.12.2023, 22:29:00",
             "img_file": [],
@@ -639,7 +639,7 @@
             "dia_id": "D2:19"
         },
         {
-            "clean_text": "I love reading non fiction pieces more of in the technology field and how they are impacting society. What about you Kate?",
+            "clean_text": "I love reading non fiction pieces more of in the technology field and how they are impacting society. What about you Emi?",
             "speaker": "elise",
             "date_time": "30.12.2023, 22:43:13",
             "img_file": [],
@@ -687,7 +687,7 @@
             "dia_id": "D2:25"
         },
         {
-            "clean_text": "I’ll talk to you tomorrow Kate I’m going to go out for a walk now and get some dinner. Have a lovely evening!",
+            "clean_text": "I’ll talk to you tomorrow Emi I’m going to go out for a walk now and get some dinner. Have a lovely evening!",
             "speaker": "elise",
             "date_time": "30.12.2023, 22:57:23",
             "img_file": [],
@@ -703,7 +703,7 @@
             "dia_id": "D2:27"
         },
         {
-            "clean_text": "Thank you Kate, I really appreciate it!",
+            "clean_text": "Thank you Emi, I really appreciate it!",
             "speaker": "elise",
             "date_time": "30.12.2023, 22:59:00",
             "img_file": [],
@@ -714,7 +714,7 @@
     "events_session_2": {
         "agent_a": [
             {
-                "sub-event": "Kate made pasta with ham and peas.",
+                "sub-event": "Emi made pasta with ham and peas.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -737,7 +737,7 @@
     },
     "session_3": [
         {
-            "clean_text": "Hello Kate. Happy New Years! How did you choose to celebrate this year?",
+            "clean_text": "Hello Emi. Happy New Years! How did you choose to celebrate this year?",
             "speaker": "elise",
             "date_time": "01.01.2024, 18:13:08",
             "img_file": [],
@@ -785,7 +785,7 @@
             "dia_id": "D3:6"
         },
         {
-            "clean_text": "Here are some of the desserts from last night. What’s your favorite dessert Kate? What did you have for New Years Eve?",
+            "clean_text": "Here are some of the desserts from last night. What’s your favorite dessert Emi? What did you have for New Years Eve?",
             "speaker": "elise",
             "date_time": "01.01.2024, 18:24:08",
             "img_file": [
@@ -817,7 +817,7 @@
             "blip_caption": "several desserts in glasses with a spoon and a knife"
         },
         {
-            "clean_text": "Wow Kate, that looks amazing. Was it hard to make? How did you make it? It looks incredible really!",
+            "clean_text": "Wow Emi, that looks amazing. Was it hard to make? How did you make it? It looks incredible really!",
             "speaker": "elise",
             "date_time": "01.01.2024, 18:43:49",
             "img_file": [
@@ -937,7 +937,7 @@
             "blip_caption": "arafficial image of a busy city street at night with neon signs"
         },
         {
-            "clean_text": "Wow that looks amazing Kate. I was wondering what it looked like last night thank you for sharing that with me!",
+            "clean_text": "Wow that looks amazing Emi. I was wondering what it looked like last night thank you for sharing that with me!",
             "speaker": "elise",
             "date_time": "01.01.2024, 18:57:36",
             "img_file": [],
@@ -956,7 +956,7 @@
     "events_session_3": {
         "agent_a": [
             {
-                "sub-event": "Kate celebrated the New Year with family and close friends.",
+                "sub-event": "Emi celebrated the New Year with family and close friends.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -995,7 +995,7 @@
             "dia_id": "D3:31"
         },
         {
-            "clean_text": "I’m doing well Kate. I’ve been traveling today from Miami to Turks and Caicos for a couple of days! It’s nice to finally get to go to the beach again!",
+            "clean_text": "I’m doing well Emi. I’ve been traveling today from Miami to Turks and Caicos for a couple of days! It’s nice to finally get to go to the beach again!",
             "speaker": "elise",
             "date_time": "03.01.2024, 22:14:16",
             "img_file": [],
@@ -1307,7 +1307,7 @@
             "dia_id": "D3:72"
         },
         {
-            "clean_text": "Thank you Kate. I will take your recommendations they sound amazing. Have a lovely day and let’s talk again tomorrow! Have a great day!",
+            "clean_text": "Thank you Emi. I will take your recommendations they sound amazing. Have a lovely day and let’s talk again tomorrow! Have a great day!",
             "speaker": "elise",
             "date_time": "03.01.2024, 23:10:24",
             "img_file": [],
@@ -1318,7 +1318,7 @@
     "events_session_4": {
         "agent_a": [
             {
-                "sub-event": "Kate plans to study for her exams at home.",
+                "sub-event": "Emi plans to study for her exams at home.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -1343,7 +1343,7 @@
             "dia_id": "D4:1"
         },
         {
-            "clean_text": "Hello Kate. I think I’m feeling a bit under the weather today. It’s been a slow day I have been at home the whole day drinking tea and trying to feel better. What about you?",
+            "clean_text": "Hello Emi. I think I’m feeling a bit under the weather today. It’s been a slow day I have been at home the whole day drinking tea and trying to feel better. What about you?",
             "speaker": "elise",
             "date_time": "04.01.2024, 22:26:14",
             "img_file": [],
@@ -1367,7 +1367,7 @@
             "dia_id": "D4:4"
         },
         {
-            "clean_text": "I never asked Kate, where do you work?",
+            "clean_text": "I never asked Emi, where do you work?",
             "speaker": "elise",
             "date_time": "04.01.2024, 22:30:34",
             "img_file": [],
@@ -1407,7 +1407,7 @@
             "dia_id": "D4:9"
         },
         {
-            "clean_text": "Wow Kate. That sounds amazing. Tell me more about your job! That sounds so interesting",
+            "clean_text": "Wow Emi. That sounds amazing. Tell me more about your job! That sounds so interesting",
             "speaker": "elise",
             "date_time": "04.01.2024, 22:33:24",
             "img_file": [],
@@ -1595,7 +1595,7 @@
             "blip_caption": "there is a cup of tea on a saucer on a bed"
         },
         {
-            "clean_text": "See you tomorrow Kate. Have a lovely day!",
+            "clean_text": "See you tomorrow Emi. Have a lovely day!",
             "speaker": "elise",
             "date_time": "04.01.2024, 22:56:43",
             "img_file": [],
@@ -1622,7 +1622,7 @@
     "events_session_5": {
         "agent_a": [
             {
-                "sub-event": "Kate had a busy day at work.",
+                "sub-event": "Emi had a busy day at work.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -1653,7 +1653,7 @@
             "dia_id": "D5:1"
         },
         {
-            "clean_text": "Hi Kate! Thanks for checking in with me. I really appreciate it. I am feeling much more better today. I had some what I call magic medicine. You put it into water or tea and it tastes like lemons but it makes you feel so much better. The best remedy for fighting the flu. What about you? How are you feeling today Kate?",
+            "clean_text": "Hi Emi! Thanks for checking in with me. I really appreciate it. I am feeling much more better today. I had some what I call magic medicine. You put it into water or tea and it tastes like lemons but it makes you feel so much better. The best remedy for fighting the flu. What about you? How are you feeling today Emi?",
             "speaker": "elise",
             "date_time": "05.01.2024, 19:03:34",
             "img_file": [],
@@ -1821,7 +1821,7 @@
             "dia_id": "D5:23"
         },
         {
-            "clean_text": "That looks amazing Kate. I’m gonna be sure to try this the next time I am in New York.",
+            "clean_text": "That looks amazing Emi. I’m gonna be sure to try this the next time I am in New York.",
             "speaker": "elise",
             "date_time": "05.01.2024, 19:22:06",
             "img_file": [],
@@ -2041,7 +2041,7 @@
             "dia_id": "D5:52"
         },
         {
-            "clean_text": "Let’s talk tomorrow Kate it was great catching up I’m gonna start my basketball game now. See you tomorrow and have a lovely day!",
+            "clean_text": "Let’s talk tomorrow Emi it was great catching up I’m gonna start my basketball game now. See you tomorrow and have a lovely day!",
             "speaker": "elise",
             "date_time": "05.01.2024, 19:40:52",
             "img_file": [],
@@ -2060,7 +2060,7 @@
     "events_session_6": {
         "agent_a": [
             {
-                "sub-event": "Kate is still very busy at work.",
+                "sub-event": "Emi is still very busy at work.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -2091,7 +2091,7 @@
             "dia_id": "D6:1"
         },
         {
-            "clean_text": "Hello Kate. How are you? The basketball game was great a bit tired. My team won so it was successful. We had a great time!",
+            "clean_text": "Hello Emi. How are you? The basketball game was great a bit tired. My team won so it was successful. We had a great time!",
             "speaker": "elise",
             "date_time": "06.01.2024, 19:33:13",
             "img_file": [],
@@ -2179,7 +2179,7 @@
             "dia_id": "D6:13"
         },
         {
-            "clean_text": "That’s interesting Kate. We are rival teams I am a huge Juventus fan when it comes to soccer. Whenever I am in Torino I like to watch a Juventus match! My family is also a huge fan so the adrenaline during the matches is incredible. Everyone is screaming, waving, and cheering so the vibes are immaculate!",
+            "clean_text": "That’s interesting Emi. We are rival teams I am a huge Juventus fan when it comes to soccer. Whenever I am in Torino I like to watch a Juventus match! My family is also a huge fan so the adrenaline during the matches is incredible. Everyone is screaming, waving, and cheering so the vibes are immaculate!",
             "speaker": "elise",
             "date_time": "06.01.2024, 21:25:45",
             "img_file": [],
@@ -2306,7 +2306,7 @@
     "events_session_7": {
         "agent_a": [
             {
-                "sub-event": "Kate is planning a vacation in Canada.",
+                "sub-event": "Emi is planning a vacation in Canada.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -2329,7 +2329,7 @@
     },
     "session_8": [
         {
-            "clean_text": "Wow! Such a beautiful beach photo Kate. That looks like an amazing place!",
+            "clean_text": "Wow! Such a beautiful beach photo Emi. That looks like an amazing place!",
             "speaker": "elise",
             "date_time": "07.01.2024, 18:59:03",
             "img_file": [],
@@ -2337,7 +2337,7 @@
             "dia_id": "D7:1"
         },
         {
-            "clean_text": "How are you doing today Kate?",
+            "clean_text": "How are you doing today Emi?",
             "speaker": "elise",
             "date_time": "07.01.2024, 18:59:22",
             "img_file": [],
@@ -2385,7 +2385,7 @@
             "dia_id": "D7:7"
         },
         {
-            "clean_text": "What are your plans for today Kate?",
+            "clean_text": "What are your plans for today Emi?",
             "speaker": "elise",
             "date_time": "07.01.2024, 19:11:58",
             "img_file": [],
@@ -2425,7 +2425,7 @@
             "dia_id": "D7:12"
         },
         {
-            "clean_text": "How about you Kate? Are you interested in art and do you have a favorite art style and artist?",
+            "clean_text": "How about you Emi? Are you interested in art and do you have a favorite art style and artist?",
             "speaker": "elise",
             "date_time": "07.01.2024, 19:20:34",
             "img_file": [],
@@ -2457,7 +2457,7 @@
             "dia_id": "D7:16"
         },
         {
-            "clean_text": "Have you ever painted before Kate?",
+            "clean_text": "Have you ever painted before Emi?",
             "speaker": "elise",
             "date_time": "07.01.2024, 19:31:37",
             "img_file": [],
@@ -2481,7 +2481,7 @@
             "dia_id": "D7:19"
         },
         {
-            "clean_text": "Great talking to you today Kate. See you tomorrow!",
+            "clean_text": "Great talking to you today Emi. See you tomorrow!",
             "speaker": "elise",
             "date_time": "07.01.2024, 19:35:42",
             "img_file": [],
@@ -2500,7 +2500,7 @@
     "events_session_8": {
         "agent_a": [
             {
-                "sub-event": "Kate plans to take a walk in the park.",
+                "sub-event": "Emi plans to take a walk in the park.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -2523,7 +2523,7 @@
     },
     "session_9": [
         {
-            "clean_text": "Hello Kate. How are you today?",
+            "clean_text": "Hello Emi. How are you today?",
             "speaker": "elise",
             "date_time": "08.01.2024, 22:26:48",
             "img_file": [],
@@ -2539,7 +2539,7 @@
             "dia_id": "D7:23"
         },
         {
-            "clean_text": "So far I've read a chapter of a book, messed around on my phone, went through a car wash, and now I'm at Walmart buying water and breakfast bars. What about you Kate?",
+            "clean_text": "So far I've read a chapter of a book, messed around on my phone, went through a car wash, and now I'm at Walmart buying water and breakfast bars. What about you Emi?",
             "speaker": "elise",
             "date_time": "08.01.2024, 22:37:52",
             "img_file": [],
@@ -2559,7 +2559,7 @@
             "blip_caption": "arafed display of various drinks and beverages in a store"
         },
         {
-            "clean_text": "Do you enjoy smoothies Kate?",
+            "clean_text": "Do you enjoy smoothies Emi?",
             "speaker": "elise",
             "date_time": "08.01.2024, 22:44:08",
             "img_file": [],
@@ -2631,7 +2631,7 @@
             "dia_id": "D7:35"
         },
         {
-            "clean_text": "Kate! You have to tell me more about this date. Was he cute? Where did you go? What was he like?",
+            "clean_text": "Emi! You have to tell me more about this date. Was he cute? Where did you go? What was he like?",
             "speaker": "elise",
             "date_time": "08.01.2024, 22:54:13",
             "img_file": [],
@@ -2714,7 +2714,7 @@
     "events_session_9": {
         "agent_a": [
             {
-                "sub-event": "Kate went on a date.",
+                "sub-event": "Emi went on a date.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -2731,7 +2731,7 @@
     },
     "session_10": [
         {
-            "clean_text": "Hello Kate! Any date updates?",
+            "clean_text": "Hello Emi! Any date updates?",
             "speaker": "elise",
             "date_time": "10.01.2024, 02:20:59",
             "img_file": [],
@@ -2874,7 +2874,7 @@
     "events_session_10": {
         "agent_a": [
             {
-                "sub-event": "Kate decided to start a new TV show.",
+                "sub-event": "Emi decided to start a new TV show.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -2899,7 +2899,7 @@
             "dia_id": "D8:1"
         },
         {
-            "clean_text": "Hey Kate!",
+            "clean_text": "Hey Emi!",
             "speaker": "elise",
             "date_time": "10.01.2024, 22:51:32",
             "img_file": [],
@@ -2915,7 +2915,7 @@
             "dia_id": "D8:3"
         },
         {
-            "clean_text": "Any favorite looks for you Kate?",
+            "clean_text": "Any favorite looks for you Emi?",
             "speaker": "elise",
             "date_time": "10.01.2024, 22:54:49",
             "img_file": [],
@@ -2971,7 +2971,7 @@
             "dia_id": "D8:10"
         },
         {
-            "clean_text": "Any favorite moments for you Kate?",
+            "clean_text": "Any favorite moments for you Emi?",
             "speaker": "elise",
             "date_time": "10.01.2024, 23:08:33",
             "img_file": [],
@@ -2995,7 +2995,7 @@
             "dia_id": "D8:13"
         },
         {
-            "clean_text": "What about Kate?",
+            "clean_text": "What about Emi?",
             "speaker": "elise",
             "date_time": "10.01.2024, 23:15:09",
             "img_file": [],
@@ -3043,7 +3043,7 @@
             "dia_id": "D8:19"
         },
         {
-            "clean_text": "What about you Kate?",
+            "clean_text": "What about you Emi?",
             "speaker": "elise",
             "date_time": "10.01.2024, 23:51:16",
             "img_file": [],
@@ -3089,7 +3089,7 @@
             "dia_id": "D9:1"
         },
         {
-            "clean_text": "Hello Kate. I’m doing well today. How are you doing?",
+            "clean_text": "Hello Emi. I’m doing well today. How are you doing?",
             "speaker": "elise",
             "date_time": "11.01.2024, 22:55:00",
             "img_file": [],
@@ -3164,7 +3164,7 @@
     "events_session_12": {
         "agent_a": [
             {
-                "sub-event": "Kate plans to go to a cooking class.",
+                "sub-event": "Emi plans to go to a cooking class.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -3203,7 +3203,7 @@
             "dia_id": "D10:2"
         },
         {
-            "clean_text": "Hey Kate I’m doing well what about you?",
+            "clean_text": "Hey Emi I’m doing well what about you?",
             "speaker": "elise",
             "date_time": "13.01.2024, 17:49:40",
             "img_file": [],
@@ -3227,7 +3227,7 @@
             "dia_id": "D10:5"
         },
         {
-            "clean_text": "What about you Kate up to anything today?",
+            "clean_text": "What about you Emi up to anything today?",
             "speaker": "elise",
             "date_time": "13.01.2024, 18:02:40",
             "img_file": [],
@@ -3259,7 +3259,7 @@
             "dia_id": "D10:9"
         },
         {
-            "clean_text": "That sounds amazing let me see what you got done Kate!",
+            "clean_text": "That sounds amazing let me see what you got done Emi!",
             "speaker": "elise",
             "date_time": "13.01.2024, 18:12:40",
             "img_file": [],
@@ -3462,7 +3462,7 @@
     "events_session_13": {
         "agent_a": [
             {
-                "sub-event": "Kate went to the hairdresser.",
+                "sub-event": "Emi went to the hairdresser.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -3493,7 +3493,7 @@
             "dia_id": "D11:1"
         },
         {
-            "clean_text": "Hey Kate. I’m doing well. How are you doing?",
+            "clean_text": "Hey Emi. I’m doing well. How are you doing?",
             "speaker": "elise",
             "date_time": "14.01.2024, 15:26:30",
             "img_file": [],
@@ -3557,7 +3557,7 @@
             "dia_id": "D11:9"
         },
         {
-            "clean_text": "Do you have any similiar experience Kate?",
+            "clean_text": "Do you have any similiar experience Emi?",
             "speaker": "elise",
             "date_time": "14.01.2024, 15:38:18",
             "img_file": [],
@@ -3605,7 +3605,7 @@
             "dia_id": "D11:15"
         },
         {
-            "clean_text": "Thanks for the advice Kate. It’s always great getting new perspectives and hearing what other people have to say as well. It’s great having a friend like you to always be able to talk too. Thanks Kate. Talk to you tomorrow! Have a lovely Sunday!",
+            "clean_text": "Thanks for the advice Emi. It’s always great getting new perspectives and hearing what other people have to say as well. It’s great having a friend like you to always be able to talk too. Thanks Emi. Talk to you tomorrow! Have a lovely Sunday!",
             "speaker": "elise",
             "date_time": "14.01.2024, 15:52:38",
             "img_file": [],
@@ -3642,7 +3642,7 @@
             "dia_id": "D12:1"
         },
         {
-            "clean_text": "Hello Kate. Wonderful to hear from you today. I’m doing well. How about you?",
+            "clean_text": "Hello Emi. Wonderful to hear from you today. I’m doing well. How about you?",
             "speaker": "elise",
             "date_time": "15.01.2024, 22:17:10",
             "img_file": [],
@@ -3734,7 +3734,7 @@
             "dia_id": "D12:13"
         },
         {
-            "clean_text": "What about you Kate? Do you have any interest in planes?",
+            "clean_text": "What about you Emi? Do you have any interest in planes?",
             "speaker": "elise",
             "date_time": "15.01.2024, 22:42:48",
             "img_file": [],
@@ -3818,7 +3818,7 @@
             "dia_id": "D12:24"
         },
         {
-            "clean_text": "Incredible journey Kate! Have you flown anywhere recently?",
+            "clean_text": "Incredible journey Emi! Have you flown anywhere recently?",
             "speaker": "elise",
             "date_time": "15.01.2024, 22:50:35",
             "img_file": [],
@@ -3842,7 +3842,7 @@
             "dia_id": "D12:27"
         },
         {
-            "clean_text": "Great talking to you Kate as always it’s so nice to have such unique and interesting conversations. I’ll talk to you tomorrow!",
+            "clean_text": "Great talking to you Emi as always it’s so nice to have such unique and interesting conversations. I’ll talk to you tomorrow!",
             "speaker": "elise",
             "date_time": "15.01.2024, 22:52:04",
             "img_file": [],
@@ -3869,7 +3869,7 @@
     },
     "session_16": [
         {
-            "clean_text": "Hey Kate. How are you? I’ve been using you tips and tricks for blonde hair and even purchased some Emsibeth products. My hair is looking better than ever!",
+            "clean_text": "Hey Emi. How are you? I’ve been using you tips and tricks for blonde hair and even purchased some Emsibeth products. My hair is looking better than ever!",
             "speaker": "elise",
             "date_time": "17.01.2024, 02:21:09",
             "img_file": [],
@@ -3985,7 +3985,7 @@
             "dia_id": "D12:43"
         },
         {
-            "clean_text": "Thank you so much Kate. I’m going to sign up for a lesson right now and hopefully get started sometime soon. Thanks so much for the tips your the best!",
+            "clean_text": "Thank you so much Emi. I’m going to sign up for a lesson right now and hopefully get started sometime soon. Thanks so much for the tips your the best!",
             "speaker": "elise",
             "date_time": "17.01.2024, 02:43:22",
             "img_file": [],
@@ -4004,7 +4004,7 @@
     "events_session_16": {
         "agent_a": [
             {
-                "sub-event": "Kate tried a new hydrating cream",
+                "sub-event": "Emi tried a new hydrating cream",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -4029,7 +4029,7 @@
             "dia_id": "D13:1"
         },
         {
-            "clean_text": "Hey Kate! Yes, I did end up signing up for a Yoga class. My first class is today at 5:00pm! I’m super excited. I went and got myself a new yoga set and a yoga mat to be prepared. Any other tips for my first day?",
+            "clean_text": "Hey Emi! Yes, I did end up signing up for a Yoga class. My first class is today at 5:00pm! I’m super excited. I went and got myself a new yoga set and a yoga mat to be prepared. Any other tips for my first day?",
             "speaker": "elise",
             "date_time": "17.01.2024, 19:57:41",
             "img_file": [],
@@ -4130,7 +4130,7 @@
             "dia_id": "D14:3"
         },
         {
-            "clean_text": "Today I went to the spa to get a lovely massage. Do you enjoy going to the spa Kate?",
+            "clean_text": "Today I went to the spa to get a lovely massage. Do you enjoy going to the spa Emi?",
             "speaker": "elise",
             "date_time": "19.01.2024, 01:05:07",
             "img_file": [],
@@ -4234,7 +4234,7 @@
             "dia_id": "D14:16"
         },
         {
-            "clean_text": "Been to anymore cooking classes by the way Kate?",
+            "clean_text": "Been to anymore cooking classes by the way Emi?",
             "speaker": "elise",
             "date_time": "19.01.2024, 01:19:55",
             "img_file": [],
@@ -4278,7 +4278,7 @@
             "blip_caption": "there is a dessert with fruit on top of it on a plate"
         },
         {
-            "clean_text": "I tried making the tiramisu recipe you have me from your Italian cooking class. Look at how it came out? What do you think Kate?",
+            "clean_text": "I tried making the tiramisu recipe you have me from your Italian cooking class. Look at how it came out? What do you think Emi?",
             "speaker": "elise",
             "date_time": "19.01.2024, 01:24:06",
             "img_file": [],
@@ -4306,7 +4306,7 @@
             "dia_id": "D14:26"
         },
         {
-            "clean_text": "Looks incredible Kate. You really have a talent for cooking. Amazing job the hard work is paying off!",
+            "clean_text": "Looks incredible Emi. You really have a talent for cooking. Amazing job the hard work is paying off!",
             "speaker": "elise",
             "date_time": "19.01.2024, 01:26:29",
             "img_file": [],
@@ -4317,13 +4317,13 @@
     "events_session_18": {
         "agent_a": [
             {
-                "sub-event": "Kate is busy developing marketing strategies and campaigns for clients.",
+                "sub-event": "Emi is busy developing marketing strategies and campaigns for clients.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
             },
             {
-                "sub-event": "Kate made the Osso Buco.",
+                "sub-event": "Emi made the Osso Buco.",
                 "date": "",
                 "id": "E",
                 "caused_by": []
@@ -4364,7 +4364,7 @@
     "session_18_date_time": "19.01.2024, 00:32:07",
     "qa": [
         {
-            "question": "What are Kate's hobbies?",
+            "question": "What are Emi's hobbies?",
             "answer": "Cooking, skiing, hiking",
             "evidence": [
                 "D1:6",
@@ -4374,7 +4374,7 @@
             "category": 1
         },
         {
-            "question": "Which cities have both, Kate and Elise, been to?",
+            "question": "Which cities have both, Emi and Elise, been to?",
             "answer": "Miami, Los Angeles, San Diego, Las Vegas, New York",
             "evidence": [
                 "D1:9",
@@ -4390,7 +4390,7 @@
             "category": 1
         },
         {
-            "question": "Where does Kate work as a teacher assistant?",
+            "question": "Where does Emi work as a teacher assistant?",
             "answer": "UCLA",
             "evidence": [
                 "D1:22",
@@ -4399,7 +4399,7 @@
             "category": 1
         },
         {
-            "question": "Does Kate work full-time or part-time as a social media manager?",
+            "question": "Does Emi work full-time or part-time as a social media manager?",
             "answer": "part-time",
             "evidence": [
                 "D1:29",
@@ -4417,7 +4417,7 @@
             "category": 3
         },
         {
-            "question": "When did Kate start skiing?",
+            "question": "When did Emi start skiing?",
             "answer": "2013",
             "evidence": [
                 "D1:49"
@@ -4425,7 +4425,7 @@
             "category": 2
         },
         {
-            "question": "When did Kate visit Art Basel?",
+            "question": "When did Emi visit Art Basel?",
             "answer": "30 December, 2023",
             "evidence": [
                 "D2:3"
@@ -4433,7 +4433,7 @@
             "category": 2
         },
         {
-            "question": "What kind of pasta did Kate make on 29 Dec 2023?",
+            "question": "What kind of pasta did Emi make on 29 Dec 2023?",
             "answer": "ham and peas",
             "evidence": [
                 "D2:9"
@@ -4463,7 +4463,7 @@
             "category": 3
         },
         {
-            "question": "What do Elise and Kate have in common?",
+            "question": "What do Elise and Emi have in common?",
             "answer": "They spend the New Year with their family and enjoy outdoor activities such as hiking.",
             "evidence": [
                 "D3:2",
@@ -4483,7 +4483,7 @@
             "category": 2
         },
         {
-            "question": "What dishes did Kate learn to cook in her Italian cooking class?",
+            "question": "What dishes did Emi learn to cook in her Italian cooking class?",
             "answer": "Pasta with ham and peas, tiramisu, Osso Buco.",
             "evidence": [
                 "D2:9",
@@ -4495,7 +4495,7 @@
             "category": 1
         },
         {
-            "question": "Where are Kate and Elise planning to celebrate New Year 2025?",
+            "question": "Where are Emi and Elise planning to celebrate New Year 2025?",
             "answer": "Miami",
             "evidence": [
                 "D3:17",
@@ -4504,7 +4504,7 @@
             "category": 2
         },
         {
-            "question": "Where was Kate on 31 Dec 2023?",
+            "question": "Where was Emi on 31 Dec 2023?",
             "answer": "New York",
             "evidence": [
                 "D3:24",
@@ -4579,7 +4579,7 @@
             "category": 2
         },
         {
-            "question": "Why can't Kate play volleyball on the beach?",
+            "question": "Why can't Emi play volleyball on the beach?",
             "answer": "She is very busy at work after the holidays.",
             "evidence": [
                 "D4:3",
@@ -4589,7 +4589,7 @@
             "category": 1
         },
         {
-            "question": "Could Kate be stressed from working extra hours?",
+            "question": "Could Emi be stressed from working extra hours?",
             "answer": "No, she works 40 hours a week.",
             "evidence": [
                 "D5:3",
@@ -4615,7 +4615,7 @@
             "category": 2
         },
         {
-            "question": "In which countries did Kate relax on the beach near the sea?",
+            "question": "In which countries did Emi relax on the beach near the sea?",
             "answer": "Indonesia, USA, Mexico",
             "evidence": [
                 "D4:26",
@@ -4637,7 +4637,7 @@
             "category": 2
         },
         {
-            "question": "What games are both Kate and Elise interested in?",
+            "question": "What games are both Emi and Elise interested in?",
             "answer": "Soccer, padel",
             "evidence": [
                 "D5:38",
@@ -4648,7 +4648,7 @@
             "category": 1
         },
         {
-            "question": "Where does Kate plan to visit in the spring of 2024?",
+            "question": "Where does Emi plan to visit in the spring of 2024?",
             "answer": "Banff National Park in Canada",
             "evidence": [
                 "D6:9"
@@ -4656,7 +4656,7 @@
             "category": 2
         },
         {
-            "question": "What do the locations where Kate spends her holidays have in common?",
+            "question": "What do the locations where Emi spends her holidays have in common?",
             "answer": "These are locations with beautiful nature and views.",
             "evidence": [
                 "D1:40",
@@ -4699,7 +4699,7 @@
             "category": 2
         },
         {
-            "question": "When does Kate plan to visit the botanical garden?",
+            "question": "When does Emi plan to visit the botanical garden?",
             "answer": "07 January, 2024",
             "evidence": [
                 "D7:9"
@@ -4717,8 +4717,8 @@
             "category": 1
         },
         {
-            "question": "Do Kate and Elise have the same favorite art style?",
-            "answer": "No, Elise likes abstract expressionism, and Kate likes impressionism.",
+            "question": "Do Emi and Elise have the same favorite art style?",
+            "answer": "No, Elise likes abstract expressionism, and Emi likes impressionism.",
             "evidence": [
                 "D2:16",
                 "D7:14"
@@ -4745,7 +4745,7 @@
             "category": 1
         },
         {
-            "question": "When did Kate visit the \"Central Perk\" cafe?",
+            "question": "When did Emi visit the \"Central Perk\" cafe?",
             "answer": "07 January, 2024",
             "evidence": [
                 "D7:37"
@@ -4753,7 +4753,7 @@
             "category": 2
         },
         {
-            "question": "What TV show was Kate watching shortly before 7 Jan 2024?",
+            "question": "What TV show was Emi watching shortly before 7 Jan 2024?",
             "answer": "Money Heist",
             "evidence": [
                 "D7:50"
@@ -4799,7 +4799,7 @@
             "category": 2
         },
         {
-            "question": "What types of pasta does Kate make in her Italian cooking class?",
+            "question": "What types of pasta does Emi make in her Italian cooking class?",
             "answer": "Homemade pasta, pasta with ham and peas.",
             "evidence": [
                 "D2:9",
@@ -4825,7 +4825,7 @@
             "category": 2
         },
         {
-            "question": "Do Kate and Elise support each other in difficult situations?",
+            "question": "Do Emi and Elise support each other in difficult situations?",
             "answer": "Yes, they share relationship advice with each other.",
             "evidence": [
                 "D7:42",
@@ -4834,7 +4834,7 @@
             "category": 3
         },
         {
-            "question": "When did Kate dye her hair?",
+            "question": "When did Emi dye her hair?",
             "answer": "12 January, 2024",
             "evidence": [
                 "D10:13"
@@ -4850,7 +4850,7 @@
             "category": 2
         },
         {
-            "question": "How many times has Elise bought Emsibeth products on Kate's advice?",
+            "question": "How many times has Elise bought Emsibeth products on Emi's advice?",
             "answer": "2 times",
             "evidence": [
                 "D11:4",
@@ -4859,7 +4859,7 @@
             "category": 3
         },
         {
-            "question": "What unpleasant situation happened in the lives of both Kate and Elise?",
+            "question": "What unpleasant situation happened in the lives of both Emi and Elise?",
             "answer": "They both went through a breakup.",
             "evidence": [
                 "D11:11",
@@ -4897,7 +4897,7 @@
             "category": 3
         },
         {
-            "question": "What countries has Kate visited?",
+            "question": "What countries has Emi visited?",
             "answer": "Indonesia, Netherlands, Mexico",
             "evidence": [
                 "D4:26",
@@ -4908,7 +4908,7 @@
             "category": 1
         },
         {
-            "question": "What are some tips that Kate give Elise?",
+            "question": "What are some tips that Emi give Elise?",
             "answer": "How to get over a breakup easier, hair care tips, tiramisu recipe.",
             "evidence": [
                 "D10:11",
@@ -4918,7 +4918,7 @@
             "category": 1
         },
         {
-            "question": "What color are both Kate and Elise's hair?",
+            "question": "What color are both Emi and Elise's hair?",
             "answer": "blonde",
             "evidence": [
                 "D10:12",
@@ -4929,7 +4929,7 @@
             "category": 1
         },
         {
-            "question": "What cosmetic products does Kate use?",
+            "question": "What cosmetic products does Emi use?",
             "answer": "Hair care products, hydrating cream.",
             "evidence": [
                 "D10:13",
@@ -4938,7 +4938,7 @@
             "category": 1
         },
         {
-            "question": "When did Kate tried Neutrogena cream?",
+            "question": "When did Emi tried Neutrogena cream?",
             "answer": "Recently before 15 Jan 2024",
             "evidence": [
                 "D12:33"
@@ -4946,7 +4946,7 @@
             "category": 2
         },
         {
-            "question": "What companies' cosmetic products does Kate use?",
+            "question": "What companies' cosmetic products does Emi use?",
             "answer": "Neutrogena, Clairol, Emsibeth",
             "evidence": [
                 "D10:21",
@@ -4965,7 +4965,7 @@
             "category": 2
         },
         {
-            "question": "What exercises do Kate and Elise both do to reduce stress?",
+            "question": "What exercises do Emi and Elise both do to reduce stress?",
             "answer": "yoga",
             "evidence": [
                 "D12:41",
@@ -5008,7 +5008,7 @@
             "category": 1
         },
         {
-            "question": "What recipes did Elise and Kate share?",
+            "question": "What recipes did Elise and Emi share?",
             "answer": "tiramisu, smoothie",
             "evidence": [
                 "D7:31",
@@ -5017,7 +5017,7 @@
             "category": 1
         },
         {
-            "question": "What dish did both Kate and Elise cook?",
+            "question": "What dish did both Emi and Elise cook?",
             "answer": "tiramisu",
             "evidence": [
                 "D3:9",
