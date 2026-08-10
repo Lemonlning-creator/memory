@@ -46,19 +46,19 @@ prepare -> generate -> evaluate -> curves
 
 ## 3. 3090 环境部署
 
-以下示例使用 PowerShell。在仓库根目录执行：
+以下以 Linux + Bash 为主。在仓库根目录执行：
 
-```powershell
-cd E:\01_Research\03_UserProfile\memory
+```bash
+cd /path/to/memory
 ```
 
 ### 3.1 创建虚拟环境
 
 推荐使用 Python 3.11 到 3.13：
 
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
 python -m pip install --upgrade pip
 ```
 
@@ -66,7 +66,7 @@ python -m pip install --upgrade pip
 
 ### 3.2 安装项目基础依赖
 
-```powershell
+```bash
 python -m pip install -e .
 ```
 
@@ -74,7 +74,7 @@ python -m pip install -e .
 
 PyTorch 的 CUDA wheel 应根据服务器驱动选择。下面是 CUDA 12.8 的安装示例：
 
-```powershell
+```bash
 python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
 python -m pip install transformers bert-score
 ```
@@ -83,7 +83,7 @@ python -m pip install transformers bert-score
 
 验证3090是否被 PyTorch 正确识别：
 
-```powershell
+```bash
 python -c "import torch; print('torch=', torch.__version__); print('cuda=', torch.cuda.is_available()); print('gpu=', torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"
 ```
 
@@ -126,11 +126,11 @@ enable_thinking = False
 
 ### 5.1 阶段一：抽取用户画像和智能体人设
 
-```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
-  --phase prepare `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
+```bash
+./.venv/bin/python -m src.experiments.exp2_user_modeling \
+  --phase prepare \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -150,11 +150,11 @@ data/exp2_user_modeling/cases/chat_1_emi_elise__emi__to__elise/assets/
 
 ### 5.2 阶段二：生成测试集回复
 
-```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
-  --phase generate `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
+```bash
+./.venv/bin/python -m src.experiments.exp2_user_modeling \
+  --phase generate \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -176,14 +176,14 @@ data/exp2_user_modeling/cases/chat_1_emi_elise__emi__to__elise/generations/predi
 
 第一次执行该阶段时，Hugging Face 会下载评估模型。应提前确保服务器能够访问 Hugging Face，并为模型缓存预留空间。
 
-```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
-  --phase evaluate `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
-  --output-dir data/exp2_user_modeling `
-  --eval-device cuda:0 `
-  --eval-batch-size 16 `
+```bash
+./.venv/bin/python -m src.experiments.exp2_user_modeling \
+  --phase evaluate \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
+  --output-dir data/exp2_user_modeling \
+  --eval-device cuda:0 \
+  --eval-batch-size 16 \
   --judge-model gpt-4o-mini
 ```
 
@@ -213,11 +213,11 @@ data/exp2_user_modeling/
 
 ### 5.4 阶段四：画像曲线
 
-```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
-  --phase curves `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
+```bash
+./.venv/bin/python -m src.experiments.exp2_user_modeling \
+  --phase curves \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -229,31 +229,31 @@ data/exp2_user_modeling/
 
 ### 6.1 批量准备画像和人设
 
-```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
-  --phase prepare `
-  --train-ratio 0.9 `
+```bash
+./.venv/bin/python -m src.experiments.exp2_user_modeling \
+  --phase prepare \
+  --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
 ```
 
 ### 6.2 批量生成回复
 
-```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
-  --phase generate `
-  --train-ratio 0.9 `
+```bash
+./.venv/bin/python -m src.experiments.exp2_user_modeling \
+  --phase generate \
+  --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
 ```
 
 ### 6.3 批量评估并生成最终表格
 
-```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
-  --phase evaluate `
-  --train-ratio 0.9 `
-  --output-dir data/exp2_user_modeling `
-  --eval-device cuda:0 `
-  --eval-batch-size 16 `
+```bash
+./.venv/bin/python -m src.experiments.exp2_user_modeling \
+  --phase evaluate \
+  --train-ratio 0.9 \
+  --output-dir data/exp2_user_modeling \
+  --eval-device cuda:0 \
+  --eval-batch-size 16 \
   --judge-model gpt-4o-mini
 ```
 
@@ -268,7 +268,7 @@ data/exp2_user_modeling/
 
 不要在不同实验协议之间复用同一个输出目录。修改模型、数据划分或角色方向时，推荐换一个新的目录，例如：
 
-```powershell
+```bash
 --output-dir data/exp2_user_modeling_run2
 ```
 
@@ -276,13 +276,13 @@ data/exp2_user_modeling/
 
 如果 BERTScore 报 CUDA out of memory，先降低批大小：
 
-```powershell
+```bash
 --eval-batch-size 8
 ```
 
 仍然不足时使用：
 
-```powershell
+```bash
 --eval-batch-size 4
 ```
 
@@ -346,3 +346,48 @@ speaker_2 = 目标智能体
 - [ ] 记录 judge model 和三个 CardiffNLP 模型名称。
 - [ ] 最终 `table2_main_results.md` 包含原论文两行和 `Ours`。
 - [ ] 正式论文结果覆盖全部目标 speakers，而不是单个 case。
+
+## 12. Windows PowerShell附录
+
+如果3090机器运行Windows，可以使用下面的PowerShell命令。实验参数和Linux版本完全一致。
+
+### 12.1 环境部署
+
+```powershell
+cd E:\01_Research\03_UserProfile\memory
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -e .
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
+python -m pip install transformers bert-score
+```
+
+### 12.2 单个对话
+
+```powershell
+.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
+  --phase prepare `
+  --case Chat_1_Emi_Elise.json `
+  --train-ratio 0.9 `
+  --output-dir data/exp2_user_modeling
+
+.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
+  --phase generate `
+  --case Chat_1_Emi_Elise.json `
+  --train-ratio 0.9 `
+  --output-dir data/exp2_user_modeling
+
+.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
+  --phase evaluate `
+  --case Chat_1_Emi_Elise.json `
+  --train-ratio 0.9 `
+  --output-dir data/exp2_user_modeling `
+  --eval-device cuda:0 `
+  --eval-batch-size 16 `
+  --judge-model gpt-4o-mini
+```
+
+### 12.3 批量运行
+
+批量运行时去掉 `--case`，依次执行 `prepare`、`generate` 和 `evaluate` 即可。
