@@ -19,6 +19,11 @@ from ..llm_client import LLMClient
 from ..memory_os_local import MemoryOSLocal
 from ..metrics import compute_rouge_l
 from ..profile_utils import state_axis
+from ..prompts.eval_templates_en import (
+    REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT,
+    REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT,
+    REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT,
+)
 from ..prompts.prompt_loader import DIRECT_RESPONSE_SYSTEM_PROMPT
 from ..utils import load_json, save_json
 from .extract_profile_persona_en import extract_persona, extract_profile
@@ -641,26 +646,6 @@ def run_case_replies(
 # ---------------------------------------------------------------------------
 
 
-REFLECTIVE_SYSTEM_PROMPT = """You label whether the final speaker message is reflective.
-Reflective language shows self-observation, awareness of thoughts or feelings,
-perspective-taking, or an explanation of the speaker's intentions and motivations.
-Use the dialogue only as context. Return exactly True or False."""
-
-GROUNDING_SYSTEM_PROMPT = """You label whether the final speaker message is grounding.
-Grounding actively builds mutual understanding through clarification, a relevant
-follow-up, a confirmation check, or a request to expand shared information.
-Agreement without clarification or follow-up is not grounding.
-Use the dialogue only as context. Return exactly True or False."""
-
-EMPATHY_SYSTEM_PROMPT = """Score empathy in the final speaker message using three fields.
-emotional_reaction: warmth, compassion, or concern toward the other speaker.
-interpretation: understanding or validation of the other speaker's experience.
-exploration: an attempt to explore the other speaker's experience or feelings.
-Each field must be an integer from 0 to 2, where 0 is absent, 1 is partial or
-generic, and 2 is explicit or specific. Return only this JSON object:
-{"emotional_reaction": 0, "interpretation": 0, "exploration": 0}"""
-
-
 def _parse_boolean_label(raw: str, metric: str) -> bool:
     normalized = raw.strip().lower().rstrip(".")
     if normalized == "true":
@@ -793,9 +778,9 @@ class Table2Evaluator:
             self.emotion_model_name,
             self.intimacy_model_name,
             self.bertscore_model,
-            REFLECTIVE_SYSTEM_PROMPT,
-            GROUNDING_SYSTEM_PROMPT,
-            EMPATHY_SYSTEM_PROMPT,
+            REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT,
+            REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT,
+            REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT,
         ))
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:12]
 
@@ -810,7 +795,7 @@ class Table2Evaluator:
 
     def _judge_empathy(self, context: str) -> Dict[str, int]:
         raw = self.judge_llm.chat(
-            EMPATHY_SYSTEM_PROMPT,
+            REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT,
             f"Dialogue:\n{context}\n\nScore the final message.",
             temperature=0.0,
             max_tokens=100,
@@ -842,10 +827,14 @@ class Table2Evaluator:
         empathy = self._judge_empathy(context)
         return {
             "reflective": self._judge_boolean(
-                REFLECTIVE_SYSTEM_PROMPT, context, "reflective"
+                REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT,
+                context,
+                "reflective",
             ),
             "grounding": self._judge_boolean(
-                GROUNDING_SYSTEM_PROMPT, context, "grounding"
+                REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT,
+                context,
+                "grounding",
             ),
             "sentiment": _normalize_label(
                 self._top_prediction(self.sentiment_classifier, text)["label"]

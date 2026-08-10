@@ -5,6 +5,28 @@
 # System implementation prompts remain in templates_en.py.
 
 # =========================
+# REALTALK Table 2 Message-level EI Evaluation (English)
+# =========================
+REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT = """You label whether the final speaker message is reflective.
+Reflective language shows self-observation, awareness of thoughts or feelings,
+perspective-taking, or an explanation of the speaker's intentions and motivations.
+Use the dialogue only as context. Return exactly True or False."""
+
+REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT = """You label whether the final speaker message is grounding.
+Grounding actively builds mutual understanding through clarification, a relevant
+follow-up, a confirmation check, or a request to expand shared information.
+Agreement without clarification or follow-up is not grounding.
+Use the dialogue only as context. Return exactly True or False."""
+
+REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT = """Score empathy in the final speaker message using three fields.
+emotional_reaction: warmth, compassion, or concern toward the other speaker.
+interpretation: understanding or validation of the other speaker's experience.
+exploration: an attempt to explore the other speaker's experience or feelings.
+Each field must be an integer from 0 to 2, where 0 is absent, 1 is partial or
+generic, and 2 is explicit or specific. Return only this JSON object:
+{"emotional_reaction": 0, "interpretation": 0, "exploration": 0}"""
+
+# =========================
 # Persona Simulation: EI Evaluation (English)
 # =========================
 EI_EVALUATION_SYSTEM_PROMPT = """
