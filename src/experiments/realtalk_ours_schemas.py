@@ -14,7 +14,6 @@ PRIMARY_MOVES = (
     "acknowledge",
     "follow-up",
     "topic-shift",
-    "mixed",
 )
 
 
@@ -382,6 +381,16 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
     lambda_trace = _number(alignment["lambda_trace"], "alignment.lambda_trace")
     if not 0 <= lambda_trace <= 1:
         raise ValueError("alignment.lambda_trace must be in [0,1]")
+    primary_move = _enum(action["primary_move"], PRIMARY_MOVES, "next_action.primary_move")
+    question_mode = _enum(
+        action["question_mode"],
+        ("none", "optional", "follow-up"),
+        "next_action.question_mode",
+    )
+    if question_mode == "follow-up" and primary_move != "follow-up":
+        raise ValueError("follow-up question_mode requires follow-up primary_move")
+    if primary_move == "follow-up" and question_mode != "follow-up":
+        raise ValueError("follow-up primary_move requires follow-up question_mode")
     return {
         "situation": {
             "topic": _text(situation["topic"], "situation.topic", allow_empty=True),
@@ -400,13 +409,13 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
         },
         "next_action": {
             "communicative_intent": _text(action["communicative_intent"], "next_action.communicative_intent"),
-            "primary_move": _enum(action["primary_move"], PRIMARY_MOVES, "next_action.primary_move"),
+            "primary_move": primary_move,
             "content_direction": _text(action["content_direction"], "next_action.content_direction"),
             "self_expression": _text(action["self_expression"], "next_action.self_expression"),
             "partner_adaptation": _text(action["partner_adaptation"], "next_action.partner_adaptation", allow_empty=True),
             "tone": _text(action["tone"], "next_action.tone"),
             "message_scale": _enum(action["message_scale"], ("short", "typical", "extended"), "next_action.message_scale"),
-            "question_mode": _enum(action["question_mode"], ("none", "optional", "follow-up"), "next_action.question_mode"),
+            "question_mode": question_mode,
         },
     }
 

@@ -36,6 +36,8 @@
 
 `lambda_trace` 是同次决策的可审计轨迹，不进行确定性公式混合。Self Domain 是默认身份，伙伴画像仅在当前相关时激活。Self Domain 主要决定声音、主动性、互动方式和消息规模，不是当前事实来源或需要逐项展示的内容清单；不得把 Ca 的地点、天气、职业、兴趣、惯例或旧事件复演为当前场景，也不得把多个画像兴趣打包进一条回复。Cb 历史未建立当前事实时，仅允许低具体度的自然自我表达；空历史选择符合人物风格的简单开场。`typical` 消息规模以确定性字符中位数为锚。
 
+Decision 必须选择一个而非 `mixed` 的 Primary Move。普通的相关回应、回答问题或理解上下文不自动提高 λ；日常事实和闲聊默认由 Self Domain 主导，仅在明确的情绪、关系或实际需要出现且目标人物会适应时进入 balanced/partner-adaptive。追问按 Self Domain 的观测问句率和问句习惯校准，不能形成每条消息都确认对方并追问的固定模式。
+
 ### Response Actor
 
 Actor 只接收完整真实历史、完整 Self Domain、`situation` 和唯一 `next_action`，输出目标人物自然下一条消息。它不接收完整 User Domain、证据、λ 数值或依据、评价指标、Future State。

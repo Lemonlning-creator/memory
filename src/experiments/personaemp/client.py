@@ -157,7 +157,7 @@ class OpenAICompatibleChatBackend:
         )
         thinking_prompt_schema = bool(
             response_schema is not None
-            and self.is_dashscope_qwen
+            and getattr(self, "is_dashscope_qwen", False)
             and thinking_enabled
         )
         for attempt in range(1, self.max_attempts + 1):
