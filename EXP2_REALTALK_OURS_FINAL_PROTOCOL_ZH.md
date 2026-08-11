@@ -280,8 +280,10 @@ Cb 开始时，不额外读取伙伴 P 的另一条对话。User Domain 从空�
 
 ### 调用 3：Message Generation
 
-输入：`H_t`、S Self Domain、P 相关 User Domain、P User State、`lambda_t` 和唯一 Behavior Policy。  
+输入：`H_t`、S Self Domain 的生成安全视图、P 相关 User Domain、P User State、`lambda_t` 和唯一 Behavior Policy。  
 输出：一条以 S 身份说出的消息正文。
+
+完整 S Self Domain 已在 Alignment 中参与决策。生成安全视图保留 Persona、表达风格、Behavior Policy Prior 与 Hard Constraints，但不直接披露身份事实和兴趣列表，防止小模型把长期背景误写成当前活动；完整对象继续保存和审计，不被删除或重新生成。
 
 最终生成必须保留论文 Appendix D.1 的任务约束：
 

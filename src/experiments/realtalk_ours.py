@@ -331,9 +331,13 @@ def run_realtalk_ours(
                 for turn in visible_partner_turns
                 if turn["turn_id"] not in observed_partner_turn_ids
             ]
+            durable_partner_turns = [
+                turn for turn in new_partner_turns
+                if _has_durable_user_domain_evidence(turn["content"])
+            ]
             try:
                 update_audit: dict[str, Any]
-                if new_partner_turns:
+                if durable_partner_turns:
                     update_envelope = _structured_call(
                         checkpoint=checkpoint,
                         backend=backend,
@@ -343,7 +347,7 @@ def run_realtalk_ours(
                             speaker=speaker,
                             partner=speaker_data["partner"],
                             previous_domain=_json(user_domain),
-                            new_turns=_turns_with_ids(new_partner_turns),
+                            new_turns=_turns_with_ids(durable_partner_turns),
                             history=_turns_with_ids(point["context_turns"]),
                         ),
                         schema=USER_DOMAIN_SCHEMA,
@@ -357,22 +361,28 @@ def run_realtalk_ours(
                         raw_audit=raw_audit,
                     )
                     user_domain = update_envelope["data"]
-                    observed_partner_turn_ids.update(
-                        turn["turn_id"] for turn in new_partner_turns
-                    )
                     update_audit = {
                         "mode": "updated",
                         "new_partner_turn_ids": [
-                            turn["turn_id"] for turn in new_partner_turns
+                            turn["turn_id"] for turn in durable_partner_turns
                         ],
                         "operation": update_envelope["audit"],
                     }
                 else:
                     update_audit = {
-                        "mode": "reused_no_new_partner_evidence",
-                        "new_partner_turn_ids": [],
+                        "mode": (
+                            "reused_no_durable_partner_evidence"
+                            if new_partner_turns
+                            else "reused_no_new_partner_evidence"
+                        ),
+                        "new_partner_turn_ids": [
+                            turn["turn_id"] for turn in new_partner_turns
+                        ],
                         "operation": None,
                     }
+                observed_partner_turn_ids.update(
+                    turn["turn_id"] for turn in new_partner_turns
+                )
 
                 current_query = (
                     visible_partner_turns[-1]["content"]
@@ -416,7 +426,7 @@ def run_realtalk_ours(
                         speaker=speaker,
                         partner=speaker_data["partner"],
                         history=format_turns(point["context_turns"]),
-                        self_domain=_json(_compact_self_domain(self_domain)),
+                        self_domain=_json(_generation_self_domain(self_domain)),
                         user_domain=_json(_compact_user_domain(user_domain)),
                         user_state=_json(alignment_result["user_state"]),
                         lambda_t=alignment_result["alignment"]["lambda_t"],
@@ -990,8 +1000,36 @@ def _write_partial_report(
     (output_dir / "REPORT_PARTIAL.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _compact_self_domain(value: dict[str, Any]) -> dict[str, Any]:
-    return value
+def _generation_self_domain(value: dict[str, Any]) -> dict[str, Any]:
+    """Expose style and constraints while keeping background facts in planning."""
+    return {
+        "persona": value["persona"],
+        "behavior_policy_prior": value["behavior_policy_prior"],
+        "hard_constraints": value["hard_constraints"],
+        "uncertainties": value["uncertainties"],
+        "omitted_from_generation": (
+            "Identity facts and interests remain available to Alignment but are not "
+            "message-content evidence."
+        ),
+    }
+
+
+def _has_durable_user_domain_evidence(content: str) -> bool:
+    """Separate stable-profile evidence from greetings and generic check-ins."""
+    normalized = re.sub(r"[^a-z0-9' ]+", " ", content.casefold())
+    normalized = re.sub(r"\s+", " ", normalized).strip()
+    low_information = (
+        r"(?:hi|hey|hello)(?: there)?",
+        r"(?:hi|hey|hello)(?: there)? how are you",
+        r"how are you",
+        r"how(?:'s| is) it going",
+        r"what(?:'s| is) up",
+        r"good (?:morning|afternoon|evening|night)",
+        r"nice to (?:meet|see) you",
+    )
+    if any(re.fullmatch(pattern, normalized) for pattern in low_information):
+        return False
+    return len(normalized.split()) >= 3
 
 
 def _compact_user_domain(value: dict[str, Any]) -> dict[str, Any]:

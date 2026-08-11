@@ -13,6 +13,8 @@ from src.experiments.realtalk_ours import (
     EXPECTED_FULL_TARGETS,
     EXPECTED_MODEL,
     RealTalkOursConfig,
+    _generation_self_domain,
+    _has_durable_user_domain_evidence,
     _normalize_alignment_for_context,
     _prepare_dataset,
     _structured_call,
@@ -248,6 +250,22 @@ class RealTalkOursTests(unittest.TestCase):
         self.assertIn(
             "unsupported first-person factual details",
             normalized["behavior_policy"]["avoid"],
+        )
+
+    def test_generation_view_hides_identity_facts_but_preserves_style(self):
+        view = _generation_self_domain(_self_domain())
+        self.assertNotIn("identity", view)
+        self.assertNotIn("likes music", json.dumps(view))
+        self.assertEqual(view["persona"]["tone"], ["brief"])
+        self.assertIn("hard_constraints", view)
+
+    def test_generic_greetings_do_not_update_stable_user_domain(self):
+        for text in ("Hi!", "Hey there, how are you?", "What's up?"):
+            self.assertFalse(_has_durable_user_domain_evidence(text))
+        self.assertTrue(
+            _has_durable_user_domain_evidence(
+                "I started a new nursing job downtown last week."
+            )
         )
 
     def test_structured_call_repairs_format_only_and_caches_result(self):

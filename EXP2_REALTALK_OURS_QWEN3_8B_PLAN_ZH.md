@@ -47,6 +47,8 @@ Nebraas 51, Paola 23, Vanessa 116, elise 36, Fahim Khan 40
 2. `State + Alignment + Policy`：一次输出 Current/Future User State、显式动态 `lambda_t` 和唯一 Behavior Policy。
 3. `Generation`：使用真实历史和上述状态生成目标人物下一条消息。
 
+Alignment 读取完整 Self Domain。Generation 读取同一 Self Domain 的生成安全视图，只包含 Persona、表达风格、Behavior Policy Prior、Hard Constraints 和不确定项；身份事实与兴趣仍完整保存并参与 Alignment，但不直接作为当前消息的事实来源。这是确定性披露边界，不新增模型调用，也不重新生成或删除 Self Domain。
+
 `lambda_t` 越高表示越适配当前伙伴，但 Self Domain 始终是身份硬约束。它不能把目标人物变成通用高共情助手。禁用 Omega、多候选策略、Verification 和语义重写。
 
 最终系统约束固定为：
@@ -69,7 +71,7 @@ Output only the message, not the speaker name.
 - 3 次失败后写入 `unresolved_errors.json`；正式生成完成要求零 unresolved。
 - 检查点按 Prompt、Schema、数据、模型和配置哈希绑定，签名不一致拒绝复用。
 - API 密钥只从环境变量读取，不进入源码、日志、manifest 或报告。
-- Self Domain 的身份与兴趣事实仅作为稳定背景；若当前 Cb 历史没有直接支持，不得被写成当前活动、计划或轶事。
+- Self Domain 的身份与兴趣事实仅作为稳定背景；若当前 Cb 历史没有直接支持，不得被写成当前活动、计划或轶事。Generation 不直接接收这两类原始事实。
 - 单个问候或礼貌问句不得被扩写为 User Domain 的 Core、Identity 或稳定 Cognition；证据稀疏时允许五层为空。
 - 无伙伴证据的首条消息采用确定性冷启动语义：`lambda_t=0`、高不确定性、只允许简短问候或通用 check-in。
 
