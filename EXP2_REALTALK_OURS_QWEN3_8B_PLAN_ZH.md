@@ -1,6 +1,6 @@
 # REALTALK Task 1 Ours Qwen3-8B 实施锚点
 
-状态：已实现并完成真实 Qwen3-8B 两样本预检；等待运行环境注入 API 密钥后执行全量  
+状态：已实现；真实 Qwen3-8B 身份与结构预检通过，语义加固后待有密钥环境复跑  
 方法锚点：`OURS_METHOD_ANCHOR_ZH.md`  
 协议审计：`EXP2_REALTALK_INPUT_OUTPUT_AUDIT_ZH.md`  
 最终协议：`EXP2_REALTALK_OURS_FINAL_PROTOCOL_ZH.md`
@@ -149,3 +149,10 @@ bash tools/run_realtalk_ours_qwen3_8b.sh
 ```
 
 运行脚本固定 `CUDA_VISIBLE_DEVICES` 为空，只运行本协议入口。
+
+## 8. 当前验证边界
+
+- 已在真实 DashScope `qwen3-8b` 上验证模型可见、`thinking=false`、required tool schema、结构化重试和两条消息的端到端检查点。
+- 诊断性两样本暴露过小模型将 Self Domain 兴趣写成“刚刚发生的活动”的问题；最终代码已增加稳定背景与当前事实的硬边界、稀疏 User Domain 规则和无证据冷启动适配。
+- 上述最后一轮语义加固尚未在真实端点复跑。正式全量前必须先新建输出目录复跑两条样本并人工确认；不能复用旧诊断目录。
+- 当前本机和服务器进程环境均未配置 `REALTALK_OURS_API_KEY`，所以没有启动 519 条正式生成。
