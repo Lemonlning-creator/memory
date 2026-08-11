@@ -12,6 +12,7 @@ from src.experiments.personaemp.client import ChatResult
 from src.experiments.realtalk_ours import (
     EXPECTED_FULL_TARGETS,
     EXPECTED_MODEL,
+    EXPECTED_SPEAKER_TARGETS,
     RealTalkOursConfig,
     _generation_self_domain,
     _has_durable_user_domain_evidence,
@@ -164,7 +165,7 @@ class FakeBackend:
             evidence = re.search(r"\[([^\]]+)\]", block).group(1)
             content = json.dumps(_user_domain(evidence))
         elif schema_name == "realtalk_ours_alignment":
-            ids = re.findall(r"\[([^\]]+:turn_\d+)\]", user_prompt)
+            ids = re.findall(r"\[([^\]]+:(?:turn|message)_\d+)\]", user_prompt)
             content = json.dumps(_alignment(ids[-1] if ids else None))
         else:
             content = "READY" if max_tokens == 8 else "Emi: FAKE_GENERATED"
@@ -195,11 +196,22 @@ class FakeLabels:
 
 
 class RealTalkOursTests(unittest.TestCase):
-    def test_public_table8_reconstruction_has_expected_519_targets(self):
+    def test_public_table8_reconstruction_has_expected_1076_raw_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)
         splits = select_realtalk_splits(config.dataset_dir)
         manifest, prepared = _prepare_dataset(config, splits)
         self.assertEqual(manifest["total_targets"], EXPECTED_FULL_TARGETS)
+        self.assertEqual(EXPECTED_FULL_TARGETS, 1076)
+        self.assertFalse(
+            manifest["merge_consecutive_same_speaker_within_session"]
+        )
+        self.assertEqual(manifest["sample_unit"], "original message bubble M_t")
+        self.assertEqual(manifest["targets_by_speaker"], EXPECTED_SPEAKER_TARGETS)
+        self.assertTrue(all(
+            ":message_" in point["target"]["turn_id"]
+            for item in prepared
+            for point in item["points"]
+        ))
         self.assertEqual(len(prepared), 10)
         self.assertEqual(
             [(item["speaker"], item["partner"]) for item in prepared],

@@ -1,6 +1,6 @@
 # REALTALK Task 1 Ours Qwen3-8B 实施锚点
 
-状态：已实现；真实 Qwen3-8B 身份与结构预检通过，语义加固后待有密钥环境复跑  
+状态：已实现；已根据论文 Figure 7 更正为原始消息级样本，待新协议 pilot 复跑  
 方法锚点：`OURS_METHOD_ANCHOR_ZH.md`  
 协议审计：`EXP2_REALTALK_INPUT_OUTPUT_AUDIT_ZH.md`  
 最终协议：`EXP2_REALTALK_OURS_FINAL_PROTOCOL_ZH.md`
@@ -22,17 +22,17 @@ thinking: disabled
 
 - 固定官方 REALTALK 仓库 commit：`b903e06a9770bf4e5fe9018c3e132889666d3b4a`。
 - 严格使用论文 Table 8 的十组 speaker-specific Ca/Cb。
-- 同一 Session 内连续同说话者气泡合并，不跨 Session 合并。
+- 每个公开 JSON 原始消息气泡均作为独立 `M_t`，不合并连续同说话者消息。
 - Ca 前 3 个 Session 用于一次性建立目标人物 Self Domain。
-- Cb 前 3 个 Session 中，每条目标人物合并消息形成一个预测点。
+- Cb 前 3 个 Session 中，每条目标人物原始消息形成一个预测点。
 - 每个预测点只读取该目标之前的真实历史；模型输出不回灌。
-- 公开数据重建数量为 10 人、519 条；论文没有公布其运行时准确样本数。
+- 公开数据重建数量为 10 人、1,076 条；论文没有公布其运行时准确样本数。
 
 逐人目标数固定为：
 
 ```text
-Emi 37, Nicolas 117, Kevin 25, Akib 37, Muhhamed 37,
-Nebraas 51, Paola 23, Vanessa 116, elise 36, Fahim Khan 40
+Emi 52, Nicolas 247, Kevin 55, Akib 157, Muhhamed 75,
+Nebraas 137, Paola 31, Vanessa 182, elise 55, Fahim Khan 85
 ```
 
 ## 3. Ours 调用顺序
@@ -90,7 +90,7 @@ Output only the message, not the speaker name.
 
 - `dataset_manifest.json`：Table 8 映射、源文件哈希和逐人数目。
 - `self_domains.json`：十位目标人物固定 Self Domain。
-- `predictions.jsonl`：519 条预测、真值、User Domain、State、lambda 和 Policy。
+- `predictions.jsonl`：1,076 条预测、真值、User Domain、State、lambda 和 Policy。
 - `raw_responses.jsonl`：每次逻辑尝试的原始输出与用量，不含密钥。
 - `checkpoint.json`：逐阶段原子检查点和失败记录。
 - `run_manifest.json`：模型、解码、Prompt/Schema/数据哈希与调用成本。
@@ -156,5 +156,6 @@ bash tools/run_realtalk_ours_qwen3_8b.sh
 
 - 已在真实 DashScope `qwen3-8b` 上验证模型可见、`thinking=false`、required tool schema、结构化重试和两条消息的端到端检查点。
 - 诊断性两样本暴露过小模型将 Self Domain 兴趣写成“刚刚发生的活动”的问题；最终代码已增加稳定背景与当前事实的硬边界、稀疏 User Domain 规则和无证据冷启动适配。
-- 上述最后一轮语义加固尚未在真实端点复跑。正式全量前必须先新建输出目录复跑两条样本并人工确认；不能复用旧诊断目录。
-- 当前本机和服务器进程环境均未配置 `REALTALK_OURS_API_KEY`，所以没有启动 519 条正式生成。
+- 旧 V4--V6 两样本使用了错误的连续气泡合并规则，只保留为诊断，不能进入正式结果。
+- 论文 Figure 7 中 Akib 的累计消息量与原始气泡 `51/73/121/142/146`（Ca）和 `53/86/157/178/197`（Cb）吻合，与合并 turn 数明显不符；因此正式协议固定为原始消息级 `M_t`。
+- 服务器已配置独立 `600` 权限的百炼环境文件。正式全量前必须在新提交、新输出目录复跑原始消息级 pilot；当前没有启动 1,076 条正式生成。

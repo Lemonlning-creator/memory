@@ -48,7 +48,7 @@
 
 本地 `dataset/Chat_*.json` 已与上述官方仓库 commit 的对应 JSON 做过字节级核对，数据源一致。
 
-论文规定：同一个人在同一 Session 内连续发送的多个消息气泡，分析前合并为一个 message-level turn。
+Persona Simulation 采用公开 JSON 的原始消息气泡作为 `M_t`，不合并连续同说话者消息。论文没有公开样本构造代码，但 Appendix D.1 将真值定义为 speaker's original message；更关键的是 Figure 7 中 Akib 的逐 Session 累计消息量与原始气泡计数吻合，而与合并 turn 计数明显不符。
 
 ## 3. REALTALK Task 1 的真实任务
 
@@ -101,20 +101,20 @@ User Prompt 为此前对话历史，末尾给出目标说话者 cue。Assistant 
 
 ## 5. 公开历史是否足够生成 Profile 和 Persona
 
-按 Ca 前 3 个 Session、连续同说话者消息合并后的实际统计：
+按 Ca 前 3 个 Session 的原始目标说话者消息统计：
 
-| 目标说话者 | 目标说话者合并发言数 | 目标发言字符数（约） |
+| 目标说话者 | 目标说话者原始消息数 | 目标发言字符数（约） |
 |---|---:|---:|
-| Emi | 20 | 7,534 |
-| Nicolas | 73 | 6,099 |
-| Kevin | 24 | 6,882 |
-| Akib | 40 | 8,698 |
-| Muhhamed | 24 | 6,321 |
-| Nebraas | 72 | 6,341 |
-| Paola | 21 | 7,136 |
-| Vanessa | 51 | 5,326 |
-| elise | 26 | 4,167 |
-| Fahim Khan | 26 | 6,710 |
+| Emi | 37 | 7,534 |
+| Nicolas | 163 | 6,099 |
+| Kevin | 39 | 6,882 |
+| Akib | 121 | 8,698 |
+| Muhhamed | 51 | 6,321 |
+| Nebraas | 148 | 6,341 |
+| Paola | 29 | 7,136 |
+| Vanessa | 85 | 5,326 |
+| elise | 36 | 4,167 |
+| Fahim Khan | 73 | 6,710 |
 
 结论：
 
@@ -125,24 +125,24 @@ User Prompt 为此前对话历史，末尾给出目标说话者 cue。Assistant 
 - Profile 的 confidence 和 evidence 必须保存；
 - 这些是初始模型，不应描述为完整、真实的人格全貌。
 
-按 Cb 前 3 个 Session 构造测试集，可得到约 519 条目标说话者合并消息。论文没有公布 Table 2 的准确测试样本总数，所以 519 是根据公开数据和论文规则得到的重建统计。
+按 Cb 前 3 个 Session 构造测试集，可得到 1,076 条目标说话者原始消息。论文没有公布 Table 2 的准确测试样本总数，所以 1,076 是根据公开数据、Table 8、三 Session 描述和 Figure 7 数量交叉验证得到的重建统计。
 
-用于 Ours 双域建模的数据覆盖如下。`Ca Self turns` 是目标说话者在 Ca 前 3 个 Session 的合并发言；`Cb Partner turns` 是测试伙伴在 Cb 前 3 个 Session 中最终可被因果观察到的合并发言总数：
+用于 Ours 双域建模的数据覆盖如下。`Ca Self messages` 是目标说话者在 Ca 前 3 个 Session 的原始消息；`Cb Partner messages` 是测试伙伴在 Cb 前 3 个 Session 中最终可被因果观察到的原始消息总数：
 
-| 目标说话者 | Ca Self turns | Cb 测试伙伴 | Cb Partner turns |
+| 目标说话者 | Ca Self messages | Cb 测试伙伴 | Cb Partner messages |
 |---|---:|---|---:|
-| Emi | 20 | elise | 36 |
-| Nicolas | 73 | Vanessa | 116 |
-| Kevin | 24 | elise | 26 |
-| Akib | 40 | Muhhamed | 37 |
-| Muhhamed | 24 | Akib | 37 |
-| Nebraas | 72 | Vanessa | 51 |
-| Paola | 21 | Kevin | 24 |
-| Vanessa | 51 | Nicolas | 117 |
-| elise | 26 | Emi | 37 |
-| Fahim Khan | 26 | Akib | 40 |
+| Emi | 37 | elise | 55 |
+| Nicolas | 163 | Vanessa | 182 |
+| Kevin | 39 | elise | 36 |
+| Akib | 121 | Muhhamed | 75 |
+| Muhhamed | 51 | Akib | 157 |
+| Nebraas | 148 | Vanessa | 85 |
+| Paola | 29 | Kevin | 39 |
+| Vanessa | 85 | Nicolas | 247 |
+| elise | 36 | Emi | 52 |
+| Fahim Khan | 73 | Akib | 121 |
 
-所有 Ca/Cb 文件都至少包含 18 个 Session，因此每个目标都满足前 3 个 Session 的建模和测试要求。Ca 的 Self Domain 证据量足够生成初始 Persona；Cb 伙伴在 3 个 Session 结束时也有 24--117 条已观察发言可支持 User Domain。测试最早位置仍可能只有 0--1 条伙伴发言，这是协议本身的冷启动状态，不能读取未来消息补齐。
+所有 Ca/Cb 文件都至少包含 18 个 Session，因此每个目标都满足前 3 个 Session 的建模和测试要求。Ca 的 Self Domain 证据量足够生成初始 Persona；Cb 伙伴在 3 个 Session 结束时有 36--247 条原始消息可支持 User Domain。测试最早位置仍可能只有 0--1 条伙伴发言，这是协议本身的冷启动状态，不能读取未来消息补齐。
 
 每位测试伙伴作为另一位参与者，也拥有论文 Table 8 指定的个人 Ca。技术上可以用该 Ca 预生成伙伴 User Domain，但这会让当前目标实验额外使用一份论文目标说话者微调基线没有使用的跨对话信息。直接与 Table 2 比较的主设置应采用：
 
@@ -161,7 +161,7 @@ User Domain：当前 Cb 中目标位置以前已观察到的伙伴发言，冷�
 {
   "target_speaker": "S",
   "history": [
-    "Cb 前 3 个 Session 中严格位于 M_t 之前的所有合并 turn"
+    "Cb 前 3 个 Session 中严格位于 M_t 之前的所有原始消息"
   ],
   "speaker_cue": "S"
 }
@@ -188,7 +188,7 @@ User Domain：当前 Cb 中目标位置以前已观察到的伙伴发言，冷�
 ### 6.3 Ground Truth
 
 ```text
-公开数据中目标说话者 S 在位置 t 的真实合并消息 M_t
+公开数据中目标说话者 S 在位置 t 的真实原始消息 M_t
 ```
 
 ## 7. Table 2 评价标准

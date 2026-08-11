@@ -100,6 +100,33 @@ def merge_consecutive_utterances(chat: Dict[str, Any]) -> List[Dict[str, Any]]:
     return merged
 
 
+def raw_message_turns(chat: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Represent every original message bubble as one causal protocol turn."""
+    return [
+        {
+            "turn_id": f"{turn['session_id']}:message_{turn['message_index']}",
+            "session_id": turn["session_id"],
+            "session_index": turn["session_index"],
+            "semantic_index": turn["message_index"],
+            "speaker": turn["speaker"],
+            "content": turn["content"],
+            "message_indices": [turn["message_index"]],
+            "dia_ids": [turn["dia_id"]] if turn.get("dia_id") else [],
+            "date_time_start": turn.get("date_time", ""),
+            "date_time_end": turn.get("date_time", ""),
+        }
+        for turn in flatten_messages(chat)
+    ]
+
+
+def protocol_turns(
+    chat: Dict[str, Any], *, merge_adjacent_bubbles: bool = True
+) -> List[Dict[str, Any]]:
+    if merge_adjacent_bubbles:
+        return merge_consecutive_utterances(chat)
+    return raw_message_turns(chat)
+
+
 def message_speakers(chat: Dict[str, Any]) -> List[str]:
     """Return the two actual message speakers, preserving first appearance."""
     actual: List[str] = []
@@ -193,6 +220,7 @@ def build_profile_corpus(
     chat: Dict[str, Any],
     target_speaker: str,
     profile_sessions: int = 3,
+    merge_adjacent_bubbles: bool = True,
 ) -> Dict[str, Any]:
     """Build the fixed Ca corpus used to derive a speaker representation."""
     if profile_sessions < 1:
@@ -206,7 +234,9 @@ def build_profile_corpus(
         )
     selected = set(selected_sessions)
     turns = [
-        turn for turn in merge_consecutive_utterances(chat)
+        turn for turn in protocol_turns(
+            chat, merge_adjacent_bubbles=merge_adjacent_bubbles
+        )
         if turn["session_id"] in selected
     ]
     if not any(turn["speaker"].casefold() == speaker.casefold() for turn in turns):
@@ -227,13 +257,16 @@ def build_message_level_points(
     test_sessions: int = 3,
     max_context_chars: int = 60000,
     max_eval_points: int = 0,
+    merge_adjacent_bubbles: bool = True,
 ) -> List[Dict[str, Any]]:
     """Build rolling message-level targets from the selected Cb sessions.
 
-    Each target is one merged message by ``target_speaker``. Its history is
-    every real merged turn before it in the selected test segment. Exp1 adds
-    the observed target message later because it classifies current state
-    instead of generating the next message.
+    Each target is one protocol message by ``target_speaker``. With
+    ``merge_adjacent_bubbles=False``, this is the original REALTALK message
+    unit used by persona simulation. Its history is every real protocol turn
+    before it in the selected test segment. Exp1 adds the observed target
+    message later because it classifies current state instead of generating
+    the next message.
     """
     if test_sessions < 1:
         raise ValueError("test_sessions must be at least 1")
@@ -249,7 +282,9 @@ def build_message_level_points(
         )
     selected = set(selected_sessions)
     turns = [
-        turn for turn in merge_consecutive_utterances(chat)
+        turn for turn in protocol_turns(
+            chat, merge_adjacent_bubbles=merge_adjacent_bubbles
+        )
         if turn["session_id"] in selected
     ]
     points: List[Dict[str, Any]] = []
