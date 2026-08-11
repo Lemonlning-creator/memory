@@ -27,6 +27,7 @@ class ChatBackend(Protocol):
         *,
         temperature: float,
         max_tokens: int,
+        top_p: float = 0.9,
         response_schema: dict[str, Any] | None = None,
     ) -> ChatResult: ...
 
@@ -86,6 +87,13 @@ class OpenAICompatibleChatBackend:
             "dashscope.aliyuncs.com" in base_url.lower()
             and model.lower().startswith("qwen")
         )
+        self.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "calls": 0,
+            "network_attempts": 0,
+            "network_retries": 0,
+        }
         try:
             from openai import OpenAI
         except ImportError as exc:
@@ -124,12 +132,22 @@ class OpenAICompatibleChatBackend:
         *,
         temperature: float,
         max_tokens: int,
+        top_p: float = 0.9,
         response_schema: dict[str, Any] | None = None,
     ) -> ChatResult:
         started = time.perf_counter()
         last_error: Exception | None = None
+        if not hasattr(self, "token_usage"):
+            self.token_usage = {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "calls": 0,
+                "network_attempts": 0,
+                "network_retries": 0,
+            }
 
         for attempt in range(1, self.max_attempts + 1):
+            self.token_usage["network_attempts"] += 1
             try:
                 request: dict[str, Any] = {
                     "model": self.model,
@@ -140,6 +158,7 @@ class OpenAICompatibleChatBackend:
                     )
                     + [{"role": "user", "content": user_prompt}],
                     "max_tokens": max_tokens,
+                    "top_p": top_p,
                 }
                 if self.is_kimi_k2:
                     request["temperature"] = (
@@ -156,7 +175,11 @@ class OpenAICompatibleChatBackend:
                     }
                 else:
                     request["temperature"] = temperature
-                    if self.enable_thinking:
+                    if self.is_dashscope_qwen:
+                        request["extra_body"] = {
+                            "enable_thinking": self.enable_thinking
+                        }
+                    elif self.enable_thinking:
                         request["extra_body"] = {"enable_thinking": True}
                 if response_schema is not None:
                     if self._uses_required_tool_schema():
@@ -209,7 +232,7 @@ class OpenAICompatibleChatBackend:
                     raise RuntimeError("model returned an empty response")
 
                 usage = getattr(response, "usage", None)
-                return ChatResult(
+                result = ChatResult(
                     content=content,
                     model=self.model,
                     prompt_tokens=int(getattr(usage, "prompt_tokens", 0) or 0),
@@ -219,10 +242,15 @@ class OpenAICompatibleChatBackend:
                     latency_seconds=round(time.perf_counter() - started, 4),
                     attempts=attempt,
                 )
+                self.token_usage["prompt_tokens"] += result.prompt_tokens
+                self.token_usage["completion_tokens"] += result.completion_tokens
+                self.token_usage["calls"] += 1
+                return result
             except Exception as exc:
                 last_error = exc
                 if attempt >= self.max_attempts or not _is_retryable(exc):
                     break
+                self.token_usage["network_retries"] += 1
                 retry_after = _retry_after_seconds(exc)
                 wait_seconds = (
                     retry_after
@@ -235,6 +263,15 @@ class OpenAICompatibleChatBackend:
         raise RuntimeError(
             f"model call failed after {attempt} attempts: {last_error}"
         ) from last_error
+
+    def available_models(self) -> list[str]:
+        """Return model IDs visible to the configured credential."""
+        response = self.client.models.list()
+        return sorted(
+            str(item.id)
+            for item in getattr(response, "data", [])
+            if getattr(item, "id", None)
+        )
 
     def _uses_required_tool_schema(self) -> bool:
         """Use forced tool arguments where provider JSON Schema is not strict."""
