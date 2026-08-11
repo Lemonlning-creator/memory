@@ -260,7 +260,12 @@ class RealTalkOursTests(unittest.TestCase):
         self.assertIn("hard_constraints", view)
 
     def test_generic_greetings_do_not_update_stable_user_domain(self):
-        for text in ("Hi!", "Hey there, how are you?", "What's up?"):
+        for text in (
+            "Hi!",
+            "Hey there, how are you?",
+            "What's up?",
+            "Hi, I’m doing good how are you?",
+        ):
             self.assertFalse(_has_durable_user_domain_evidence(text))
         self.assertTrue(
             _has_durable_user_domain_evidence(

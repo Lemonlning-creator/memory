@@ -1029,7 +1029,17 @@ def _has_durable_user_domain_evidence(content: str) -> bool:
     )
     if any(re.fullmatch(pattern, normalized) for pattern in low_information):
         return False
-    return len(normalized.split()) >= 3
+    generic_checkin_words = {
+        "a", "am", "and", "are", "day", "doing", "far", "fine", "going",
+        "good", "great", "hello", "hey", "hi", "how", "i", "im", "is",
+        "it", "m", "morning", "night", "so", "thanks", "thank", "the",
+        "there", "today", "up", "well", "what's", "you", "your",
+    }
+    informative_words = [
+        word for word in normalized.split()
+        if word not in generic_checkin_words
+    ]
+    return len(informative_words) >= 2
 
 
 def _compact_user_domain(value: dict[str, Any]) -> dict[str, Any]:
