@@ -46,7 +46,7 @@ Actor 只接收完整真实历史、完整 Self Domain、`situation` 和唯一 `
 
 ## 5. Schema、恢复与审计
 
-三个结构化阶段使用严格 JSON Schema，每次最多三次逻辑尝试。格式修复只修正 JSON、字段和类型。所有操作使用幂等 key 和检查点；最终完成要求 0 unresolved。原始 content 与 reasoning 分字段保存，报告只披露 thinking 模式、token 与哈希。API 密钥只从环境变量读取。
+三个结构化阶段使用严格 JSON Schema，每次最多三次逻辑尝试。百炼 Qwen thinking 不支持强制工具调用，且实测 JSON mode 会阻塞，因此 Decision 将完整 Schema 写入 Prompt，并以同一 Schema 在本地严格校验；其他非 thinking 阶段继续使用端点原生强制 Schema。格式修复只修正 JSON、字段和类型。所有操作使用幂等 key 和检查点；最终完成要求 0 unresolved。原始 content 与 reasoning 分字段保存，报告只披露 thinking 模式、token 与哈希。API 密钥只从环境变量读取。
 
 ## 6. 执行门槛
 

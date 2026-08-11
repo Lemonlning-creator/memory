@@ -257,7 +257,7 @@ class PersonaEmpPublicReproductionTests(unittest.TestCase):
         self.assertIn("tool_choice", completions.request)
         self.assertNotIn("response_format", completions.request)
 
-    def test_dashscope_qwen_thinking_schema_uses_json_mode(self) -> None:
+    def test_dashscope_qwen_thinking_schema_uses_prompt_contract(self) -> None:
         completions = ThinkingJsonCompletions()
         backend = OpenAICompatibleChatBackend.__new__(OpenAICompatibleChatBackend)
         backend.model = "qwen3-max-2026-01-23"
@@ -280,7 +280,7 @@ class PersonaEmpPublicReproductionTests(unittest.TestCase):
             response_schema=schema, enable_thinking=True,
         )
         assert completions.request is not None
-        self.assertEqual(completions.request["response_format"], {"type": "json_object"})
+        self.assertNotIn("response_format", completions.request)
         self.assertNotIn("tools", completions.request)
         self.assertNotIn("tool_choice", completions.request)
         self.assertIn("exact schema", completions.request["messages"][-1]["content"])

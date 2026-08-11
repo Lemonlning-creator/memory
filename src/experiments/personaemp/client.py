@@ -155,7 +155,7 @@ class OpenAICompatibleChatBackend:
             if enable_thinking is None
             else bool(enable_thinking)
         )
-        thinking_json_mode = bool(
+        thinking_prompt_schema = bool(
             response_schema is not None
             and self.is_dashscope_qwen
             and thinking_enabled
@@ -178,7 +178,7 @@ class OpenAICompatibleChatBackend:
                             + json.dumps(
                                 response_schema["schema"], ensure_ascii=False
                             )
-                            if thinking_json_mode
+                            if thinking_prompt_schema
                             else user_prompt
                         ),
                     }],
@@ -207,8 +207,8 @@ class OpenAICompatibleChatBackend:
                     elif thinking_enabled:
                         request["extra_body"] = {"enable_thinking": True}
                 if response_schema is not None:
-                    if thinking_json_mode:
-                        request["response_format"] = {"type": "json_object"}
+                    if thinking_prompt_schema:
+                        pass
                     elif self._uses_required_tool_schema():
                         schema_name = str(response_schema.get("name") or "").strip()
                         schema = response_schema.get("schema")
@@ -243,7 +243,7 @@ class OpenAICompatibleChatBackend:
                 if (
                     response_schema is not None
                     and self._uses_required_tool_schema()
-                    and not thinking_json_mode
+                    and not thinking_prompt_schema
                 ):
                     tool_calls = list(message.tool_calls or [])
                     if (
