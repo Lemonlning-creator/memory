@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REALTALK Task 1 · Ours 三 Session 实验</title>
+  <style>
+    :root {
+      --paper: #f6f4ee;
+      --ink: #17201d;
+      --muted: #64706b;
+      --line: #c8cec8;
+      --green: #176b52;
+      --green-soft: #dcebe4;
+      --blue: #255e91;
+      --blue-soft: #dfeaf4;
+      --red: #a43d32;
+      --red-soft: #f2dfda;
+      --yellow: #d9a928;
+      --white: #fffefa;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Noto Serif SC", "Source Han Serif SC", "Microsoft YaHei", serif;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+
+    .shell { max-width: 1180px; margin: 0 auto; padding: 0 28px 80px; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 58px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(246, 244, 238, .96);
+      backdrop-filter: blur(10px);
+    }
+    .brand { font-weight: 800; font-size: 15px; }
+    .nav { display: flex; gap: 18px; font-family: "Microsoft YaHei", sans-serif; font-size: 13px; }
+    .nav a { color: var(--muted); text-decoration: none; }
+    .nav a:hover { color: var(--green); }
+
+    header {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 48px;
+      align-items: end;
+      min-height: 440px;
+      padding: 72px 0 54px;
+      border-bottom: 1px solid var(--line);
+    }
+    .kicker {
+      font-family: "Microsoft YaHei", sans-serif;
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    h1 { margin: 18px 0; max-width: 760px; font-size: clamp(38px, 6vw, 72px); line-height: 1.08; }
+    .lead { max-width: 680px; color: var(--muted); font-size: 18px; }
+    .stamp {
+      border-left: 5px solid var(--green);
+      padding: 22px 0 22px 24px;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    .stamp strong { display: block; font-size: 44px; line-height: 1; }
+    .stamp span { display: block; margin-top: 12px; color: var(--muted); font-size: 14px; }
+
+    section { padding: 70px 0; border-bottom: 1px solid var(--line); }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-bottom: 34px; }
+    h2 { margin: 0; font-size: 34px; line-height: 1.2; }
+    .section-note { max-width: 480px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: 14px; }
+
+    .facts { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); background: var(--white); }
+    .fact { min-height: 132px; padding: 24px; border-right: 1px solid var(--line); }
+    .fact:last-child { border-right: 0; }
+    .fact b { display: block; font-size: 34px; line-height: 1.1; }
+    .fact span { display: block; margin-top: 10px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: 13px; }
+
+    .rail {
+      display: grid;
+      grid-template-columns: 1fr 54px 1fr 54px 1fr;
+      align-items: stretch;
+    }
+    .rail-card { min-height: 220px; padding: 28px; border: 1px solid var(--line); background: var(--white); }
+    .rail-card.ca { border-top: 5px solid var(--blue); }
+    .rail-card.cb { border-top: 5px solid var(--red); }
+    .rail-card.out { border-top: 5px solid var(--green); }
+    .rail-card small { font-family: "Microsoft YaHei", sans-serif; color: var(--muted); }
+    .rail-card h3 { margin: 14px 0 12px; font-size: 24px; }
+    .rail-card p { margin: 0; color: var(--muted); }
+    .arrow { display: grid; place-items: center; color: var(--green); font: 700 28px/1 sans-serif; }
+
+    .sample {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    .chat { border: 1px solid var(--line); background: var(--white); padding: 28px; }
+    .bubble { width: fit-content; max-width: 82%; margin: 12px 0; padding: 12px 15px; border-radius: 6px; font-family: "Microsoft YaHei", sans-serif; font-size: 14px; }
+    .bubble.partner { background: var(--blue-soft); }
+    .bubble.target { margin-left: auto; background: var(--green-soft); }
+    .bubble.hidden { margin-left: auto; border: 1px dashed var(--red); color: var(--red); background: var(--red-soft); }
+    .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: 12px; }
+    .dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; }
+    .dot.blue { background: var(--blue); } .dot.green { background: var(--green); } .dot.red { background: var(--red); }
+
+    .ours-stack { display: grid; gap: 12px; }
+    .stage {
+      display: grid;
+      grid-template-columns: 130px 1fr 1fr;
+      gap: 22px;
+      align-items: center;
+      min-height: 104px;
+      padding: 18px 22px;
+      border: 1px solid var(--line);
+      background: var(--white);
+    }
+    .stage-index { font: 800 34px/1 "Microsoft YaHei", sans-serif; color: var(--green); }
+    .stage h3 { margin: 0 0 4px; font-size: 20px; }
+    .stage p { margin: 0; color: var(--muted); font-size: 14px; }
+    .io { font-family: "Microsoft YaHei", sans-serif; font-size: 13px; color: var(--muted); }
+    .io b { color: var(--ink); }
+
+    .lambda {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr 1fr;
+      align-items: center;
+      gap: 18px;
+      margin-top: 28px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      background: var(--white);
+    }
+    .lambda-side { font-family: "Microsoft YaHei", sans-serif; font-size: 14px; }
+    .lambda-side:last-child { text-align: right; }
+    .meter { position: relative; height: 12px; background: var(--blue-soft); border: 1px solid var(--line); }
+    .meter::after { content: ""; position: absolute; inset: -5px auto -5px 52%; width: 4px; background: var(--yellow); }
+    .meter-label { margin-top: 9px; text-align: center; color: var(--muted); font: 12px "Microsoft YaHei", sans-serif; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric { min-height: 115px; padding: 20px; border: 1px solid var(--line); background: var(--white); }
+    .metric.local { border-left: 4px solid var(--green); }
+    .metric.pending { border-left: 4px solid var(--yellow); }
+    .metric b { display: block; font-family: "Microsoft YaHei", sans-serif; font-size: 14px; }
+    .metric span { display: block; margin-top: 12px; color: var(--muted); font-size: 12px; }
+
+    .boundary { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .yes, .no { padding: 25px; border: 1px solid var(--line); background: var(--white); }
+    .yes { border-top: 5px solid var(--green); }
+    .no { border-top: 5px solid var(--red); }
+    .boundary h3 { margin: 0 0 14px; }
+    .boundary ul { margin: 0; padding-left: 20px; color: var(--muted); }
+
+    details { border-top: 1px solid var(--line); }
+    details:last-child { border-bottom: 1px solid var(--line); }
+    summary { cursor: pointer; padding: 18px 0; font-weight: 800; }
+    details p { max-width: 850px; margin: 0 0 22px; color: var(--muted); }
+
+    .run {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 24px;
+      padding: 28px;
+      border: 1px solid var(--green);
+      background: var(--green-soft);
+    }
+    .pulse { display: flex; align-items: center; gap: 10px; font-family: "Microsoft YaHei", sans-serif; font-weight: 800; }
+    .pulse::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--green); animation: pulse 1.8s infinite; }
+    @keyframes pulse { 50% { opacity: .35; transform: scale(.78); } }
+    code { overflow-wrap: anywhere; font-family: Consolas, monospace; font-size: 12px; }
+
+    footer { padding: 34px 0; color: var(--muted); font-family: "Microsoft YaHei", sans-serif; font-size: 12px; }
+
+    @media (max-width: 850px) {
+      .shell { padding-inline: 18px; }
+      .nav { display: none; }
+      header { grid-template-columns: 1fr; min-height: auto; padding-top: 48px; }
+      .facts, .metrics { grid-template-columns: 1fr 1fr; }
+      .fact:nth-child(2) { border-right: 0; }
+      .rail { grid-template-columns: 1fr; gap: 10px; }
+      .arrow { transform: rotate(90deg); min-height: 34px; }
+      .sample, .boundary { grid-template-columns: 1fr; }
+      .stage { grid-template-columns: 70px 1fr; }
+      .stage .io { grid-column: 2; }
+      .lambda { grid-template-columns: 1fr; }
+      .lambda-side:last-child { text-align: left; }
+      .run { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 40px; }
+      .facts, .metrics { grid-template-columns: 1fr; }
+      .fact { border-right: 0; border-bottom: 1px solid var(--line); }
+      .stage { grid-template-columns: 1fr; }
+      .stage .io { grid-column: 1; }
+    }
+
+    @media print {
+      .topbar { position: static; }
+      .pulse::before { animation: none; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="topbar">
+      <div class="brand">REALTALK / TASK 1 / OURS</div>
+      <div class="nav">
+        <a href="#protocol">协议</a>
+        <a href="#sample">样本</a>
+        <a href="#ours">Ours</a>
+        <a href="#metrics">评价</a>
+        <a href="#status">状态</a>
+      </div>
+    </nav>
+
+    <header>
+      <div>
+        <div class="kicker">三 Session 正式执行锚点</div>
+        <h1>让 Qwen3-8B<br>成为真实的那个人</h1>
+        <p class="lead">固定论文 Table 8 的 Ca/Cb。用三段 Ca 建立 Self Domain，在三段 Cb 中逐条预测目标人物的真实下一次发言。</p>
+      </div>
+      <div class="stamp">
+        <strong>3 + 3</strong>
+        <span>Ca 三个 Session建立人物<br>Cb 三个 Session完成测试</span>
+      </div>
+    </header>
+
+    <section id="protocol">
+      <div class="section-head">
+        <h2>一眼看懂实验</h2>
+        <p class="section-note">整段对话 EI 只负责确定 Ca/Cb。模型真正看到的内容始终限制在各自的时间前 3 个 Session。</p>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>10</b><span>目标人物</span></div>
+        <div class="fact"><b>519</b><span>合并消息级目标</span></div>
+        <div class="fact"><b>1</b><span>只运行 Ours</span></div>
+        <div class="fact"><b>0</b><span>训练与微调</span></div>
+      </div>
+      <div class="rail" style="margin-top:26px">
+        <article class="rail-card ca">
+          <small>CA · PERSONA SOURCE</small>
+          <h3>认识目标人物</h3>
+          <p>时间前 3 个 Session。保留双方语境，只用目标人物自己的发言支持稳定 Self Domain。</p>
+        </article>
+        <div class="arrow">→</div>
+        <article class="rail-card cb">
+          <small>CB · CAUSAL TEST</small>
+          <h3>进入另一段关系</h3>
+          <p>时间前 3 个 Session。每次只看到当前目标之前的真实历史，持续理解测试伙伴。</p>
+        </article>
+        <div class="arrow">→</div>
+        <article class="rail-card out">
+          <small>OUTPUT · TARGET SPEAKER</small>
+          <h3>继续说下一句</h3>
+          <p>只生成目标人物消息。真实目标隐藏到评分阶段，生成文本永不回灌历史。</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="sample">
+      <div class="section-head">
+        <h2>一条样本是什么</h2>
+        <p class="section-note">伙伴消息不是答案。只有当前被模拟的人物发言才形成测试点。</p>
+      </div>
+      <div class="sample">
+        <div class="chat">
+          <div class="bubble target">Emi：今天事情有点多。</div>
+          <div class="bubble partner">Elise：你还好吗？</div>
+          <div class="bubble partner">Elise：要不要先休息一下？</div>
+          <div class="bubble hidden">Emi：真实下一条消息 · 已隐藏</div>
+          <div class="legend">
+            <span><i class="dot green"></i>目标人物历史</span>
+            <span><i class="dot blue"></i>伙伴历史</span>
+            <span><i class="dot red"></i>Ground Truth</span>
+          </div>
+        </div>
+        <div class="chat">
+          <div class="kicker">模型实际任务</div>
+          <h3 style="font-size:26px;margin:12px 0">You are Emi.<br>Continue the conversation.</h3>
+          <p style="color:var(--muted)">输入左侧可见历史，预测隐藏的 Emi 消息。下一条样本仍使用真实对话，不使用模型刚生成的内容。</p>
+          <div style="margin-top:26px;padding-top:18px;border-top:1px solid var(--line);font-family:'Microsoft YaHei',sans-serif;font-size:13px">
+            连续 Emi 气泡 → 先合并<br>
+            连续 Elise 气泡 → 只进入历史<br>
+            不跨 Session 合并
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ours">
+      <div class="section-head">
+        <h2>Ours 的四步</h2>
+        <p class="section-note">Self 是身份锚点，User 是伙伴模型，Alignment 产生动态权衡，Generation 才落成最终文本。</p>
+      </div>
+      <div class="ours-stack">
+        <div class="stage">
+          <div class="stage-index">01</div>
+          <div><h3>Self Domain</h3><p>每位人物一次，Cb 测试期间固定。</p></div>
+          <div class="io"><b>输入</b> Ca 前 3 Session<br><b>输出</b> Persona · Style · Policy Prior</div>
+        </div>
+        <div class="stage">
+          <div class="stage-index">02</div>
+          <div><h3>User Domain</h3><p>只从已经出现的伙伴消息因果更新。</p></div>
+          <div class="io"><b>输入</b> Cb 已见伙伴证据<br><b>输出</b> 五层伙伴画像</div>
+        </div>
+        <div class="stage">
+          <div class="stage-index">03</div>
+          <div><h3>Alignment</h3><p>一次生成状态、动态 lambda 和唯一策略。</p></div>
+          <div class="io"><b>输入</b> Self · User · History<br><b>输出</b> State · lambda · Policy</div>
+        </div>
+        <div class="stage">
+          <div class="stage-index">04</div>
+          <div><h3>Generation</h3><p>以目标人物身份继续真实对话。</p></div>
+          <div class="io"><b>模型</b> qwen3-8b<br><b>输出</b> 纯文本人物消息</div>
+        </div>
+      </div>
+      <div class="lambda">
+        <div class="lambda-side"><b>lambda 较低</b><br>更贴近人物惯常表达</div>
+        <div><div class="meter"></div><div class="meter-label">每条消息动态判断 · Self 身份始终不可破坏</div></div>
+        <div class="lambda-side"><b>lambda 较高</b><br>更适应伙伴当前需要</div>
+      </div>
+    </section>
+
+    <section id="metrics">
+      <div class="section-head">
+        <h2>八项评价</h2>
+        <p class="section-note">绿色为本地可完成，黄色等待真实 gpt-4o-mini 端点。缺少后三项时不生成最终完成标志。</p>
+      </div>
+      <div class="metrics">
+        <div class="metric local"><b>ROUGE-L</b><span>词面内容相似度</span></div>
+        <div class="metric local"><b>BERTScore</b><span>语义内容相似度</span></div>
+        <div class="metric local"><b>Sentiment</b><span>情感极性准确率</span></div>
+        <div class="metric local"><b>Emotion</b><span>情绪类别准确率</span></div>
+        <div class="metric local"><b>Intimacy</b><span>绝对差，越低越好</span></div>
+        <div class="metric pending"><b>Reflectiveness</b><span>等待 GPT 评价</span></div>
+        <div class="metric pending"><b>Grounding</b><span>等待 GPT 评价</span></div>
+        <div class="metric pending"><b>Empathy</b><span>绝对差，等待 GPT</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>边界很清楚</h2>
+        <p class="section-note">正式主行只接受 3/3 条件。更多 Ca 历史只能作为另行标注的扩展实验。</p>
+      </div>
+      <div class="boundary">
+        <div class="yes">
+          <h3>保持</h3>
+          <ul>
+            <li>Table 8 固定 Ca/Cb</li>
+            <li>连续气泡合并</li>
+            <li>真实因果历史</li>
+            <li>动态 lambda 与唯一策略</li>
+          </ul>
+        </div>
+        <div class="no">
+          <h3>禁用</h3>
+          <ul>
+            <li>Omega 与主动探索</li>
+            <li>Verification 与重写</li>
+            <li>句数限制和强制共情</li>
+            <li>未来 Cb 信息和生成回灌</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-head">
+        <h2>证据等级</h2>
+        <p class="section-note">把论文事实和本地重建分开，最终报告不会把推断写成官方数字。</p>
+      </div>
+      <details open>
+        <summary>论文明确</summary>
+        <p>Ca/Cb 设计、低整体 EI 对话作为 Cb、连续同说话者消息合并、目标人物下一消息任务、三 Session 主条件、Table 8 逐人物结果与 Table 2 聚合。</p>
+      </details>
+      <details>
+        <summary>公开数据交叉验证</summary>
+        <p>按时间取前 N 个 Session 的合并消息累计数量与 Figure 7 横轴吻合，支持使用连续时间前缀。</p>
+      </details>
+      <details>
+        <summary>必须披露的重建</summary>
+        <p>Persona Simulation 构造代码和官方精确样本数未公开。519 是公开 JSON 按论文规则重建得到的测试规模。</p>
+      </details>
+    </section>
+
+    <section id="status">
+      <div class="section-head">
+        <h2>已经开始执行</h2>
+        <p class="section-note">错误的 1,076 原始气泡版本已隔离，绝不进入正式结果。</p>
+      </div>
+      <div class="run">
+        <div class="pulse">正式运行中</div>
+        <div>
+          <b>screen</b><br><code>realtalk-ours-qwen3-8b-merged-full-v1</code><br><br>
+          <b>output</b><br><code>/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-ours-qwen3-8b-merged-full-v1-a642f82</code>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      实现提交 a642f82 · qwen3-8b · thinking off · CPU only · protocol-aligned comparison
+    </footer>
+  </div>
+</body>
+</html>
