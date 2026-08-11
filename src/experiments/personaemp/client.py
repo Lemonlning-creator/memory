@@ -15,6 +15,7 @@ class ChatResult:
     completion_tokens: int
     latency_seconds: float
     attempts: int
+    reasoning_content: str = ""
 
 
 class ChatBackend(Protocol):
@@ -29,6 +30,7 @@ class ChatBackend(Protocol):
         max_tokens: int,
         top_p: float = 0.9,
         response_schema: dict[str, Any] | None = None,
+        enable_thinking: bool | None = None,
     ) -> ChatResult: ...
 
 
@@ -134,6 +136,7 @@ class OpenAICompatibleChatBackend:
         max_tokens: int,
         top_p: float = 0.9,
         response_schema: dict[str, Any] | None = None,
+        enable_thinking: bool | None = None,
     ) -> ChatResult:
         started = time.perf_counter()
         last_error: Exception | None = None
@@ -146,6 +149,11 @@ class OpenAICompatibleChatBackend:
                 "network_retries": 0,
             }
 
+        thinking_enabled = (
+            self.enable_thinking
+            if enable_thinking is None
+            else bool(enable_thinking)
+        )
         for attempt in range(1, self.max_attempts + 1):
             self.token_usage["network_attempts"] += 1
             try:
@@ -162,13 +170,13 @@ class OpenAICompatibleChatBackend:
                 }
                 if self.is_kimi_k2:
                     request["temperature"] = (
-                        1.0 if self.enable_thinking else 0.6
+                        1.0 if thinking_enabled else 0.6
                     )
                     request["extra_body"] = {
                         "thinking": {
                             "type": (
                                 "enabled"
-                                if self.enable_thinking
+                                if thinking_enabled
                                 else "disabled"
                             )
                         }
@@ -177,9 +185,9 @@ class OpenAICompatibleChatBackend:
                     request["temperature"] = temperature
                     if self.is_dashscope_qwen:
                         request["extra_body"] = {
-                            "enable_thinking": self.enable_thinking
+                            "enable_thinking": thinking_enabled
                         }
-                    elif self.enable_thinking:
+                    elif thinking_enabled:
                         request["extra_body"] = {"enable_thinking": True}
                 if response_schema is not None:
                     if self._uses_required_tool_schema():
@@ -230,6 +238,9 @@ class OpenAICompatibleChatBackend:
                     content = (message.content or "").strip()
                 if not content:
                     raise RuntimeError("model returned an empty response")
+                reasoning_content = str(
+                    getattr(message, "reasoning_content", "") or ""
+                ).strip()
 
                 usage = getattr(response, "usage", None)
                 result = ChatResult(
@@ -241,6 +252,7 @@ class OpenAICompatibleChatBackend:
                     ),
                     latency_seconds=round(time.perf_counter() - started, 4),
                     attempts=attempt,
+                    reasoning_content=reasoning_content,
                 )
                 self.token_usage["prompt_tokens"] += result.prompt_tokens
                 self.token_usage["completion_tokens"] += result.completion_tokens

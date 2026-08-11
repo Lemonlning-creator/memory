@@ -1,4 +1,4 @@
-"""Strict structured contracts for the REALTALK Task 1 Ours pipeline."""
+"""Strict contracts for the REALTALK Ours Agentic V2 pipeline."""
 from __future__ import annotations
 
 from typing import Any, Callable
@@ -6,11 +6,15 @@ from typing import Any, Callable
 
 CONFIDENCE = ("low", "medium", "high")
 INTENSITY = ("low", "medium", "high")
-ORIENTATIONS = (
-    "self-dominant",
-    "self-leaning",
-    "user-leaning",
-    "strongly-user-oriented",
+PROFILE_LAYERS = ("core", "regulation", "cognition", "identity", "behavior")
+ORIENTATIONS = ("self-led", "balanced", "partner-adaptive")
+PRIMARY_MOVES = (
+    "self-disclose",
+    "answer",
+    "acknowledge",
+    "follow-up",
+    "topic-shift",
+    "mixed",
 )
 
 
@@ -22,72 +26,134 @@ def _fact_schema() -> dict[str, Any]:
     return {
         "type": "object",
         "properties": {
-            "statement": {"type": "string"},
+            "value": {"type": "string"},
             "confidence": {"type": "string", "enum": list(CONFIDENCE)},
-            "evidence_turn_ids": _string_array_schema(),
+            "evidence_ids": _string_array_schema(),
         },
-        "required": ["statement", "confidence", "evidence_turn_ids"],
+        "required": ["value", "confidence", "evidence_ids"],
         "additionalProperties": False,
     }
 
 
 SELF_DOMAIN_SCHEMA = {
-    "name": "realtalk_ours_self_domain",
+    "name": "realtalk_ours_agentic_self_domain_v2",
     "strict": True,
     "schema": {
         "type": "object",
         "properties": {
-            "identity": {
+            "identity_context": {
                 "type": "object",
                 "properties": {
                     "self_descriptions": _string_array_schema(),
-                    "stable_interests": _string_array_schema(),
+                    "life_background": _string_array_schema(),
                     "relationships": _string_array_schema(),
-                    "life_context": _string_array_schema(),
+                    "recurring_interests": _string_array_schema(),
                 },
                 "required": [
                     "self_descriptions",
-                    "stable_interests",
+                    "life_background",
                     "relationships",
-                    "life_context",
+                    "recurring_interests",
                 ],
                 "additionalProperties": False,
             },
-            "persona": {
+            "communication_signature": {
                 "type": "object",
                 "properties": {
-                    "personality_traits": _string_array_schema(),
                     "tone": _string_array_schema(),
+                    "vocabulary_and_phrasing": _string_array_schema(),
+                    "information_density": {"type": "string"},
+                    "typical_message_scale": {"type": "string"},
                     "expression_patterns": _string_array_schema(),
                 },
-                "required": ["personality_traits", "tone", "expression_patterns"],
-                "additionalProperties": False,
-            },
-            "behavior_policy_prior": {
-                "type": "object",
-                "properties": {
-                    "interaction_principles": _string_array_schema(),
-                    "emotional_response_style": {"type": "string"},
-                    "guidance_style": {"type": "string"},
-                    "initiative": {"type": "string", "enum": list(INTENSITY)},
-                },
                 "required": [
-                    "interaction_principles",
-                    "emotional_response_style",
-                    "guidance_style",
-                    "initiative",
+                    "tone",
+                    "vocabulary_and_phrasing",
+                    "information_density",
+                    "typical_message_scale",
+                    "expression_patterns",
                 ],
                 "additionalProperties": False,
             },
-            "hard_constraints": _string_array_schema(),
-            "uncertainties": _string_array_schema(),
+            "interaction_policy_prior": {
+                "type": "object",
+                "properties": {
+                    "initiative": {"type": "string"},
+                    "self_disclosure": {"type": "string"},
+                    "question_behavior": {"type": "string"},
+                    "topic_continuation": {"type": "string"},
+                    "topic_shift": {"type": "string"},
+                    "advice_behavior": {"type": "string"},
+                    "response_to_partner_emotion": {"type": "string"},
+                },
+                "required": [
+                    "initiative",
+                    "self_disclosure",
+                    "question_behavior",
+                    "topic_continuation",
+                    "topic_shift",
+                    "advice_behavior",
+                    "response_to_partner_emotion",
+                ],
+                "additionalProperties": False,
+            },
+            "affective_social_signature": {
+                "type": "object",
+                "properties": {
+                    "emotion_expression": {"type": "string"},
+                    "sentiment_style": {"type": "string"},
+                    "introspection_style": {"type": "string"},
+                    "follow_up_style": {"type": "string"},
+                    "warmth_style": {"type": "string"},
+                    "closeness_style": {"type": "string"},
+                },
+                "required": [
+                    "emotion_expression",
+                    "sentiment_style",
+                    "introspection_style",
+                    "follow_up_style",
+                    "warmth_style",
+                    "closeness_style",
+                ],
+                "additionalProperties": False,
+            },
+            "boundaries_and_uncertainty": {
+                "type": "object",
+                "properties": {
+                    "stable_boundaries": _string_array_schema(),
+                    "uncertain_attributes": _string_array_schema(),
+                },
+                "required": ["stable_boundaries", "uncertain_attributes"],
+                "additionalProperties": False,
+            },
+            "observable_statistics": {
+                "type": "object",
+                "properties": {
+                    "target_message_count": {"type": "integer", "minimum": 1},
+                    "mean_characters": {"type": "number", "minimum": 0},
+                    "median_characters": {"type": "number", "minimum": 0},
+                    "question_rate": {"type": "number", "minimum": 0, "maximum": 1},
+                    "first_person_rate": {"type": "number", "minimum": 0, "maximum": 1},
+                    "median_merged_bubbles": {"type": "number", "minimum": 1},
+                },
+                "required": [
+                    "target_message_count",
+                    "mean_characters",
+                    "median_characters",
+                    "question_rate",
+                    "first_person_rate",
+                    "median_merged_bubbles",
+                ],
+                "additionalProperties": False,
+            },
         },
         "required": [
-            "identity",
-            "persona",
-            "behavior_policy_prior",
-            "hard_constraints",
-            "uncertainties",
+            "identity_context",
+            "communication_signature",
+            "interaction_policy_prior",
+            "affective_social_signature",
+            "boundaries_and_uncertainty",
+            "observable_statistics",
         ],
         "additionalProperties": False,
     },
@@ -95,14 +161,14 @@ SELF_DOMAIN_SCHEMA = {
 
 
 USER_DOMAIN_SCHEMA = {
-    "name": "realtalk_ours_user_domain",
+    "name": "realtalk_ours_agentic_user_domain_v2",
     "strict": True,
     "schema": {
         "type": "object",
         "properties": {
             **{
                 layer: {"type": "array", "items": _fact_schema()}
-                for layer in ("core", "regulation", "cognition", "identity", "behavior")
+                for layer in PROFILE_LAYERS
             },
             "update_summary": {
                 "type": "object",
@@ -116,136 +182,95 @@ USER_DOMAIN_SCHEMA = {
                 "additionalProperties": False,
             },
         },
-        "required": [
-            "core",
-            "regulation",
-            "cognition",
-            "identity",
-            "behavior",
-            "update_summary",
-        ],
+        "required": [*PROFILE_LAYERS, "update_summary"],
         "additionalProperties": False,
     },
 }
 
 
 ALIGNMENT_SCHEMA = {
-    "name": "realtalk_ours_alignment",
+    "name": "realtalk_ours_agentic_decision_v2",
     "strict": True,
     "schema": {
         "type": "object",
         "properties": {
-            "user_state": {
+            "situation": {
                 "type": "object",
                 "properties": {
-                    "current": {
-                        "type": "object",
-                        "properties": {
-                            "emotion": {"type": "string"},
-                            "emotional_intensity": {
-                                "type": "string",
-                                "enum": list(INTENSITY),
-                            },
-                            "intent": {"type": "string"},
-                            "main_need": {"type": "string"},
-                            "interaction_expectation": {"type": "string"},
-                            "evidence_turn_ids": _string_array_schema(),
-                            "uncertainty": {
-                                "type": "string",
-                                "enum": list(CONFIDENCE),
-                            },
-                        },
-                        "required": [
-                            "emotion",
-                            "emotional_intensity",
-                            "intent",
-                            "main_need",
-                            "interaction_expectation",
-                            "evidence_turn_ids",
-                            "uncertainty",
-                        ],
-                        "additionalProperties": False,
-                    },
-                    "future": {
-                        "type": "object",
-                        "properties": {
-                            "likely_reaction": {"type": "string"},
-                            "response_risk": {"type": "string"},
-                            "desired_transition": {"type": "string"},
-                            "uncertainty": {
-                                "type": "string",
-                                "enum": list(CONFIDENCE),
-                            },
-                        },
-                        "required": [
-                            "likely_reaction",
-                            "response_risk",
-                            "desired_transition",
-                            "uncertainty",
-                        ],
-                        "additionalProperties": False,
-                    },
+                    "topic": {"type": "string"},
+                    "partner_move": {"type": "string"},
+                    "explicit_affect": {"type": "string"},
+                    "affect_intensity": {"type": "string", "enum": list(INTENSITY)},
+                    "support_request": {"type": "boolean"},
+                    "open_question": {"type": "string"},
+                    "uncertainty": {"type": "string", "enum": list(CONFIDENCE)},
                 },
-                "required": ["current", "future"],
+                "required": [
+                    "topic",
+                    "partner_move",
+                    "explicit_affect",
+                    "affect_intensity",
+                    "support_request",
+                    "open_question",
+                    "uncertainty",
+                ],
                 "additionalProperties": False,
+            },
+            "relevant_user_domain": {
+                "type": "array",
+                "maxItems": 2,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "layer": {"type": "string", "enum": list(PROFILE_LAYERS)},
+                        "value": {"type": "string"},
+                    },
+                    "required": ["layer", "value"],
+                    "additionalProperties": False,
+                },
             },
             "alignment": {
                 "type": "object",
                 "properties": {
-                    "lambda_t": {"type": "number", "minimum": 0, "maximum": 1},
-                    "orientation": {
-                        "type": "string",
-                        "enum": list(ORIENTATIONS),
-                    },
-                    "lambda_basis": {"type": "string"},
-                    "self_constraint": {"type": "string"},
-                    "user_adaptation": {"type": "string"},
+                    "orientation": {"type": "string", "enum": list(ORIENTATIONS)},
+                    "lambda_trace": {"type": "number", "minimum": 0, "maximum": 1},
+                    "decision_basis": {"type": "string"},
                 },
-                "required": [
-                    "lambda_t",
-                    "orientation",
-                    "lambda_basis",
-                    "self_constraint",
-                    "user_adaptation",
-                ],
+                "required": ["orientation", "lambda_trace", "decision_basis"],
                 "additionalProperties": False,
             },
-            "behavior_policy": {
+            "next_action": {
                 "type": "object",
                 "properties": {
-                    "response_objective": {"type": "string"},
-                    "perspective_taking": {"type": "string"},
-                    "emotion_alignment": {"type": "string"},
-                    "personalization": {"type": "string"},
-                    "self_domain_expression": {"type": "string"},
-                    "directness": {"type": "string", "enum": list(INTENSITY)},
-                    "guidance": {
-                        "type": "string",
-                        "enum": ["none", "light", "direct"],
-                    },
-                    "question_policy": {
-                        "type": "string",
-                        "enum": ["none", "optional", "necessary"],
-                    },
+                    "communicative_intent": {"type": "string"},
+                    "primary_move": {"type": "string", "enum": list(PRIMARY_MOVES)},
+                    "content_direction": {"type": "string"},
+                    "self_expression": {"type": "string"},
+                    "partner_adaptation": {"type": "string"},
                     "tone": {"type": "string"},
-                    "avoid": _string_array_schema(),
+                    "message_scale": {
+                        "type": "string",
+                        "enum": ["short", "typical", "extended"],
+                    },
+                    "question_mode": {
+                        "type": "string",
+                        "enum": ["none", "optional", "follow-up"],
+                    },
                 },
                 "required": [
-                    "response_objective",
-                    "perspective_taking",
-                    "emotion_alignment",
-                    "personalization",
-                    "self_domain_expression",
-                    "directness",
-                    "guidance",
-                    "question_policy",
+                    "communicative_intent",
+                    "primary_move",
+                    "content_direction",
+                    "self_expression",
+                    "partner_adaptation",
                     "tone",
-                    "avoid",
+                    "message_scale",
+                    "question_mode",
                 ],
                 "additionalProperties": False,
             },
         },
-        "required": ["user_state", "alignment", "behavior_policy"],
+        "required": ["situation", "relevant_user_domain", "alignment", "next_action"],
         "additionalProperties": False,
     },
 }
@@ -253,85 +278,77 @@ ALIGNMENT_SCHEMA = {
 
 def empty_user_domain() -> dict[str, Any]:
     return {
-        "core": [],
-        "regulation": [],
-        "cognition": [],
-        "identity": [],
-        "behavior": [],
+        **{layer: [] for layer in PROFILE_LAYERS},
         "update_summary": {
             "added": [],
             "revised": [],
             "removed": [],
-            "uncertainties": ["No partner evidence has been observed yet."],
+            "uncertainties": ["No completed partner session has been observed yet."],
         },
     }
 
 
 def normalize_self_domain(value: Any) -> dict[str, Any]:
     root = _exact_object(value, SELF_DOMAIN_SCHEMA["schema"], "self_domain")
-    identity = _exact_object(
-        root["identity"],
-        SELF_DOMAIN_SCHEMA["schema"]["properties"]["identity"],
-        "identity",
-    )
-    persona = _exact_object(
-        root["persona"],
-        SELF_DOMAIN_SCHEMA["schema"]["properties"]["persona"],
-        "persona",
-    )
-    prior = _exact_object(
-        root["behavior_policy_prior"],
-        SELF_DOMAIN_SCHEMA["schema"]["properties"]["behavior_policy_prior"],
-        "behavior_policy_prior",
-    )
-    return {
-        "identity": {key: _strings(identity[key], f"identity.{key}") for key in identity},
-        "persona": {key: _strings(persona[key], f"persona.{key}") for key in persona},
-        "behavior_policy_prior": {
-            "interaction_principles": _strings(
-                prior["interaction_principles"],
-                "behavior_policy_prior.interaction_principles",
-            ),
-            "emotional_response_style": _text(
-                prior["emotional_response_style"],
-                "behavior_policy_prior.emotional_response_style",
-            ),
-            "guidance_style": _text(
-                prior["guidance_style"], "behavior_policy_prior.guidance_style"
-            ),
-            "initiative": _enum(prior["initiative"], INTENSITY, "initiative"),
+    result: dict[str, Any] = {}
+    for section in (
+        "identity_context",
+        "communication_signature",
+        "interaction_policy_prior",
+        "affective_social_signature",
+        "boundaries_and_uncertainty",
+    ):
+        section_schema = SELF_DOMAIN_SCHEMA["schema"]["properties"][section]
+        item = _exact_object(root[section], section_schema, section)
+        result[section] = {
+            key: (
+                _strings(raw, f"{section}.{key}")
+                if isinstance(raw, list)
+                else _text(raw, f"{section}.{key}")
+            )
+            for key, raw in item.items()
+        }
+    stats_schema = SELF_DOMAIN_SCHEMA["schema"]["properties"]["observable_statistics"]
+    stats = _exact_object(root["observable_statistics"], stats_schema, "observable_statistics")
+    result["observable_statistics"] = {
+        "target_message_count": _integer(stats["target_message_count"], "target_message_count", minimum=1),
+        **{
+            key: _number(stats[key], f"observable_statistics.{key}")
+            for key in (
+                "mean_characters",
+                "median_characters",
+                "question_rate",
+                "first_person_rate",
+                "median_merged_bubbles",
+            )
         },
-        "hard_constraints": _strings(root["hard_constraints"], "hard_constraints"),
-        "uncertainties": _strings(root["uncertainties"], "uncertainties"),
     }
+    for key in ("question_rate", "first_person_rate"):
+        if not 0 <= result["observable_statistics"][key] <= 1:
+            raise ValueError(f"observable_statistics.{key} must be in [0,1]")
+    return result
 
 
 def normalize_user_domain(value: Any) -> dict[str, Any]:
     root = _exact_object(value, USER_DOMAIN_SCHEMA["schema"], "user_domain")
     normalized: dict[str, Any] = {}
-    for layer in ("core", "regulation", "cognition", "identity", "behavior"):
+    for layer in PROFILE_LAYERS:
         facts = root[layer]
         if not isinstance(facts, list):
             raise ValueError(f"{layer} must be an array")
         seen: set[str] = set()
-        normalized_facts = []
+        normalized[layer] = []
         for index, fact in enumerate(facts):
             item = _exact_object(fact, _fact_schema(), f"{layer}[{index}]")
-            statement = _text(item["statement"], f"{layer}[{index}].statement")
-            key = statement.casefold()
-            if key in seen:
-                raise ValueError(f"duplicate fact in {layer}: {statement}")
-            seen.add(key)
-            normalized_facts.append({
-                "statement": statement,
-                "confidence": _enum(
-                    item["confidence"], CONFIDENCE, f"{layer}[{index}].confidence"
-                ),
-                "evidence_turn_ids": _strings(
-                    item["evidence_turn_ids"], f"{layer}[{index}].evidence_turn_ids"
-                ),
+            fact_value = _text(item["value"], f"{layer}[{index}].value")
+            if fact_value.casefold() in seen:
+                raise ValueError(f"duplicate fact in {layer}: {fact_value}")
+            seen.add(fact_value.casefold())
+            normalized[layer].append({
+                "value": fact_value,
+                "confidence": _enum(item["confidence"], CONFIDENCE, f"{layer}[{index}].confidence"),
+                "evidence_ids": _strings(item["evidence_ids"], f"{layer}[{index}].evidence_ids"),
             })
-        normalized[layer] = normalized_facts
     summary_schema = USER_DOMAIN_SCHEMA["schema"]["properties"]["update_summary"]
     summary = _exact_object(root["update_summary"], summary_schema, "update_summary")
     normalized["update_summary"] = {
@@ -342,89 +359,54 @@ def normalize_user_domain(value: Any) -> dict[str, Any]:
 
 def normalize_alignment(value: Any) -> dict[str, Any]:
     schema = ALIGNMENT_SCHEMA["schema"]
-    root = _exact_object(value, schema, "alignment_result")
-    state_schema = schema["properties"]["user_state"]
-    state = _exact_object(root["user_state"], state_schema, "user_state")
-    current = _exact_object(
-        state["current"], state_schema["properties"]["current"], "user_state.current"
-    )
-    future = _exact_object(
-        state["future"], state_schema["properties"]["future"], "user_state.future"
-    )
-    align_schema = schema["properties"]["alignment"]
-    alignment = _exact_object(root["alignment"], align_schema, "alignment")
-    policy_schema = schema["properties"]["behavior_policy"]
-    policy = _exact_object(root["behavior_policy"], policy_schema, "behavior_policy")
-    lambda_t = alignment["lambda_t"]
-    if isinstance(lambda_t, bool) or not isinstance(lambda_t, (int, float)):
-        raise ValueError("alignment.lambda_t must be numeric")
-    lambda_t = round(float(lambda_t), 4)
-    if not 0 <= lambda_t <= 1:
-        raise ValueError("alignment.lambda_t must be in [0, 1]")
-    orientation = _enum(alignment["orientation"], ORIENTATIONS, "orientation")
-    expected = _orientation(lambda_t)
-    if orientation != expected:
-        raise ValueError(
-            f"alignment.orientation {orientation!r} conflicts with lambda_t; expected {expected!r}"
-        )
+    root = _exact_object(value, schema, "decision")
+    situation_schema = schema["properties"]["situation"]
+    situation = _exact_object(root["situation"], situation_schema, "situation")
+    alignment_schema = schema["properties"]["alignment"]
+    alignment = _exact_object(root["alignment"], alignment_schema, "alignment")
+    action_schema = schema["properties"]["next_action"]
+    action = _exact_object(root["next_action"], action_schema, "next_action")
+
+    relevant = root["relevant_user_domain"]
+    if not isinstance(relevant, list) or len(relevant) > 2:
+        raise ValueError("relevant_user_domain must contain at most two facts")
+    normalized_relevant = []
+    fact_schema = schema["properties"]["relevant_user_domain"]["items"]
+    for index, fact in enumerate(relevant):
+        item = _exact_object(fact, fact_schema, f"relevant_user_domain[{index}]")
+        normalized_relevant.append({
+            "layer": _enum(item["layer"], PROFILE_LAYERS, f"relevant_user_domain[{index}].layer"),
+            "value": _text(item["value"], f"relevant_user_domain[{index}].value"),
+        })
+
+    lambda_trace = _number(alignment["lambda_trace"], "alignment.lambda_trace")
+    if not 0 <= lambda_trace <= 1:
+        raise ValueError("alignment.lambda_trace must be in [0,1]")
     return {
-        "user_state": {
-            "current": {
-                "emotion": _text(current["emotion"], "current.emotion", allow_empty=True),
-                "emotional_intensity": _enum(
-                    current["emotional_intensity"], INTENSITY, "current.emotional_intensity"
-                ),
-                "intent": _text(current["intent"], "current.intent", allow_empty=True),
-                "main_need": _text(current["main_need"], "current.main_need", allow_empty=True),
-                "interaction_expectation": _text(
-                    current["interaction_expectation"],
-                    "current.interaction_expectation",
-                    allow_empty=True,
-                ),
-                "evidence_turn_ids": _strings(
-                    current["evidence_turn_ids"], "current.evidence_turn_ids"
-                ),
-                "uncertainty": _enum(
-                    current["uncertainty"], CONFIDENCE, "current.uncertainty"
-                ),
-            },
-            "future": {
-                key: (
-                    _enum(future[key], CONFIDENCE, "future.uncertainty")
-                    if key == "uncertainty"
-                    else _text(future[key], f"future.{key}", allow_empty=True)
-                )
-                for key in future
-            },
+        "situation": {
+            "topic": _text(situation["topic"], "situation.topic", allow_empty=True),
+            "partner_move": _text(situation["partner_move"], "situation.partner_move", allow_empty=True),
+            "explicit_affect": _text(situation["explicit_affect"], "situation.explicit_affect", allow_empty=True),
+            "affect_intensity": _enum(situation["affect_intensity"], INTENSITY, "situation.affect_intensity"),
+            "support_request": _boolean(situation["support_request"], "situation.support_request"),
+            "open_question": _text(situation["open_question"], "situation.open_question", allow_empty=True),
+            "uncertainty": _enum(situation["uncertainty"], CONFIDENCE, "situation.uncertainty"),
         },
+        "relevant_user_domain": normalized_relevant,
         "alignment": {
-            "lambda_t": lambda_t,
-            "orientation": orientation,
-            **{
-                key: _text(alignment[key], f"alignment.{key}")
-                for key in ("lambda_basis", "self_constraint", "user_adaptation")
-            },
+            "orientation": _enum(alignment["orientation"], ORIENTATIONS, "alignment.orientation"),
+            "lambda_trace": round(lambda_trace, 4),
+            "decision_basis": _text(alignment["decision_basis"], "alignment.decision_basis"),
         },
-        "behavior_policy": {
-            **{
-                key: _text(policy[key], f"behavior_policy.{key}")
-                for key in (
-                    "response_objective",
-                    "perspective_taking",
-                    "emotion_alignment",
-                    "personalization",
-                    "self_domain_expression",
-                    "tone",
-                )
-            },
-            "directness": _enum(policy["directness"], INTENSITY, "directness"),
-            "guidance": _enum(policy["guidance"], ("none", "light", "direct"), "guidance"),
-            "question_policy": _enum(
-                policy["question_policy"],
-                ("none", "optional", "necessary"),
-                "question_policy",
-            ),
-            "avoid": _strings(policy["avoid"], "behavior_policy.avoid"),
+        "next_action": {
+            "communicative_intent": _text(action["communicative_intent"], "next_action.communicative_intent"),
+            "primary_move": _enum(action["primary_move"], PRIMARY_MOVES, "next_action.primary_move"),
+            "content_direction": _text(action["content_direction"], "next_action.content_direction"),
+            "self_expression": _text(action["self_expression"], "next_action.self_expression"),
+            "partner_adaptation": _text(action["partner_adaptation"], "next_action.partner_adaptation", allow_empty=True),
+            "tone": _text(action["tone"], "next_action.tone"),
+            "message_scale": _enum(action["message_scale"], ("short", "typical", "extended"), "next_action.message_scale"),
+            "question_mode": _enum(action["question_mode"], ("none", "optional", "follow-up"), "next_action.question_mode"),
         },
     }
 
@@ -468,15 +450,24 @@ def _enum(value: Any, allowed: tuple[str, ...], path: str) -> str:
     return text
 
 
-def _orientation(lambda_t: float) -> str:
-    if lambda_t < 0.25:
-        return "self-dominant"
-    if lambda_t < 0.5:
-        return "self-leaning"
-    if lambda_t < 0.75:
-        return "user-leaning"
-    return "strongly-user-oriented"
+def _number(value: Any, path: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{path} must be numeric")
+    return round(float(value), 6)
+
+
+def _integer(value: Any, path: str, minimum: int = 0) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{path} must be an integer")
+    if value < minimum:
+        raise ValueError(f"{path} must be at least {minimum}")
+    return value
+
+
+def _boolean(value: Any, path: str) -> bool:
+    if not isinstance(value, bool):
+        raise ValueError(f"{path} must be boolean")
+    return value
 
 
 Normalizer = Callable[[Any], dict[str, Any]]
-

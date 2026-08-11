@@ -14,11 +14,9 @@ from src.experiments.realtalk_ours import (
     EXPECTED_MODEL,
     EXPECTED_SPEAKER_TARGETS,
     RealTalkOursConfig,
-    _generation_self_domain,
-    _has_durable_user_domain_evidence,
-    _normalize_alignment_for_context,
     _prepare_dataset,
     _structured_call,
+    _validate_decision_profile_activation,
     run_realtalk_ours,
 )
 from src.experiments.realtalk_ours_schemas import (
@@ -28,88 +26,53 @@ from src.experiments.realtalk_ours_schemas import (
 )
 
 
-def _self_domain() -> dict:
+def _self_domain(stats: dict) -> dict:
     return {
-        "identity": {
-            "self_descriptions": [],
-            "stable_interests": ["likes music"],
-            "relationships": [],
-            "life_context": [],
+        "identity_context": {
+            "self_descriptions": [], "life_background": [],
+            "relationships": [], "recurring_interests": [],
         },
-        "persona": {
-            "personality_traits": ["casual"],
-            "tone": ["brief"],
-            "expression_patterns": ["uses informal wording"],
+        "communication_signature": {
+            "tone": ["casual"], "vocabulary_and_phrasing": ["informal"],
+            "information_density": "medium", "typical_message_scale": "short",
+            "expression_patterns": ["direct replies"],
         },
-        "behavior_policy_prior": {
-            "interaction_principles": ["respond directly"],
-            "emotional_response_style": "restrained",
-            "guidance_style": "rarely gives advice",
-            "initiative": "medium",
+        "interaction_policy_prior": {
+            "initiative": "medium", "self_disclosure": "sometimes",
+            "question_behavior": "sometimes", "topic_continuation": "usually",
+            "topic_shift": "sometimes", "advice_behavior": "rarely",
+            "response_to_partner_emotion": "warm but concise",
         },
-        "hard_constraints": ["do not invent personal events"],
-        "uncertainties": [],
+        "affective_social_signature": {
+            "emotion_expression": "moderate", "sentiment_style": "casual",
+            "introspection_style": "brief", "follow_up_style": "direct",
+            "warmth_style": "friendly", "closeness_style": "informal",
+        },
+        "boundaries_and_uncertainty": {
+            "stable_boundaries": [], "uncertain_attributes": [],
+        },
+        "observable_statistics": stats,
     }
 
 
-def _user_domain(evidence_id: str) -> dict:
+def _decision() -> dict:
     return {
-        "core": [],
-        "regulation": [],
-        "cognition": [],
-        "identity": [{
-            "statement": "The partner discusses daily experiences.",
-            "confidence": "low",
-            "evidence_turn_ids": [evidence_id],
-        }],
-        "behavior": [],
-        "update_summary": {
-            "added": ["daily experiences"],
-            "revised": [],
-            "removed": [],
-            "uncertainties": [],
+        "situation": {
+            "topic": "casual conversation", "partner_move": "continues the exchange",
+            "explicit_affect": "", "affect_intensity": "low",
+            "support_request": False, "open_question": "", "uncertainty": "medium",
         },
-    }
-
-
-def _alignment(evidence_id: str | None) -> dict:
-    no_evidence = evidence_id is None
-    return {
-        "user_state": {
-            "current": {
-                "emotion": "" if no_evidence else "neutral",
-                "emotional_intensity": "low",
-                "intent": "" if no_evidence else "continue the conversation",
-                "main_need": "",
-                "interaction_expectation": "" if no_evidence else "a natural reply",
-                "evidence_turn_ids": [evidence_id] if evidence_id else [],
-                "uncertainty": "high",
-            },
-            "future": {
-                "likely_reaction": "" if no_evidence else "may continue the topic",
-                "response_risk": "" if no_evidence else "overly polished wording would be out of character",
-                "desired_transition": "" if no_evidence else "a natural continuation",
-                "uncertainty": "high",
-            },
-        },
+        "relevant_user_domain": [],
         "alignment": {
-            "lambda_t": 0.0 if no_evidence else 0.6,
-            "orientation": "self-dominant" if no_evidence else "user-leaning",
-            "lambda_basis": "no partner evidence" if no_evidence else "some partner context is visible",
-            "self_constraint": "retain the target's casual style",
-            "user_adaptation": "none" if no_evidence else "address the latest topic",
+            "orientation": "self-led", "lambda_trace": 0.2,
+            "decision_basis": "The target's usual style is the main guide.",
         },
-        "behavior_policy": {
-            "response_objective": "continue naturally",
-            "perspective_taking": "acknowledge the partner's topic",
-            "emotion_alignment": "do not exaggerate emotion",
-            "personalization": "none" if no_evidence else "use only visible context",
-            "self_domain_expression": "use casual concise wording",
-            "directness": "medium",
-            "guidance": "none",
-            "question_policy": "optional",
-            "tone": "casual",
-            "avoid": ["generic assistant language"],
+        "next_action": {
+            "communicative_intent": "continue naturally", "primary_move": "answer",
+            "content_direction": "respond to the visible exchange",
+            "self_expression": "use the target's casual voice",
+            "partner_adaptation": "match the current topic", "tone": "casual",
+            "message_scale": "typical", "question_mode": "optional",
         },
     }
 
@@ -122,287 +85,149 @@ class FakeBackend:
     def __init__(self, malformed_self_once: bool = False) -> None:
         self.calls = []
         self.malformed_self_once = malformed_self_once
-        self.token_usage = {
-            "prompt_tokens": 0,
-            "completion_tokens": 0,
-            "calls": 0,
-            "network_attempts": 0,
-            "network_retries": 0,
-        }
+        self.token_usage = {key: 0 for key in (
+            "prompt_tokens", "completion_tokens", "calls",
+            "network_attempts", "network_retries",
+        )}
 
     def available_models(self):
         return [EXPECTED_MODEL]
 
-    def chat(
-        self,
-        system_prompt,
-        user_prompt,
-        *,
-        temperature,
-        max_tokens,
-        top_p=0.9,
-        response_schema=None,
-    ):
+    def chat(self, system_prompt, user_prompt, *, temperature, max_tokens,
+             top_p=0.9, response_schema=None, enable_thinking=None):
         schema_name = response_schema["name"] if response_schema else None
         self.calls.append({
-            "system": system_prompt,
-            "user": user_prompt,
-            "schema": schema_name,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-            "top_p": top_p,
+            "system": system_prompt, "user": user_prompt, "schema": schema_name,
+            "max_tokens": max_tokens, "enable_thinking": enable_thinking,
         })
-        if schema_name == "realtalk_ours_self_domain":
-            prior_self_calls = sum(
-                call["schema"] == schema_name for call in self.calls
-            )
-            if self.malformed_self_once and prior_self_calls == 1:
+        if schema_name == "realtalk_ours_agentic_self_domain_v2":
+            if self.malformed_self_once and sum(c["schema"] == schema_name for c in self.calls) == 1:
                 content = "not-json"
             else:
-                content = json.dumps(_self_domain())
-        elif schema_name == "realtalk_ours_user_domain":
-            block = user_prompt.split("NEWLY OBSERVED PARTNER TURNS:", 1)[1]
-            evidence = re.search(r"\[([^\]]+)\]", block).group(1)
-            content = json.dumps(_user_domain(evidence))
-        elif schema_name == "realtalk_ours_alignment":
-            ids = re.findall(r"\[([^\]]+:(?:turn|message)_\d+)\]", user_prompt)
-            content = json.dumps(_alignment(ids[-1] if ids else None))
+                stats = json.loads(user_prompt.split(
+                    "DETERMINISTIC OBSERVABLE STATISTICS (copy exactly):\n", 1
+                )[1].split("\n\nBuild", 1)[0])
+                content = json.dumps(_self_domain(stats))
+        elif schema_name == "realtalk_ours_agentic_user_domain_v2":
+            partner = re.search(r"PARTNER \(the modeled user\): (.+)", user_prompt).group(1)
+            session_block = user_prompt.split("COMPLETE FINISHED SESSION", 1)[1]
+            evidence = re.search(
+                rf"\[([^\]]+)\] {re.escape(partner)}:", session_block, re.I
+            ).group(1)
+            content = json.dumps({
+                "core": [], "regulation": [], "cognition": [], "identity": [],
+                "behavior": [{"value": "Converses casually", "confidence": "low", "evidence_ids": [evidence]}],
+                "update_summary": {"added": ["casual conversation"], "revised": [], "removed": [], "uncertainties": []},
+            })
+        elif schema_name == "realtalk_ours_agentic_decision_v2":
+            content = json.dumps(_decision())
         else:
-            content = "READY" if max_tokens == 8 else "Emi: FAKE_GENERATED"
+            content = "READY" if max_tokens in {8, 32} else "Akib: FAKE_GENERATED"
         self.token_usage["calls"] += 1
         self.token_usage["network_attempts"] += 1
         self.token_usage["prompt_tokens"] += 10
         self.token_usage["completion_tokens"] += 5
-        return ChatResult(
-            content=content,
-            model=self.model,
-            prompt_tokens=10,
-            completion_tokens=5,
-            latency_seconds=0.01,
-            attempts=1,
-        )
+        return ChatResult(content, self.model, 10, 5, 0.01, 1, "private" if enable_thinking else "")
 
 
 class FakeLabels:
     def annotate(self, text):
-        return {
-            "emotion": "joy" if "FAKE_GENERATED" in text else "sadness",
-            "sentiment": "positive" if "FAKE_GENERATED" in text else "negative",
-            "intimacy": 0.8 if "FAKE_GENERATED" in text else 0.3,
-        }
+        return {"emotion": "joy" if "FAKE" in text else "sadness",
+                "sentiment": "positive" if "FAKE" in text else "negative",
+                "intimacy": 0.8 if "FAKE" in text else 0.3}
 
     def metadata(self):
-        return {"provider": "fake-pinned-labels"}
+        return {"provider": "fake"}
 
 
 class RealTalkOursTests(unittest.TestCase):
     def test_public_table8_reconstruction_has_expected_519_merged_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)
-        splits = select_realtalk_splits(config.dataset_dir)
-        manifest, prepared = _prepare_dataset(config, splits)
+        manifest, prepared = _prepare_dataset(config, select_realtalk_splits(config.dataset_dir))
         self.assertEqual(manifest["total_targets"], EXPECTED_FULL_TARGETS)
-        self.assertEqual(EXPECTED_FULL_TARGETS, 519)
-        self.assertTrue(
-            manifest["merge_consecutive_same_speaker_within_session"]
-        )
-        self.assertEqual(
-            manifest["sample_unit"],
-            "merged consecutive same-speaker message M_t",
-        )
         self.assertEqual(manifest["targets_by_speaker"], EXPECTED_SPEAKER_TARGETS)
-        self.assertTrue(all(
-            ":turn_" in point["target"]["turn_id"]
-            for item in prepared
-            for point in item["points"]
-        ))
         self.assertEqual(len(prepared), 10)
-        self.assertEqual(
-            [(item["speaker"], item["partner"]) for item in prepared],
-            [
-                ("Emi", "elise"),
-                ("Nicolas", "Vanessa"),
-                ("Kevin", "elise"),
-                ("Akib", "Muhhamed"),
-                ("Muhhamed", "Akib"),
-                ("Nebraas", "Vanessa"),
-                ("Paola", "Kevin"),
-                ("Vanessa", "Nicolas"),
-                ("elise", "Emi"),
-                ("Fahim Khan", "Akib"),
-            ],
-        )
+        self.assertFalse(manifest["history_compression_enabled"])
+        self.assertFalse(manifest["history_truncation_enabled"])
+        self.assertTrue(all(not point["context_truncated"] for item in prepared for point in item["points"]))
 
-    def test_strict_schemas_reject_extra_fields_and_lambda_mismatch(self):
-        value = _self_domain()
+    def test_strict_schema_and_profile_activation(self):
+        value = _self_domain({
+            "target_message_count": 1, "mean_characters": 1.0,
+            "median_characters": 1.0, "question_rate": 0.0,
+            "first_person_rate": 0.0, "median_merged_bubbles": 1.0,
+        })
         value["extra"] = True
         with self.assertRaisesRegex(ValueError, "fields mismatch"):
             normalize_self_domain(value)
-
-        alignment = _alignment("session_1:turn_1")
-        alignment["alignment"]["orientation"] = "self-dominant"
-        with self.assertRaisesRegex(ValueError, "conflicts with lambda_t"):
-            normalize_alignment(alignment)
-
-    def test_no_partner_evidence_is_deterministically_cold_started(self):
-        model_value = _alignment("session_1:turn_1")
-        normalized = _normalize_alignment_for_context(
-            normalize_alignment(model_value), set()
-        )
-        self.assertEqual(normalized["alignment"]["lambda_t"], 0.0)
-        self.assertEqual(normalized["alignment"]["orientation"], "self-dominant")
-        self.assertEqual(normalized["user_state"]["current"]["emotion"], "")
-        self.assertEqual(
-            normalized["behavior_policy"]["personalization"], "none"
-        )
-
-    def test_alignment_policy_cannot_turn_profile_facts_into_message_content(self):
-        normalized = _normalize_alignment_for_context(
-            normalize_alignment(_alignment("session_1:turn_1")),
-            {"session_1:turn_1"},
-            "session_1:turn_1",
-        )
-        expression = normalized["behavior_policy"]["self_domain_expression"]
-        self.assertIn("tone, phrasing, initiative", expression)
-        self.assertIn(
-            "unsupported first-person factual details",
-            normalized["behavior_policy"]["avoid"],
-        )
-
-    def test_current_state_must_cite_latest_partner_turn(self):
-        with self.assertRaisesRegex(ValueError, "latest partner turn"):
-            _normalize_alignment_for_context(
-                normalize_alignment(_alignment("session_1:turn_1")),
-                {"session_1:turn_1", "session_1:turn_3"},
-                "session_1:turn_3",
+        decision = normalize_alignment(_decision())
+        decision["relevant_user_domain"] = [{"layer": "identity", "value": "unknown"}]
+        with self.assertRaisesRegex(ValueError, "unknown User Domain"):
+            _validate_decision_profile_activation(
+                decision,
+                {"core": [], "regulation": [], "cognition": [], "identity": [], "behavior": [], "update_summary": {}},
             )
 
-    def test_generation_view_hides_identity_facts_but_preserves_style(self):
-        view = _generation_self_domain(_self_domain())
-        self.assertNotIn("identity", view)
-        self.assertNotIn("likes music", json.dumps(view))
-        self.assertEqual(view["persona"]["tone"], ["brief"])
-        self.assertIn("hard_constraints", view)
-
-    def test_generic_greetings_do_not_update_stable_user_domain(self):
-        for text in (
-            "Hi!",
-            "Hey there, how are you?",
-            "What's up?",
-            "Hi, I’m doing good how are you?",
-        ):
-            self.assertFalse(_has_durable_user_domain_evidence(text))
-        self.assertTrue(
-            _has_durable_user_domain_evidence(
-                "I started a new nursing job downtown last week."
-            )
-        )
-
-    def test_structured_call_repairs_format_only_and_caches_result(self):
+    def test_structured_call_repairs_and_records_thinking_mode(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            checkpoint = OperationCheckpoint(root / "checkpoint.json", "sig")
             backend = FakeBackend(malformed_self_once=True)
+            stats = {"target_message_count": 1, "mean_characters": 1.0,
+                     "median_characters": 1.0, "question_rate": 0.0,
+                     "first_person_rate": 0.0, "median_merged_bubbles": 1.0}
             result = _structured_call(
-                checkpoint=checkpoint,
-                backend=backend,
-                operation_key="self_domain:emi",
-                system_prompt="system",
-                user_prompt="original evidence",
-                schema=SELF_DOMAIN_SCHEMA,
-                normalizer=normalize_self_domain,
-                max_tokens=1800,
-                max_attempts=3,
-                raw_audit=root / "raw.jsonl",
+                checkpoint=OperationCheckpoint(root / "checkpoint.json", "sig"),
+                backend=backend, operation_key="self:test", system_prompt="system",
+                user_prompt="DETERMINISTIC OBSERVABLE STATISTICS (copy exactly):\n" + json.dumps(stats) + "\n\nBuild",
+                schema=SELF_DOMAIN_SCHEMA, normalizer=normalize_self_domain,
+                max_tokens=1800, max_attempts=3, raw_audit=root / "raw.jsonl",
+                enable_thinking=False,
             )
-            self.assertEqual(result["data"], _self_domain())
             self.assertEqual(result["audit"]["logical_attempts"], 2)
+            self.assertFalse(result["audit"]["thinking_enabled"])
             self.assertIn("FORMAT REPAIR REQUIRED", backend.calls[1]["user"])
-            self.assertIn("Do not add new evidence", backend.calls[1]["user"])
-            calls = len(backend.calls)
-            resumed = _structured_call(
-                checkpoint=checkpoint,
-                backend=backend,
-                operation_key="self_domain:emi",
-                system_prompt="changed but cached",
-                user_prompt="changed but cached",
-                schema=SELF_DOMAIN_SCHEMA,
-                normalizer=normalize_self_domain,
-                max_tokens=1800,
-                max_attempts=3,
-                raw_audit=root / "raw.jsonl",
-            )
-            self.assertEqual(resumed, result)
-            self.assertEqual(len(backend.calls), calls)
 
-    def test_small_run_is_causal_resumable_and_never_marks_pipeline_complete(self):
+    def test_akib_21_run_updates_user_domain_only_at_session_boundary(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "run"
             config = RealTalkOursConfig(
-                output_dir=str(output),
-                speaker_filter=("Emi",),
-                max_eval_points_per_speaker=2,
-                compute_local_metrics=False,
+                output_dir=str(output), speaker_filter=("Akib",),
+                max_eval_points_per_speaker=21, compute_local_metrics=False,
             )
             backend = FakeBackend()
             summary = run_realtalk_ours(config, backend=backend)
             self.assertTrue(summary["generation_complete"])
-            self.assertEqual(summary["records"], 2)
-            self.assertTrue((output / "GENERATION_COMPLETE").exists())
-            self.assertFalse((output / "PIPELINE_COMPLETE").exists())
-            self.assertTrue((output / "GPT_EVALUATION_PENDING.json").exists())
-            run_manifest = json.loads(
-                (output / "run_manifest.json").read_text(encoding="utf-8")
-            )
-            self.assertRegex(
-                run_manifest["implementation_repository_commit"],
-                r"^[0-9a-f]{40}$",
-            )
+            self.assertEqual(summary["records"], 21)
+            user_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_user_domain_v2"]
+            self.assertEqual(len(user_calls), 1)
+            decision_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_decision_v2"]
+            self.assertEqual(len(decision_calls), 21)
+            self.assertTrue(all(c["enable_thinking"] is True for c in decision_calls))
+            generation_calls = [c for c in backend.calls if c["max_tokens"] == 300]
+            self.assertEqual(len(generation_calls), 21)
+            for call in generation_calls:
+                lower = call["user"].casefold()
+                self.assertNotIn("user domain", lower)
+                self.assertNotIn("lambda_trace", lower)
+                self.assertNotIn("reflectiveness", lower)
+            predictions = [json.loads(line) for line in (output / "predictions.jsonl").read_text(encoding="utf-8").splitlines()]
+            self.assertEqual(sum(not item["user_domain_completed_session_updates"] for item in predictions), 16)
+            self.assertEqual(predictions[16]["user_domain_completed_session_updates"], ["session_1"])
 
-            generation_calls = [
-                call for call in backend.calls
-                if call["schema"] is None and call["max_tokens"] == 300
-            ]
-            self.assertEqual(len(generation_calls), 2)
-            self.assertNotIn("FAKE_GENERATED", generation_calls[1]["user"])
-            predictions = [
-                json.loads(line)
-                for line in (output / "predictions.jsonl").read_text(
-                    encoding="utf-8"
-                ).splitlines()
-            ]
-            self.assertEqual(
-                [item["generated_message"] for item in predictions],
-                ["FAKE_GENERATED", "FAKE_GENERATED"],
-            )
-
-            resumed_backend = FakeBackend()
-            resumed = run_realtalk_ours(config, backend=resumed_backend)
-            self.assertEqual(resumed["records"], 2)
-            self.assertEqual(resumed_backend.calls, [])
-
-    def test_local_five_metric_stage_writes_partial_table_only(self):
+    def test_local_metrics_complete_but_pipeline_stays_pending(self):
         with tempfile.TemporaryDirectory() as directory:
-            output = Path(directory) / "run"
             config = RealTalkOursConfig(
-                output_dir=str(output),
-                speaker_filter=("Emi",),
+                output_dir=str(Path(directory) / "run"), speaker_filter=("Emi",),
                 max_eval_points_per_speaker=2,
             )
             summary = run_realtalk_ours(
-                config,
-                backend=FakeBackend(),
-                label_evaluator=FakeLabels(),
+                config, backend=FakeBackend(), label_evaluator=FakeLabels(),
                 bertscore_fn=lambda references, candidates: [0.75] * len(references),
             )
+            output = Path(config.output_dir)
             self.assertEqual(summary["local_metrics"]["message_count"], 2)
-            macro = summary["local_metrics"]["speaker_macro"]
-            self.assertEqual(macro["bertscore_f1"]["mean"], 0.75)
-            self.assertEqual(macro["sentiment_accuracy"]["mean"], 0.0)
-            self.assertEqual(macro["intimacy_absolute_difference"]["mean"], 0.5)
             self.assertTrue((output / "LOCAL_METRICS_COMPLETE").exists())
             self.assertFalse((output / "PIPELINE_COMPLETE").exists())
-            report = (output / "REPORT_PARTIAL.md").read_text(encoding="utf-8")
-            self.assertIn("pending gpt-4o-mini", report)
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ from .exp1_protocol import (
     build_profile_corpus,
     format_turns,
     message_speakers,
+    protocol_turns,
     select_realtalk_splits,
     stable_hash,
 )
@@ -46,7 +47,7 @@ from .realtalk_ours_schemas import (
 from ..metrics import compute_rouge_l
 
 
-EXPECTED_MODEL = "qwen3-8b"
+EXPECTED_MODEL = "qwen3-max-2026-01-23"
 OFFICIAL_REALTALK_COMMIT = "b903e06a9770bf4e5fe9018c3e132889666d3b4a"
 EXPECTED_FULL_TARGETS = 519
 EXPECTED_SPEAKER_TARGETS = {
@@ -84,35 +85,27 @@ PAPER_TABLE2_ROWS = {
     },
 }
 
-SELF_DOMAIN_SYSTEM_PROMPT = """You build an evidence-grounded Self Domain for a persona-simulation agent.
-The target speaker is the person the model must imitate later. Infer only durable identity, style, and
-behavioral tendencies supported by that target speaker's own utterances. The other speaker's utterances
-provide conversational context but are never evidence about the target. Do not turn one-off moods,
-hypotheticals, quoted material, jokes, or the partner's facts into stable target attributes. Keep uncertainty
-explicit and return exactly the requested JSON structure."""
+SELF_DOMAIN_SYSTEM_PROMPT = """Compile a private Self Domain for a persona-simulation agent.
+Model the target speaker as a person: identity context, communication signature, interaction policy,
+and affective-social signature. Use the complete conversation to understand context, while grounding
+claims about the target in the target's own messages. Distinguish stable tendencies from one-off events
+and preserve uncertainty. Copy the supplied observable statistics exactly. Return only the schema."""
 
 SELF_DOMAIN_USER_TEMPLATE = """TARGET SPEAKER: {speaker}
 SOURCE: the first {session_count} sessions of the target's paper-assigned Ca conversation.
 
-TARGET-SPEAKER UTTERANCES (the only factual evidence about {speaker}):
-{target_evidence}
-
-FULL MERGED CONVERSATION (context only; partner facts are not {speaker}'s facts):
+COMPLETE LOSSLESSLY MERGED CONVERSATION WITH SESSION AND TURN IDS:
 {full_context}
 
-Build the fixed Self Domain. It must help reproduce {speaker}'s identity, conversational style, initiative,
-emotional response style, and boundaries without inventing facts. Empty arrays are valid when evidence is
-insufficient. Interests and identity require explicit first-person support or a repeated target behavior.
-Uncertainties must concern {speaker}, never the Ca partner."""
+DETERMINISTIC OBSERVABLE STATISTICS (copy exactly):
+{observable_statistics}
 
-USER_DOMAIN_SYSTEM_PROMPT = """You update a five-layer User Domain for a conversation partner.
-Use only the partner's already-observed utterances as evidence about that partner. Target-speaker messages
-may clarify context but must never become partner facts. Preserve supported prior facts, revise conflicts,
-remove unsupported claims, consolidate duplicates, and keep evidence turn IDs. This is causal state: no
-future message or ground truth is available. Empty layers are expected when evidence is thin. A greeting,
-polite question, or other single speech act can support an immediate behavior observation at most; it does
-not establish a core value, identity, stable cognition, or regulation pattern. Do not restate the same
-observation across multiple layers merely to fill the schema. Return exactly the requested JSON structure."""
+Build the fixed cross-partner Self Domain for acting as {speaker}."""
+
+USER_DOMAIN_SYSTEM_PROMPT = """Update a private five-layer User Domain for the conversation partner.
+The fixed layers are Core, Regulation, Cognition, Identity, and Behavior. Use the complete finished session
+for context, but every partner fact must cite partner evidence IDs. Preserve supported prior facts, revise
+conflicts, consolidate overlap, and leave layers empty when evidence is insufficient. Return only the schema."""
 
 USER_DOMAIN_USER_TEMPLATE = """TARGET SPEAKER (the agent): {speaker}
 PARTNER (the modeled user): {partner}
@@ -120,43 +113,17 @@ PARTNER (the modeled user): {partner}
 PREVIOUS USER DOMAIN:
 {previous_domain}
 
-NEWLY OBSERVED PARTNER TURNS:
-{new_turns}
+COMPLETE FINISHED SESSION WITH SESSION AND TURN IDS:
+{completed_session}
 
-VISIBLE REAL CONVERSATION HISTORY:
-{history}
+Update the five layers using this completed session. Evidence IDs must identify partner turns."""
 
-Update the partner's five layers: core concerns/values, regulation patterns, cognition/communication,
-identity/life facts, and behavior/preferences. Every fact requires at least one supplied partner turn ID."""
-
-ALIGNMENT_SYSTEM_PROMPT = """You are the adaptive alignment stage of a persona-simulation agent.
-First infer the partner's current and short-term likely state from causal evidence. CURRENT means the latest
-visible partner turn, not an earlier event, a stable profile fact, or a previous state. Recompute it for every
-target message and cite the latest partner turn ID in current.evidence_turn_ids. Then choose an explicit
-adaptive lambda_t in [0,1]: low values preserve the target speaker's habitual behavior; high values adapt
-more strongly to the partner's present needs. The target speaker's identity remains a hard constraint at
-every value. Finally produce exactly one Behavior Policy for the next message.
-
-This benchmark asks for the target human's likely message, not an ideal assistant response. Do not force
-empathy, advice, questions, positivity, or personalization. Match the target's demonstrated style and use
-partner adaptation only where evidence supports it. Orientation must match lambda_t: [0,.25)
-self-dominant, [.25,.5) self-leaning, [.5,.75) user-leaning, [.75,1] strongly-user-oriented. Return exactly
-the requested JSON structure.
-
-Calibrate lambda_t to this imitation task. Use [0,.25) for greetings, routine updates, factual exchanges,
-light banter, or unclear needs; [.25,.5) for ordinary partner-aware adjustment; [.5,.75) only for a clear
-current emotional or relational need; and [.75,1] only for an explicit, high-intensity need where the target
-speaker's demonstrated behavior supports strong adaptation. A negative topic alone is not a reason for a
-high lambda. Do not default to therapeutic acknowledgment.
-
-Self Domain identity facts and interests are background knowledge, not topics that must appear. In the
-Behavior Policy, self_domain_expression should normally select tone, phrasing, initiative, and response
-length. It must not direct the generator to mention an interest, activity, location, possession, plan, or
-anecdote unless the visible Cb history has already made that exact content relevant to the current exchange.
-
-If no partner turn is visible, there is no User State evidence: use empty strings for all current/future
-semantic fields, high uncertainty, lambda_t=0, self-dominant orientation, no personalization, and a simple
-target-style conversation opener. Never infer a partner need merely because a conversation is starting."""
+ALIGNMENT_SYSTEM_PROMPT = """You are the private Decision Agent for a persona-simulation actor.
+Decide what the target speaker, represented by the Self Domain, would naturally choose to do next.
+Treat the Self Domain as the default behavioral identity, read the complete real history, and use partner
+profile facts only when they are relevant now. Internally balance self-led behavior and partner adaptation,
+record that balance as lambda_trace, and commit to one concrete next action. The task is identity simulation,
+not designing an ideal assistant response. Return only the schema."""
 
 ALIGNMENT_USER_TEMPLATE = """TARGET SPEAKER: {speaker}
 PARTNER: {partner}
@@ -170,56 +137,28 @@ CURRENT USER DOMAIN:
 REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:
 {history}
 
-LATEST PARTNER QUERY/TURN WITH ID (the primary evidence for CURRENT state; may be empty):
-{current_query}
+LATEST PARTNER MESSAGE (may be empty):
+{latest_partner_message}
 
-Infer state, choose lambda_t, and produce one concrete policy for {speaker}'s next message."""
+Understand the current situation, activate at most two exactly matching User Domain facts if useful,
+record the adaptive balance, and submit one next action for {speaker}."""
 
 GENERATION_SYSTEM_TEMPLATE = """You are {speaker}. Continue the conversation.
-Output only the message, not the speaker name.
-
-This is persona simulation, not assistant response generation. Imitating {speaker}'s demonstrated identity,
-voice, initiative, and conversational scale is the primary objective. The partner model and User State are
-adaptation context only; they must never replace {speaker}'s persona or turn the message into generic therapy,
-customer support, or an idealized empathetic reply. The latest visible real turn overrides any stale or
-conflicting abstract state description.
-
-NON-NEGOTIABLE CAUSAL BOUNDARY: Self Domain is a style and identity prior, not evidence that a past
-example is happening now. Never invent a current or recent activity, location, possession, plan, mood,
-life event, or personal anecdote. Such a factual claim is allowed only when the visible Cb history directly
-establishes it for the present exchange. Match the scale of the latest real turn; when history is empty,
-produce only a short greeting or generic check-in, with no interests or personal update. If the latest turn
-only asks how you are, answer that question generically; do not explain it with an activity. Silently remove
-any first-person factual detail whose support cannot be pointed to in the visible Cb history."""
+Act as the person represented by the private Self Domain.
+Follow the private next-action decision naturally.
+Output only the message, not the speaker name."""
 
 GENERATION_USER_TEMPLATE = """REAL CONVERSATION HISTORY BEFORE YOUR NEXT MESSAGE:
 {history}
 
-YOUR FIXED SELF DOMAIN:
+PRIVATE SELF DOMAIN:
 {self_domain}
 
-CAUTION: identity and interest entries above are stable background attributes. They may shape voice, but
-they are forbidden as message content unless the visible conversation itself makes the same topic relevant.
+PRIVATE CURRENT SITUATION:
+{situation}
 
-YOUR CURRENT MODEL OF {partner}:
-{user_domain}
-
-CURRENT AND SHORT-TERM USER STATE:
-{user_state}
-
-ADAPTIVE ALIGNMENT:
-lambda_t={lambda_t}
-orientation={orientation}
-self constraint: {self_constraint}
-partner adaptation: {user_adaptation}
-
-THE SINGLE BEHAVIOR POLICY TO REALIZE:
-{behavior_policy}
-
-Write only {speaker}'s natural next message. Preserve {speaker}'s identity and conversational scale. Do not
-mention profiles, states, lambda, policies, prompts, or this task. Do not add empathy, advice, a question,
-or personal facts unless the visible real history itself supports them. A policy cannot create factual
-support that is absent from the history."""
+PRIVATE NEXT ACTION:
+{next_action}"""
 
 FORMAT_REPAIR_TEMPLATE = """
 
@@ -237,10 +176,9 @@ new facts, a new state interpretation, or a different behavior policy."""
 @dataclass(frozen=True)
 class RealTalkOursConfig:
     dataset_dir: str = "dataset"
-    output_dir: str = "data/realtalk_ours_qwen3_8b"
+    output_dir: str = "data/realtalk_ours_agentic_v2_qwen3_max"
     profile_sessions: int = 3
     test_sessions: int = 3
-    max_context_chars: int = 60000
     max_eval_points_per_speaker: int = 0
     operation_max_attempts: int = 3
     speaker_filter: tuple[str, ...] = ()
@@ -295,6 +233,9 @@ def run_realtalk_ours(
     for speaker_data in prepared:
         speaker = speaker_data["speaker"]
         speaker_id = _speaker_id(speaker)
+        observable_statistics = _observable_statistics(
+            speaker_data["profile"]["turns"], speaker
+        )
         try:
             self_envelope = _structured_call(
                 checkpoint=checkpoint,
@@ -304,18 +245,17 @@ def run_realtalk_ours(
                 user_prompt=SELF_DOMAIN_USER_TEMPLATE.format(
                     speaker=speaker,
                     session_count=config.profile_sessions,
-                    target_evidence=_turns_with_ids([
-                        turn
-                        for turn in speaker_data["profile"]["turns"]
-                        if turn["speaker"].casefold() == speaker.casefold()
-                    ]),
                     full_context=_turns_with_ids(speaker_data["profile"]["turns"]),
+                    observable_statistics=_json(observable_statistics),
                 ),
                 schema=SELF_DOMAIN_SCHEMA,
-                normalizer=normalize_self_domain,
+                normalizer=lambda value: _validate_observable_statistics(
+                    normalize_self_domain(value), observable_statistics
+                ),
                 max_tokens=1800,
                 max_attempts=config.operation_max_attempts,
                 raw_audit=raw_audit,
+                enable_thinking=False,
             )
         except Exception as exc:
             failure = _failure("self_domain", speaker, None, exc)
@@ -328,85 +268,58 @@ def run_realtalk_ours(
         self_domain = self_envelope["data"]
         self_domains[speaker] = self_domain
         user_domain = empty_user_domain()
-        observed_partner_turn_ids: set[str] = set()
+        allowed_partner_turn_ids: set[str] = set()
+        completed_session_updates: list[str] = []
+        active_session = speaker_data["points"][0]["target_session"]
 
         for point in speaker_data["points"]:
             result_id = f"{speaker_id}:{point['sample_id']}"
-            visible_partner_turns = [
-                turn
-                for turn in point["context_turns"]
-                if turn["speaker"].casefold() == speaker_data["partner"].casefold()
-            ]
-            new_partner_turns = [
-                turn
-                for turn in visible_partner_turns
-                if turn["turn_id"] not in observed_partner_turn_ids
-            ]
-            durable_partner_turns = [
-                turn for turn in new_partner_turns
-                if _has_durable_user_domain_evidence(turn["content"])
-            ]
             try:
-                update_audit: dict[str, Any]
-                if durable_partner_turns:
+                if point["target_session"] != active_session:
+                    completed_turns = speaker_data["test_turns_by_session"][active_session]
+                    completed_partner_ids = {
+                        turn["turn_id"] for turn in completed_turns
+                        if turn["speaker"].casefold() == speaker_data["partner"].casefold()
+                    }
+                    allowed_after_update = allowed_partner_turn_ids | completed_partner_ids
                     update_envelope = _structured_call(
                         checkpoint=checkpoint,
                         backend=backend,
-                        operation_key=f"user_domain:{result_id}",
+                        operation_key=f"user_domain:{speaker_id}:after:{active_session}",
                         system_prompt=USER_DOMAIN_SYSTEM_PROMPT,
                         user_prompt=USER_DOMAIN_USER_TEMPLATE.format(
                             speaker=speaker,
                             partner=speaker_data["partner"],
                             previous_domain=_json(user_domain),
-                            new_turns=_turns_with_ids(durable_partner_turns),
-                            history=_turns_with_ids(point["context_turns"]),
+                            completed_session=_turns_with_ids(completed_turns),
                         ),
                         schema=USER_DOMAIN_SCHEMA,
                         normalizer=lambda value: _validate_user_domain_evidence(
                             normalize_user_domain(value),
-                            observed_partner_turn_ids
-                            | {turn["turn_id"] for turn in new_partner_turns},
+                            allowed_after_update,
                         ),
                         max_tokens=1800,
                         max_attempts=config.operation_max_attempts,
                         raw_audit=raw_audit,
+                        enable_thinking=False,
                     )
                     user_domain = update_envelope["data"]
-                    update_audit = {
-                        "mode": "updated",
-                        "new_partner_turn_ids": [
-                            turn["turn_id"] for turn in durable_partner_turns
-                        ],
-                        "operation": update_envelope["audit"],
-                    }
-                else:
-                    update_audit = {
-                        "mode": (
-                            "reused_no_durable_partner_evidence"
-                            if new_partner_turns
-                            else "reused_no_new_partner_evidence"
-                        ),
-                        "new_partner_turn_ids": [
-                            turn["turn_id"] for turn in new_partner_turns
-                        ],
-                        "operation": None,
-                    }
-                observed_partner_turn_ids.update(
-                    turn["turn_id"] for turn in new_partner_turns
-                )
+                    allowed_partner_turn_ids = allowed_after_update
+                    completed_session_updates.append(active_session)
+                    active_session = point["target_session"]
 
-                latest_partner_turn = (
-                    visible_partner_turns[-1] if visible_partner_turns else None
-                )
-                current_query = (
-                    _turns_with_ids([latest_partner_turn])
-                    if latest_partner_turn
-                    else ""
+                visible_partner_turns = [
+                    turn for turn in point["context_turns"]
+                    if turn["speaker"].casefold() == speaker_data["partner"].casefold()
+                ]
+                latest_partner_message = (
+                    _turns_with_ids([visible_partner_turns[-1]])
+                    if visible_partner_turns else ""
                 )
                 alignment_envelope = _structured_call(
                     checkpoint=checkpoint,
                     backend=backend,
-                    operation_key=f"alignment:{result_id}",
+                    operation_key=f"decision:{result_id}",
                     system_prompt=ALIGNMENT_SYSTEM_PROMPT,
                     user_prompt=ALIGNMENT_USER_TEMPLATE.format(
                         speaker=speaker,
@@ -414,26 +327,18 @@ def run_realtalk_ours(
                         self_domain=_json(self_domain),
                         user_domain=_json(user_domain),
                         history=_turns_with_ids(point["context_turns"]),
-                        current_query=current_query,
+                        latest_partner_message=latest_partner_message,
                     ),
                     schema=ALIGNMENT_SCHEMA,
-                    normalizer=lambda value: _normalize_alignment_for_context(
-                        normalize_alignment(value),
-                        set(observed_partner_turn_ids),
-                        (
-                            latest_partner_turn["turn_id"]
-                            if latest_partner_turn
-                            else None
-                        ),
+                    normalizer=lambda value: _validate_decision_profile_activation(
+                        normalize_alignment(value), user_domain
                     ),
                     max_tokens=1600,
                     max_attempts=config.operation_max_attempts,
                     raw_audit=raw_audit,
+                    enable_thinking=True,
                 )
-                alignment_result = alignment_envelope["data"]
-                alignment_envelope["audit"]["deterministic_no_evidence_adapter"] = (
-                    not observed_partner_turn_ids
-                )
+                decision = alignment_envelope["data"]
                 generation_envelope = _text_call(
                     checkpoint=checkpoint,
                     backend=backend,
@@ -441,20 +346,15 @@ def run_realtalk_ours(
                     system_prompt=GENERATION_SYSTEM_TEMPLATE.format(speaker=speaker),
                     user_prompt=GENERATION_USER_TEMPLATE.format(
                         speaker=speaker,
-                        partner=speaker_data["partner"],
                         history=format_turns(point["context_turns"]),
-                        self_domain=_json(_generation_self_domain(self_domain)),
-                        user_domain=_json(_compact_user_domain(user_domain)),
-                        user_state=_json(alignment_result["user_state"]),
-                        lambda_t=alignment_result["alignment"]["lambda_t"],
-                        orientation=alignment_result["alignment"]["orientation"],
-                        self_constraint=alignment_result["alignment"]["self_constraint"],
-                        user_adaptation=alignment_result["alignment"]["user_adaptation"],
-                        behavior_policy=_json(alignment_result["behavior_policy"]),
+                        self_domain=_json(self_domain),
+                        situation=_json(decision["situation"]),
+                        next_action=_json(decision["next_action"]),
                     ),
                     speaker=speaker,
                     max_attempts=config.operation_max_attempts,
                     raw_audit=raw_audit,
+                    enable_thinking=False,
                 )
                 result = {
                     "result_id": result_id,
@@ -476,12 +376,13 @@ def run_realtalk_ours(
                     "generated_message": generation_envelope["data"],
                     "self_domain_hash": stable_hash(self_domain),
                     "user_domain": user_domain,
-                    "user_domain_update": update_audit,
-                    "user_state": alignment_result["user_state"],
-                    "alignment": alignment_result["alignment"],
-                    "behavior_policy": alignment_result["behavior_policy"],
+                    "user_domain_completed_session_updates": list(completed_session_updates),
+                    "situation": decision["situation"],
+                    "relevant_user_domain": decision["relevant_user_domain"],
+                    "alignment": decision["alignment"],
+                    "next_action": decision["next_action"],
                     "operation_audit": {
-                        "alignment": alignment_envelope["audit"],
+                        "decision": alignment_envelope["audit"],
                         "generation": generation_envelope["audit"],
                     },
                 }
@@ -607,12 +508,26 @@ def _prepare_dataset(
             test_chat,
             speaker,
             test_sessions=config.test_sessions,
-            max_context_chars=config.max_context_chars,
+            max_context_chars=0,
             max_eval_points=config.max_eval_points_per_speaker,
             merge_adjacent_bubbles=True,
         )
         if not points:
             raise ValueError(f"no test targets for {speaker}")
+        if any(point["context_truncated"] for point in points):
+            raise ValueError(f"V2 forbids truncated history for {speaker}")
+        selected_sessions = list(points[0]["test_sessions"])
+        selected_set = set(selected_sessions)
+        test_turns = [
+            turn for turn in protocol_turns(test_chat, merge_adjacent_bubbles=True)
+            if turn["session_id"] in selected_set
+        ]
+        test_turns_by_session = {
+            session_id: [
+                turn for turn in test_turns if turn["session_id"] == session_id
+            ]
+            for session_id in selected_sessions
+        }
         counts[split["speaker"]] = len(points)
         for path in (train_path, test_path):
             files[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -622,6 +537,8 @@ def _prepare_dataset(
             "partner": partner,
             "profile": profile,
             "points": points,
+            "test_turns": test_turns,
+            "test_turns_by_session": test_turns_by_session,
         })
     manifest = {
         "dataset": "REALTALK public preprocessed conversations",
@@ -631,6 +548,10 @@ def _prepare_dataset(
         "test_sessions": config.test_sessions,
         "sample_unit": "merged consecutive same-speaker message M_t",
         "merge_consecutive_same_speaker_within_session": True,
+        "merged_bubbles_preserve_text_with_newlines_and_source_ids": True,
+        "history_compression_enabled": False,
+        "history_truncation_enabled": False,
+        "full_three_session_history": True,
         "generated_outputs_are_never_rolled_into_history": True,
         "source_files_sha256": dict(sorted(files.items())),
         "source_files_aggregate_sha256": stable_hash(dict(sorted(files.items()))),
@@ -648,12 +569,16 @@ def _run_preflight(output_dir: Path, backend: ChatBackend) -> dict[str, Any]:
         value = _load_json(path)
         if (
             value.get("model") == EXPECTED_MODEL
-            and value.get("enable_thinking") is False
-            and value.get("minimal_generation_succeeded") is True
+            and value.get("stage_thinking") == {
+                "self_domain": False,
+                "user_domain": False,
+                "decision": True,
+                "generation": False,
+            }
+            and value.get("nonthinking_generation_succeeded") is True
+            and value.get("thinking_generation_succeeded") is True
         ):
             return value
-    if bool(getattr(backend, "enable_thinking", False)):
-        raise ValueError("qwen3-8b thinking must be disabled")
     available_fn = getattr(backend, "available_models", None)
     available = list(available_fn()) if callable(available_fn) else [backend.model]
     if EXPECTED_MODEL not in available:
@@ -666,17 +591,36 @@ def _run_preflight(output_dir: Path, backend: ChatBackend) -> dict[str, Any]:
         temperature=0.0,
         top_p=0.9,
         max_tokens=8,
+        enable_thinking=False,
     )
     if "READY" not in response.content.upper():
         raise ValueError(f"minimal model preflight failed: {response.content!r}")
+    thinking_response = backend.chat(
+        "Think privately, then return exactly READY.",
+        "READY",
+        temperature=0.0,
+        top_p=0.9,
+        max_tokens=32,
+        enable_thinking=True,
+    )
+    if "READY" not in thinking_response.content.upper():
+        raise ValueError(
+            f"thinking model preflight failed: {thinking_response.content!r}"
+        )
     value = {
         "checked_at_utc": _now(),
         "model": backend.model,
         "base_url_host": _safe_host(getattr(backend, "base_url", "injected-test-backend")),
-        "enable_thinking": bool(getattr(backend, "enable_thinking", False)),
+        "stage_thinking": {
+            "self_domain": False,
+            "user_domain": False,
+            "decision": True,
+            "generation": False,
+        },
         "model_visible": True,
-        "minimal_generation_succeeded": True,
-        "minimal_generation_attempts": response.attempts,
+        "nonthinking_generation_succeeded": True,
+        "thinking_generation_succeeded": True,
+        "minimal_generation_attempts": response.attempts + thinking_response.attempts,
     }
     _write_json(path, value)
     return value
@@ -694,6 +638,7 @@ def _structured_call(
     max_tokens: int,
     max_attempts: int,
     raw_audit: Path,
+    enable_thinking: bool,
 ) -> dict[str, Any]:
     repair = {"raw": "", "error": ""}
     logical_attempt = {"value": 0}
@@ -712,6 +657,7 @@ def _structured_call(
             top_p=0.9,
             max_tokens=max_tokens,
             response_schema=schema,
+            enable_thinking=enable_thinking,
         )
 
     def validate(result: ChatResult) -> dict[str, Any]:
@@ -720,6 +666,7 @@ def _structured_call(
             "logical_attempt": logical_attempt["value"],
             "model": result.model,
             "raw_response": result.content,
+            "reasoning_content": result.reasoning_content,
             "prompt_tokens": result.prompt_tokens,
             "completion_tokens": result.completion_tokens,
             "latency_seconds": result.latency_seconds,
@@ -743,6 +690,8 @@ def _structured_call(
                 "completion_tokens_last_call": result.completion_tokens,
                 "latency_seconds_last_call": result.latency_seconds,
                 "schema": schema["name"],
+                "thinking_enabled": enable_thinking,
+                "reasoning_sha256": stable_hash(result.reasoning_content),
             },
         }
 
@@ -765,6 +714,7 @@ def _text_call(
     speaker: str,
     max_attempts: int,
     raw_audit: Path,
+    enable_thinking: bool,
 ) -> dict[str, Any]:
     logical_attempt = {"value": 0}
 
@@ -776,6 +726,7 @@ def _text_call(
             temperature=0.6,
             top_p=0.9,
             max_tokens=300,
+            enable_thinking=enable_thinking,
         )
 
     def validate(result: ChatResult) -> dict[str, Any]:
@@ -784,6 +735,7 @@ def _text_call(
             "logical_attempt": logical_attempt["value"],
             "model": result.model,
             "raw_response": result.content,
+            "reasoning_content": result.reasoning_content,
             "prompt_tokens": result.prompt_tokens,
             "completion_tokens": result.completion_tokens,
             "latency_seconds": result.latency_seconds,
@@ -799,6 +751,8 @@ def _text_call(
                 "prompt_tokens_last_call": result.prompt_tokens,
                 "completion_tokens_last_call": result.completion_tokens,
                 "latency_seconds_last_call": result.latency_seconds,
+                "thinking_enabled": enable_thinking,
+                "reasoning_sha256": stable_hash(result.reasoning_content),
             },
         }
 
@@ -933,22 +887,33 @@ def _write_generation_outputs(
     _write_json(output_dir / "dataset_manifest.json", dataset_manifest)
     _write_json(output_dir / "run_manifest.json", {
         "created_at_utc": _now(),
-        "protocol": "realtalk_task1_ours_explicit_modeling_v1",
+        "protocol": "realtalk_task1_ours_agentic_v2",
         "comparison_status": "protocol_aligned_not_runtime_identical",
         "paper_persona_simulation_model_disclosed": False,
         "implementation_repository_commit": _repository_commit(),
         "ours_model": EXPECTED_MODEL,
         "all_ours_stages_use_same_model": True,
-        "enable_thinking": False,
+        "stage_thinking": {
+            "self_domain": False,
+            "user_domain": False,
+            "decision": True,
+            "generation": False,
+        },
         "training_or_finetuning": False,
         "omega_enabled": False,
+        "future_user_state_enabled": False,
+        "history_compression_enabled": False,
+        "history_truncation_enabled": False,
+        "full_three_session_history": True,
+        "user_domain_update_frequency": "after_session_1_and_after_session_2",
+        "multiple_policy_candidates_enabled": False,
         "verification_or_rewrite_enabled": False,
         "response_length_restriction": None,
         "generated_output_rollout": False,
         "decoding": {
             "self_domain": {"temperature": 0.2, "top_p": 0.9, "max_tokens": 1800},
             "user_domain": {"temperature": 0.2, "top_p": 0.9, "max_tokens": 1800},
-            "alignment": {"temperature": 0.2, "top_p": 0.9, "max_tokens": 1600},
+            "decision": {"temperature": 0.2, "top_p": 0.9, "max_tokens": 1600},
             "generation": {"temperature": 0.6, "top_p": 0.9, "max_tokens": 300},
             "seed": None,
         },
@@ -959,7 +924,7 @@ def _write_generation_outputs(
         "schema_hashes": {
             "self_domain": stable_hash(SELF_DOMAIN_SCHEMA),
             "user_domain": stable_hash(USER_DOMAIN_SCHEMA),
-            "alignment": stable_hash(ALIGNMENT_SCHEMA),
+            "decision": stable_hash(ALIGNMENT_SCHEMA),
         },
         "source_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "preflight": preflight,
@@ -991,7 +956,7 @@ def _write_partial_report(
         "ours": ours,
         "disclosure": (
             "Protocol-aligned comparison on reconstructed public REALTALK Task 1 points. "
-            "The paper does not disclose its persona-simulation base model; Ours uses qwen3-8b."
+            "The paper does not disclose its persona-simulation base model; Ours uses qwen3-max-2026-01-23."
         ),
         "reconstructed_targets": dataset_manifest["total_targets"],
     }
@@ -1000,7 +965,7 @@ def _write_partial_report(
         "# REALTALK Table 2 + Ours (Partial)",
         "",
         "This is a protocol-aligned comparison on reconstructed public REALTALK Task 1 points. ",
-        "The paper does not disclose its persona-simulation base model; Ours uses `qwen3-8b`.",
+        "The paper does not disclose its persona-simulation base model; Ours uses `qwen3-max-2026-01-23`.",
         "",
         "| Method | Lexical | Semantic | Reflective | Grounding | Sentiment | Emotion | Intimacy | Empathy |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
@@ -1023,56 +988,41 @@ def _write_partial_report(
     (output_dir / "REPORT_PARTIAL.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def _generation_self_domain(value: dict[str, Any]) -> dict[str, Any]:
-    """Expose style and constraints while keeping background facts in planning."""
-    return {
-        "persona": value["persona"],
-        "behavior_policy_prior": value["behavior_policy_prior"],
-        "hard_constraints": value["hard_constraints"],
-        "uncertainties": value["uncertainties"],
-        "omitted_from_generation": (
-            "Identity facts and interests remain available to Alignment but are not "
-            "message-content evidence."
-        ),
-    }
-
-
-def _has_durable_user_domain_evidence(content: str) -> bool:
-    """Separate stable-profile evidence from greetings and generic check-ins."""
-    normalized = re.sub(r"[^a-z0-9' ]+", " ", content.casefold())
-    normalized = re.sub(r"\s+", " ", normalized).strip()
-    low_information = (
-        r"(?:hi|hey|hello)(?: there)?",
-        r"(?:hi|hey|hello)(?: there)? how are you",
-        r"how are you",
-        r"how(?:'s| is) it going",
-        r"what(?:'s| is) up",
-        r"good (?:morning|afternoon|evening|night)",
-        r"nice to (?:meet|see) you",
-    )
-    if any(re.fullmatch(pattern, normalized) for pattern in low_information):
-        return False
-    generic_checkin_words = {
-        "a", "am", "and", "are", "day", "doing", "far", "fine", "going",
-        "good", "great", "hello", "hey", "hi", "how", "i", "im", "is",
-        "it", "m", "morning", "night", "so", "thanks", "thank", "the",
-        "there", "today", "up", "well", "what's", "you", "your",
-    }
-    informative_words = [
-        word for word in normalized.split()
-        if word not in generic_checkin_words
+def _observable_statistics(
+    turns: list[dict[str, Any]], speaker: str
+) -> dict[str, Any]:
+    target_turns = [
+        turn for turn in turns
+        if turn["speaker"].casefold() == speaker.casefold()
     ]
-    return len(informative_words) >= 2
-
-
-def _compact_user_domain(value: dict[str, Any]) -> dict[str, Any]:
+    if not target_turns:
+        raise ValueError(f"no Self Domain evidence for {speaker}")
+    lengths = [len(turn["content"]) for turn in target_turns]
+    first_person = re.compile(r"\b(?:i|i'm|i've|i'd|me|my|mine|we|our|ours|us)\b", re.I)
+    merged_counts = [len(turn.get("message_indices", [0])) for turn in target_turns]
     return {
-        layer: [
-            {"statement": fact["statement"], "confidence": fact["confidence"]}
-            for fact in value[layer]
-        ]
-        for layer in ("core", "regulation", "cognition", "identity", "behavior")
+        "target_message_count": len(target_turns),
+        "mean_characters": round(statistics.mean(lengths), 4),
+        "median_characters": round(float(statistics.median(lengths)), 4),
+        "question_rate": round(
+            statistics.mean("?" in turn["content"] for turn in target_turns), 4
+        ),
+        "first_person_rate": round(
+            statistics.mean(bool(first_person.search(turn["content"])) for turn in target_turns), 4
+        ),
+        "median_merged_bubbles": round(float(statistics.median(merged_counts)), 4),
     }
+
+
+def _validate_observable_statistics(
+    value: dict[str, Any], expected: dict[str, Any]
+) -> dict[str, Any]:
+    actual = value["observable_statistics"]
+    if actual != expected:
+        raise ValueError(
+            f"observable_statistics changed: expected={expected}, actual={actual}"
+        )
+    return value
 
 
 def _normalize_generated_message(value: str, speaker: str) -> str:
@@ -1088,7 +1038,7 @@ def _normalize_generated_message(value: str, speaker: str) -> str:
         raise ValueError("generated message must not be empty")
     if text.startswith("{") or text.startswith("["):
         raise ValueError("generated message leaked structured output")
-    leaked = ("lambda_t", "behavior_policy", "user_domain", "self_domain")
+    leaked = ("lambda_trace", "next_action", "user_domain", "self_domain")
     if any(marker in text.casefold() for marker in leaked):
         raise ValueError("generated message leaked internal state")
     return text
@@ -1099,7 +1049,7 @@ def _validate_user_domain_evidence(
 ) -> dict[str, Any]:
     for layer in ("core", "regulation", "cognition", "identity", "behavior"):
         for fact in value[layer]:
-            evidence = set(fact["evidence_turn_ids"])
+            evidence = set(fact["evidence_ids"])
             if not evidence:
                 raise ValueError(f"{layer} fact has no evidence turn IDs")
             unknown = evidence - allowed_turn_ids
@@ -1110,84 +1060,21 @@ def _validate_user_domain_evidence(
     return value
 
 
-def _normalize_alignment_for_context(
-    value: dict[str, Any],
-    allowed_turn_ids: set[str],
-    latest_partner_turn_id: str | None = None,
+def _validate_decision_profile_activation(
+    value: dict[str, Any], user_domain: dict[str, Any]
 ) -> dict[str, Any]:
-    if not allowed_turn_ids:
-        value = {
-            **value,
-            "user_state": {
-                "current": {
-                    "emotion": "",
-                    "emotional_intensity": "low",
-                    "intent": "",
-                    "main_need": "",
-                    "interaction_expectation": "",
-                    "evidence_turn_ids": [],
-                    "uncertainty": "high",
-                },
-                "future": {
-                    "likely_reaction": "",
-                    "response_risk": "",
-                    "desired_transition": "",
-                    "uncertainty": "high",
-                },
-            },
-            "alignment": {
-                "lambda_t": 0.0,
-                "orientation": "self-dominant",
-                "lambda_basis": "No partner evidence is visible.",
-                "self_constraint": "Preserve the target speaker's demonstrated style.",
-                "user_adaptation": "None until partner evidence is observed.",
-            },
-            "behavior_policy": {
-                "response_objective": "Produce a simple target-style conversation opener.",
-                "perspective_taking": "None without partner evidence.",
-                "emotion_alignment": "Do not infer or manufacture a partner emotion.",
-                "personalization": "none",
-                "self_domain_expression": "Use style only; do not turn profile facts into a current event.",
-                "directness": "medium",
-                "guidance": "none",
-                "question_policy": "optional",
-                "tone": value["behavior_policy"]["tone"],
-                "avoid": list(dict.fromkeys([
-                    *value["behavior_policy"]["avoid"],
-                    "invented current or recent personal events",
-                    "unsupported partner needs",
-                ])),
-            },
-        }
-    else:
-        policy = value["behavior_policy"]
-        value = {
-            **value,
-            "behavior_policy": {
-                **policy,
-                "self_domain_expression": (
-                    "Use demonstrated tone, phrasing, initiative, and conversational scale only. "
-                    "Do not introduce identity facts, interests, activities, locations, plans, or "
-                    "anecdotes unless the visible Cb history directly supports that content."
-                ),
-                "avoid": list(dict.fromkeys([
-                    *policy["avoid"],
-                    "unsupported first-person factual details",
-                    "turning stable profile facts into current or recent events",
-                ])),
-            },
-        }
-    evidence = set(value["user_state"]["current"]["evidence_turn_ids"])
-    unknown = evidence - allowed_turn_ids
+    available = {
+        (layer, fact["value"])
+        for layer in ("core", "regulation", "cognition", "identity", "behavior")
+        for fact in user_domain[layer]
+    }
+    selected = {
+        (fact["layer"], fact["value"])
+        for fact in value["relevant_user_domain"]
+    }
+    unknown = selected - available
     if unknown:
-        raise ValueError(
-            f"current user state cites unobserved turns: {sorted(unknown)}"
-        )
-    if latest_partner_turn_id and latest_partner_turn_id not in evidence:
-        raise ValueError(
-            "current user state must cite the latest partner turn: "
-            f"{latest_partner_turn_id}"
-        )
+        raise ValueError(f"decision activated unknown User Domain facts: {sorted(unknown)}")
     return value
 
 
@@ -1246,13 +1133,18 @@ def _run_signature(
     return stable_hash({
         "config": cfg,
         "model": backend.model,
-        "thinking": bool(getattr(backend, "enable_thinking", False)),
+        "stage_thinking": {
+            "self_domain": False,
+            "user_domain": False,
+            "decision": True,
+            "generation": False,
+        },
         "dataset_manifest": dataset_manifest,
         "prompts": _prompt_hashes(),
         "schemas": {
             "self": stable_hash(SELF_DOMAIN_SCHEMA),
             "user": stable_hash(USER_DOMAIN_SCHEMA),
-            "alignment": stable_hash(ALIGNMENT_SCHEMA),
+            "decision": stable_hash(ALIGNMENT_SCHEMA),
         },
         "source": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
         "implementation_repository_commit": _repository_commit(),
@@ -1265,8 +1157,8 @@ def _prompt_hashes() -> dict[str, str]:
         "self_domain_user": stable_hash(SELF_DOMAIN_USER_TEMPLATE),
         "user_domain_system": stable_hash(USER_DOMAIN_SYSTEM_PROMPT),
         "user_domain_user": stable_hash(USER_DOMAIN_USER_TEMPLATE),
-        "alignment_system": stable_hash(ALIGNMENT_SYSTEM_PROMPT),
-        "alignment_user": stable_hash(ALIGNMENT_USER_TEMPLATE),
+        "decision_system": stable_hash(ALIGNMENT_SYSTEM_PROMPT),
+        "decision_user": stable_hash(ALIGNMENT_USER_TEMPLATE),
         "generation_system": stable_hash(GENERATION_SYSTEM_TEMPLATE),
         "generation_user": stable_hash(GENERATION_USER_TEMPLATE),
         "format_repair": stable_hash(FORMAT_REPAIR_TEMPLATE),
@@ -1289,8 +1181,6 @@ def _repository_commit() -> str:
 def _validate_config(config: RealTalkOursConfig) -> None:
     if config.profile_sessions != 3 or config.test_sessions != 3:
         raise ValueError("main REALTALK Ours protocol requires exactly three Ca and Cb sessions")
-    if config.max_context_chars < 0:
-        raise ValueError("max_context_chars must be non-negative")
     if config.operation_max_attempts != 3:
         raise ValueError("structured logical attempts are fixed at three")
     if config.max_eval_points_per_speaker < 0:
@@ -1437,11 +1327,10 @@ def _now() -> str:
 
 def parse_args() -> RealTalkOursConfig:
     parser = argparse.ArgumentParser(
-        description="Run REALTALK Task 1 Ours with fixed qwen3-8b"
+        description="Run REALTALK Task 1 Ours Agentic V2 with fixed qwen3-max"
     )
     parser.add_argument("--dataset-dir", default="dataset")
-    parser.add_argument("--output-dir", default="data/realtalk_ours_qwen3_8b")
-    parser.add_argument("--max-context-chars", type=int, default=60000)
+    parser.add_argument("--output-dir", default="data/realtalk_ours_agentic_v2_qwen3_max")
     parser.add_argument("--max-eval-points-per-speaker", type=int, default=0)
     parser.add_argument("--speaker", action="append", dest="speaker_filter")
     parser.add_argument("--skip-local-metrics", action="store_true")
@@ -1453,7 +1342,6 @@ def parse_args() -> RealTalkOursConfig:
     return RealTalkOursConfig(
         dataset_dir=args.dataset_dir,
         output_dir=args.output_dir,
-        max_context_chars=args.max_context_chars,
         max_eval_points_per_speaker=args.max_eval_points_per_speaker,
         speaker_filter=tuple(args.speaker_filter or ()),
         compute_local_metrics=not args.skip_local_metrics,
