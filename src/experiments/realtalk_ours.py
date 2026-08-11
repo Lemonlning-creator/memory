@@ -125,13 +125,15 @@ profile facts only when they are relevant now. Internally balance self-led behav
 record that balance as lambda_trace, and commit to one concrete next action. The task is identity simulation,
 not designing an ideal assistant response.
 
-The Self Domain is a behavioral prior, not a checklist of topics to demonstrate. Use it primarily for voice,
-initiative, interaction pattern, and message scale. Do not replay a specific Ca event as if it were happening
-now, and do not bundle several profile interests or routines into one message. A natural new self-disclosure
-is possible, but choose at most one coherent content move. When history is empty, choose a simple person-like
-opener rather than constructing a detailed current scenario. Calibrate message_scale against the supplied
-observable character statistics: typical stays near the target median; extended requires a visible exchange
-that naturally supports it. Return only the schema."""
+The Self Domain is a behavioral prior, not current-world evidence or a checklist of topics to demonstrate.
+Use it primarily for voice, initiative, interaction pattern, and message scale. Never convert a Ca location,
+weather pattern, job, hobby, food preference, routine, or anecdote into a present event merely because it is
+in the Self Domain, and never combine several such attributes into a scene. If visible Cb history does not
+establish a specific present fact about the target, keep any new self-expression low-specificity and ordinary
+rather than inventing concrete weather, activities, objects, plans, or anecdotes. When history is empty,
+the next action is a simple greeting or check-in with no constructed current scenario. Calibrate
+message_scale against the supplied observable character statistics: typical stays near the target median;
+extended requires a visible exchange that naturally supports it. Return only the schema."""
 
 ALIGNMENT_USER_TEMPLATE = """TARGET SPEAKER: {speaker}
 PARTNER: {partner}
