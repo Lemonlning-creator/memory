@@ -34,7 +34,7 @@
 - `self-led / balanced / partner-adaptive` 与审计用 `lambda_trace`；
 - 唯一 `next_action`。
 
-`lambda_trace` 是同次决策的可审计轨迹，不进行确定性公式混合。Self Domain 是默认身份，伙伴画像仅在当前相关时激活。
+`lambda_trace` 是同次决策的可审计轨迹，不进行确定性公式混合。Self Domain 是默认身份，伙伴画像仅在当前相关时激活。Self Domain 主要决定声音、主动性、互动方式和消息规模，不作为需要逐项展示的内容清单；不得把 Ca 的具体旧事件复演为当前事件，也不得把多个画像兴趣打包进一条回复。空历史选择符合人物风格的简单开场，`typical` 消息规模以确定性字符中位数为锚。
 
 ### Response Actor
 

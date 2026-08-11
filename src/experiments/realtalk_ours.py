@@ -123,7 +123,15 @@ Decide what the target speaker, represented by the Self Domain, would naturally 
 Treat the Self Domain as the default behavioral identity, read the complete real history, and use partner
 profile facts only when they are relevant now. Internally balance self-led behavior and partner adaptation,
 record that balance as lambda_trace, and commit to one concrete next action. The task is identity simulation,
-not designing an ideal assistant response. Return only the schema."""
+not designing an ideal assistant response.
+
+The Self Domain is a behavioral prior, not a checklist of topics to demonstrate. Use it primarily for voice,
+initiative, interaction pattern, and message scale. Do not replay a specific Ca event as if it were happening
+now, and do not bundle several profile interests or routines into one message. A natural new self-disclosure
+is possible, but choose at most one coherent content move. When history is empty, choose a simple person-like
+opener rather than constructing a detailed current scenario. Calibrate message_scale against the supplied
+observable character statistics: typical stays near the target median; extended requires a visible exchange
+that naturally supports it. Return only the schema."""
 
 ALIGNMENT_USER_TEMPLATE = """TARGET SPEAKER: {speaker}
 PARTNER: {partner}
@@ -158,7 +166,9 @@ PRIVATE CURRENT SITUATION:
 {situation}
 
 PRIVATE NEXT ACTION:
-{next_action}"""
+{next_action}
+
+Realize this as one natural message at the requested scale and in the Self Domain's communication signature."""
 
 FORMAT_REPAIR_TEMPLATE = """
 
