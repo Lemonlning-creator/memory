@@ -43,7 +43,83 @@ Qualitative Analysis 使用独立脚本单独运行，不依赖 `generate` 或 `
 | Message-level EI | Intimacy | 生成回复与真实回复的分数绝对差 | 越低越好 |
 | Message-level EI | Empathy | 生成回复与真实回复的总分绝对差 | 越低越好 |
 
-聚合时先计算每位目标 speaker 的平均分，再计算所有目标 speakers 之间的 `mean ± population std`。
+### 2.1 指标含义
+
+- **Lexical（词汇相似度）**：使用 ROUGE-L F1 比较生成回复与数据集真实回复的最长公共子序列，反映两者在用词和句子片段上的重合程度。取值通常为 0–1，越高表示表层表达越接近真实回复；它不直接代表回复是否自然或正确。
+- **Semantic（语义相似度）**：使用 `roberta-large` 的 BERTScore F1 比较生成回复与真实回复的上下文语义，允许两者使用不同措辞表达相近含义。越高表示整体语义越接近真实回复。
+- **Reflective（反思性语言一致性）**：分别判断生成回复和真实回复是否表现出自我观察、对自身反应的视角理解，或对行为动机和目标的解释，再计算两者标签的一致率。只陈述事实、偏好、决定或普通认可不算反思性语言。取值为 0–1，越高表示生成回复的反思性表达模式与真实回复越一致；它不是对“反思越多越好”的直接评分。
+- **Grounding（共同理解建立行为一致性）**：分别判断生成回复和真实回复是否通过澄清问题、针对前文的相关追问或确认性检查来建立共同理解，再计算标签一致率。普通认可、单纯观察、无关提问或换话题式提问不算 Grounding。取值为 0–1，越高表示生成回复建立共同理解的方式越接近真实回复。
+- **Sentiment（情感倾向一致性）**：使用 CardiffNLP 情感分类器分别标注生成回复和真实回复的正向、中性或负向倾向，再计算标签准确率。取值为 0–1，越高表示两者情感极性越一致。
+- **Emotion（情绪类别一致性）**：使用 CardiffNLP 情绪分类器分别识别生成回复和真实回复的主要情绪，再计算标签准确率。取值为 0–1，越高表示两者表达的主要情绪越一致。
+- **Intimacy（亲密度误差）**：使用 CardiffNLP intimacy 模型分别给生成回复和真实回复评分，然后计算两者的绝对差 `|generated - reference|`。越低表示生成回复的自我披露和亲密程度越接近真实回复。该列不是“亲密度本身”，因此不能解释为数值越高越亲密或越好。
+- **Empathy（共情强度误差）**：按照 EPITOME 的 Emotional Reaction、Interpretation、Exploration 三个维度分别给出 0–2 分，总分范围为 0–6；指标取生成回复总分与真实回复总分的绝对差。越低表示共情强度越接近真实回复。过度共情和共情不足都会增大误差，因此该列不能解释为“共情越多越好”。
+
+Table 2 衡量的是生成回复对真实回复的**模拟一致性**。高分表示生成回复在相应属性上更像数据集中的真实人物回复，并不等同于对回复通用质量、帮助性或安全性的独立评价。
+
+### 2.2 逐样本评估方法
+
+每个测试评测点包含同一条真实用户输入对应的两条候选回复：
+
+```text
+reference = REALTALK 数据集中的真实目标角色回复
+generated = Ours 根据历史、用户画像和智能体人设生成的回复
+```
+
+评估时从该回复所在 Session 的开头按原顺序读取真实对话，截断在目标回复之前，然后分别把 `reference` 和 `generated` 放到完全相同的最后一个位置。这样两条候选回复共享相同的 Session 内历史，评估器不会看到目标回复之后的消息。两条回复分别标注后再进行比较，不把 reference 直接交给分类器或 judge 作为 generated 的评分提示。
+
+| 指标 | 评估器 | 单条样本计算方法 |
+|---|---|---|
+| Lexical | 项目中的 ROUGE-L 实现 | 直接计算 `ROUGE-L_F1(reference, generated)` |
+| Semantic | BERTScore，`roberta-large` | 计算 `BERTScore_F1(reference, generated)`；运行设备由 `--eval-device` 指定 |
+| Reflective | LLM judge + `REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT` | 在相同对话历史下分别将 reference 和 generated 标为 `True/False`；标签相同记 1，否则记 0 |
+| Grounding | LLM judge + `REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT` | 在相同对话历史下分别将 reference 和 generated 标为 `True/False`；标签相同记 1，否则记 0 |
+| Sentiment | `cardiffnlp/twitter-roberta-base-sentiment-latest` | 分别预测两条回复的最高概率情感倾向标签；标签相同记 1，否则记 0 |
+| Emotion | `cardiffnlp/twitter-roberta-large-emotion-latest` | 分别预测两条回复的最高概率情绪标签；标签相同记 1，否则记 0 |
+| Intimacy | `cardiffnlp/twitter-roberta-large-intimacy-latest` | 分别取得模型输出分数，计算 `abs(score_reference - score_generated)` |
+| Empathy | LLM judge + `REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT` | 分别评估 ER、IN、EX 三项，每项 0–2 分；先求两侧总分，再计算 `abs(total_reference - total_generated)` |
+
+三个 CardiffNLP 分类器只接收候选回复本身；Reflective、Grounding 和 Empathy judge 接收“相同的 Session 内历史 + 当前候选回复”。分类器输入使用 `truncation=True, max_length=512`，LLM judge 使用 `temperature=0.0`。阶段性调试可以通过 `--judge-model qwen-plus` 运行；严格复现 REALTALK 时应使用论文采用的 `gpt-4o-mini`。
+
+三个 LLM judge prompt 以 REALTALK Appendix C.1–C.3 的定义、正反例和 EPITOME 分档为依据，并适配为当前代码使用的“System prompt + Session 内历史及最后候选回复”输入格式。这里没有复用项目中旧的通用 EI prompt，因为旧 prompt 的直接 0–2 对比方式及附加 appropriateness 字段不符合 Table 2 的标注与聚合协议。适配只明确判定边界和结构化输出：普通认可不自动算 Reflective，任意提问不自动算 Grounding，事实追问不自动算 Empathy Exploration；不改变 Table 2 的指标定义。
+
+离散属性的逐样本分数为：
+
+```text
+score_i = 1[label_reference == label_generated]
+```
+
+Intimacy 和 Empathy 使用绝对误差：
+
+```text
+error_i = abs(value_reference - value_generated)
+```
+
+逐样本标注写入：
+
+```text
+cases/<case_id>/evaluation/table2_annotations.jsonl
+```
+
+每个对话的八项平均结果写入：
+
+```text
+cases/<case_id>/evaluation/table2_scores.json
+```
+
+### 2.3 聚合方法
+
+最终结果不是把所有消息直接做微平均，也不是先把十个对话等权平均，而是：
+
+1. 合并属于同一目标 speaker 的全部测试样本。
+2. 对每位目标 speaker 分别计算每个指标的样本平均值。
+3. 对所有目标 speakers 的均值做宏平均，得到表中的 `mean`。
+4. 对目标 speakers 的均值计算总体标准差，得到表中的 `population std`。
+
+因此表中的 `mean ± std` 表示“目标角色之间的平均表现及角色差异”，不是多次随机运行的均值和误差，也不是置信区间。完整聚合协议为：
+
+```text
+mean per target speaker -> macro mean and population std across target speakers
+```
 
 ## 3. 3090 环境部署
 
