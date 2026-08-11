@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import random
 import time
@@ -154,6 +155,11 @@ class OpenAICompatibleChatBackend:
             if enable_thinking is None
             else bool(enable_thinking)
         )
+        thinking_json_mode = bool(
+            response_schema is not None
+            and self.is_dashscope_qwen
+            and thinking_enabled
+        )
         for attempt in range(1, self.max_attempts + 1):
             self.token_usage["network_attempts"] += 1
             try:
@@ -164,7 +170,18 @@ class OpenAICompatibleChatBackend:
                         if system_prompt.strip()
                         else []
                     )
-                    + [{"role": "user", "content": user_prompt}],
+                    + [{
+                        "role": "user",
+                        "content": (
+                            user_prompt
+                            + "\n\nReturn one JSON object matching this exact schema:\n"
+                            + json.dumps(
+                                response_schema["schema"], ensure_ascii=False
+                            )
+                            if thinking_json_mode
+                            else user_prompt
+                        ),
+                    }],
                     "max_tokens": max_tokens,
                     "top_p": top_p,
                 }
@@ -190,7 +207,9 @@ class OpenAICompatibleChatBackend:
                     elif thinking_enabled:
                         request["extra_body"] = {"enable_thinking": True}
                 if response_schema is not None:
-                    if self._uses_required_tool_schema():
+                    if thinking_json_mode:
+                        request["response_format"] = {"type": "json_object"}
+                    elif self._uses_required_tool_schema():
                         schema_name = str(response_schema.get("name") or "").strip()
                         schema = response_schema.get("schema")
                         if not schema_name or not isinstance(schema, dict):
@@ -221,7 +240,11 @@ class OpenAICompatibleChatBackend:
 
                 response = self.client.chat.completions.create(**request)
                 message = response.choices[0].message
-                if response_schema is not None and self._uses_required_tool_schema():
+                if (
+                    response_schema is not None
+                    and self._uses_required_tool_schema()
+                    and not thinking_json_mode
+                ):
                     tool_calls = list(message.tool_calls or [])
                     if (
                         len(tool_calls) != 1

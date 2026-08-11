@@ -150,6 +150,22 @@ class FakeCompletions:
         )
 
 
+class ThinkingJsonCompletions:
+    def __init__(self) -> None:
+        self.request: dict[str, Any] | None = None
+
+    def create(self, **request: Any) -> Any:
+        self.request = request
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(
+                content='{"intents":["Personal Advice"]}',
+                reasoning_content="private reasoning",
+                tool_calls=None,
+            ))],
+            usage=SimpleNamespace(prompt_tokens=10, completion_tokens=5),
+        )
+
+
 class PersonaEmpPublicReproductionTests(unittest.TestCase):
     def test_kimi_structured_output_uses_required_tool_schema(self) -> None:
         completions = FakeCompletions()
@@ -240,6 +256,35 @@ class PersonaEmpPublicReproductionTests(unittest.TestCase):
         self.assertIn("tools", completions.request)
         self.assertIn("tool_choice", completions.request)
         self.assertNotIn("response_format", completions.request)
+
+    def test_dashscope_qwen_thinking_schema_uses_json_mode(self) -> None:
+        completions = ThinkingJsonCompletions()
+        backend = OpenAICompatibleChatBackend.__new__(OpenAICompatibleChatBackend)
+        backend.model = "qwen3-max-2026-01-23"
+        backend.base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        backend.max_attempts = 1
+        backend.enable_thinking = False
+        backend.is_kimi_k2 = False
+        backend.is_dashscope_qwen = True
+        backend.client = SimpleNamespace(chat=SimpleNamespace(completions=completions))
+        schema = {
+            "name": "intent_schema", "strict": True,
+            "schema": {
+                "type": "object",
+                "properties": {"intents": {"type": "array", "items": {"type": "string"}}},
+                "required": ["intents"], "additionalProperties": False,
+            },
+        }
+        result = backend.chat(
+            "system", "user", temperature=0.0, max_tokens=100,
+            response_schema=schema, enable_thinking=True,
+        )
+        assert completions.request is not None
+        self.assertEqual(completions.request["response_format"], {"type": "json_object"})
+        self.assertNotIn("tools", completions.request)
+        self.assertNotIn("tool_choice", completions.request)
+        self.assertIn("exact schema", completions.request["messages"][-1]["content"])
+        self.assertEqual(result.reasoning_content, "private reasoning")
 
     def test_alpsbench_adapter_joins_gold_and_reconstructs_intent(self) -> None:
         input_row = {
