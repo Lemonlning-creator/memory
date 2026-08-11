@@ -48,7 +48,7 @@
 
 本地 `dataset/Chat_*.json` 已与上述官方仓库 commit 的对应 JSON 做过字节级核对，数据源一致。
 
-Persona Simulation 采用公开 JSON 的原始消息气泡作为 `M_t`，不合并连续同说话者消息。论文没有公开样本构造代码，但 Appendix D.1 将真值定义为 speaker's original message；更关键的是 Figure 7 中 Akib 的逐 Session 累计消息量与原始气泡计数吻合，而与合并 turn 计数明显不符。
+Persona Simulation 使用论文第 4.1 节的分析消息单位：同一 Session 内连续同说话者的原始气泡先拼接成一条语义消息 `M_t`。Appendix D.1 中的 speaker's original message 指此样本的真实说话者消息，不能据此推翻第 4.1 节的明确合并规则。
 
 ## 3. REALTALK Task 1 的真实任务
 
@@ -125,7 +125,7 @@ User Prompt 为此前对话历史，末尾给出目标说话者 cue。Assistant 
 - Profile 的 confidence 和 evidence 必须保存；
 - 这些是初始模型，不应描述为完整、真实的人格全貌。
 
-按 Cb 前 3 个 Session 构造测试集，可得到 1,076 条目标说话者原始消息。论文没有公布 Table 2 的准确测试样本总数，所以 1,076 是根据公开数据、Table 8、三 Session 描述和 Figure 7 数量交叉验证得到的重建统计。
+按 Cb 前 3 个 Session 构造测试集，并先执行连续同说话者消息合并，可得到 519 条目标说话者消息。论文没有公布 Table 2 的准确测试样本总数，所以 519 是根据公开数据、Table 8、三 Session 描述和第 4.1 节合并规则得到的重建统计。
 
 用于 Ours 双域建模的数据覆盖如下。`Ca Self messages` 是目标说话者在 Ca 前 3 个 Session 的原始消息；`Cb Partner messages` 是测试伙伴在 Cb 前 3 个 Session 中最终可被因果观察到的原始消息总数：
 

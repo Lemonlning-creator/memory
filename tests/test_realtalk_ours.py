@@ -196,19 +196,22 @@ class FakeLabels:
 
 
 class RealTalkOursTests(unittest.TestCase):
-    def test_public_table8_reconstruction_has_expected_1076_raw_targets(self):
+    def test_public_table8_reconstruction_has_expected_519_merged_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)
         splits = select_realtalk_splits(config.dataset_dir)
         manifest, prepared = _prepare_dataset(config, splits)
         self.assertEqual(manifest["total_targets"], EXPECTED_FULL_TARGETS)
-        self.assertEqual(EXPECTED_FULL_TARGETS, 1076)
-        self.assertFalse(
+        self.assertEqual(EXPECTED_FULL_TARGETS, 519)
+        self.assertTrue(
             manifest["merge_consecutive_same_speaker_within_session"]
         )
-        self.assertEqual(manifest["sample_unit"], "original message bubble M_t")
+        self.assertEqual(
+            manifest["sample_unit"],
+            "merged consecutive same-speaker message M_t",
+        )
         self.assertEqual(manifest["targets_by_speaker"], EXPECTED_SPEAKER_TARGETS)
         self.assertTrue(all(
-            ":message_" in point["target"]["turn_id"]
+            ":turn_" in point["target"]["turn_id"]
             for item in prepared
             for point in item["points"]
         ))

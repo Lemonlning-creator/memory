@@ -48,18 +48,18 @@ from ..metrics import compute_rouge_l
 
 EXPECTED_MODEL = "qwen3-8b"
 OFFICIAL_REALTALK_COMMIT = "b903e06a9770bf4e5fe9018c3e132889666d3b4a"
-EXPECTED_FULL_TARGETS = 1076
+EXPECTED_FULL_TARGETS = 519
 EXPECTED_SPEAKER_TARGETS = {
-    "Emi": 52,
-    "Nicolas": 247,
-    "Kevin": 55,
-    "Akib": 157,
-    "Muhhamed": 75,
-    "Nebraas": 137,
-    "Paola": 31,
-    "Vanessa": 182,
-    "elise": 55,
-    "Fahim Khan": 85,
+    "Emi": 37,
+    "Nicolas": 117,
+    "Kevin": 25,
+    "Akib": 37,
+    "Muhhamed": 37,
+    "Nebraas": 51,
+    "Paola": 23,
+    "Vanessa": 116,
+    "elise": 36,
+    "Fahim Khan": 40,
 }
 PAPER_TABLE2_ROWS = {
     "w/o fine-tune": {
@@ -585,7 +585,7 @@ def _prepare_dataset(
             train_chat,
             speaker,
             profile_sessions=config.profile_sessions,
-            merge_adjacent_bubbles=False,
+            merge_adjacent_bubbles=True,
         )
         points = build_message_level_points(
             test_chat,
@@ -593,7 +593,7 @@ def _prepare_dataset(
             test_sessions=config.test_sessions,
             max_context_chars=config.max_context_chars,
             max_eval_points=config.max_eval_points_per_speaker,
-            merge_adjacent_bubbles=False,
+            merge_adjacent_bubbles=True,
         )
         if not points:
             raise ValueError(f"no test targets for {speaker}")
@@ -613,8 +613,8 @@ def _prepare_dataset(
         "table8_speaker_specific_splits": [dict(item) for item in splits],
         "profile_sessions": config.profile_sessions,
         "test_sessions": config.test_sessions,
-        "sample_unit": "original message bubble M_t",
-        "merge_consecutive_same_speaker_within_session": False,
+        "sample_unit": "merged consecutive same-speaker message M_t",
+        "merge_consecutive_same_speaker_within_session": True,
         "generated_outputs_are_never_rolled_into_history": True,
         "source_files_sha256": dict(sorted(files.items())),
         "source_files_aggregate_sha256": stable_hash(dict(sorted(files.items()))),

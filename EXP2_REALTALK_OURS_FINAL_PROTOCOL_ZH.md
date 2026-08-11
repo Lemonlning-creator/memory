@@ -61,26 +61,26 @@ b903e06a9770bf4e5fe9018c3e132889666d3b4a
 
 每位参与者有两条不同伙伴的长对话。论文 Table 8 对每位参与者分别指定一条 Ca 和一条 Cb：
 
-| 目标说话者 / Ours Self | Ca：建立目标 Self | Cb：正式测试 | Cb 伙伴 / Ours User | Ca 前 3 Session Self messages | Cb 前 3 Session targets |
+| 目标说话者 / Ours Self | Ca：建立目标 Self | Cb：正式测试 | Cb 伙伴 / Ours User | Ca 前 3 Session Self turns | Cb 前 3 Session targets |
 |---|---|---|---|---:|---:|
-| Emi | Chat 4 Emi-Paola | Chat 1 Emi-elise | elise | 37 | 52 |
-| Nicolas | Chat 5 Nicolas-Nebraas | Chat 6 Vanessa-Nicolas | Vanessa | 163 | 247 |
-| Kevin | Chat 3 Kevin-Paola | Chat 2 Kevin-elise | elise | 39 | 55 |
-| Akib | Chat 9 Fahim-Akib | Chat 8 Akib-Muhhamed | Muhhamed | 121 | 157 |
-| Muhhamed | Chat 10 Fahim-Muhhamed | Chat 8 Akib-Muhhamed | Akib | 51 | 75 |
-| Nebraas | Chat 5 Nicolas-Nebraas | Chat 7 Nebraas-Vanessa | Vanessa | 148 | 137 |
-| Paola | Chat 4 Emi-Paola | Chat 3 Kevin-Paola | Kevin | 29 | 31 |
-| Vanessa | Chat 7 Nebraas-Vanessa | Chat 6 Vanessa-Nicolas | Nicolas | 85 | 182 |
-| elise | Chat 2 Kevin-elise | Chat 1 Emi-elise | Emi | 36 | 55 |
-| Fahim Khan | Chat 10 Fahim-Muhhamed | Chat 9 Fahim-Akib | Akib | 73 | 85 |
+| Emi | Chat 4 Emi-Paola | Chat 1 Emi-elise | elise | 20 | 37 |
+| Nicolas | Chat 5 Nicolas-Nebraas | Chat 6 Vanessa-Nicolas | Vanessa | 73 | 117 |
+| Kevin | Chat 3 Kevin-Paola | Chat 2 Kevin-elise | elise | 24 | 25 |
+| Akib | Chat 9 Fahim-Akib | Chat 8 Akib-Muhhamed | Muhhamed | 40 | 37 |
+| Muhhamed | Chat 10 Fahim-Muhhamed | Chat 8 Akib-Muhhamed | Akib | 24 | 37 |
+| Nebraas | Chat 5 Nicolas-Nebraas | Chat 7 Nebraas-Vanessa | Vanessa | 72 | 51 |
+| Paola | Chat 4 Emi-Paola | Chat 3 Kevin-Paola | Kevin | 21 | 23 |
+| Vanessa | Chat 7 Nebraas-Vanessa | Chat 6 Vanessa-Nicolas | Nicolas | 51 | 116 |
+| elise | Chat 2 Kevin-elise | Chat 1 Emi-elise | Emi | 26 | 36 |
+| Fahim Khan | Chat 10 Fahim-Muhhamed | Chat 9 Fahim-Akib | Akib | 26 | 40 |
 
 总测试目标：
 
 ```text
-52 + 247 + 55 + 157 + 75 + 137 + 31 + 182 + 55 + 85 = 1,076
+37 + 117 + 25 + 37 + 37 + 51 + 23 + 116 + 36 + 40 = 519
 ```
 
-这 1,076 是公开数据按 Table 8、前三 Session 和原始消息级 `M_t` 重建得到的数量。论文没有公布 Table 2 的准确样本数，不能把 1,076 称为论文官方报告数字。原始消息级选择由 Figure 7 的累计消息量交叉验证支持。
+这 519 是公开数据按 Table 8、前三 Session 和论文的连续同说话者消息合并规则重建得到的数量。论文没有公布 Table 2 的准确样本数，不能把 519 称为论文官方报告数字。
 
 ## 3. Ca 和 Cb 分别做什么
 
@@ -116,9 +116,9 @@ Ours：Ca -> 显式 Self Domain
 
 ## 4. 消息预处理和测试样本
 
-### 4.1 消息单位
+### 4.1 合并规则
 
-每个公开 JSON 中的原始消息气泡都是独立 `M_t`，相邻同说话者消息不合并。该选择与 Appendix D.1 的原始消息真值定义及 Figure 7 的逐 Session 累计消息量一致。
+同一人在同一 Session 中连续发送的消息气泡合并为一条语义消息；不跨 Session 合并。这对应论文第 4.1 节“在分析前合并连续同说话者消息”的明确规则。
 
 ### 4.2 Ca 范围
 
@@ -126,12 +126,12 @@ Ours：Ca -> 显式 Self Domain
 
 ### 4.3 Cb 范围
 
-使用 Cb 按时间排序的前 3 个 Session。对其中每一条属于目标说话者 S 的原始消息 `M_t` 构造一个测试样本。
+使用 Cb 按时间排序的前 3 个 Session。对其中每一条属于目标说话者 S 的合并消息 `M_t` 构造一个测试样本。
 
 ### 4.4 每条样本的历史
 
 ```text
-H_t = Cb 选定片段中严格位于 M_t 之前的全部真实原始消息
+H_t = Cb 选定片段中严格位于 M_t 之前的全部真实合并消息
 ```
 
 - Session 之间继承真实历史；
@@ -364,7 +364,7 @@ Ours 与论文行同任务、同公开 Ca/Cb 分配、同目标消息和同评�
 | `H_t={M_1,...,M_(t-1)}` | 论文明确 | 真实 causal prefix |
 | 目标人物原消息作为真值 | 论文明确 | 完全沿用 |
 | D.1 角色 Prompt | 论文明确 | 保留为最终生成任务约束 |
-| 原始消息气泡作为 `M_t` | Figure 7 与 D.1 支持，官方构造代码未公开 | 不合并；累计数量与 Figure 7 对齐 |
+| 连续同说话者消息合并 | 论文第 4.1 节明确 | 同 Session 内合并 |
 | 3 Session 条件及其后趋于饱和 | 论文明确 | 采用 3-Session 主条件 |
 | 前 3 Session 的精确逐消息构造 | 官方代码未公开 | 按时间顺序取前 3 Session 重建并披露 |
 | 精确 Persona Simulation 代码 | 未公开 | 本地重建并记录 hash |
@@ -391,4 +391,4 @@ Ours 与论文行同任务、同公开 Ca/Cb 分配、同目标消息和同评�
 - Prompt、Schema、数据、源码、模型与解码参数全部进入运行签名和 manifest；
 - API 密钥不进入仓库或实验产物。
 
-唯一待补项是可验证的 `gpt-4o-mini` API 端点。获得端点前可以完成 1,076 条生成和本地五项指标，但不得创建 `PIPELINE_COMPLETE`。
+唯一待补项是可验证的 `gpt-4o-mini` API 端点。获得端点前可以完成 519 条生成和本地五项指标，但不得创建 `PIPELINE_COMPLETE`。

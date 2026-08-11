@@ -22,11 +22,11 @@ thinking: disabled
 
 - 固定官方 REALTALK 仓库 commit：`b903e06a9770bf4e5fe9018c3e132889666d3b4a`。
 - 严格使用论文 Table 8 的十组 speaker-specific Ca/Cb。
-- 每个公开 JSON 原始消息气泡均作为独立 `M_t`，不合并连续同说话者消息。
+- 按论文第 4.1 节，同一 Session 内连续同说话者消息先合并为一条 `M_t`。
 - Ca 前 3 个 Session 用于一次性建立目标人物 Self Domain。
 - Cb 前 3 个 Session 中，每条目标人物原始消息形成一个预测点。
 - 每个预测点只读取该目标之前的真实历史；模型输出不回灌。
-- 公开数据重建数量为 10 人、1,076 条；论文没有公布其运行时准确样本数。
+- 公开数据重建数量为 10 人、519 条；论文没有公布其运行时准确样本数。
 
 逐人目标数固定为：
 
@@ -90,7 +90,7 @@ Output only the message, not the speaker name.
 
 - `dataset_manifest.json`：Table 8 映射、源文件哈希和逐人数目。
 - `self_domains.json`：十位目标人物固定 Self Domain。
-- `predictions.jsonl`：1,076 条预测、真值、User Domain、State、lambda 和 Policy。
+- `predictions.jsonl`：519 条预测、真值、User Domain、State、lambda 和 Policy。
 - `raw_responses.jsonl`：每次逻辑尝试的原始输出与用量，不含密钥。
 - `checkpoint.json`：逐阶段原子检查点和失败记录。
 - `run_manifest.json`：模型、解码、Prompt/Schema/数据哈希与调用成本。
@@ -158,4 +158,4 @@ bash tools/run_realtalk_ours_qwen3_8b.sh
 - 诊断性两样本暴露过小模型将 Self Domain 兴趣写成“刚刚发生的活动”的问题；最终代码已增加稳定背景与当前事实的硬边界、稀疏 User Domain 规则和无证据冷启动适配。
 - 旧 V4--V6 两样本使用了错误的连续气泡合并规则，只保留为诊断，不能进入正式结果。
 - 论文 Figure 7 中 Akib 的累计消息量与原始气泡 `51/73/121/142/146`（Ca）和 `53/86/157/178/197`（Cb）吻合，与合并 turn 数明显不符；因此正式协议固定为原始消息级 `M_t`。
-- 服务器已配置独立 `600` 权限的百炼环境文件。正式全量前必须在新提交、新输出目录复跑原始消息级 pilot；当前没有启动 1,076 条正式生成。
+- 服务器已配置独立 `600` 权限的百炼环境文件。正式全量前必须在新提交、新输出目录复跑合并消息级 pilot。
