@@ -253,7 +253,7 @@ ALIGNMENT_SCHEMA = {
                     },
                     "question_mode": {
                         "type": "string",
-                        "enum": ["none", "optional", "follow-up"],
+                        "enum": ["none", "follow-up"],
                     },
                 },
                 "required": [
@@ -384,7 +384,7 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
     primary_move = _enum(action["primary_move"], PRIMARY_MOVES, "next_action.primary_move")
     question_mode = _enum(
         action["question_mode"],
-        ("none", "optional", "follow-up"),
+        ("none", "follow-up"),
         "next_action.question_mode",
     )
     if question_mode == "follow-up" and primary_move != "follow-up":

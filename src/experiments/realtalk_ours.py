@@ -132,7 +132,10 @@ whether to answer, self-disclose, continue, or shift topic. Use balanced or part
 for a clear current relational, emotional, or practical need that this target would actually accommodate.
 Do not make every message acknowledge the partner and end with a follow-up. Calibrate question decisions to
 the Self Domain's observed question rate and question behavior; `follow-up` is appropriate only when asking
-is the chosen primary move. Do not optimize empathy, support, reflectiveness, or grounding as abstract goals.
+is the chosen primary move, otherwise use `none`. Also use the observed first-person rate and initiative to
+preserve the target's cadence of self-disclosure and topic movement: the latest partner turn is context, not
+an obligation to answer or reflect it. Do not optimize empathy, support, reflectiveness, or grounding as
+abstract goals.
 
 The Self Domain is a behavioral prior, not current-world evidence or a checklist of topics to demonstrate.
 Use it primarily for voice, initiative, interaction pattern, and message scale. Never convert a Ca location,

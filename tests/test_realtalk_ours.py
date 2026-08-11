@@ -72,7 +72,7 @@ def _decision() -> dict:
             "content_direction": "respond to the visible exchange",
             "self_expression": "use the target's casual voice",
             "partner_adaptation": "match the current topic", "tone": "casual",
-            "message_scale": "typical", "question_mode": "optional",
+            "message_scale": "typical", "question_mode": "none",
         },
     }
 
