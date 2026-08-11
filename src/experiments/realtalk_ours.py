@@ -130,7 +130,9 @@ Update the partner's five layers: core concerns/values, regulation patterns, cog
 identity/life facts, and behavior/preferences. Every fact requires at least one supplied partner turn ID."""
 
 ALIGNMENT_SYSTEM_PROMPT = """You are the adaptive alignment stage of a persona-simulation agent.
-First infer the partner's current and short-term likely state from causal evidence. Then choose an explicit
+First infer the partner's current and short-term likely state from causal evidence. CURRENT means the latest
+visible partner turn, not an earlier event, a stable profile fact, or a previous state. Recompute it for every
+target message and cite the latest partner turn ID in current.evidence_turn_ids. Then choose an explicit
 adaptive lambda_t in [0,1]: low values preserve the target speaker's habitual behavior; high values adapt
 more strongly to the partner's present needs. The target speaker's identity remains a hard constraint at
 every value. Finally produce exactly one Behavior Policy for the next message.
@@ -140,6 +142,12 @@ empathy, advice, questions, positivity, or personalization. Match the target's d
 partner adaptation only where evidence supports it. Orientation must match lambda_t: [0,.25)
 self-dominant, [.25,.5) self-leaning, [.5,.75) user-leaning, [.75,1] strongly-user-oriented. Return exactly
 the requested JSON structure.
+
+Calibrate lambda_t to this imitation task. Use [0,.25) for greetings, routine updates, factual exchanges,
+light banter, or unclear needs; [.25,.5) for ordinary partner-aware adjustment; [.5,.75) only for a clear
+current emotional or relational need; and [.75,1] only for an explicit, high-intensity need where the target
+speaker's demonstrated behavior supports strong adaptation. A negative topic alone is not a reason for a
+high lambda. Do not default to therapeutic acknowledgment.
 
 Self Domain identity facts and interests are background knowledge, not topics that must appear. In the
 Behavior Policy, self_domain_expression should normally select tone, phrasing, initiative, and response
@@ -159,19 +167,22 @@ FIXED SELF DOMAIN:
 CURRENT USER DOMAIN:
 {user_domain}
 
-PREVIOUS USER STATE:
-{previous_state}
-
 REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:
 {history}
 
-LATEST PARTNER QUERY/TURN (may be empty):
+LATEST PARTNER QUERY/TURN WITH ID (the primary evidence for CURRENT state; may be empty):
 {current_query}
 
 Infer state, choose lambda_t, and produce one concrete policy for {speaker}'s next message."""
 
 GENERATION_SYSTEM_TEMPLATE = """You are {speaker}. Continue the conversation.
 Output only the message, not the speaker name.
+
+This is persona simulation, not assistant response generation. Imitating {speaker}'s demonstrated identity,
+voice, initiative, and conversational scale is the primary objective. The partner model and User State are
+adaptation context only; they must never replace {speaker}'s persona or turn the message into generic therapy,
+customer support, or an idealized empathetic reply. The latest visible real turn overrides any stale or
+conflicting abstract state description.
 
 NON-NEGOTIABLE CAUSAL BOUNDARY: Self Domain is a style and identity prior, not evidence that a past
 example is happening now. Never invent a current or recent activity, location, possession, plan, mood,
@@ -317,7 +328,6 @@ def run_realtalk_ours(
         self_domain = self_envelope["data"]
         self_domains[speaker] = self_domain
         user_domain = empty_user_domain()
-        previous_user_state: dict[str, Any] = {}
         observed_partner_turn_ids: set[str] = set()
 
         for point in speaker_data["points"]:
@@ -385,9 +395,12 @@ def run_realtalk_ours(
                     turn["turn_id"] for turn in new_partner_turns
                 )
 
+                latest_partner_turn = (
+                    visible_partner_turns[-1] if visible_partner_turns else None
+                )
                 current_query = (
-                    visible_partner_turns[-1]["content"]
-                    if visible_partner_turns
+                    _turns_with_ids([latest_partner_turn])
+                    if latest_partner_turn
                     else ""
                 )
                 alignment_envelope = _structured_call(
@@ -400,7 +413,6 @@ def run_realtalk_ours(
                         partner=speaker_data["partner"],
                         self_domain=_json(self_domain),
                         user_domain=_json(user_domain),
-                        previous_state=_json(previous_user_state),
                         history=_turns_with_ids(point["context_turns"]),
                         current_query=current_query,
                     ),
@@ -408,6 +420,11 @@ def run_realtalk_ours(
                     normalizer=lambda value: _normalize_alignment_for_context(
                         normalize_alignment(value),
                         set(observed_partner_turn_ids),
+                        (
+                            latest_partner_turn["turn_id"]
+                            if latest_partner_turn
+                            else None
+                        ),
                     ),
                     max_tokens=1600,
                     max_attempts=config.operation_max_attempts,
@@ -417,7 +434,6 @@ def run_realtalk_ours(
                 alignment_envelope["audit"]["deterministic_no_evidence_adapter"] = (
                     not observed_partner_turn_ids
                 )
-                previous_user_state = alignment_result["user_state"]
                 generation_envelope = _text_call(
                     checkpoint=checkpoint,
                     backend=backend,
@@ -1095,7 +1111,9 @@ def _validate_user_domain_evidence(
 
 
 def _normalize_alignment_for_context(
-    value: dict[str, Any], allowed_turn_ids: set[str]
+    value: dict[str, Any],
+    allowed_turn_ids: set[str],
+    latest_partner_turn_id: str | None = None,
 ) -> dict[str, Any]:
     if not allowed_turn_ids:
         value = {
@@ -1164,6 +1182,11 @@ def _normalize_alignment_for_context(
     if unknown:
         raise ValueError(
             f"current user state cites unobserved turns: {sorted(unknown)}"
+        )
+    if latest_partner_turn_id and latest_partner_turn_id not in evidence:
+        raise ValueError(
+            "current user state must cite the latest partner turn: "
+            f"{latest_partner_turn_id}"
         )
     return value
 

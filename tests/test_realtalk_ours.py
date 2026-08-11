@@ -259,6 +259,7 @@ class RealTalkOursTests(unittest.TestCase):
         normalized = _normalize_alignment_for_context(
             normalize_alignment(_alignment("session_1:turn_1")),
             {"session_1:turn_1"},
+            "session_1:turn_1",
         )
         expression = normalized["behavior_policy"]["self_domain_expression"]
         self.assertIn("tone, phrasing, initiative", expression)
@@ -266,6 +267,14 @@ class RealTalkOursTests(unittest.TestCase):
             "unsupported first-person factual details",
             normalized["behavior_policy"]["avoid"],
         )
+
+    def test_current_state_must_cite_latest_partner_turn(self):
+        with self.assertRaisesRegex(ValueError, "latest partner turn"):
+            _normalize_alignment_for_context(
+                normalize_alignment(_alignment("session_1:turn_1")),
+                {"session_1:turn_1", "session_1:turn_3"},
+                "session_1:turn_3",
+            )
 
     def test_generation_view_hides_identity_facts_but_preserves_style(self):
         view = _generation_self_domain(_self_domain())
