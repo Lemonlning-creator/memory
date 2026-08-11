@@ -7,23 +7,113 @@
 # =========================
 # REALTALK Table 2 Message-level EI Evaluation (English)
 # =========================
-REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT = """You label whether the final speaker message is reflective.
-Reflective language shows self-observation, awareness of thoughts or feelings,
-perspective-taking, or an explanation of the speaker's intentions and motivations.
-Use the dialogue only as context. Return exactly True or False."""
+REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT = """Reflectiveness Classification
 
-REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT = """You label whether the final speaker message is grounding.
-Grounding actively builds mutual understanding through clarification, a relevant
-follow-up, a confirmation check, or a request to expand shared information.
-Agreement without clarification or follow-up is not grounding.
-Use the dialogue only as context. Return exactly True or False."""
+You are an evaluator trained to determine whether the final speaker message is
+reflective, indicating self-awareness. Evaluate only the final message; use the
+preceding dialogue only to interpret it.
 
-REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT = """Score empathy in the final speaker message using three fields.
-emotional_reaction: warmth, compassion, or concern toward the other speaker.
-interpretation: understanding or validation of the other speaker's experience.
-exploration: an attempt to explore the other speaker's experience or feelings.
-Each field must be an integer from 0 to 2, where 0 is absent, 1 is partial or
-generic, and 2 is explicit or specific. Return only this JSON object:
+Reflective language is characterized by one or more of the following:
+- Self-observation: the speaker recognizes or examines their own thoughts,
+  feelings, actions, or recurring patterns.
+- Perspective-taking: the speaker shows awareness of another person's
+  perspective and relates it to their own response, behavior, or understanding.
+- Intentionality: the speaker explains the reasoning, motivation, or goal behind
+  their behavior or decision.
+
+Decision boundaries:
+- Merely stating a fact, preference, decision, or opinion is not reflective.
+- The presence of phrases such as "I think" or "I feel" is not sufficient unless
+  the speaker expresses awareness of, or insight into, an internal state,
+  motivation, pattern, or perspective.
+- Agreement, encouragement, paraphrasing, or acknowledging the other speaker is
+  not reflective by itself unless it also reveals the final speaker's awareness.
+
+Examples:
+- "I realize I tend to get defensive when I receive feedback, and I think it's
+  because I want to do well." -> True. It identifies a behavioral pattern and
+  examines its motivation.
+- "I did what I thought was best for the project." -> False. It reports a
+  decision without examining the underlying emotion, motivation, or impact.
+
+Return exactly True for reflective or False for not reflective. Do not provide
+an explanation or any additional text."""
+
+REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT = """Grounding Act Classification
+
+You are an evaluator trained to determine whether the final speaker message
+demonstrates grounding: active engagement intended to establish or deepen mutual
+understanding. Evaluate only the final message; use the preceding dialogue to
+determine whether it responds to information already shared.
+
+A grounding act contains one or more of the following:
+- A clarifying question seeking further information about something the other
+  speaker said.
+- A relevant follow-up inquiry that invites the other speaker to elaborate on a
+  point, experience, or feeling already raised.
+- A confirmation check that tests whether the speaker understood the other
+  person correctly.
+
+Decision boundaries:
+- Agreement, encouragement, empathy, or an observation without clarification,
+  confirmation, or a relevant follow-up is not grounding.
+- A question is not automatically grounding. A generic conversational question,
+  an unrelated question, or a question that merely changes the topic does not
+  establish common ground about previously shared information.
+- A follow-up can be grounding only when its relationship to the preceding
+  dialogue is clear.
+
+Examples:
+- "Can you tell me more about what happened at the event?" -> True.
+- "I completely understand your point." -> False.
+- "So, you're saying that this new policy will impact the timeline?" -> True.
+- "It sounds like you've already made your decision." -> False.
+
+Return exactly True for grounding or False for not grounding. Do not provide an
+explanation or any additional text."""
+
+REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT = """Empathy Assessment
+
+You are an evaluator assessing the empathy conveyed by the final speaker message
+toward the other speaker (the seeker). Evaluate only the final message; use the
+preceding dialogue to identify the seeker's experience and feelings. Do not infer
+empathy from the speaker's persona, response length, or generally positive tone.
+
+Score each component independently with an integer from 0 to 2.
+
+1. emotional_reaction
+Does the response express or allude to warmth, compassion, concern, or similar
+feelings directed toward the seeker?
+- 0: No emotional reaction toward the seeker.
+- 1: The response alludes to warmth, compassion, or concern, but does not express
+  it explicitly.
+- 2: The response explicitly expresses warmth, compassion, concern, or a similar
+  emotional reaction toward the seeker.
+Enthusiasm about a topic, politeness, or a generally friendly tone alone is not
+an emotional reaction toward the seeker's experience.
+
+2. interpretation
+Does the response communicate an understanding of the seeker's experiences or
+feelings?
+- 0: No understanding of the seeker's experience or feelings is communicated.
+- 1: Some understanding is communicated through conjecture, speculation,
+  paraphrasing, or a relevant similar experience of the responder or another
+  person.
+- 2: The response provides deep, explicit understanding and validation of the
+  seeker's particular feelings or experiences, potentially using more than one
+  of the forms above.
+Repeating a fact from the dialogue without communicating understanding is 0.
+
+3. exploration
+Does the response attempt to explore the seeker's experiences or feelings?
+- 0: No attempt to explore the seeker's experience or feelings.
+- 1: Exploration is present but generic.
+- 2: Exploration is specific and delves into the seeker's particular experience
+  or feelings.
+A factual or topic-continuation question that does not explore the seeker's
+experience or feelings is 0 for this component, even if it is a grounding act.
+
+Return only this JSON object with integer values and no additional fields or text:
 {"emotional_reaction": 0, "interpretation": 0, "exploration": 0}"""
 
 # =========================

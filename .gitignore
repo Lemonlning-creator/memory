@@ -7,3 +7,9 @@ user_profile_*.json
 logs/app.log
 
 tests/
+
+*.db
+
+data/exp2_user_modeling
+data/exp2_user_modeling_curve
+data/exp2_user_modeling_qualitative_fixed_run2

@@ -2,19 +2,20 @@
 
 本文件说明如何在 NVIDIA RTX 3090 机器上部署和运行实验二。
 
-实验入口只有一个：
+实验二有两个相互独立的入口：
 
 ```text
-src/experiments/exp2_user_modeling.py
+src/experiments/exp2_user_modeling.py              # Table 2 主结果
+src/experiments/exp2_user_modeling_qualitative.py  # 画像进化与画像熵
 ```
 
-推荐按以下顺序运行：
+主结果按以下顺序运行：
 
 ```text
-prepare -> generate -> evaluate -> curves
+prepare -> generate -> evaluate
 ```
 
-其中 `prepare`、`generate` 和 `evaluate` 是主结果必需阶段；`curves` 是额外定性分析。
+Qualitative Analysis 使用独立脚本单独运行，不依赖 `generate` 或 `evaluate`。
 
 ## 1. 实验协议
 
@@ -52,45 +53,71 @@ prepare -> generate -> evaluate -> curves
 cd /path/to/memory
 ```
 
-### 3.1 创建虚拟环境
+### 3.1 安装uv并同步项目环境
 
-推荐使用 Python 3.11 到 3.13：
-
-```bash
-python3.11 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-```
-
-如果服务器已经有本项目的 `.venv`，可以直接激活，不需要重新创建。
-
-### 3.2 安装项目基础依赖
+如果服务器还没有uv，先安装并确认版本：
 
 ```bash
-python -m pip install -e .
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv --version
 ```
 
-### 3.3 安装3090评估依赖
-
-PyTorch 的 CUDA wheel 应根据服务器驱动选择。下面是 CUDA 12.8 的安装示例：
+使用uv安装Python 3.11，并根据仓库中的 `pyproject.toml` 和 `uv.lock` 创建或同步 `.venv`：
 
 ```bash
-python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
-python -m pip install transformers bert-score
+uv python install 3.11
+uv sync --locked --python 3.11
 ```
 
-如果服务器驱动不适合 CUDA 12.8，请使用 PyTorch 官方安装选择器生成对应命令，不要安装 CPU-only wheel。
+不需要手动执行 `source .venv/bin/activate`。基础实验通过 `uv run` 使用项目环境；第3.3节单独安装评估依赖后，评估命令必须使用 `uv run --no-sync`。
+
+### 3.2 同步项目基础依赖
+
+```bash
+uv sync --locked
+```
+
+### 3.3 安装3090评估依赖（Driver 470 / CUDA 11.x）
+
+当前3090服务器的 NVIDIA Driver 为 `470.256.02`，`nvidia-smi` 显示 CUDA 11.4。该驱动属于CUDA 11.x兼容范围，因此使用PyTorch的CUDA 11.8 wheel，不使用CUDA 12.x wheel：
+
+```bash
+uv pip install "torch==2.7.1" --torch-backend=cu118
+uv pip install --reinstall "transformers==4.57.6" "tokenizers==0.22.2" "huggingface-hub==0.36.2" "bert-score==0.3.13"
+```
+
+这里不要求系统额外安装完整的CUDA 11.8 Toolkit；PyTorch wheel会携带所需CUDA运行时。不要在这台Driver 470机器上安装 `cu12x` wheel。
+
+当前 `torch`、`transformers` 和 `bert-score` 尚未写入项目锁文件，因此这里通过 `uv pip` 安装到uv管理的项目 `.venv`。不要在安装后直接执行普通的 `uv run`：它会根据当前锁文件重新同步 Chroma 的传递依赖，并可能把兼容版本回滚为 `tokenizers 0.23.1` 和 `huggingface-hub 1.16.1`。评估统一使用 `uv run --no-sync`。如果之后执行了 `uv sync`，需要重新执行本节。
+
+评估前先检查依赖一致性和实际版本：
+
+```bash
+uv pip check
+uv pip show transformers tokenizers huggingface-hub torch bert-score
+```
+
+预期至少包括：
+
+```text
+transformers      4.57.6
+tokenizers        0.22.2
+huggingface-hub   0.36.2
+torch             2.7.1+cu118
+bert-score        0.3.13
+```
 
 验证3090是否被 PyTorch 正确识别：
 
 ```bash
-python -c "import torch; print('torch=', torch.__version__); print('cuda=', torch.cuda.is_available()); print('gpu=', torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"
+uv run --no-sync python -c "import torch; print('torch=', torch.__version__); print('torch_cuda=', torch.version.cuda); print('cuda_available=', torch.cuda.is_available()); print('gpu=', torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"
 ```
 
 预期输出应包含：
 
 ```text
-cuda= True
+torch_cuda= 11.8
+cuda_available= True
 gpu= NVIDIA GeForce RTX 3090
 ```
 
@@ -127,7 +154,7 @@ enable_thinking = False
 ### 5.1 阶段一：抽取用户画像和智能体人设
 
 ```bash
-./.venv/bin/python -m src.experiments.exp2_user_modeling \
+uv run python -m src.experiments.exp2_user_modeling \
   --phase prepare \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
@@ -151,7 +178,7 @@ data/exp2_user_modeling/cases/chat_1_emi_elise__emi__to__elise/assets/
 ### 5.2 阶段二：生成测试集回复
 
 ```bash
-./.venv/bin/python -m src.experiments.exp2_user_modeling \
+uv run python -m src.experiments.exp2_user_modeling \
   --phase generate \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
@@ -174,10 +201,19 @@ data/exp2_user_modeling/cases/chat_1_emi_elise__emi__to__elise/generations/predi
 
 ### 5.3 阶段三：计算 Table 2 指标
 
-第一次执行该阶段时，Hugging Face 会下载评估模型。应提前确保服务器能够访问 Hugging Face，并为模型缓存预留空间。
+当前3090已经缓存四个本地评估模型，因此下面使用离线模式，避免每次启动都访问 Hugging Face：
+
+```text
+cardiffnlp/twitter-roberta-base-sentiment-latest
+cardiffnlp/twitter-roberta-large-emotion-latest
+cardiffnlp/twitter-roberta-large-intimacy-latest
+roberta-large
+```
+
+在一台没有这些缓存的新机器上，第一次运行需要联网并暂时去掉 `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`；缓存完整后再使用下面的离线命令。
 
 ```bash
-./.venv/bin/python -m src.experiments.exp2_user_modeling \
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --phase evaluate \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
@@ -214,14 +250,45 @@ data/exp2_user_modeling/
 ### 5.4 阶段四：画像曲线
 
 ```bash
-./.venv/bin/python -m src.experiments.exp2_user_modeling \
-  --phase curves \
+uv run python -m src.experiments.exp2_user_modeling_qualitative \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
 ```
 
-当前需要注意：现有 `prepare` 使用一次性画像抽取，不会生成逐 Session 的 `profile_snapshots`。因此曲线阶段目前还不能直接接在一次性画像后运行；主结果只需要完成 `prepare -> generate -> evaluate`。在画像进化数据来源最终确定前，不建议运行 `curves` 或 `--phase all`。
+该脚本与主结果完全独立：
+
+- 用户画像从空白状态开始，不读取 `prepare` 生成的一次性画像。
+- 只按时间顺序回放前 90% Session 的 REALTALK 真实双方消息。
+- 不生成智能体回复，不读取后 10% 测试 Session，也不运行 Table 2 指标。
+- 直接调用现有 `MemoryOSLocal` 记忆流水线和 `bayesian_online` 画像更新。
+- 从零开始时预置与一次性画像抽取完全相同的 5 层 21 个固定字段；动态更新只能修改字段内容和置信度，不能新增、删除、改名或移动字段。
+- 在初始状态及每个训练 Session 结束后保存一次画像快照。
+
+单案例输出位于：
+
+```text
+data/exp2_user_modeling/cases/<case_id>/qualitative/
+├─ profile_runtime.json
+├─ user_profile.json
+├─ memory/memory.db
+├─ profile_snapshots/
+├─ profile_trajectory.json
+└─ trajectory_manifest.json
+```
+
+`profile_runtime.json` 是算法内部使用的贝叶斯画像，包含置信度和证据等更新元数据。最终对外使用 `user_profile.json`：其结构与 `dataset/lsy_user.json` 一致，只包含 5 层、21 个固定字段及画像内容。
+
+曲线输出位于：
+
+```text
+data/exp2_user_modeling/qualitative_figures/
+├─ profile_curves.json
+├─ profile_evolution_curve.png
+└─ profile_entropy_curve.png
+```
+
+两条曲线始终使用同一组固定字段。画像进化是 21 个字段中已经填入稳定画像内容的比例；画像熵是这 21 个字段的平均二元熵，尚无内容的字段按最大不确定性 1.0 计算。横轴是前 90% 数据中的时间顺序 Session 编号，包含 Session 0 的空画像起点。
 
 ## 6. 批量运行
 
@@ -230,7 +297,7 @@ data/exp2_user_modeling/
 ### 6.1 批量准备画像和人设
 
 ```bash
-./.venv/bin/python -m src.experiments.exp2_user_modeling \
+uv run python -m src.experiments.exp2_user_modeling \
   --phase prepare \
   --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
@@ -239,7 +306,7 @@ data/exp2_user_modeling/
 ### 6.2 批量生成回复
 
 ```bash
-./.venv/bin/python -m src.experiments.exp2_user_modeling \
+uv run python -m src.experiments.exp2_user_modeling \
   --phase generate \
   --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling
@@ -248,13 +315,23 @@ data/exp2_user_modeling/
 ### 6.3 批量评估并生成最终表格
 
 ```bash
-./.venv/bin/python -m src.experiments.exp2_user_modeling \
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --phase evaluate \
   --train-ratio 0.9 \
   --output-dir data/exp2_user_modeling \
   --eval-device cuda:0 \
   --eval-batch-size 16 \
   --judge-model gpt-4o-mini
+```
+
+### 6.4 批量生成画像进化与画像熵曲线
+
+不传 `--case` 即从零开始分别回放全部对话的前 90% Session：
+
+```bash
+uv run python -m src.experiments.exp2_user_modeling_qualitative \
+  --train-ratio 0.9 \
+  --output-dir data/exp2_user_modeling
 ```
 
 ## 7. 断点续跑
@@ -294,6 +371,10 @@ Reflective、Grounding 和 Empathy 通过 API 评估，不占用3090显存。Sen
 
 说明尚未安装评估依赖。重新执行第3.3节中的安装命令。
 
+### `tokenizers>=0.22.0,<=0.23.0 ... found tokenizers==0.23.1`
+
+这是普通 `uv run` 根据锁文件同步 Chroma 传递依赖造成的版本回滚。重新执行第3.3节的两个 `uv pip install` 命令，确认 `uv pip check` 通过，然后使用 `uv run --no-sync` 启动评估，不要再用普通 `uv run`。
+
 ### `torch.cuda.is_available() is False`
 
 检查：
@@ -302,13 +383,17 @@ Reflective、Grounding 和 Empathy 通过 API 评估，不占用3090显存。Sen
 2. 是否误装了 CPU-only PyTorch；
 3. PyTorch wheel 的 CUDA 版本是否与当前驱动兼容。
 
+### `expanded size of the tensor ... 533 ... existing size 514`
+
+这是回复超过 RoBERTa 上下文上限、但 tokenizer 未自动截断造成的错误。当前评估代码已显式使用 `truncation=True, max_length=512`；同步最新的 `src/experiments/exp2_user_modeling.py` 后，用相同评估命令继续即可，已写入的 JSONL 标注会自动复用。
+
 ### `no generated replies ... run --phase generate first`
 
 评估目录中没有该 case 的 `predictions.jsonl`。确认 `prepare`、`generate` 和 `evaluate` 使用了相同的 `--output-dir` 与 `--case`。
 
 ### Hugging Face 模型下载失败
 
-确认3090服务器可以访问 `huggingface.co`。如果模型已提前下载到服务器缓存，Transformers 会直接复用缓存。
+如果模型已经在本地缓存，使用文档中的 `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`，避免 Transformers 先联网执行 HEAD 请求。若离线模式提示找不到文件，则缓存并不完整，需要先在可联网环境下载上述四个模型。
 
 ### `gpt-4o-mini` 调用失败
 
@@ -318,9 +403,9 @@ Reflective、Grounding 和 Empathy 通过 API 评估，不占用3090显存。Sen
 
 当前代码固定使用 1536 维 embedding。不要复用由1024维或其他维度创建的旧 Milvus 数据库；使用新的 `--output-dir` 重新运行。
 
-### `missing profile snapshot` 或 curves 失败
+### Qualitative Analysis 中断
 
-这是当前一次性画像抽取与逐 Session 曲线数据之间尚未对齐造成的。它不影响 Table 2 主结果，先完成 `prepare -> generate -> evaluate`。
+完整的 qualitative trajectory 会直接复用，不会重复调用模型。若运行在中途失败，脚本不会从非空画像或非空 Milvus 数据库继续，以免破坏“从零开始”的协议；请换一个新的 `--output-dir` 重新运行。该问题不影响 `prepare -> generate -> evaluate` 主结果。
 
 ## 10. 当前实验范围说明
 
@@ -343,6 +428,9 @@ speaker_2 = 目标智能体
 - [ ] 生成历史使用数据集真实回复。
 - [ ] `predictions.jsonl` 中参考回复未进入 generation input audit。
 - [ ] 3090被 `torch.cuda.is_available()` 正确识别。
+- [ ] `uv pip check` 显示所有依赖兼容。
+- [ ] 评估使用 `uv run --no-sync`，没有触发依赖回滚。
+- [ ] 四个 Hugging Face 评估模型已缓存，离线加载正常。
 - [ ] 记录 judge model 和三个 CardiffNLP 模型名称。
 - [ ] 最终 `table2_main_results.md` 包含原论文两行和 `Ours`。
 - [ ] 正式论文结果覆盖全部目标 speakers，而不是单个 case。
@@ -355,30 +443,30 @@ speaker_2 = 目标智能体
 
 ```powershell
 cd E:\01_Research\03_UserProfile\memory
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -e .
-python -m pip install torch --index-url https://download.pytorch.org/whl/cu128
-python -m pip install transformers bert-score
+uv python install 3.11
+uv sync --locked --python 3.11
+uv pip install "torch==2.7.1" --torch-backend=cu118
+uv pip install --reinstall "transformers==4.57.6" "tokenizers==0.22.2" "huggingface-hub==0.36.2" "bert-score==0.3.13"
 ```
 
 ### 12.2 单个对话
 
 ```powershell
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
+uv run python -m src.experiments.exp2_user_modeling `
   --phase prepare `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
   --output-dir data/exp2_user_modeling
 
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
+uv run python -m src.experiments.exp2_user_modeling `
   --phase generate `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
   --output-dir data/exp2_user_modeling
 
-.\.venv\Scripts\python.exe -m src.experiments.exp2_user_modeling `
+$env:HF_HUB_OFFLINE="1"
+$env:TRANSFORMERS_OFFLINE="1"
+uv run --no-sync python -m src.experiments.exp2_user_modeling `
   --phase evaluate `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
@@ -386,6 +474,11 @@ python -m pip install transformers bert-score
   --eval-device cuda:0 `
   --eval-batch-size 16 `
   --judge-model gpt-4o-mini
+
+uv run python -m src.experiments.exp2_user_modeling_qualitative `
+  --case Chat_1_Emi_Elise.json `
+  --train-ratio 0.9 `
+  --output-dir data/exp2_user_modeling
 ```
 
 ### 12.3 批量运行

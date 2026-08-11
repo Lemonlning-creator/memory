@@ -14,7 +14,6 @@ from statistics import mean, pstdev
 from typing import Any, Dict, Iterable, List, Sequence
 
 from ..agent import StateDrivenCompanionAgent
-from ..epistemic_decay import compute_portrait_entropy, compute_profile_completeness
 from ..llm_client import LLMClient
 from ..memory_os_local import MemoryOSLocal
 from ..metrics import compute_rouge_l
@@ -287,8 +286,6 @@ class CasePaths:
     persona: Path
     profile: Path
     runtime_profile: Path
-    profile_snapshots: Path
-    profile_progress: Path
     asset_manifest: Path
     memory_db: Path
     predictions: Path
@@ -307,8 +304,6 @@ class CasePaths:
             persona=assets / "agent_persona.json",
             profile=assets / "user_profile.json",
             runtime_profile=assets / "user_profile_runtime.json",
-            profile_snapshots=assets / "profile_snapshots",
-            profile_progress=assets / "profile_progress.json",
             asset_manifest=assets / "asset_manifest.json",
             memory_db=case_root / "memory" / "memory.db",
             predictions=case_root / "generations" / "predictions.jsonl",
@@ -322,7 +317,6 @@ class CasePaths:
             self.persona,
             self.profile,
             self.runtime_profile,
-            self.profile_progress,
             self.asset_manifest,
             self.memory_db,
             self.predictions,
@@ -331,7 +325,6 @@ class CasePaths:
             self.table2_scores,
         ):
             path.parent.mkdir(parents=True, exist_ok=True)
-        self.profile_snapshots.mkdir(parents=True, exist_ok=True)
 
 
 class JsonlStore:
@@ -730,8 +723,10 @@ class Table2Evaluator:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer, pipeline
         except ImportError as exc:
             raise RuntimeError(
-                "Table 2 evaluation dependencies are missing. Install torch, transformers, "
-                "and bert-score in the 3090 environment before running --phase evaluate."
+                "Table 2 evaluation dependencies are missing or mutually incompatible. "
+                "Install the pinned torch, transformers, tokenizers, and bert-score versions "
+                "documented in README_exp2_user_modeling.md. "
+                f"Original import error: {exc}"
             ) from exc
 
         if device.startswith("cuda") and not torch.cuda.is_available():
@@ -814,7 +809,7 @@ class Table2Evaluator:
 
     @staticmethod
     def _top_prediction(classifier: Any, text: str) -> Dict[str, Any]:
-        result = classifier(text, truncation=True)
+        result = classifier(text, truncation=True, max_length=512)
         if isinstance(result, list):
             result = result[0]
         if not isinstance(result, dict) or "score" not in result:
@@ -1095,100 +1090,6 @@ def evaluate_table2(
 
 
 # ---------------------------------------------------------------------------
-# Qualitative curves
-# ---------------------------------------------------------------------------
-
-
-def _static_profile(snapshot: Dict[str, Any]) -> Dict[str, Any]:
-    return snapshot.get("profile", {}).get("state_axis", {}).get("static_profile", {})
-
-
-def collect_curve_points(
-    cases: Iterable[ExperimentCase],
-    output_dir: str | Path,
-) -> List[Dict[str, Any]]:
-    points: List[Dict[str, Any]] = []
-    for case in cases:
-        paths = CasePaths.for_case(output_dir, case)
-        for train_index, session_id in enumerate(case.train_sessions, start=1):
-            snapshot_path = paths.profile_snapshots / f"{session_id}.json"
-            if not snapshot_path.exists():
-                raise FileNotFoundError(f"missing profile snapshot: {snapshot_path}")
-            profile = _static_profile(load_json(str(snapshot_path)))
-            points.append({
-                "case_id": case.case_id,
-                "session_id": session_id,
-                "train_index": train_index,
-                "profile_completeness": compute_profile_completeness(profile),
-                "profile_entropy": compute_portrait_entropy(profile),
-            })
-    return points
-
-
-def aggregate_curve_points(points: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    grouped: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
-    for point in points:
-        grouped[int(point["train_index"])].append(point)
-    return [
-        {
-            "train_index": index,
-            "case_count": len(values),
-            "mean_profile_completeness": mean(
-                value["profile_completeness"] for value in values
-            ),
-            "mean_profile_entropy": mean(value["profile_entropy"] for value in values),
-        }
-        for index, values in sorted(grouped.items())
-    ]
-
-
-def write_curves(
-    cases: Iterable[ExperimentCase],
-    output_dir: str | Path,
-) -> Dict[str, str]:
-    import matplotlib.pyplot as plt
-
-    root = Path(output_dir).resolve()
-    figures = root / "figures"
-    figures.mkdir(parents=True, exist_ok=True)
-    points = collect_curve_points(cases, root)
-    aggregate = aggregate_curve_points(points)
-    data_path = figures / "profile_curves.json"
-    save_json(str(data_path), {"per_case": points, "aggregate": aggregate})
-
-    x = [row["train_index"] for row in aggregate]
-    completeness = [row["mean_profile_completeness"] for row in aggregate]
-    entropy = [row["mean_profile_entropy"] for row in aggregate]
-
-    evolution_path = figures / "profile_evolution_curve.png"
-    plt.figure(figsize=(7, 4.2))
-    plt.plot(x, completeness, marker="o", linewidth=2)
-    plt.xlabel("Training session index")
-    plt.ylabel("Mean profile completeness")
-    plt.ylim(0, 1)
-    plt.grid(alpha=0.25)
-    plt.tight_layout()
-    plt.savefig(evolution_path, dpi=200)
-    plt.close()
-
-    entropy_path = figures / "profile_entropy_curve.png"
-    plt.figure(figsize=(7, 4.2))
-    plt.plot(x, entropy, marker="o", linewidth=2, color="#d95f02")
-    plt.xlabel("Training session index")
-    plt.ylabel("Mean profile entropy")
-    plt.ylim(0, 1)
-    plt.grid(alpha=0.25)
-    plt.tight_layout()
-    plt.savefig(entropy_path, dpi=200)
-    plt.close()
-    return {
-        "curve_data": str(data_path),
-        "profile_evolution": str(evolution_path),
-        "profile_entropy": str(entropy_path),
-    }
-
-
-# ---------------------------------------------------------------------------
 # Command-line entry point
 # ---------------------------------------------------------------------------
 
@@ -1252,10 +1153,6 @@ def run(args: argparse.Namespace) -> None:
             batch_size=args.eval_batch_size,
         )
 
-    figures: Dict[str, str] = {}
-    if args.phase in ("curves", "all"):
-        figures = write_curves(cases, output_dir)
-
     save_json(str(output_dir / "run_manifest.json"), {
         "experiment": "Experiment 2. User Modeling Evaluation",
         "research_question": "Does explicit user modeling enable better personalized interactions?",
@@ -1267,7 +1164,6 @@ def run(args: argparse.Namespace) -> None:
         "cases": [asdict(case) for case in cases],
         "generated_this_run": generated,
         "evaluation": evaluation,
-        "figures": figures,
         "evaluation_status": "complete" if evaluation else "not_run",
     })
 
@@ -1278,7 +1174,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--phase",
-        choices=("prepare", "generate", "evaluate", "curves", "all"),
+        choices=("prepare", "generate", "evaluate", "all"),
         default="all",
     )
     parser.add_argument("--dataset-dir", default="dataset")
