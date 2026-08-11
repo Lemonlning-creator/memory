@@ -7,6 +7,7 @@ import json
 import os
 import re
 import statistics
+import subprocess
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -919,6 +920,7 @@ def _write_generation_outputs(
         "protocol": "realtalk_task1_ours_explicit_modeling_v1",
         "comparison_status": "protocol_aligned_not_runtime_identical",
         "paper_persona_simulation_model_disclosed": False,
+        "implementation_repository_commit": _repository_commit(),
         "ours_model": EXPECTED_MODEL,
         "all_ours_stages_use_same_model": True,
         "enable_thinking": False,
@@ -1230,6 +1232,7 @@ def _run_signature(
             "alignment": stable_hash(ALIGNMENT_SCHEMA),
         },
         "source": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "implementation_repository_commit": _repository_commit(),
     })
 
 
@@ -1245,6 +1248,19 @@ def _prompt_hashes() -> dict[str, str]:
         "generation_user": stable_hash(GENERATION_USER_TEMPLATE),
         "format_repair": stable_hash(FORMAT_REPAIR_TEMPLATE),
     }
+
+
+def _repository_commit() -> str:
+    root = Path(__file__).resolve().parents[2]
+    value = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        text=True,
+        stderr=subprocess.DEVNULL,
+    ).strip()
+    if not re.fullmatch(r"[0-9a-f]{40}", value):
+        raise ValueError(f"invalid implementation repository commit: {value!r}")
+    return value
 
 
 def _validate_config(config: RealTalkOursConfig) -> None:

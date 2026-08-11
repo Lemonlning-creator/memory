@@ -338,6 +338,13 @@ class RealTalkOursTests(unittest.TestCase):
             self.assertTrue((output / "GENERATION_COMPLETE").exists())
             self.assertFalse((output / "PIPELINE_COMPLETE").exists())
             self.assertTrue((output / "GPT_EVALUATION_PENDING.json").exists())
+            run_manifest = json.loads(
+                (output / "run_manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertRegex(
+                run_manifest["implementation_repository_commit"],
+                r"^[0-9a-f]{40}$",
+            )
 
             generation_calls = [
                 call for call in backend.calls
