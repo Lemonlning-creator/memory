@@ -185,7 +185,7 @@ def _contexts(dataset_dir: Path, rows: list[dict[str, Any]]) -> dict[str, str]:
             merge_adjacent_bubbles=True,
         )
         for point in points:
-            result_id = f"{split['speaker'].casefold()}:{point['sample_id']}"
+            result_id = f"{_speaker_id(split['speaker'])}:{point['sample_id']}"
             within_session = [
                 turn for turn in point["context_turns"]
                 if turn["session_id"] == point["target_session"]
@@ -198,6 +198,10 @@ def _contexts(dataset_dir: Path, rows: list[dict[str, Any]]) -> dict[str, str]:
     if missing:
         raise ValueError(f"failed to reconstruct contexts for {missing[:3]}")
     return contexts
+
+
+def _speaker_id(speaker: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", speaker.casefold()).strip("_")
 
 
 def run(predictions: Path, dataset_dir: Path, output_dir: Path, model: str) -> dict[str, Any]:
@@ -275,7 +279,10 @@ def run(predictions: Path, dataset_dir: Path, output_dir: Path, model: str) -> d
         "unresolved_errors": len(checkpoint["errors"]),
         "message_micro": {name: round(statistics.mean(item["metrics"][name] for item in scored), 6) for name in metric_names} if scored else {},
         "paper_table2_reference": PAPER_TABLE2,
-        "comparison_warning": "One-speaker subset; paper values aggregate ten speakers and are not directly comparable.",
+        "comparison_warning": (
+            f"Diagnostic subset spanning {len({item['speaker'] for item in scored})} speakers; "
+            "paper values use the complete protocol and are not directly comparable."
+        ),
         "created_at_utc": _now(),
     }
     with (output_dir / "scored.jsonl").open("w", encoding="utf-8") as handle:

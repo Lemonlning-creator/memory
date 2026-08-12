@@ -20,6 +20,14 @@ class RealTalkGptJudgeTest(unittest.TestCase):
         context = _contexts(Path("dataset"), rows)[rows[0]["result_id"]]
         self.assertNotIn("Good morning. How's it going?", context)
 
+    def test_context_supports_multiword_speaker_ids(self):
+        result_id = "fahim_khan:message_0:session_1:turn_1"
+        contexts = _contexts(
+            Path("dataset"),
+            [{"speaker": "Fahim Khan", "result_id": result_id}],
+        )
+        self.assertIn(result_id, contexts)
+
     def test_boolean_parser(self):
         self.assertTrue(_parse_bool("True"))
         self.assertFalse(_parse_bool("'False'."))
