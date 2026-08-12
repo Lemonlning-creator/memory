@@ -189,7 +189,7 @@ USER_DOMAIN_SCHEMA = {
 
 
 ALIGNMENT_SCHEMA = {
-    "name": "realtalk_ours_agentic_decision_v2",
+    "name": "realtalk_ours_agentic_decision_v3",
     "strict": True,
     "schema": {
         "type": "object",
@@ -203,6 +203,12 @@ ALIGNMENT_SCHEMA = {
                     "affect_intensity": {"type": "string", "enum": list(INTENSITY)},
                     "support_request": {"type": "boolean"},
                     "open_question": {"type": "string"},
+                    "partner_has_open_thread": {"type": "boolean"},
+                    "missing_information": {"type": "string"},
+                    "continuation_value": {
+                        "type": "string",
+                        "enum": ["none", "low", "medium", "high"],
+                    },
                     "uncertainty": {"type": "string", "enum": list(CONFIDENCE)},
                 },
                 "required": [
@@ -212,6 +218,9 @@ ALIGNMENT_SCHEMA = {
                     "affect_intensity",
                     "support_request",
                     "open_question",
+                    "partner_has_open_thread",
+                    "missing_information",
+                    "continuation_value",
                     "uncertainty",
                 ],
                 "additionalProperties": False,
@@ -256,6 +265,10 @@ ALIGNMENT_SCHEMA = {
                         "type": "string",
                         "enum": ["none", "follow-up"],
                     },
+                    "continuation_move": {
+                        "type": "string",
+                        "enum": ["none", "reciprocal-question"],
+                    },
                 },
                 "required": [
                     "communicative_intent",
@@ -266,6 +279,7 @@ ALIGNMENT_SCHEMA = {
                     "tone",
                     "message_scale",
                     "question_mode",
+                    "continuation_move",
                 ],
                 "additionalProperties": False,
             },
@@ -392,6 +406,13 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
         raise ValueError("follow-up question_mode requires follow-up primary_move")
     if primary_move == "follow-up" and question_mode != "follow-up":
         raise ValueError("follow-up primary_move requires follow-up question_mode")
+    continuation_move = _enum(
+        action["continuation_move"],
+        ("none", "reciprocal-question"),
+        "next_action.continuation_move",
+    )
+    if primary_move == "follow-up" and continuation_move != "none":
+        raise ValueError("follow-up primary_move cannot add a continuation move")
     return {
         "situation": {
             "topic": _text(situation["topic"], "situation.topic", allow_empty=True),
@@ -400,6 +421,17 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
             "affect_intensity": _enum(situation["affect_intensity"], INTENSITY, "situation.affect_intensity"),
             "support_request": _boolean(situation["support_request"], "situation.support_request"),
             "open_question": _text(situation["open_question"], "situation.open_question", allow_empty=True),
+            "partner_has_open_thread": _boolean(
+                situation["partner_has_open_thread"], "situation.partner_has_open_thread"
+            ),
+            "missing_information": _text(
+                situation["missing_information"], "situation.missing_information", allow_empty=True
+            ),
+            "continuation_value": _enum(
+                situation["continuation_value"],
+                ("none", "low", "medium", "high"),
+                "situation.continuation_value",
+            ),
             "uncertainty": _enum(situation["uncertainty"], CONFIDENCE, "situation.uncertainty"),
         },
         "relevant_user_domain": normalized_relevant,
@@ -417,6 +449,7 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
             "tone": _text(action["tone"], "next_action.tone"),
             "message_scale": _enum(action["message_scale"], ("short", "typical", "extended"), "next_action.message_scale"),
             "question_mode": question_mode,
+            "continuation_move": continuation_move,
         },
     }
 

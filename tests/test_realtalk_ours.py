@@ -66,6 +66,8 @@ def _decision() -> dict:
             "topic": "casual conversation", "partner_move": "continues the exchange",
             "explicit_affect": "", "affect_intensity": "low",
             "support_request": False, "open_question": "", "uncertainty": "medium",
+            "partner_has_open_thread": False, "missing_information": "",
+            "continuation_value": "none",
         },
         "relevant_user_domain": [],
         "alignment": {
@@ -78,6 +80,7 @@ def _decision() -> dict:
             "self_expression": "use the target's casual voice",
             "partner_adaptation": "match the current topic", "tone": "casual",
             "message_scale": "typical", "question_mode": "none",
+            "continuation_move": "none",
         },
     }
 
@@ -124,7 +127,7 @@ class FakeBackend:
                 "behavior": [{"value": "Converses casually", "confidence": "low", "evidence_ids": [evidence]}],
                 "update_summary": {"added": ["casual conversation"], "revised": [], "removed": [], "uncertainties": []},
             })
-        elif schema_name == "realtalk_ours_agentic_decision_v2":
+        elif schema_name == "realtalk_ours_agentic_decision_v3":
             decision = _decision()
             history = user_prompt.split(
                 "REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:\n", 1
@@ -172,6 +175,10 @@ class RealTalkOursTests(unittest.TestCase):
         self.assertIn("natural greeting", _action_contract("open"))
         self.assertIn("Do not add a return question", _action_contract("answer"))
         self.assertIn("Only ask one relevant question", _action_contract("follow-up"))
+        self.assertIn(
+            "exactly one short question",
+            _action_contract("answer", "reciprocal-question"),
+        )
         self.assertIn("Do not interpret", _action_contract("self-disclose"))
         with self.assertRaisesRegex(ValueError, "unknown primary move"):
             _action_contract("mixed")
@@ -204,6 +211,18 @@ class RealTalkOursTests(unittest.TestCase):
             _validate_decision_context(decision, has_history=False)
         decision["next_action"]["primary_move"] = "open"
         self.assertIs(_validate_decision_context(decision, has_history=False), decision)
+
+    def test_reciprocal_question_requires_supported_open_thread(self):
+        decision = normalize_alignment(_decision())
+        decision["next_action"]["continuation_move"] = "reciprocal-question"
+        with self.assertRaisesRegex(ValueError, "open partner thread"):
+            _validate_decision_context(decision, has_history=True)
+        decision["situation"].update({
+            "partner_has_open_thread": True,
+            "missing_information": "the outcome of the partner's plan",
+            "continuation_value": "medium",
+        })
+        self.assertIs(_validate_decision_context(decision, has_history=True), decision)
 
     def test_public_table8_reconstruction_has_expected_519_merged_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)
@@ -264,7 +283,7 @@ class RealTalkOursTests(unittest.TestCase):
             self.assertEqual(summary["records"], 21)
             user_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_user_domain_v2"]
             self.assertEqual(len(user_calls), 1)
-            decision_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_decision_v2"]
+            decision_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_decision_v3"]
             self.assertEqual(len(decision_calls), 21)
             self.assertTrue(all(c["enable_thinking"] is False for c in decision_calls))
             generation_calls = [c for c in backend.calls if c["max_tokens"] == 300]
