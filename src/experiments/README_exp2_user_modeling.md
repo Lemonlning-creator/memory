@@ -796,7 +796,7 @@ uv run python -m src.experiments.exp2_user_modeling \
 
 ### 13.3 固定智能体人设
 
-智能体人设必须与 `dataset/lx_agent.json` 的层级和字段语义一致；当前抽取协议版本为 `lx_agent_v2_behavior_calibrated`，JSON 键和字段内容统一使用英文。该版本没有增删或重命名三层字段，只修改抽取 prompt，使其记录关系距离和回复长度、emoji、追问、自我反思、自我披露、建议、共情等行为的实际频率。旧的 `name/personality/tone/...`、`meta_info/strategy_layer/...` 或早期抽取 prompt 生成的人设文件不能与 v5 混用；请换新的输出目录重新执行 `prepare`。`generate` 会同时校验字段结构、persona schema 版本和抽取 prompt SHA256，不一致时会在调用模型前停止。
+智能体人设采用从 `dataset/lx_agent.json` 派生的固定英文 schema；当前抽取协议版本为 `lx_agent_v3_behavior_calibrated_no_catchphrases`，JSON 键和字段内容统一使用英文。三层结构保持为 `core_layer`、`capability_layer` 和 `expression_layer`，但主动删除了 `expression_layer.catchphrases`：少量历史语句不应被固化为每轮可复用的生成规则，以免模型机械重复并影响回复分布。抽取 prompt 仍记录关系距离和回复长度、emoji、追问、自我反思、自我披露、建议、共情等行为的实际频率。旧的 `name/personality/tone/...`、`meta_info/strategy_layer/...`、含 `catchphrases` 的 v2 人设或早期抽取 prompt 生成的人设文件不能与新协议混用；请换新的输出目录重新执行 `prepare`。`generate` 会同时校验字段结构、persona schema 版本和抽取 prompt SHA256，不一致时会在调用模型前停止。
 
 ### 13.4 GPT-4o-mini 使用独立中转 API
 
