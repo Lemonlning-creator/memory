@@ -354,6 +354,18 @@ Topic 不属于 Table 2。Persona Consistency 是论文 Table 8 的跨对话说�
 
 Ours 与论文行同任务、同公开 Ca/Cb 分配、同目标消息和同评价定义，但论文没有公开 Persona Simulation 的基础生成模型和运行配置，因此只能称为 protocol-aligned comparison，不能称为完全相同运行时的严格复现。
 
+### 11.1 后续优化的固定论文参照
+
+所有提示词、流程或模型变更都必须输出完整八项，并与论文 `w/o fine-tune`、`w/ fine-tune` 两行并列。优化主参照固定为 `w/ fine-tune`；不得只展示相对上一版的提升，也不得只选择有利指标。
+
+- 高值指标：报告 `Ours - paper`；
+- Intimacy/Empathy AD：报告 `paper - Ours`；
+- 所有差值统一为正值代表 Ours 更好；
+- Reflectiveness/Grounding 是对真实消息标签的一致率，不以更多反思或更多追问为目标；
+- 小规模开发集只用于配对诊断，最终比较必须采用完整 10 人、519 条的 speaker-macro mean 与 population std。
+
+优化时优先缩小当前冻结验证中落后的 Reflectiveness、Empathy、Grounding、Sentiment 和 Lexical，同时保护已领先或持平的 Semantic、Emotion 和 Intimacy。任何使用论文结果指导 Prompt 的修改都必须保持通用行为规则，禁止根据具体测试答案、人物或 result ID 定制。
+
 ## 12. 原文逐项验证
 
 | 设计项 | 论文/官方状态 | 本协议处理 |

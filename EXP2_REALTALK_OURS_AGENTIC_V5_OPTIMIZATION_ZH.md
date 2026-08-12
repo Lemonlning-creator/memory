@@ -36,6 +36,38 @@
 
 V5 在同样本上降低了过度共情，改善 Emotion 和 ROUGE-L；Grounding 没有异常抬高。10 条规模太小，不能据此声称超过论文完整 Table 2。
 
+## 与论文 Table 2 的并列展示
+
+| 方法 | Lexical ↑ | Semantic ↑ | Reflective ↑ | Grounding ↑ | Sentiment ↑ | Emotion ↑ | Intimacy ↓ | Empathy ↓ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 论文 w/o fine-tune | 0.14 | 0.76 | 0.62 | 0.40 | 0.53 | 0.43 | 0.06 | 1.80 |
+| 论文 w/ fine-tune | 0.14 | 0.78 | 0.77 | 0.62 | 0.59 | 0.46 | 0.07 | 1.24 |
+| Ours V3 interior-60，冻结验证 | 0.10 | **0.84** | 0.53 | 0.55 | 0.53 | **0.47** | **0.07** | 1.67 |
+| Ours V5，开发诊断 10 条 | 0.13 | **0.85** | **0.90** | 0.60 | **0.70** | **0.70** | 0.08 | **0.90** |
+
+V3 interior-60 是当前更可信的泛化状态。相对论文 `w/ fine-tune`，其主要差距依次为：
+
+- Reflectiveness Accuracy：`-0.24`；
+- Empathy AD：差 `+0.43`，即误差更大；
+- Grounding Accuracy：`-0.07`；
+- Sentiment Accuracy：`-0.06`；
+- Lexical：`-0.04`。
+
+已保持或领先的指标是 Semantic `+0.06`、Emotion `+0.01`、Intimacy AD 持平。V5 开发集显示 Reflectiveness 和 Empathy 可能已改善，但在新 holdout 或完整 519 条复现前不能替代 V3 结论。
+
+## 后续优化比较规则
+
+以后每轮优化必须同时报告论文两行、当前冻结验证基线和新候选的完整八项，主目标采用论文 `w/ fine-tune`。对高优指标使用 `候选 - 论文`，对 AD 指标使用 `论文 - 候选`，统一令正值表示候选更好。
+
+优化不得直接强制“更多反思、更多追问或更多共情”：Reflectiveness、Grounding、Sentiment 和 Emotion 衡量的是候选与真实消息标签是否一致；Intimacy 和 Empathy 衡量强度误差。单纯增加某种行为可能使预测标签系统性偏离 Ground Truth。
+
+每轮采用固定顺序：
+
+1. 在固定开发样本上做旧版/新版同样本配对，Ground Truth Judge 标签冻结，仅重评 Candidate。
+2. 同时检查八项，不接受以 Semantic、Emotion 或其他已领先指标明显退化换取单项提升。
+3. 通过开发门槛后只运行一次未见 holdout，不再依据 holdout 改 Prompt。
+4. 最终结论仅来自 10 人、519 条 speaker-macro mean 和 population std；小样本只报告为诊断。
+
 ## 行为观察
 
 - 10 条中 4 条含问句，4 条是显式 reciprocal question，平均 103.5 字符。
