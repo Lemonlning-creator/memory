@@ -19,6 +19,7 @@ from src.experiments.realtalk_ours import (
     _profile_activation_whitelist,
     _validate_decision_context,
     _prepare_dataset,
+    _select_even_points_per_session,
     _structured_call,
     _validate_decision_profile_activation,
     run_realtalk_ours,
@@ -151,6 +152,22 @@ class FakeLabels:
 
 
 class RealTalkOursTests(unittest.TestCase):
+    def test_even_session_sampler_uses_positions_only(self):
+        points = [
+            {"target_session": session, "sample_id": f"{session}-{index}"}
+            for session in ("session_1", "session_2", "session_3")
+            for index in range(5)
+        ]
+        selected = _select_even_points_per_session(points, selected_count=2)
+        self.assertEqual(
+            [point["sample_id"] for point in selected],
+            [
+                "session_1-0", "session_1-4",
+                "session_2-0", "session_2-4",
+                "session_3-0", "session_3-4",
+            ],
+        )
+
     def test_action_contracts_isolate_primary_moves(self):
         self.assertIn("natural greeting", _action_contract("open"))
         self.assertIn("Do not add a return question", _action_contract("answer"))

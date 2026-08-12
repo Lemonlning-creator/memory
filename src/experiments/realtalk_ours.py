@@ -234,6 +234,7 @@ class RealTalkOursConfig:
     profile_sessions: int = 3
     test_sessions: int = 3
     max_eval_points_per_speaker: int = 0
+    eval_points_per_session: int = 0
     operation_max_attempts: int = 3
     speaker_filter: tuple[str, ...] = ()
     compute_local_metrics: bool = True
@@ -573,6 +574,11 @@ def _prepare_dataset(
             max_eval_points=config.max_eval_points_per_speaker,
             merge_adjacent_bubbles=True,
         )
+        if config.eval_points_per_session:
+            points = _select_even_points_per_session(
+                points,
+                selected_count=config.eval_points_per_session,
+            )
         if not points:
             raise ValueError(f"no test targets for {speaker}")
         if any(point["context_truncated"] for point in points):
@@ -613,6 +619,17 @@ def _prepare_dataset(
         "history_compression_enabled": False,
         "history_truncation_enabled": False,
         "full_three_session_history": True,
+        "evaluation_point_selection": (
+            {
+                "method": "deterministic_even_position_within_session",
+                "points_per_session": config.eval_points_per_session,
+                "uses_message_text": False,
+                "uses_ground_truth": False,
+                "uses_judge_labels": False,
+            }
+            if config.eval_points_per_session
+            else {"method": "prefix_or_full_protocol"}
+        ),
         "generated_outputs_are_never_rolled_into_history": True,
         "source_files_sha256": dict(sorted(files.items())),
         "source_files_aggregate_sha256": stable_hash(dict(sorted(files.items()))),
@@ -1291,6 +1308,12 @@ def _validate_config(config: RealTalkOursConfig) -> None:
         raise ValueError("structured logical attempts are fixed at three")
     if config.max_eval_points_per_speaker < 0:
         raise ValueError("max_eval_points_per_speaker must be non-negative")
+    if config.eval_points_per_session < 0:
+        raise ValueError("eval_points_per_session must be non-negative")
+    if config.max_eval_points_per_speaker and config.eval_points_per_session:
+        raise ValueError(
+            "max_eval_points_per_speaker and eval_points_per_session are mutually exclusive"
+        )
 
 
 def _is_full_protocol(
@@ -1299,6 +1322,7 @@ def _is_full_protocol(
     return (
         not config.speaker_filter
         and config.max_eval_points_per_speaker == 0
+        and config.eval_points_per_session == 0
         and len(splits) == len(REALTALK_PERSONA_SPLITS)
     )
 
@@ -1343,6 +1367,31 @@ def _turns_with_ids(turns: Iterable[dict[str, Any]]) -> str:
     return "\n".join(
         f"[{turn['turn_id']}] {turn['speaker']}: {turn['content']}" for turn in turns
     )
+
+
+def _select_even_points_per_session(
+    points: list[dict[str, Any]], *, selected_count: int
+) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    sessions = list(dict.fromkeys(point["target_session"] for point in points))
+    for session_id in sessions:
+        session_points = [
+            point for point in points if point["target_session"] == session_id
+        ]
+        if len(session_points) < selected_count:
+            raise ValueError(
+                f"session {session_id} has {len(session_points)} targets; "
+                f"cannot select {selected_count}"
+            )
+        if selected_count == 1:
+            indices = [len(session_points) // 2]
+        else:
+            indices = [
+                round(index * (len(session_points) - 1) / (selected_count - 1))
+                for index in range(selected_count)
+            ]
+        selected.extend(session_points[index] for index in indices)
+    return selected
 
 
 def _metric_display(summary: dict[str, Any] | None, metric: str) -> str:
@@ -1438,6 +1487,7 @@ def parse_args() -> RealTalkOursConfig:
     parser.add_argument("--dataset-dir", default="dataset")
     parser.add_argument("--output-dir", default="data/realtalk_ours_agentic_v2_qwen3_max")
     parser.add_argument("--max-eval-points-per-speaker", type=int, default=0)
+    parser.add_argument("--eval-points-per-session", type=int, default=0)
     parser.add_argument("--speaker", action="append", dest="speaker_filter")
     parser.add_argument("--skip-local-metrics", action="store_true")
     parser.add_argument("--skip-bertscore", action="store_true")
@@ -1449,6 +1499,7 @@ def parse_args() -> RealTalkOursConfig:
         dataset_dir=args.dataset_dir,
         output_dir=args.output_dir,
         max_eval_points_per_speaker=args.max_eval_points_per_speaker,
+        eval_points_per_session=args.eval_points_per_session,
         speaker_filter=tuple(args.speaker_filter or ()),
         compute_local_metrics=not args.skip_local_metrics,
         compute_bertscore=not args.skip_bertscore,
