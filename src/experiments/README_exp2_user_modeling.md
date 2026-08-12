@@ -225,7 +225,7 @@ enable_thinking = False
 
 ## 5. 单个对话完整运行
 
-下面以 `Chat_1_Emi_Elise.json` 为例。四个阶段必须使用相同的 `--output-dir`、`--case` 和 `--train-ratio`。
+下面以 `Chat_1_Emi_Elise.json` 为例。主实验的 `prepare`、`generate`、`evaluate` 必须使用相同的 `--output-dir`、`--case`、`--train-ratio` 和 `--prompt-version`。定性曲线脚本不生成智能体回复，因此不接收 `--prompt-version`。
 
 ### 5.1 阶段一：抽取用户画像和智能体人设
 
@@ -235,6 +235,7 @@ uv run python -m src.experiments.exp2_user_modeling \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
+  --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -260,6 +261,7 @@ uv run python -m src.experiments.exp2_user_modeling \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
+  --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -296,6 +298,7 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
+  --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling \
   --eval-device cuda:0 \
   --eval-batch-size 16 \
@@ -381,6 +384,7 @@ uv run python -m src.experiments.exp2_user_modeling \
   --phase prepare \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
+  --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -391,6 +395,7 @@ uv run python -m src.experiments.exp2_user_modeling \
   --phase generate \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
+  --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -401,6 +406,7 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
   --phase evaluate \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
+  --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling \
   --eval-device cuda:0 \
   --eval-batch-size 16 \
@@ -542,6 +548,7 @@ uv run python -m src.experiments.exp2_user_modeling `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
   --config config.qwen-plus.ini `
+  --prompt-version v3_realtalk_aligned `
   --output-dir data/exp2_user_modeling
 
 uv run python -m src.experiments.exp2_user_modeling `
@@ -549,6 +556,7 @@ uv run python -m src.experiments.exp2_user_modeling `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
   --config config.qwen-plus.ini `
+  --prompt-version v3_realtalk_aligned `
   --output-dir data/exp2_user_modeling
 
 $env:HF_HUB_OFFLINE="1"
@@ -558,6 +566,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
   --config config.qwen-plus.ini `
+  --prompt-version v3_realtalk_aligned `
   --output-dir data/exp2_user_modeling `
   --eval-device cuda:0 `
   --eval-batch-size 16 `
