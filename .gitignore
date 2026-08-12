@@ -10,4 +10,7 @@ tests/
 
 *.db
 
-data/exp2_user_modeling*/
+# Generated experiment outputs and run logs. Source code under src/experiments/
+# remains trackable; only artifacts written under data/ are excluded.
+data/exp*/
+data/exp*.log

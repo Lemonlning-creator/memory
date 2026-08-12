@@ -74,6 +74,7 @@ DIRECT_RESPONSE_SYSTEM_PROMPT = """
 7. 不编造事实。
 8. 必须使用中文。
 9. 不要说"作为AI"。
+10. 上一轮共情状态来自前一条用户消息，可能已经过时；只有与当前输入一致时才作为软指导，不要为了服从旧状态而强行共情或追问。
 """
 DIRECT_RESPONSE_USER_PROMPT_TEMPLATE = """
 请结合下述信息生成智能体的回复，要求既符合智能体自身的人设，也符合用户的长期画像：
@@ -83,6 +84,7 @@ DIRECT_RESPONSE_USER_PROMPT_TEMPLATE = """
 当前所处语境：{current_context}
 智能体完整人设：{persona_config}
 检索出的相关记忆：{relevant_memory}
+上一轮共情状态：{previous_empathy_state}
 请直接生成回复内容：
 """
 # =========================
@@ -237,22 +239,10 @@ PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = """以下是 {user_name} 与其对话�
 # =========================
 # 智能体人设提取（中文版）
 # =========================
-PERSONA_EXTRACTION_SYSTEM_PROMPT = """你是智能体人设提取专家。根据两人的真实对话，提取 {agent_name}（AI 智能体）的人设配置。
-
-只返回 JSON，不要解释。返回格式：
-{{
-  "name": "{agent_name}",
-  "personality": "",               // 核心性格描述
-  "tone": "",                      // 语气风格
-  "interaction_principles": [],    // 交互原则列表
-  "expression_patterns": []        // 高频表达模式
-}}
-"""
-
-PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE = """以下是 {agent_name} 与其对话伙伴的对话记录：
-
-{corpus}
-"""
+from ..persona_schema import (
+    PERSONA_EXTRACTION_SYSTEM_PROMPT,
+    PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE,
+)
 
 # =========================
 # 共情对齐推理（中文版）

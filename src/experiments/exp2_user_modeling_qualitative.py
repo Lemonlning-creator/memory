@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import argparse
 import configparser
+import hashlib
 import json
 import math
 import sys
-from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,7 +25,8 @@ from .exp2_user_modeling import (
 )
 
 
-PROTOCOL = "exp2_fixed_schema_profile_trajectory_from_zero_on_train_split_v2"
+PROTOCOL = "exp2_fixed_schema_turn_trajectory_from_zero_on_train_split_v3"
+SMOOTHING_ALPHA = 0.2
 _BASE_PROFILE_EVOLUTION_SYSTEM_PROMPT = agent_module.PROFILE_EVOLUTION_SYSTEM_PROMPT
 
 
@@ -137,6 +138,16 @@ def _normalise_agent_profile(agent: StateDrivenCompanionAgent) -> None:
         state.get("static_profile", {})
     )
     save_json(agent.profile_path, agent.user_profile)
+
+
+def _profile_fingerprint(profile: Dict[str, Any]) -> str:
+    payload = json.dumps(
+        _static_profile(profile),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def _field_populated(attribute: Any) -> bool:
@@ -281,10 +292,15 @@ def _write_clean_profile(runtime_path: Path, clean_path: Path) -> None:
 def _point(
     case: ExperimentCase,
     profile: Dict[str, Any],
+    turn_index: int,
     session_index: int,
     session_id: str | None,
-    session_bubbles: int,
+    session_turn_index: int,
+    session_end: bool,
     observed_bubbles: int,
+    profile_version: int,
+    profile_changed: bool,
+    profile_sha256: str,
     finalize_result: Dict[str, Any] | None,
 ) -> Dict[str, Any]:
     static_profile = _static_profile(profile)
@@ -292,15 +308,48 @@ def _point(
     return {
         "case_id": case.case_id,
         "user_speaker": case.user_speaker,
+        "turn_index": turn_index,
         "session_index": session_index,
         "session_id": session_id,
-        "session_bubbles": session_bubbles,
+        "session_turn_index": session_turn_index,
+        "session_end": session_end,
         "observed_bubbles": observed_bubbles,
+        "profile_version": profile_version,
+        "profile_changed": profile_changed,
+        "profile_sha256": profile_sha256,
         "profile_completeness": _fixed_profile_completeness(static_profile),
         "profile_entropy": _fixed_profile_entropy(static_profile),
         "flushed_mid_term_ids": list(finalized.get("flushed_mid_term_ids") or []),
         "long_term_memory_id": finalized.get("long_term_memory_id"),
     }
+
+
+def _add_turn_progress_and_smoothing(points: List[Dict[str, Any]]) -> None:
+    """Add causal visualization fields without changing the raw trajectory."""
+    if not points:
+        return
+    max_turn = max(int(point["turn_index"]) for point in points)
+    smooth_completeness: float | None = None
+    smooth_entropy: float | None = None
+    for point in points:
+        turn_index = int(point["turn_index"])
+        point["turn_progress"] = turn_index / max_turn if max_turn else 0.0
+        completeness = float(point["profile_completeness"])
+        entropy = float(point["profile_entropy"])
+        if smooth_completeness is None:
+            smooth_completeness = completeness
+            smooth_entropy = entropy
+        else:
+            smooth_completeness = (
+                SMOOTHING_ALPHA * completeness
+                + (1.0 - SMOOTHING_ALPHA) * smooth_completeness
+            )
+            smooth_entropy = (
+                SMOOTHING_ALPHA * entropy
+                + (1.0 - SMOOTHING_ALPHA) * smooth_entropy
+            )
+        point["smoothed_profile_completeness"] = round(smooth_completeness, 6)
+        point["smoothed_profile_entropy"] = round(smooth_entropy, 6)
 
 
 def _save_snapshot(
@@ -405,14 +454,22 @@ def run_case_trajectory(
         chat = load_json(case.dataset_path)
         points: List[Dict[str, Any]] = []
         observed_bubbles = 0
+        turn_index = 0
+        profile_version = 0
+        previous_profile_sha256 = _profile_fingerprint(agent.user_profile)
 
         initial = _point(
             case=case,
             profile=agent.user_profile,
+            turn_index=0,
             session_index=0,
             session_id=None,
-            session_bubbles=0,
+            session_turn_index=0,
+            session_end=False,
             observed_bubbles=0,
+            profile_version=0,
+            profile_changed=False,
+            profile_sha256=previous_profile_sha256,
             finalize_result=None,
         )
         points.append(initial)
@@ -425,7 +482,8 @@ def run_case_trajectory(
 
         for session_index, session_id in enumerate(case.train_sessions, start=1):
             bubbles = bubbles_for_sessions(chat, [session_id])
-            for bubble in bubbles:
+            last_point: Dict[str, Any] | None = None
+            for session_turn_index, bubble in enumerate(bubbles, start=1):
                 if bubble.speaker == case.user_speaker:
                     role = "user"
                 elif bubble.speaker == case.agent_speaker:
@@ -435,38 +493,65 @@ def run_case_trajectory(
                         f"unexpected speaker {bubble.speaker!r} in {case.case_id}"
                     )
                 agent.observe_dialogue_turn(role, bubble.content)
+                observed_bubbles += 1
+                turn_index += 1
+                session_end = session_turn_index == len(bubbles)
+                finalized = agent.finalize_session() if session_end else None
+                _normalise_agent_profile(agent)
 
-            observed_bubbles += len(bubbles)
-            finalized = agent.finalize_session()
-            _normalise_agent_profile(agent)
-            point = _point(
-                case=case,
-                profile=agent.user_profile,
-                session_index=session_index,
-                session_id=session_id,
-                session_bubbles=len(bubbles),
-                observed_bubbles=observed_bubbles,
-                finalize_result=finalized,
-            )
-            points.append(point)
-            _save_snapshot(
-                paths.snapshots / f"{session_index:03d}_{session_id}.json",
-                case,
-                point,
-                agent.user_profile,
-            )
-            print(
-                f"[Qualitative] {case.case_id} {session_index}/{len(case.train_sessions)} "
-                f"{session_id} completeness={point['profile_completeness']:.4f} "
-                f"entropy={point['profile_entropy']:.4f}"
-            )
+                profile_sha256 = _profile_fingerprint(agent.user_profile)
+                profile_changed = profile_sha256 != previous_profile_sha256
+                if profile_changed:
+                    profile_version += 1
+                point = _point(
+                    case=case,
+                    profile=agent.user_profile,
+                    turn_index=turn_index,
+                    session_index=session_index,
+                    session_id=session_id,
+                    session_turn_index=session_turn_index,
+                    session_end=session_end,
+                    observed_bubbles=observed_bubbles,
+                    profile_version=profile_version,
+                    profile_changed=profile_changed,
+                    profile_sha256=profile_sha256,
+                    finalize_result=finalized,
+                )
+                points.append(point)
+                last_point = point
+                if profile_changed:
+                    _save_snapshot(
+                        paths.snapshots
+                        / f"turn_{turn_index:05d}_profile_v{profile_version:03d}.json",
+                        case,
+                        point,
+                        agent.user_profile,
+                    )
+                previous_profile_sha256 = profile_sha256
+
+            if last_point is not None:
+                print(
+                    f"[Qualitative] {case.case_id} session={session_index}/"
+                    f"{len(case.train_sessions)} turn={turn_index} {session_id} "
+                    f"profile_v={last_point['profile_version']} "
+                    f"completeness={last_point['profile_completeness']:.4f} "
+                    f"entropy={last_point['profile_entropy']:.4f}"
+                )
+
+        _add_turn_progress_and_smoothing(points)
 
         save_json(str(paths.trajectory), {
             "protocol": PROTOCOL,
             "case": asdict(case),
             "data_policy": "from_zero_real_dialogue_train_split_only",
             "reply_policy": "no_generated_agent_replies",
-            "snapshot_policy": "initial_and_after_each_train_session",
+            "turn_definition": "one merged consecutive-speaker dialogue bubble",
+            "snapshot_policy": "initial_and_only_when_the_fixed_profile_changes",
+            "curve_policy": {
+                "raw": "recorded after every observed training turn",
+                "smoothing": "causal EWMA for visualization only",
+                "smoothing_alpha": SMOOTHING_ALPHA,
+            },
             "points": points,
         })
         _write_clean_profile(paths.runtime_profile, paths.clean_profile)
@@ -496,24 +581,62 @@ def run_case_trajectory(
 
 def aggregate_curve_points(
     per_case: Dict[str, Sequence[Dict[str, Any]]],
+    grid_size: int = 101,
 ) -> List[Dict[str, Any]]:
-    grouped: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
-    for points in per_case.values():
-        for point in points:
-            grouped[int(point["session_index"])].append(point)
-    return [
-        {
-            "session_index": session_index,
-            "case_count": len(points),
+    if grid_size < 2:
+        raise ValueError("grid_size must be at least 2")
+
+    def prepared(source: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        rows = [dict(point) for point in source]
+        if not rows:
+            return rows
+        if any("turn_progress" not in row for row in rows):
+            _add_turn_progress_and_smoothing(rows)
+        return sorted(rows, key=lambda row: float(row["turn_progress"]))
+
+    def interpolate(rows: Sequence[Dict[str, Any]], x: float, field: str) -> float:
+        if not rows:
+            raise ValueError("cannot interpolate an empty trajectory")
+        if x <= float(rows[0]["turn_progress"]):
+            return float(rows[0][field])
+        for left, right in zip(rows, rows[1:]):
+            left_x = float(left["turn_progress"])
+            right_x = float(right["turn_progress"])
+            if x <= right_x:
+                if right_x == left_x:
+                    return float(right[field])
+                ratio = (x - left_x) / (right_x - left_x)
+                return float(left[field]) + ratio * (
+                    float(right[field]) - float(left[field])
+                )
+        return float(rows[-1][field])
+
+    trajectories = [prepared(points) for points in per_case.values() if points]
+    aggregate: List[Dict[str, Any]] = []
+    for index in range(grid_size):
+        progress = index / (grid_size - 1)
+        aggregate.append({
+            "turn_progress": progress,
+            "turn_progress_percent": progress * 100.0,
+            "case_count": len(trajectories),
             "mean_profile_completeness": mean(
-                float(point["profile_completeness"]) for point in points
+                interpolate(rows, progress, "profile_completeness")
+                for rows in trajectories
             ),
             "mean_profile_entropy": mean(
-                float(point["profile_entropy"]) for point in points
+                interpolate(rows, progress, "profile_entropy")
+                for rows in trajectories
             ),
-        }
-        for session_index, points in sorted(grouped.items())
-    ]
+            "mean_smoothed_profile_completeness": mean(
+                interpolate(rows, progress, "smoothed_profile_completeness")
+                for rows in trajectories
+            ),
+            "mean_smoothed_profile_entropy": mean(
+                interpolate(rows, progress, "smoothed_profile_entropy")
+                for rows in trajectories
+            ),
+        })
+    return aggregate
 
 
 def write_curves(
@@ -528,38 +651,104 @@ def write_curves(
     data_path = figures / "profile_curves.json"
     save_json(str(data_path), {
         "protocol": PROTOCOL,
-        "x_axis": "chronological session index within the 90% train split",
+        "x_axis": {
+            "per_case": "global dialogue turn index within the 90% train split",
+            "aggregate": "normalized chronological turn progress (0-100%)",
+        },
         "fixed_schema": {layer: list(fields) for layer, fields in PROFILE_FIELDS.items()},
         "profile_evolution": "populated fraction of the 21 fixed one-shot extraction fields",
         "profile_entropy": (
             "mean binary entropy across the same 21 fields; empty fields have entropy 1"
         ),
+        "smoothing": {
+            "method": "causal EWMA",
+            "alpha": SMOOTHING_ALPHA,
+            "purpose": "visualization only; raw per-turn values remain authoritative",
+        },
         "per_case": per_case,
         "aggregate": aggregate,
     })
 
-    x = [row["session_index"] for row in aggregate]
-    completeness = [row["mean_profile_completeness"] for row in aggregate]
-    entropy = [row["mean_profile_entropy"] for row in aggregate]
+    single_case_points = (
+        list(next(iter(per_case.values()))) if len(per_case) == 1 else []
+    )
+    if single_case_points:
+        x = [int(point["turn_index"]) for point in single_case_points]
+        completeness = [float(point["profile_completeness"]) for point in single_case_points]
+        entropy = [float(point["profile_entropy"]) for point in single_case_points]
+        smooth_completeness = [
+            float(point["smoothed_profile_completeness"])
+            for point in single_case_points
+        ]
+        smooth_entropy = [
+            float(point["smoothed_profile_entropy"])
+            for point in single_case_points
+        ]
+        x_label = "Training dialogue turn index (90% split)"
+    else:
+        x = [row["turn_progress_percent"] for row in aggregate]
+        completeness = [row["mean_profile_completeness"] for row in aggregate]
+        entropy = [row["mean_profile_entropy"] for row in aggregate]
+        smooth_completeness = [
+            row["mean_smoothed_profile_completeness"] for row in aggregate
+        ]
+        smooth_entropy = [row["mean_smoothed_profile_entropy"] for row in aggregate]
+        x_label = "Normalized training-turn progress (%)"
+
+    def decorate_single_case(metric: str) -> None:
+        if not single_case_points:
+            return
+        for point in single_case_points:
+            turn = int(point["turn_index"])
+            if point.get("session_end"):
+                plt.axvline(turn, linewidth=0.7, alpha=0.12, color="black")
+        updates = [point for point in single_case_points if point.get("profile_changed")]
+        if updates:
+            plt.scatter(
+                [int(point["turn_index"]) for point in updates],
+                [float(point[metric]) for point in updates],
+                s=24,
+                zorder=3,
+                label="Actual profile update",
+            )
 
     evolution_path = figures / "profile_evolution_curve.png"
     plt.figure(figsize=(7, 4.2))
-    plt.plot(x, completeness, marker="o", linewidth=2)
-    plt.xlabel("Training session index (90% split)")
+    plt.plot(x, completeness, linewidth=1, alpha=0.35, label="Raw per-turn mean")
+    plt.plot(x, smooth_completeness, linewidth=2.2, label="Causal EWMA trend")
+    decorate_single_case("profile_completeness")
+    plt.xlabel(x_label)
     plt.ylabel("Mean fixed-field coverage")
     plt.ylim(-0.02, 1.02)
     plt.grid(alpha=0.25)
+    plt.legend()
     plt.tight_layout()
     plt.savefig(evolution_path, dpi=200)
     plt.close()
 
     entropy_path = figures / "profile_entropy_curve.png"
     plt.figure(figsize=(7, 4.2))
-    plt.plot(x, entropy, marker="o", linewidth=2, color="#d95f02")
-    plt.xlabel("Training session index (90% split)")
+    plt.plot(
+        x,
+        entropy,
+        linewidth=1,
+        alpha=0.35,
+        color="#d95f02",
+        label="Raw per-turn mean",
+    )
+    plt.plot(
+        x,
+        smooth_entropy,
+        linewidth=2.2,
+        color="#d95f02",
+        label="Causal EWMA trend",
+    )
+    decorate_single_case("profile_entropy")
+    plt.xlabel(x_label)
     plt.ylabel("Mean fixed-field profile entropy")
     plt.ylim(-0.02, 1.02)
     plt.grid(alpha=0.25)
+    plt.legend()
     plt.tight_layout()
     plt.savefig(entropy_path, dpi=200)
     plt.close()

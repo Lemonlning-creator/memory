@@ -79,6 +79,7 @@ Requirements:
 6. Prioritize emotional comfort over logical analysis when the user is upset or down.
 7. Do not fabricate any facts.
 8. Never use phrasing such as "As an AI".
+9. The previous empathy state comes from the preceding user turn and may be stale. Use it only as soft guidance when it is compatible with the latest user input; never force empathy or a follow-up question to satisfy the prior state.
 """
 DIRECT_RESPONSE_USER_PROMPT_TEMPLATE = """
 User input: {user_input}
@@ -87,6 +88,7 @@ Existing current state: {current_state}
 Current context: {current_context}
 Agent complete persona: {persona_config}
 Retrieved relevant memories: {relevant_memory}
+Previous-turn empathy state: {previous_empathy_state}
 Please generate the reply content directly:
 """
 
@@ -313,24 +315,10 @@ PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE = """The following is a conversation bet
 # =========================
 # Persona Extraction (English)
 # =========================
-PERSONA_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting agent personas from conversations. Based on the dialogue between two people, extract the persona configuration for {agent_name} (the AI agent).
-
-Return ONLY valid JSON containing:
-{{
-  "name": "{agent_name}",
-  "personality": "",               // Core personality description
-  "tone": "",                      // Tone/style of communication
-  "interaction_principles": [],    // List of interaction principles
-  "expression_patterns": []        // High-frequency expression patterns
-}}
-
-Return ONLY valid JSON, no explanation.
-"""
-
-PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE = """The following is a conversation between {agent_name} and their conversation partner:
-
-{corpus}
-"""
+from ..persona_schema import (
+    PERSONA_EXTRACTION_SYSTEM_PROMPT,
+    PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE,
+)
 
 # =========================
 # Empathy Alignment Reasoning (English)

@@ -560,3 +560,84 @@ uv run python -m src.experiments.exp2_user_modeling_qualitative `
 ### 12.3 批量运行
 
 批量运行时去掉 `--case`，依次执行 `prepare`、`generate` 和 `evaluate` 即可。
+
+## 13. Prompt 版本、独立 Judge API 与 turn 级曲线
+
+### 13.1 不可混用的版本
+
+主实验现在同时记录三类版本：
+
+- `protocol_version`：状态传递、teacher forcing、训练/测试划分等实验协议。
+- `generation_prompt_version`：回复生成与 empathy alignment 使用的 prompt bundle。
+- `evaluation_prompt_version`：固定的 REALTALK Table 2 judge prompt。
+
+可用生成 prompt 版本：
+
+```text
+v1_baseline          已有旧结果对应的基线提示词，不更新 current_state
+v2_state_update      上一轮共情状态 + 每轮 current/projected state 更新
+v3_realtalk_aligned  在 v2 基础上适配 REALTALK 对话行为与 EI 判定边界（默认）
+```
+
+每条 prediction 和最终 manifest 都保存 prompt 版本及 SHA256。不同版本必须使用不同的 `--output-dir`，程序会拒绝把不同版本追加到同一个 `predictions.jsonl`。
+
+示例：
+
+```bash
+uv run python -m src.experiments.exp2_user_modeling \
+  --phase generate \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
+  --prompt-version v3_realtalk_aligned \
+  --output-dir data/exp2_user_modeling/v3_realtalk_aligned
+```
+
+已有旧 predictions 没有 prompt metadata 时只按 `v1_baseline` 处理。不要把旧目录用于 v2 或 v3。
+
+### 13.2 用户状态时序
+
+第 `t` 轮回复 prompt 在当前 alignment 启动前冻结，因此使用第 `t-1` 轮已经完成的 `current_state` 和 `previous_empathy_state`。当前回复与第 `t` 轮 alignment 并行；alignment 完成后把固定结构的 `current_state` 与 `projected_state` 写入 runtime profile，供第 `t+1` 轮使用。长期静态用户画像在主实验测试阶段保持不变。
+
+### 13.3 固定智能体人设
+
+智能体人设必须与 `dataset/lx_agent.json` 的层级和字段语义一致，schema 版本为 `lx_agent_v1`；JSON 键和字段内容统一使用英文。旧的 `name/personality/tone/...` 或 `meta_info/strategy_layer/...` 人设文件不能与新结果混用；请换新的输出目录重新执行 `prepare`。
+
+### 13.4 GPT-4o-mini 使用独立中转 API
+
+`config.ini` 中的 `[API]` 只用于算法生成；`[EvaluationAPI]` 只用于 Reflective、Grounding 和 Empathy judge。当前评估后端配置为：
+
+```ini
+[EvaluationAPI]
+model = gpt-4o-mini
+backend = zhizengzeng
+base_url = https://api.zhizengzeng.com/v1
+api_key_env = EVAL_API_KEY
+```
+
+运行前只在环境变量中提供密钥，不要把密钥写入仓库：
+
+```bash
+export EVAL_API_KEY="your-key"
+```
+
+评估命令：
+
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
+  --phase evaluate \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
+  --prompt-version v3_realtalk_aligned \
+  --output-dir data/exp2_user_modeling/v3_realtalk_aligned \
+  --judge-config-section EvaluationAPI \
+  --eval-device cuda:0 \
+  --eval-batch-size 16
+```
+
+Judge 缓存指纹包含模型、API 后端、base URL、评估 prompt 和本地分类器名称，因此不会误用此前 Qwen 或其他中转后端的标注。
+
+### 13.5 turn 级 qualitative 曲线
+
+qualitative 脚本仍只重放前 90% 的真实数据集对话，不生成智能体回复。现在每个合并后的连续同 speaker dialogue bubble 记为一个 turn，并在每个 turn 后记录原始 completeness、entropy、profile hash 和 profile version。完整画像只在画像真实变化时保存快照。
+
+单对话底层横轴使用真实 `turn_index`；多对话聚合图使用归一化训练 turn 进度 `0%–100%`。图中淡线为真实 per-turn 均值，主线为只使用当前及历史数据的 causal EWMA，可视化平滑不改变原始指标；单对话图额外标出真实画像更新点和 Session 边界。

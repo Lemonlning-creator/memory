@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import argparse
 import configparser
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 import hashlib
 import json
 import math
+import os
 import re
+import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -13,23 +17,37 @@ from pathlib import Path
 from statistics import mean, pstdev
 from typing import Any, Dict, Iterable, List, Sequence
 
+from openai import OpenAI
+
 from ..agent import StateDrivenCompanionAgent
 from ..llm_client import LLMClient
 from ..memory_os_local import MemoryOSLocal
 from ..metrics import compute_rouge_l
+from ..persona_schema import (
+    PERSONA_SCHEMA_VERSION,
+    persona_schema_manifest,
+    validate_persona,
+)
 from ..profile_utils import state_axis
 from ..prompts.eval_templates_en import (
     REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT,
     REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT,
     REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT,
 )
-from ..prompts.prompt_loader import DIRECT_RESPONSE_SYSTEM_PROMPT
+from ..prompts.exp2_versions import (
+    DEFAULT_EXP2_PROMPT_VERSION,
+    EVALUATION_PROMPT_VERSION,
+    exp2_prompt_versions,
+    get_exp2_prompt_bundle,
+)
 from ..utils import load_json, save_json
 from .extract_profile_persona_en import extract_persona, extract_profile
 
 
 SESSION_PATTERN = re.compile(r"session_(\d+)$")
 PROFILE_ALGORITHM = "extract_profile_persona_en.extract_profile:one_shot_train_split"
+PROTOCOL_VERSION = "exp2_protocol_v2_state_update"
+GENERATION_POLICY = "previous_empathy_state_parallel_state_update_v2"
 PROFILE_FIELDS = {
     "core": ("summary", "values", "motivations", "concerns"),
     "regulation": ("summary", "stress_response", "conflict_style", "emotion_regulation"),
@@ -383,10 +401,19 @@ def build_case_persona(
 ) -> Dict[str, Any]:
     """Extract the agent persona from only the training sessions."""
     if paths.persona.exists():
-        return load_json(str(paths.persona))
+        persona = load_json(str(paths.persona))
+        try:
+            validate_persona(persona)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"existing persona is not {PERSONA_SCHEMA_VERSION}; use a new "
+                "--output-dir so legacy and fixed-schema assets are not mixed"
+            ) from exc
+        return persona
     chat = load_json(case.dataset_path)
     train_sessions = [chat[session_id] for session_id in case.train_sessions]
     persona = extract_persona(LLMClient(config_path), train_sessions, case.agent_speaker)
+    validate_persona(persona)
     save_json(str(paths.persona), persona)
     return persona
 
@@ -434,15 +461,30 @@ def build_case_profile(
     if not paths.persona.exists():
         raise FileNotFoundError(f"persona must be built first: {paths.persona}")
 
-    if paths.profile.exists() and paths.runtime_profile.exists() and paths.asset_manifest.exists():
+    profile_assets = (
+        paths.profile.exists(),
+        paths.runtime_profile.exists(),
+        paths.asset_manifest.exists(),
+    )
+    if all(profile_assets):
         manifest = load_json(str(paths.asset_manifest))
         if (
             manifest.get("profile_algorithm") == PROFILE_ALGORITHM
             and manifest.get("train_sessions") == list(case.train_sessions)
+            and manifest.get("persona_schema_version") == PERSONA_SCHEMA_VERSION
         ):
             profile = load_json(str(paths.profile))
             _validate_extracted_profile(profile)
             return profile
+        raise RuntimeError(
+            "existing training assets use a different profile/persona protocol; "
+            "use a new --output-dir to preserve the earlier assets and results"
+        )
+    if any(profile_assets):
+        raise RuntimeError(
+            "partial training assets already exist; use a new --output-dir rather "
+            "than overwriting an incomplete or legacy run"
+        )
 
     chat = load_json(case.dataset_path)
     train_sessions = [chat[session_id] for session_id in case.train_sessions]
@@ -459,6 +501,8 @@ def build_case_profile(
         "profile_algorithm": PROFILE_ALGORITHM,
         "profile_schema": "dataset/lsy_user.json",
         "persona_algorithm": "experiments.extract_profile_persona_en.extract_persona",
+        "persona_schema_version": PERSONA_SCHEMA_VERSION,
+        "persona_schema": persona_schema_manifest(),
         "train_only": True,
         "train_sessions": list(case.train_sessions),
         "profile_path": str(paths.profile),
@@ -526,10 +570,81 @@ def _append_real_bubble(
     agent.epistemic_tracker.increment()
 
 
+def _generate_with_parallel_alignment(
+    agent: StateDrivenCompanionAgent,
+    user_message: str,
+    relevant_memory: Dict[str, Any],
+) -> tuple[str, Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+    """Generate with the previous state while aligning the current turn in parallel."""
+    previous_empathy_state = deepcopy(agent.last_empathy_state)
+    # Render from the preceding completed state before the concurrent alignment
+    # can write the current turn's state.
+    response_prompt = agent._response_prompt(
+        user_message,
+        relevant_memory,
+        previous_empathy_state=previous_empathy_state,
+    )
+    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="exp2-alignment") as executor:
+        alignment_future = executor.submit(
+            _run_alignment_with_format_retry,
+            agent,
+            user_message,
+            relevant_memory,
+        )
+        generated_reply = agent.llm.chat(
+            agent.prompt_bundle.response_system,
+            response_prompt,
+            temperature=0.4,
+            max_tokens=450,
+        ).strip()
+        response_model_timing = deepcopy(agent.llm.last_model_timing)
+        alignment = alignment_future.result()
+    return generated_reply, alignment, previous_empathy_state, response_model_timing
+
+
+def _valid_alignment_payload(
+    agent: StateDrivenCompanionAgent,
+    result: Dict[str, Any],
+) -> bool:
+    """Check only the JSON contract needed by the versioned experiment."""
+    if not isinstance(result, dict) or not isinstance(result.get("empathy_state"), dict):
+        return False
+    if not agent.prompt_bundle.updates_user_state:
+        return True
+    state_update = result.get("state_update")
+    return (
+        isinstance(state_update, dict)
+        and isinstance(state_update.get("current_state"), dict)
+        and isinstance(state_update.get("projected_state"), dict)
+    )
+
+
+def _run_alignment_with_format_retry(
+    agent: StateDrivenCompanionAgent,
+    user_message: str,
+    relevant_memory: Dict[str, Any],
+    max_attempts: int = 3,
+) -> Dict[str, Any]:
+    """Retry only malformed/missing alignment JSON; never silently save an empty state."""
+    for attempt in range(1, max_attempts + 1):
+        result = agent._run_empathy_alignment(user_message, relevant_memory)
+        if _valid_alignment_payload(agent, result):
+            return result
+        if attempt < max_attempts:
+            print(
+                f"[Empathy Alignment Retry] invalid JSON contract; "
+                f"attempt={attempt + 1}/{max_attempts}"
+            )
+    raise RuntimeError(
+        f"empathy alignment failed to return valid JSON after {max_attempts} attempts"
+    )
+
+
 def run_case_replies(
     case: ExperimentCase,
     paths: CasePaths,
     config_path: str = "config.ini",
+    prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
 ) -> int:
     """Generate Ours replies while preserving REALTALK history via teacher forcing."""
     if not paths.profile.exists() or not paths.runtime_profile.exists() or not paths.persona.exists():
@@ -544,7 +659,20 @@ def run_case_replies(
     predictions = JsonlStore(paths.predictions)
     states = JsonlStore(paths.understanding)
     _assert_consistent_stores(predictions, states)
-    completed_ids = {row["example_id"] for row in predictions.read_all()}
+    prediction_rows = predictions.read_all()
+    prompt_bundle = get_exp2_prompt_bundle(prompt_version)
+    incompatible_rows = [
+        row for row in prediction_rows
+        if row.get("generation_policy") != GENERATION_POLICY
+        or row.get("prompt_version") != prompt_bundle.version
+        or row.get("prompt_sha256") != prompt_bundle.fingerprint
+    ]
+    if incompatible_rows:
+        raise RuntimeError(
+            "existing predictions were generated with a different protocol or prompt "
+            "version; use a new --output-dir so versioned replies are not mixed"
+        )
+    completed_ids = {row["example_id"] for row in prediction_rows}
     start_index = _resume_position(bubbles, examples, completed_ids)
 
     agent = StateDrivenCompanionAgent(
@@ -555,11 +683,27 @@ def run_case_replies(
         modeling_mode="explicit",
         update_mode="static",
         exploration_mode="adaptive",
+        prompt_version=prompt_bundle.version,
     )
     agent.memory_manager = MemoryOSLocal(
         persist_path=str(paths.memory_db),
         config_path=config_path,
     )
+
+    if completed_ids:
+        state_by_id = {row["example_id"]: row for row in states.read_all()}
+        ordered_completed = [
+            example.example_id for example in examples
+            if example.example_id in completed_ids
+        ]
+        last_state = state_by_id[ordered_completed[-1]]
+        if "empathy_state_for_next_turn" not in last_state:
+            raise RuntimeError(
+                "resume state is missing empathy_state_for_next_turn; use a new "
+                "--output-dir to run the current generation policy"
+            )
+        agent.last_empathy_state = deepcopy(last_state["empathy_state_for_next_turn"])
+        agent.last_prediction = deepcopy(last_state.get("future_understanding", {}))
 
     for bubble in bubbles[max(0, start_index - 6):start_index]:
         _append_real_bubble(agent, case, bubble)
@@ -584,14 +728,13 @@ def run_case_replies(
         history_count_before = len(agent.memory_manager.short_term_memory)
         _append_real_bubble(agent, case, bubble)
         relevant_memory = agent.memory_manager.retrieve_relevant_memory(example.user_message)
-        alignment = agent._run_empathy_alignment(example.user_message, relevant_memory)
-        response_prompt = agent._response_prompt(example.user_message, relevant_memory)
-        generated_reply = agent.llm.chat(
-            DIRECT_RESPONSE_SYSTEM_PROMPT,
-            response_prompt,
-            temperature=0.4,
-            max_tokens=450,
-        ).strip()
+        generated_reply, alignment, previous_empathy_state, response_model_timing = (
+            _generate_with_parallel_alignment(
+                agent,
+                example.user_message,
+                relevant_memory,
+            )
+        )
 
         state = state_axis(agent.user_profile)
         created_at = datetime.now(timezone.utc).isoformat()
@@ -602,6 +745,7 @@ def run_case_replies(
             "current_user_message": example.user_message,
             "current_understanding": alignment.get("understanding", {}),
             "future_understanding": alignment.get("prediction", {}),
+            "empathy_state_for_next_turn": deepcopy(agent.last_empathy_state),
             "core_current_state": state.get("current_state", {}),
             "core_projected_state": state.get("projected_state", {}),
             "next_user_message": example.next_user_message,
@@ -612,6 +756,11 @@ def run_case_replies(
         predictions.append({
             **asdict(example),
             "generated_reply": generated_reply,
+            "protocol_version": PROTOCOL_VERSION,
+            "generation_policy": GENERATION_POLICY,
+            "prompt_version": prompt_bundle.version,
+            "prompt_sha256": prompt_bundle.fingerprint,
+            "alignment_execution": "parallel_current_alignment_previous_state_for_response",
             "history_policy": "teacher_forcing_real_replies_only",
             "history_bubbles_before_user": history_count_before,
             "profile_loaded_before_first_test_turn": True,
@@ -620,9 +769,10 @@ def run_case_replies(
                 "contains_user_message": True,
                 "contains_reference_reply": False,
                 "contains_next_user_message": False,
+                "previous_empathy_state": previous_empathy_state,
                 "relevant_memory": relevant_memory,
             },
-            "model_timing": agent.llm.last_model_timing,
+            "model_timing": response_model_timing,
             "created_at": created_at,
         })
 
@@ -705,6 +855,88 @@ def build_candidate_context(
     return turns
 
 
+class Exp2JudgeClient(LLMClient):
+    """Exp2-only LLM client using the independent OpenAI-compatible judge API."""
+
+    def __init__(
+        self,
+        config_path: str,
+        config_section: str,
+        model: str | None = None,
+    ) -> None:
+        config = configparser.ConfigParser()
+        config.read(config_path, encoding="utf-8")
+        if not config.has_section(config_section):
+            raise ValueError(f"missing [{config_section}] in {config_path}")
+        api_config = config[config_section]
+        self.model = model or api_config.get("model", fallback="gpt-4o-mini")
+        self.enable_thinking = False
+        self.backend = api_config.get("backend", fallback=config_section).strip()
+        self.base_url = api_config.get("base_url", fallback="").strip()
+        self.config_section = config_section
+        api_key_env = api_config.get("api_key_env", fallback="EVAL_API_KEY").strip()
+        api_key = os.getenv(api_key_env)
+        if not api_key:
+            raise ValueError(
+                f"environment variable {api_key_env} is required for [{config_section}]"
+            )
+        self.client = OpenAI(
+            api_key=api_key,
+            base_url=self.base_url or None,
+            timeout=60.0,
+        )
+        self.last_model_timing = {"first_char_seconds": None}
+        self.token_usage = {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "calls": 0,
+        }
+
+    @property
+    def endpoint_identity(self) -> str:
+        return f"{self.backend}|{self.base_url}|{self.model}|{self.config_section}"
+
+    def chat(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        temperature: float = 0.6,
+        max_tokens: int | None = None,
+    ) -> str:
+        """Call an OpenAI-compatible judge without Qwen-only request fields."""
+        request: Dict[str, Any] = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": temperature,
+        }
+        if max_tokens is not None:
+            request["max_tokens"] = max_tokens
+
+        response = None
+        last_error: Exception | None = None
+        for attempt in range(1, 4):
+            try:
+                response = self.client.chat.completions.create(**request)
+                break
+            except Exception as exc:
+                last_error = exc
+                wait_seconds = attempt * 5
+                print(
+                    f"[Judge Chat Error] attempt={attempt}/3 "
+                    f"wait={wait_seconds}s error={exc}"
+                )
+                if attempt < 3:
+                    time.sleep(wait_seconds)
+        if response is None:
+            assert last_error is not None
+            raise last_error
+        self._record_usage(response)
+        return response.choices[0].message.content.strip()
+
+
 class Table2Evaluator:
     """REALTALK Table 2 annotators, loaded only when evaluation is requested."""
 
@@ -768,6 +1000,8 @@ class Table2Evaluator:
     @property
     def fingerprint(self) -> str:
         payload = "|".join((
+            EVALUATION_PROMPT_VERSION,
+            self.judge_llm.endpoint_identity,
             self.judge_llm.model,
             self.sentiment_model_name,
             self.emotion_model_name,
@@ -1038,19 +1272,41 @@ def evaluate_table2(
     cases: Sequence[ExperimentCase],
     output_dir: str | Path,
     config_path: str,
-    judge_model: str,
+    judge_model: str | None,
+    judge_config_section: str,
     device: str,
     batch_size: int,
+    prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
 ) -> Dict[str, str]:
+    prompt_bundle = get_exp2_prompt_bundle(prompt_version)
     for case in cases:
         predictions_path = CasePaths.for_case(output_dir, case).predictions
-        if not predictions_path.exists() or not list(read_jsonl(predictions_path)):
+        predictions = list(read_jsonl(predictions_path)) if predictions_path.exists() else []
+        if not predictions:
             raise FileNotFoundError(
                 f"no generated replies for {case.case_id}; run --phase generate first"
             )
+        mismatched = [
+            row for row in predictions
+            if (
+                row.get("prompt_version", "v1_baseline") != prompt_bundle.version
+                or (
+                    row.get("prompt_sha256") is not None
+                    and row.get("prompt_sha256") != prompt_bundle.fingerprint
+                )
+            )
+        ]
+        if mismatched:
+            raise RuntimeError(
+                f"predictions for {case.case_id} do not match --prompt-version "
+                f"{prompt_bundle.version}; select the recorded version instead"
+            )
 
-    judge_llm = LLMClient(config_path)
-    judge_llm.model = judge_model
+    judge_llm = Exp2JudgeClient(
+        config_path,
+        config_section=judge_config_section,
+        model=judge_model,
+    )
     evaluator = Table2Evaluator(
         judge_llm=judge_llm,
         device=device,
@@ -1069,11 +1325,22 @@ def evaluate_table2(
     table_path = evaluation_dir / "table2_main_results.md"
     save_json(str(result_path), {
         "protocol": {
+            "experiment_protocol_version": PROTOCOL_VERSION,
+            "generation_prompts": prompt_bundle.manifest(),
             "lexical": "ROUGE-L F1",
             "semantic": f"BERTScore F1 ({evaluator.bertscore_model})",
             "categorical": "accuracy against the reference reply label",
             "continuous": "absolute difference from the reference reply score",
-            "judge_model": judge_model,
+            "evaluation_prompt_version": EVALUATION_PROMPT_VERSION,
+            "evaluation_prompt_sha256": hashlib.sha256("\n".join((
+                REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT,
+                REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT,
+                REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT,
+            )).encode("utf-8")).hexdigest(),
+            "judge_model": judge_llm.model,
+            "judge_backend": judge_llm.backend,
+            "judge_base_url": judge_llm.base_url,
+            "judge_config_section": judge_config_section,
             "sentiment_model": evaluator.sentiment_model_name,
             "emotion_model": evaluator.emotion_model_name,
             "intimacy_model": evaluator.intimacy_model_name,
@@ -1128,6 +1395,7 @@ def run(args: argparse.Namespace) -> None:
     all_cases = build_cases(args.dataset_dir, args.train_ratio)
     save_split_manifest(all_cases, output_dir / "split_manifest.json", args.train_ratio)
     cases = _select_cases(all_cases, args.case)
+    prompt_bundle = get_exp2_prompt_bundle(args.prompt_version)
 
     generated: Dict[str, int] = {}
     if args.phase in ("prepare", "all"):
@@ -1140,7 +1408,12 @@ def run(args: argparse.Namespace) -> None:
     if args.phase in ("generate", "all"):
         for case in cases:
             paths = CasePaths.for_case(output_dir, case)
-            generated[case.case_id] = run_case_replies(case, paths, args.config)
+            generated[case.case_id] = run_case_replies(
+                case,
+                paths,
+                args.config,
+                prompt_version=prompt_bundle.version,
+            )
 
     evaluation: Dict[str, str] = {}
     if args.phase in ("evaluate", "all"):
@@ -1149,12 +1422,18 @@ def run(args: argparse.Namespace) -> None:
             output_dir=output_dir,
             config_path=args.config,
             judge_model=args.judge_model,
+            judge_config_section=args.judge_config_section,
             device=args.eval_device,
             batch_size=args.eval_batch_size,
+            prompt_version=prompt_bundle.version,
         )
 
     save_json(str(output_dir / "run_manifest.json"), {
         "experiment": "Experiment 2. User Modeling Evaluation",
+        "protocol_version": PROTOCOL_VERSION,
+        "generation_prompts": prompt_bundle.manifest(),
+        "evaluation_prompt_version": EVALUATION_PROMPT_VERSION,
+        "persona_schema": persona_schema_manifest(),
         "research_question": "Does explicit user modeling enable better personalized interactions?",
         "phase": args.phase,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -1182,9 +1461,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", default="config.ini")
     parser.add_argument("--train-ratio", type=float, default=0.9)
     parser.add_argument(
+        "--prompt-version",
+        choices=exp2_prompt_versions(),
+        default=DEFAULT_EXP2_PROMPT_VERSION,
+        help="Immutable generation/alignment prompt bundle recorded with every reply.",
+    )
+    parser.add_argument(
         "--judge-model",
-        default="gpt-4o-mini",
-        help="REALTALK uses gpt-4o-mini for reflective, grounding, and empathy labels.",
+        default=None,
+        help="Override [EvaluationAPI].model; REALTALK uses gpt-4o-mini.",
+    )
+    parser.add_argument(
+        "--judge-config-section",
+        default="EvaluationAPI",
+        help="Independent config.ini section for the LLM judge backend and key env name.",
     )
     parser.add_argument(
         "--eval-device",

@@ -15,11 +15,14 @@ from typing import Any, Dict, List
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 from src.llm_client import LLMClient
+from src.persona_schema import (
+    PERSONA_EXTRACTION_SYSTEM_PROMPT,
+    PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE,
+    validate_persona,
+)
 from src.prompts.templates_en import (
     PROFILE_EXTRACTION_SYSTEM_PROMPT,
     PROFILE_EXTRACTION_USER_PROMPT_TEMPLATE,
-    PERSONA_EXTRACTION_SYSTEM_PROMPT,
-    PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE,
 )
 
 CONFIG_PATH = "config.ini"
@@ -81,11 +84,15 @@ def extract_persona(llm: LLMClient, train_sessions: List[List[Dict[str, Any]]], 
     print(f"[2/2] Extracting {agent_name}'s persona...")
     corpus = format_all_sessions(train_sessions)
     
-    system_prompt = PERSONA_EXTRACTION_SYSTEM_PROMPT.format(agent_name=agent_name)
-    user_prompt = PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE.format(agent_name=agent_name, corpus=corpus)
+    system_prompt = PERSONA_EXTRACTION_SYSTEM_PROMPT
+    user_prompt = PERSONA_EXTRACTION_USER_PROMPT_TEMPLATE.format(
+        agent_name=agent_name,
+        evidence=corpus,
+    )
     
     raw = llm.chat(system_prompt, user_prompt)
     persona = json.loads(raw.strip().strip("```json").strip("```").strip())
+    validate_persona(persona)
     print(f"  Persona extraction completed")
     return persona
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import json
 from pathlib import Path
 import re
@@ -12,16 +13,16 @@ from .memory_os_local import MemoryOSLocal
 from .profile_utils import state_axis, context_axis, create_empty_profile, migrate_profile
 from .utils import load_json, save_json, parse_json
 from .prompts.prompt_loader import (
-    DIRECT_RESPONSE_SYSTEM_PROMPT,
-    DIRECT_RESPONSE_USER_PROMPT_TEMPLATE,
     PROFILE_EVOLUTION_SYSTEM_PROMPT,
     PROFILE_EVOLUTION_USER_PROMPT_TEMPLATE,
     UNDERSTANDING_FEEDBACK_SYSTEM_PROMPT,
     UNDERSTANDING_FEEDBACK_USER_PROMPT_TEMPLATE,
-    EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
-    EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE,
     PERIODIC_REBUILD_SYSTEM_PROMPT,
     PERIODIC_REBUILD_USER_PROMPT_TEMPLATE,
+)
+from .prompts.exp2_versions import (
+    DEFAULT_EXP2_PROMPT_VERSION,
+    get_exp2_prompt_bundle,
 )
 from .epistemic_decay import EpistemicDecayTracker, EXPLORATION_MODES
 
@@ -51,6 +52,7 @@ class StateDrivenCompanionAgent:
         update_mode: str = "bayesian_online",
         exploration_mode: str = "adaptive",
         periodic_rebuild_interval: int = 5,
+        prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
     ):
         # Validate modes
         if modeling_mode not in MODELING_MODES:
@@ -66,20 +68,23 @@ class StateDrivenCompanionAgent:
         self.update_mode = update_mode
         self.exploration_mode = exploration_mode
         self.periodic_rebuild_interval = periodic_rebuild_interval
+        self.prompt_bundle = get_exp2_prompt_bundle(prompt_version)
+        self.prompt_version = self.prompt_bundle.version
         self._sessions_since_last_rebuild = 0
 
         self.profile_path = profile_path or self._profile_path_for_user(user_name)
         self.user_profile = self._load_or_create_user_profile(self.profile_path)
         self.persona_path = persona_path or DEFAULT_PERSONA_PATH
         state_axis_obj = self.user_profile.setdefault("state_axis", {})
-        state_axis_obj["current_state"] = {}
-        state_axis_obj["projected_state"] = {}
+        state_axis_obj.setdefault("current_state", {})
+        state_axis_obj.setdefault("projected_state", {})
         self.epistemic_tracker = EpistemicDecayTracker(mode=exploration_mode)
         self.last_empathy_state: Dict[str, Any] = {}
         self.last_prediction: Dict[str, Any] = {}
         self.last_agent_response: str = ""
-        self.user_profile["context_axis"] = {}
-        save_json(profile_path, self.user_profile)
+        self.user_profile.setdefault("context_axis", {})
+        self._state_lock = threading.Lock()
+        save_json(self.profile_path, self.user_profile)
         self.persona_config = load_json(self.persona_path)
 
         self.memory_manager = MemoryOSLocal()
@@ -109,6 +114,7 @@ class StateDrivenCompanionAgent:
         self,
         user_input: str,
         relevant_memory: Dict[str, Any],
+        previous_empathy_state: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, str]:
         from .profile_utils import flatten_static_profile
         state = state_axis(self.user_profile)
@@ -129,14 +135,22 @@ class StateDrivenCompanionAgent:
             "current_context": json.dumps(context, ensure_ascii=False),
             "persona_config": json.dumps(self.persona_config, ensure_ascii=False),
             "relevant_memory": json.dumps(relevant_memory, ensure_ascii=False),
+            "previous_empathy_state": json.dumps(
+                previous_empathy_state or {}, ensure_ascii=False
+            ),
         }
 
     def _response_prompt(
         self,
         user_input: str,
         relevant_memory: Dict[str, Any],
+        previous_empathy_state: Optional[Dict[str, Any]] = None,
     ) -> str:
-        return DIRECT_RESPONSE_USER_PROMPT_TEMPLATE.format(**self._prompt_context(user_input, relevant_memory))
+        return self.prompt_bundle.response_user.format(**self._prompt_context(
+            user_input,
+            relevant_memory,
+            previous_empathy_state=previous_empathy_state,
+        ))
 
     # ---------- memory background pipelines ----------
     def _start_background(self, target, args: tuple) -> None:
@@ -280,7 +294,7 @@ class StateDrivenCompanionAgent:
         flattened = flatten_static_profile(static_profile)
         omega = self.epistemic_tracker.compute(static_profile)
 
-        user_prompt = EMPATHY_ALIGNMENT_REASONING_USER_PROMPT_TEMPLATE.format(
+        user_prompt = self.prompt_bundle.alignment_user.format(
             recent_context=json.dumps(relevant_memory, ensure_ascii=False)[:2000],
             user_message=user_input,
             user_profile=json.dumps(flattened, ensure_ascii=False)[:2000],
@@ -291,17 +305,39 @@ class StateDrivenCompanionAgent:
 
         try:
             result = parse_json(self.llm.chat(
-                EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT,
+                self.prompt_bundle.alignment_system,
                 user_prompt,
                 temperature=0.3,
             ))
             if isinstance(result, dict):
                 self.last_empathy_state = result.get("empathy_state", {})
                 self.last_prediction = result.get("prediction", {})
+                self._apply_alignment_state_update(result)
             return result
         except Exception as e:
             print(f"[Empathy Alignment Error] {e}")
             return {}
+
+    def _apply_alignment_state_update(self, result: Dict[str, Any]) -> bool:
+        """Persist the current-turn state for use by the following turn."""
+        if not self.prompt_bundle.updates_user_state:
+            return False
+        update = result.get("state_update")
+        if not isinstance(update, dict):
+            print("[State Update] missing state_update object in alignment result")
+            return False
+        current_state = update.get("current_state")
+        projected_state = update.get("projected_state")
+        if not isinstance(current_state, dict) or not isinstance(projected_state, dict):
+            print("[State Update] current_state/projected_state must both be objects")
+            return False
+
+        with self._state_lock:
+            state = state_axis(self.user_profile)
+            state["current_state"] = deepcopy(current_state)
+            state["projected_state"] = deepcopy(projected_state)
+            save_json(self.profile_path, self.user_profile)
+        return True
 
     def _understanding_feedback(self, user_input: str) -> None:
         """UPDATING step: assess how previous empathy was received and update understanding."""
@@ -380,24 +416,30 @@ class StateDrivenCompanionAgent:
         self.memory_manager.append_stm("user", user_input)
         relevant_memory = self.memory_manager.retrieve_relevant_memory(user_input)
 
-        # Empathy alignment reasoning runs in background; does NOT block streaming.
-        # If a previous alignment result exists, use it; otherwise skip for this turn.
-        empathy_state = self.last_empathy_state if self.last_empathy_state else {}
-        threading.Thread(
+        # Snapshot and render the response prompt before current-turn alignment
+        # can update state.  The current reply therefore uses only completed
+        # state from the preceding turn.
+        previous_empathy_state = deepcopy(self.last_empathy_state)
+        response_prompt = self._response_prompt(
+            user_input,
+            relevant_memory,
+            previous_empathy_state=previous_empathy_state,
+        )
+
+        # Current alignment and response generation still execute in parallel.
+        alignment_thread = threading.Thread(
             target=self._run_empathy_alignment,
             args=(user_input, relevant_memory),
             daemon=True,
-        ).start()
-
-        # Build the prompt
-        response_prompt = self._response_prompt(user_input, relevant_memory)
+        )
+        alignment_thread.start()
 
         parts: List[str] = []
         first_token_logged = False
         t_start = perf_counter()
         try:
             for content in self.llm.chat_stream(
-                DIRECT_RESPONSE_SYSTEM_PROMPT,
+                self.prompt_bundle.response_system,
                 response_prompt,
                 temperature=0.4,
                 max_tokens=450,
@@ -414,6 +456,11 @@ class StateDrivenCompanionAgent:
                 yield {"type": "token", "content": FALLBACK_RESPONSE}
 
         response = "".join(parts).strip() or FALLBACK_RESPONSE
+
+        # The response and current-turn alignment run concurrently. Join only
+        # after response generation so this alignment is ready for the next
+        # turn without affecting the state used by the current response.
+        alignment_thread.join()
 
         self.memory_manager.append_stm("assistant", response)
         self.last_agent_response = response
