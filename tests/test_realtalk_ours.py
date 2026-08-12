@@ -124,7 +124,10 @@ class FakeBackend:
             })
         elif schema_name == "realtalk_ours_agentic_decision_v2":
             decision = _decision()
-            if "REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:\n(none)" in user_prompt:
+            history = user_prompt.split(
+                "REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:\n", 1
+            )[1].split("\n\nLATEST PARTNER MESSAGE", 1)[0]
+            if not history.strip():
                 decision["next_action"]["primary_move"] = "open"
             content = json.dumps(decision)
         else:
