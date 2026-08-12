@@ -681,6 +681,17 @@ done
 find "$V4_DIR/cases" -path '*/generations/predictions.jsonl' -print
 ```
 
+当前版本的 `generate` 会自动为每个 case 创建新的 `memory/`、`generations/`、`states/` 和 `evaluation/` 目录；复制 assets 时不需要手工创建这些目录。若服务器尚未同步该修复、运行时出现 `Open local milvus failed, dir: .../memory not exists`，可以先用下面的兼容命令创建空目录，再重新执行完全相同的生成命令：
+
+```bash
+for CASE_DIR in "$V4_DIR"/cases/*; do
+  [ -d "$CASE_DIR" ] || continue
+  mkdir -p "$CASE_DIR"/{memory,generations,states,evaluation}
+done
+```
+
+该命令只创建缺失目录，不会修改或删除画像、人设、已有生成结果或评估结果。同步当前版本代码后不再需要执行它。
+
 如果目标目录包含旧 predictions，其中记录的 `prompt_version` 或 `prompt_sha256` 与 v4 不同，程序会主动报错，防止不同版本结果混写。不要手工把旧记录的版本字段改成 v4。如果没有干净的 prepared assets，才对新的 v4 输出目录重新运行一次 `--phase prepare`。
 
 保留生成和评估分开执行时，生成命令为：

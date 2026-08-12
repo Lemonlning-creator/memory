@@ -647,6 +647,11 @@ def run_case_replies(
     """Generate Ours replies while preserving REALTALK history via teacher forcing."""
     if not paths.profile.exists() or not paths.runtime_profile.exists() or not paths.persona.exists():
         raise FileNotFoundError(f"training assets missing for {case.case_id}; run prepare first")
+    # A prompt-version run may reuse only immutable prepared assets in a fresh
+    # output directory.  In that case prepare did not create the per-case
+    # memory/generation/state/evaluation directories, so generation must own
+    # initialization of all of its output parents.
+    paths.ensure_parents()
 
     chat = load_json(case.dataset_path)
     examples = build_reply_examples(chat, case)
