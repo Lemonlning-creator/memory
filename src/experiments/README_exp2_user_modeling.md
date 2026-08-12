@@ -411,6 +411,22 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
   --eval-device cuda:0 \
   --eval-batch-size 16 \
   --judge-model gpt-4o-mini
+
+# 远程连接测试
+tmux new -s exp2_v4
+
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+uv run --no-sync python -u -m src.experiments.exp2_user_modeling \
+  --phase evaluate \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --prompt-version v4_task_reframed \
+  --output-dir data/exp2_qwen_plus_v4 \
+  --judge-config-section EvaluationAPI \
+  --eval-device cuda:0 \
+  --eval-batch-size 16 \
+  --judge-model gpt-4o-mini \
+  2>&1 | tee data/exp2_qwen_plus_v4_evaluate.log
 ```
 
 ### 6.4 连续执行生成和评估
