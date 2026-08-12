@@ -34,9 +34,9 @@ REFLECTIVENESS_PROMPT = """Reflectiveness Classification
 You are an evaluator trained to determine if a speaker's language is reflective, indicating self-awareness. Reflective language is characterized by self-observation, perspective-taking, and intentionality. This means that the speaker is not only aware of their thoughts, feelings, or actions but also able to express this awareness clearly.
 
 A reflective response often includes one or more of the following traits:
-- Self-observation: The speaker describes their own emotional or cognitive state.
-- Perspective-taking: The speaker understands how their actions or emotions affect others or acknowledges another person's perspective.
-- Intentionality: The speaker explains the reasoning behind their behavior or decisions, revealing motivations or goals.
+- Self-observation: The speaker describes their own emotional or cognitive state (e.g., "I feel uncertain about..." or "I'm aware that...").
+- Perspective-taking: The speaker shows an understanding of how their actions or emotions affect others or acknowledges another person's perspective on the situation (e.g., "I understand that my response may seem...").
+- Intentionality: The speaker explains the reasoning behind their behavior or decisions, revealing their underlying motivations or goals (e.g., "I decided to respond this way because...").
 
 Example Statements
 - "I realize I tend to get defensive when I receive feedback, and I think it's because I want to do well."
@@ -44,7 +44,7 @@ Reflective or Not Reflective: Reflective
 Reason: This statement shows self-observation and insight into motivation.
 - "I did what I thought was best for the project."
 Reflective or Not Reflective: Not Reflective
-Reason: The speaker describes a decision but does not analyze the emotions or motivations behind it or consider its impact on others.
+Reason: While the speaker describes their decision, they don't analyze or acknowledge the emotions or motivations behind their choice or consider its impact on others.
 
 Given this dialogue context:
 {history}
@@ -54,26 +54,26 @@ Reflective language includes phrases like 'I feel...', 'I think...', or similar 
 Respond only with 'True' for reflective or 'False' for not reflective."""
 
 GROUNDING_PROMPT = """Grounding Act Classification
-You are an evaluator trained to determine if a speaker's language demonstrates grounding, which reflects active engagement and a commitment to mutual understanding in conversation. Grounding acts are characterized by clarifying questions, follow-up inquiries, or statements that seek to confirm, clarify, or expand on shared information.
+You are an evaluator trained to determine if a speaker's language demonstrates grounding, which reflects active engagement and a commitment to mutual understanding in conversation. Grounding acts are characterized by clarifying questions, follow-up inquiries, or statements that seek to confirm, clarify, or expand on shared information. These acts are essential for building common ground, ensuring that both participants have a clear understanding, and preventing misunderstandings.
 
 A grounding response often includes one or more of the following traits:
-- Clarifying questions that seek clarification or further information.
-- Follow-up inquiries that explore a point raised by the other person.
-- Confirmation checks that confirm understanding of what the other person said.
+- Clarifying questions: The speaker asks questions that seek clarification or further information about the other person's statements (e.g., "Could you explain that further?" or "What did you mean by...?").
+- Follow-up inquiries: The speaker shows interest in exploring a point raised by the other person, prompting them to elaborate or continue sharing (e.g., "How did that make you feel?" or "Can you tell me more about...?").
+- Confirmation checks: The speaker seeks to confirm their understanding of what the other person said (e.g., "So, you mean that...?" or "Are you saying that...?").
 
 Example Statements
 - "Can you tell me more about what happened at the event?"
 Grounding or Not Grounding: Grounding
-Reason: This follow-up question prompts the other person to provide more information.
+Reason: This is a follow-up question that prompts the other person to provide more information, demonstrating interest and a desire to deepen mutual understanding.
 - "I completely understand your point."
 Grounding or Not Grounding: Not Grounding
-Reason: Agreement alone does not seek further information or clarification.
+Reason: Although this statement indicates agreement, it does not actively seek further information or clarification and does not encourage continued dialogue.
 - "So, you're saying that this new policy will impact the timeline?"
 Grounding or Not Grounding: Grounding
-Reason: This is a confirmation check.
+Reason: This is a confirmation check, as the speaker seeks to ensure their understanding of the other person's statement.
 - "It sounds like you've already made your decision."
 Grounding or Not Grounding: Not Grounding
-Reason: This is an observation rather than a clarifying or follow-up question.
+Reason: This statement reflects an observation rather than a clarifying or follow-up question, so it does not serve as a grounding act.
 
 Dialogue context:
 {history}
@@ -91,10 +91,10 @@ Does the response express or allude to warmth, compassion, concern, or similar f
 - 2: The response has an explicit mention.
 
 Component 2: Interpretation
-Does the response communicate an understanding of the seeker's experiences and feelings?
+Does the response communicate an understanding of the seeker's experiences and feelings? In what manner?
 - 0: No.
-- 1: It communicates understanding through conjecture, reflection, description, or paraphrase.
-- 2: It provides a deep, explicit understanding and validation.
+- 1: Yes, the response communicates an understanding of the seeker's experiences and/or feelings. The response may contain conjectures or speculations, reflect back on or describe similar experiences of the responder or others, or paraphrase the seeker's experiences and/or feelings.
+- 2: The response provides a deep, explicit understanding and validation of the seeker's feelings or experiences, potentially using multiple sub-categories.
 
 Component 3: Exploration
 Does the response attempt to explore the seeker's experiences and feelings?
@@ -267,16 +267,40 @@ def run(predictions: Path, dataset_dir: Path, output_dir: Path, model: str) -> d
             },
         })
     metric_names = ("reflectiveness_accuracy", "grounding_accuracy", "empathy_absolute_difference")
+    by_speaker = {
+        speaker: {
+            name: round(statistics.mean(
+                item["metrics"][name] for item in scored
+                if item["speaker"] == speaker
+            ), 6)
+            for name in metric_names
+        }
+        for speaker in dict.fromkeys(item["speaker"] for item in scored)
+    }
+    speaker_macro = {
+        name: {
+            "mean": round(statistics.mean(
+                values[name] for values in by_speaker.values()
+            ), 6),
+            "std_population": round(statistics.pstdev(
+                values[name] for values in by_speaker.values()
+            ), 6),
+        }
+        for name in metric_names
+    } if by_speaker else {}
     summary = {
         "status": "complete" if len(scored) == len(rows) and not checkpoint["errors"] else "incomplete",
         "scope": "small_subset_diagnostic_not_table2_main_result",
-        "judge_protocol": "realtalk_appendix_c_within_session_v2",
+        "judge_protocol": "realtalk_appendix_c_full_prompt_within_session_v3",
         "model_requested": model,
         "messages_input": len(rows),
         "messages_scored": len(scored),
         "judgments_expected": len(rows) * 6,
         "judgments_complete": len(checkpoint["judgments"]),
         "unresolved_errors": len(checkpoint["errors"]),
+        "aggregation_for_table2": "speaker_macro_mean_and_population_std",
+        "by_speaker": by_speaker,
+        "speaker_macro": speaker_macro,
         "message_micro": {name: round(statistics.mean(item["metrics"][name] for item in scored), 6) for name in metric_names} if scored else {},
         "paper_table2_reference": PAPER_TABLE2,
         "comparison_warning": (

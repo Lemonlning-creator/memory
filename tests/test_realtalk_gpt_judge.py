@@ -2,6 +2,7 @@ import unittest
 from pathlib import Path
 
 from src.experiments.realtalk_gpt_judge import (
+    EMPATHY_PROMPT,
     REFLECTIVENESS_PROMPT,
     GROUNDING_PROMPT,
     _contexts,
@@ -14,6 +15,9 @@ class RealTalkGptJudgeTest(unittest.TestCase):
     def test_prompts_include_appendix_c_examples(self):
         self.assertIn("I did what I thought was best", REFLECTIVENESS_PROMPT)
         self.assertIn("Can you tell me more", GROUNDING_PROMPT)
+        self.assertIn("underlying motivations or goals", REFLECTIVENESS_PROMPT)
+        self.assertIn("preventing misunderstandings", GROUNDING_PROMPT)
+        self.assertIn("potentially using multiple sub-categories", EMPATHY_PROMPT)
 
     def test_context_is_limited_to_target_session(self):
         rows = [{"speaker": "Akib", "result_id": "akib:message_16:session_2:turn_1"}]

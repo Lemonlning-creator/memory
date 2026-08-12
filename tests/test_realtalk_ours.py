@@ -171,6 +171,32 @@ class RealTalkOursTests(unittest.TestCase):
             ],
         )
 
+    def test_interior_session_sampler_is_disjoint_from_full_span(self):
+        points = [
+            {"target_session": session, "sample_id": f"{session}-{index}"}
+            for session in ("session_1", "session_2", "session_3")
+            for index in range(5)
+        ]
+        full_span = _select_even_points_per_session(
+            points, selected_count=2, position_mode="full-span"
+        )
+        interior = _select_even_points_per_session(
+            points, selected_count=2, position_mode="interior"
+        )
+        self.assertEqual(
+            [point["sample_id"] for point in interior],
+            [
+                "session_1-1", "session_1-3",
+                "session_2-1", "session_2-3",
+                "session_3-1", "session_3-3",
+            ],
+        )
+        self.assertTrue(
+            {point["sample_id"] for point in full_span}.isdisjoint(
+                point["sample_id"] for point in interior
+            )
+        )
+
     def test_action_contracts_isolate_primary_moves(self):
         self.assertIn("natural greeting", _action_contract("open"))
         self.assertIn("Do not add a return question", _action_contract("answer"))

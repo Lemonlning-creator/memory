@@ -247,6 +247,7 @@ class RealTalkOursConfig:
     test_sessions: int = 3
     max_eval_points_per_speaker: int = 0
     eval_points_per_session: int = 0
+    eval_point_position_mode: str = "full-span"
     operation_max_attempts: int = 3
     speaker_filter: tuple[str, ...] = ()
     compute_local_metrics: bool = True
@@ -591,6 +592,7 @@ def _prepare_dataset(
             points = _select_even_points_per_session(
                 points,
                 selected_count=config.eval_points_per_session,
+                position_mode=config.eval_point_position_mode,
             )
         if not points:
             raise ValueError(f"no test targets for {speaker}")
@@ -636,6 +638,7 @@ def _prepare_dataset(
             {
                 "method": "deterministic_even_position_within_session",
                 "points_per_session": config.eval_points_per_session,
+                "position_mode": config.eval_point_position_mode,
                 "uses_message_text": False,
                 "uses_ground_truth": False,
                 "uses_judge_labels": False,
@@ -1347,6 +1350,14 @@ def _validate_config(config: RealTalkOursConfig) -> None:
         raise ValueError("max_eval_points_per_speaker must be non-negative")
     if config.eval_points_per_session < 0:
         raise ValueError("eval_points_per_session must be non-negative")
+    if config.eval_point_position_mode not in {"full-span", "interior"}:
+        raise ValueError(
+            "eval_point_position_mode must be 'full-span' or 'interior'"
+        )
+    if not config.eval_points_per_session and config.eval_point_position_mode != "full-span":
+        raise ValueError(
+            "eval_point_position_mode requires eval_points_per_session"
+        )
     if config.max_eval_points_per_speaker and config.eval_points_per_session:
         raise ValueError(
             "max_eval_points_per_speaker and eval_points_per_session are mutually exclusive"
@@ -1407,7 +1418,8 @@ def _turns_with_ids(turns: Iterable[dict[str, Any]]) -> str:
 
 
 def _select_even_points_per_session(
-    points: list[dict[str, Any]], *, selected_count: int
+    points: list[dict[str, Any]], *, selected_count: int,
+    position_mode: str = "full-span",
 ) -> list[dict[str, Any]]:
     selected: list[dict[str, Any]] = []
     sessions = list(dict.fromkeys(point["target_session"] for point in points))
@@ -1415,12 +1427,18 @@ def _select_even_points_per_session(
         session_points = [
             point for point in points if point["target_session"] == session_id
         ]
-        if len(session_points) < selected_count:
+        minimum_points = selected_count + 2 if position_mode == "interior" else selected_count
+        if len(session_points) < minimum_points:
             raise ValueError(
                 f"session {session_id} has {len(session_points)} targets; "
-                f"cannot select {selected_count}"
+                f"cannot select {selected_count} {position_mode} points"
             )
-        if selected_count == 1:
+        if position_mode == "interior":
+            indices = [
+                round((index + 1) * (len(session_points) - 1) / (selected_count + 1))
+                for index in range(selected_count)
+            ]
+        elif selected_count == 1:
             indices = [len(session_points) // 2]
         else:
             indices = [
@@ -1525,6 +1543,11 @@ def parse_args() -> RealTalkOursConfig:
     parser.add_argument("--output-dir", default="data/realtalk_ours_agentic_v2_qwen3_max")
     parser.add_argument("--max-eval-points-per-speaker", type=int, default=0)
     parser.add_argument("--eval-points-per-session", type=int, default=0)
+    parser.add_argument(
+        "--eval-point-position-mode",
+        choices=("full-span", "interior"),
+        default="full-span",
+    )
     parser.add_argument("--speaker", action="append", dest="speaker_filter")
     parser.add_argument("--skip-local-metrics", action="store_true")
     parser.add_argument("--skip-bertscore", action="store_true")
@@ -1537,6 +1560,7 @@ def parse_args() -> RealTalkOursConfig:
         output_dir=args.output_dir,
         max_eval_points_per_speaker=args.max_eval_points_per_speaker,
         eval_points_per_session=args.eval_points_per_session,
+        eval_point_position_mode=args.eval_point_position_mode,
         speaker_filter=tuple(args.speaker_filter or ()),
         compute_local_metrics=not args.skip_local_metrics,
         compute_bertscore=not args.skip_bertscore,
