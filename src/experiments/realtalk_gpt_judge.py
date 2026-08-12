@@ -38,10 +38,19 @@ A reflective response often includes one or more of the following traits:
 - Perspective-taking: The speaker understands how their actions or emotions affect others or acknowledges another person's perspective.
 - Intentionality: The speaker explains the reasoning behind their behavior or decisions, revealing motivations or goals.
 
+Example Statements
+- "I realize I tend to get defensive when I receive feedback, and I think it's because I want to do well."
+Reflective or Not Reflective: Reflective
+Reason: This statement shows self-observation and insight into motivation.
+- "I did what I thought was best for the project."
+Reflective or Not Reflective: Not Reflective
+Reason: The speaker describes a decision but does not analyze the emotions or motivations behind it or consider its impact on others.
+
 Given this dialogue context:
 {history}
 
 Determine whether the speaker's last message ({turn}) is reflective or not.
+Reflective language includes phrases like 'I feel...', 'I think...', or similar reflective expressions.
 Respond only with 'True' for reflective or 'False' for not reflective."""
 
 GROUNDING_PROMPT = """Grounding Act Classification
@@ -51,6 +60,20 @@ A grounding response often includes one or more of the following traits:
 - Clarifying questions that seek clarification or further information.
 - Follow-up inquiries that explore a point raised by the other person.
 - Confirmation checks that confirm understanding of what the other person said.
+
+Example Statements
+- "Can you tell me more about what happened at the event?"
+Grounding or Not Grounding: Grounding
+Reason: This follow-up question prompts the other person to provide more information.
+- "I completely understand your point."
+Grounding or Not Grounding: Not Grounding
+Reason: Agreement alone does not seek further information or clarification.
+- "So, you're saying that this new policy will impact the timeline?"
+Grounding or Not Grounding: Grounding
+Reason: This is a confirmation check.
+- "It sounds like you've already made your decision."
+Grounding or Not Grounding: Not Grounding
+Reason: This is an observation rather than a clarifying or follow-up question.
 
 Dialogue context:
 {history}
@@ -163,7 +186,14 @@ def _contexts(dataset_dir: Path, rows: list[dict[str, Any]]) -> dict[str, str]:
         )
         for point in points:
             result_id = f"{split['speaker'].casefold()}:{point['sample_id']}"
-            contexts[result_id] = point["context_text"]
+            within_session = [
+                turn for turn in point["context_turns"]
+                if turn["session_id"] == point["target_session"]
+            ]
+            contexts[result_id] = "\n".join(
+                f"{turn['speaker']}: {turn['content']}"
+                for turn in within_session
+            )
     missing = [row["result_id"] for row in rows if row["result_id"] not in contexts]
     if missing:
         raise ValueError(f"failed to reconstruct contexts for {missing[:3]}")
@@ -236,6 +266,7 @@ def run(predictions: Path, dataset_dir: Path, output_dir: Path, model: str) -> d
     summary = {
         "status": "complete" if len(scored) == len(rows) and not checkpoint["errors"] else "incomplete",
         "scope": "small_subset_diagnostic_not_table2_main_result",
+        "judge_protocol": "realtalk_appendix_c_within_session_v2",
         "model_requested": model,
         "messages_input": len(rows),
         "messages_scored": len(scored),

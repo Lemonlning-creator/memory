@@ -18,7 +18,7 @@ GPT Judge 目录：
 
 `/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-gpt4omini-agentic-v2-akib21-c750af1`
 
-## 八项结果
+## 八项结果（GPT 三项为已废弃诊断版）
 
 | 指标 | Akib 21 | 论文 w/o fine-tune | 论文 w/ fine-tune |
 |---|---:|---:|---:|
@@ -31,7 +31,7 @@ GPT Judge 目录：
 | Intimacy AD | 0.062 | 0.06 | 0.07 |
 | Empathy AD | 2.429 | 1.80 | 1.24 |
 
-以上仅是单人物、小样本诊断，论文行是十人物聚合，不能作为正式 Table 2 横向结论。
+以上仅是单人物、小样本诊断，论文行是十人物聚合，不能作为正式 Table 2 横向结论。进一步核对论文 Appendix C 后发现首轮 GPT Judge 错误地使用了跨 Session 累积历史，且 Reflectiveness/Grounding Prompt 省略了论文示例。因此表中三项 GPT 指标已标记为废弃诊断值，必须使用 `realtalk_appendix_c_within_session_v2` 重算；五项本地指标不受影响。
 
 ## 门槛判断
 

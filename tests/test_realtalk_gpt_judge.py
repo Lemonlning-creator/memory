@@ -1,9 +1,25 @@
 import unittest
+from pathlib import Path
 
-from src.experiments.realtalk_gpt_judge import _parse_bool, _parse_empathy
+from src.experiments.realtalk_gpt_judge import (
+    REFLECTIVENESS_PROMPT,
+    GROUNDING_PROMPT,
+    _contexts,
+    _parse_bool,
+    _parse_empathy,
+)
 
 
 class RealTalkGptJudgeTest(unittest.TestCase):
+    def test_prompts_include_appendix_c_examples(self):
+        self.assertIn("I did what I thought was best", REFLECTIVENESS_PROMPT)
+        self.assertIn("Can you tell me more", GROUNDING_PROMPT)
+
+    def test_context_is_limited_to_target_session(self):
+        rows = [{"speaker": "Akib", "result_id": "akib:message_16:session_2:turn_1"}]
+        context = _contexts(Path("dataset"), rows)[rows[0]["result_id"]]
+        self.assertNotIn("Good morning. How's it going?", context)
+
     def test_boolean_parser(self):
         self.assertTrue(_parse_bool("True"))
         self.assertFalse(_parse_bool("'False'."))
