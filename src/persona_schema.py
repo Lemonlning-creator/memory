@@ -4,7 +4,7 @@ import hashlib
 from typing import Any, Dict
 
 
-PERSONA_SCHEMA_VERSION = "lx_agent_v1"
+PERSONA_SCHEMA_VERSION = "lx_agent_v2_behavior_calibrated"
 
 # English-key mapping of the hierarchy and fields in dataset/lx_agent.json.
 PERSONA_FIELDS = {
@@ -24,25 +24,33 @@ PERSONA_FIELDS = {
     },
 }
 
-PERSONA_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting an agent persona from historical dialogue. The persona will be used to simulate the target speaker's replies.
+PERSONA_EXTRACTION_SYSTEM_PROMPT = """You are an expert at extracting an agent persona from historical dialogue. The persona will be used to simulate the target speaker's replies in held-out conversations.
 
 Use only evidence from the target speaker. Do not invent identity, biography, relationships, locations, occupations, experiences, preferences, or catchphrases that are not supported by the dialogue. Extract stable and reusable characteristics rather than one-off states.
+
+This is behavioral description, not an ideal companion specification:
+- Do not turn politeness into empathy, ordinary agreement into reflectiveness, or any question into a general tendency to explore.
+- Do not use flattering labels such as "empathetic", "supportive", "emotionally intelligent", "warm", or "chatty" unless repeated target-speaker behavior clearly supports them; describe the observable behavior instead.
+- Infer the target speaker's typical interaction distance and whether familiarity changes their tone, self-disclosure, emotional engagement, or willingness to ask follow-ups.
+- Calibrate, rather than exaggerate, these observable tendencies: response length, emoji use, question/follow-up use, reflective self-observation, personal self-disclosure, advice giving, explicit emotional reaction, interpretation/validation, and emotional exploration.
+- In expression_layer, state each supported tendency with one of rare/occasional/common/frequent and, where useful, the context in which it occurs. Do not describe a behavior as frequent merely because it appears once or twice in a long corpus.
+- Catchphrases must be repeated verbatim or near-verbatim expressions. Otherwise return an empty list.
 
 Return exactly the following JSON structure. Use these English field names and write every extracted value in English:
 {
   "core_layer": {
     "background_knowledge": "Supported background knowledge as one English string",
     "values": ["Stable value in English"],
-    "personality_foundation": ["Stable personality trait in English"],
+    "personality_foundation": ["Evidence-based stable trait and interaction-distance tendency in English"],
     "core_motivations": ["Stable motivation in English"]
   },
   "capability_layer": {
     "professional_capabilities": ["Supported capability in English"]
   },
   "expression_layer": {
-    "language_style": ["Stable language-style characteristic in English"],
+    "language_style": ["Frequency-calibrated style characteristic, including length/informality/emoji use, in English"],
     "catchphrases": ["Repeated or strongly supported expression in English"],
-    "behavioral_mannerisms": ["Stable interaction behavior in English"]
+    "behavioral_mannerisms": ["Frequency-calibrated question, reflection, self-disclosure, advice, or empathy behavior in English"]
   }
 }
 
@@ -57,7 +65,7 @@ Extract the fixed-schema persona for {agent_name}."""
 
 
 def validate_persona(persona: Dict[str, Any]) -> None:
-    """Require the exact lx_agent_v1 hierarchy and value types."""
+    """Require the exact fixed persona hierarchy and value types."""
     if not isinstance(persona, dict):
         raise ValueError("agent persona must be a JSON object")
     if set(persona) != set(PERSONA_FIELDS):

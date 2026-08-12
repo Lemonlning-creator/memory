@@ -433,15 +433,15 @@ uv run --no-sync python -u -m src.experiments.exp2_user_modeling \
 
 已经准备好训练集画像和人设后，可以用 `generate-evaluate` 在一个进程中先生成全部选中 case 的回复，再立即计算 Table 2 指标。原来的 `generate` 和 `evaluate` 阶段仍然保留，可以继续单独运行。组合阶段同样支持断点续跑：如果生成已经完成而评估中断，重新执行相同命令会跳过已有 generation，再从评估缓存继续。
 
-批量运行 v4：
+批量运行当前关系校准版本 v5：
 
 ```bash
 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --phase generate-evaluate \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
-  --prompt-version v4_task_reframed \
-  --output-dir data/exp2_qwen_plus_v4 \
+  --prompt-version v5_relationship_calibrated \
+  --output-dir data/exp2_qwen_plus_v5_clean \
   --judge-config-section EvaluationAPI \
   --eval-device cuda:0 \
   --eval-batch-size 16 \
@@ -643,9 +643,37 @@ v1_baseline          已有旧结果对应的基线提示词，不更新 current
 v2_state_update      上一轮共情状态 + 每轮 current/projected state 更新
 v3_realtalk_aligned  在 v2 基础上适配 REALTALK 对话行为与 EI 判定边界（默认）
 v4_task_reframed     完全重写的任务优先提示词；独立校准角色、内容和对话行为，不继承 v1-v3 文本
+v5_relationship_calibrated  基于关系距离和角色行为频率校准回复；默认不启用反思、追问或共情行为
 ```
 
 `v4_task_reframed` 不是在 v3 后追加规则：回复 prompt 与 alignment prompt 均从零重写，但保持核心算法所需的并行执行方式以及 `understanding`、`prediction`、`empathy_state`、`state_update` 输出契约。v4 暂不设为默认版本，必须显式传入并使用独立输出目录。
+
+`v5_relationship_calibrated` 保留 v4 作为已运行版本，不覆盖其 prompt 或结果。v5 同时升级智能体人设抽取：三层英文键和字段保持与 `dataset/lx_agent.json` 一致，但字段内容改为基于训练对话描述 rare/occasional/common/frequent 的真实行为频率，并要求区分关系距离。回复和 alignment 先判断 unfamiliar/casual/familiar/close，再决定是否需要 Reflective、Grounding 和三类 Empathy 行为；这些行为默认关闭，只有当前轮、关系距离和目标角色频率同时支持时才启用。
+
+由于人设抽取 prompt 已改变，v5 必须使用全新输出目录从 `prepare` 开始，不能复制 v1-v4 的 `agent_persona.json` 或整个 assets 目录。用户画像也建议随同一次 prepare 生成，以避免资产 manifest 不一致。推荐流程：
+
+```bash
+V5_DIR=data/exp2_qwen_plus_v5_clean
+
+uv run --no-sync python -m src.experiments.exp2_user_modeling \
+  --phase prepare \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --prompt-version v5_relationship_calibrated \
+  --output-dir "$V5_DIR"
+
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+uv run --no-sync python -m src.experiments.exp2_user_modeling \
+  --phase generate-evaluate \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --prompt-version v5_relationship_calibrated \
+  --output-dir "$V5_DIR" \
+  --judge-config-section EvaluationAPI \
+  --eval-device cuda:0 \
+  --eval-batch-size 16 \
+  --judge-model gpt-4o-mini
+```
 
 每条 prediction 和最终 manifest 都保存 prompt 版本及 SHA256。不同版本必须使用不同的 `--output-dir`，程序会拒绝把不同版本追加到同一个 `predictions.jsonl`。
 
@@ -784,7 +812,7 @@ uv run python -m src.experiments.exp2_user_modeling \
 
 ### 13.3 固定智能体人设
 
-智能体人设必须与 `dataset/lx_agent.json` 的层级和字段语义一致，schema 版本为 `lx_agent_v1`；JSON 键和字段内容统一使用英文。旧的 `name/personality/tone/...` 或 `meta_info/strategy_layer/...` 人设文件不能与新结果混用；请换新的输出目录重新执行 `prepare`。
+智能体人设必须与 `dataset/lx_agent.json` 的层级和字段语义一致；当前抽取协议版本为 `lx_agent_v2_behavior_calibrated`，JSON 键和字段内容统一使用英文。该版本没有增删或重命名三层字段，只修改抽取 prompt，使其记录关系距离和回复长度、emoji、追问、自我反思、自我披露、建议、共情等行为的实际频率。旧的 `name/personality/tone/...`、`meta_info/strategy_layer/...` 或早期抽取 prompt 生成的人设文件不能与 v5 混用；请换新的输出目录重新执行 `prepare`。`generate` 会同时校验字段结构、persona schema 版本和抽取 prompt SHA256，不一致时会在调用模型前停止。
 
 ### 13.4 GPT-4o-mini 使用独立中转 API
 
