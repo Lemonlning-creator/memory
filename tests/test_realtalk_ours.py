@@ -108,7 +108,7 @@ class FakeBackend:
             "system": system_prompt, "user": user_prompt, "schema": schema_name,
             "max_tokens": max_tokens, "enable_thinking": enable_thinking,
         })
-        if schema_name == "realtalk_ours_agentic_self_domain_v2":
+        if schema_name == "realtalk_ours_agentic_self_domain_v3":
             if self.malformed_self_once and sum(c["schema"] == schema_name for c in self.calls) == 1:
                 content = "not-json"
             else:
@@ -127,7 +127,7 @@ class FakeBackend:
                 "behavior": [{"value": "Converses casually", "confidence": "low", "evidence_ids": [evidence]}],
                 "update_summary": {"added": ["casual conversation"], "revised": [], "removed": [], "uncertainties": []},
             })
-        elif schema_name == "realtalk_ours_agentic_decision_v3":
+        elif schema_name == "realtalk_ours_agentic_decision_v4":
             decision = _decision()
             history = user_prompt.split(
                 "REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:\n", 1
@@ -206,7 +206,7 @@ class RealTalkOursTests(unittest.TestCase):
             _action_contract("answer", "reciprocal-question"),
         )
         self.assertIn(
-            "Do not explain motivations",
+            "explain motivations",
             _action_contract("self-disclose", "reciprocal-question"),
         )
         self.assertIn("Do not interpret", _action_contract("self-disclose"))
@@ -218,6 +218,8 @@ class RealTalkOursTests(unittest.TestCase):
             "target_message_count": 1, "mean_characters": 1.0,
             "median_characters": 1.0, "question_rate": 0.0,
             "first_person_rate": 0.0, "median_merged_bubbles": 1.0,
+            "reflective_marker_rate": 0.0, "evaluative_opener_rate": 0.0,
+            "reflective_marker_rate": 0.0, "evaluative_opener_rate": 0.0,
         })
         view = _behavioral_self_domain(domain)
         self.assertNotIn("identity_context", view)
@@ -250,7 +252,7 @@ class RealTalkOursTests(unittest.TestCase):
         decision["situation"].update({
             "partner_has_open_thread": True,
             "missing_information": "the outcome of the partner's plan",
-            "continuation_value": "medium",
+            "continuation_value": "high",
         })
         self.assertIs(_validate_decision_context(decision, has_history=True), decision)
 
@@ -287,7 +289,9 @@ class RealTalkOursTests(unittest.TestCase):
             backend = FakeBackend(malformed_self_once=True)
             stats = {"target_message_count": 1, "mean_characters": 1.0,
                      "median_characters": 1.0, "question_rate": 0.0,
-                     "first_person_rate": 0.0, "median_merged_bubbles": 1.0}
+                     "first_person_rate": 0.0, "median_merged_bubbles": 1.0,
+                     "reflective_marker_rate": 0.0,
+                     "evaluative_opener_rate": 0.0}
             result = _structured_call(
                 checkpoint=OperationCheckpoint(root / "checkpoint.json", "sig"),
                 backend=backend, operation_key="self:test", system_prompt="system",
@@ -313,7 +317,7 @@ class RealTalkOursTests(unittest.TestCase):
             self.assertEqual(summary["records"], 21)
             user_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_user_domain_v2"]
             self.assertEqual(len(user_calls), 1)
-            decision_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_decision_v3"]
+            decision_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_decision_v4"]
             self.assertEqual(len(decision_calls), 21)
             self.assertTrue(all(c["enable_thinking"] is False for c in decision_calls))
             generation_calls = [c for c in backend.calls if c["max_tokens"] == 300]

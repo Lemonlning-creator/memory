@@ -36,7 +36,7 @@ def _fact_schema() -> dict[str, Any]:
 
 
 SELF_DOMAIN_SCHEMA = {
-    "name": "realtalk_ours_agentic_self_domain_v2",
+    "name": "realtalk_ours_agentic_self_domain_v3",
     "strict": True,
     "schema": {
         "type": "object",
@@ -134,6 +134,8 @@ SELF_DOMAIN_SCHEMA = {
                     "median_characters": {"type": "number", "minimum": 0},
                     "question_rate": {"type": "number", "minimum": 0, "maximum": 1},
                     "first_person_rate": {"type": "number", "minimum": 0, "maximum": 1},
+                    "reflective_marker_rate": {"type": "number", "minimum": 0, "maximum": 1},
+                    "evaluative_opener_rate": {"type": "number", "minimum": 0, "maximum": 1},
                     "median_merged_bubbles": {"type": "number", "minimum": 1},
                 },
                 "required": [
@@ -142,6 +144,8 @@ SELF_DOMAIN_SCHEMA = {
                     "median_characters",
                     "question_rate",
                     "first_person_rate",
+                    "reflective_marker_rate",
+                    "evaluative_opener_rate",
                     "median_merged_bubbles",
                 ],
                 "additionalProperties": False,
@@ -189,7 +193,7 @@ USER_DOMAIN_SCHEMA = {
 
 
 ALIGNMENT_SCHEMA = {
-    "name": "realtalk_ours_agentic_decision_v3",
+    "name": "realtalk_ours_agentic_decision_v4",
     "strict": True,
     "schema": {
         "type": "object",
@@ -333,11 +337,16 @@ def normalize_self_domain(value: Any) -> dict[str, Any]:
                 "median_characters",
                 "question_rate",
                 "first_person_rate",
+                "reflective_marker_rate",
+                "evaluative_opener_rate",
                 "median_merged_bubbles",
             )
         },
     }
-    for key in ("question_rate", "first_person_rate"):
+    for key in (
+        "question_rate", "first_person_rate", "reflective_marker_rate",
+        "evaluative_opener_rate",
+    ):
         if not 0 <= result["observable_statistics"][key] <= 1:
             raise ValueError(f"observable_statistics.{key} must be in [0,1]")
     return result

@@ -130,13 +130,22 @@ the latest turn does not by itself require a balanced or partner-adaptive orient
 casual, or daily-life exchange, default to self-led behavior and let the target's interaction prior determine
 whether to answer, self-disclose, continue, or shift topic. Use balanced or partner-adaptive orientation only
 for a clear current relational, emotional, or practical need that this target would actually accommodate.
-Do not make every message acknowledge the partner and end with a question. First identify whether the
-partner left an open thread, what useful information is genuinely missing, and whether continuing it has
-none, low, medium, or high conversational value. Calibrate question decisions to
-the Self Domain's observed question rate and question behavior; `follow-up` is appropriate only when asking
-is the chosen primary move, otherwise use `none`. Also use the observed first-person rate and initiative to
+Do not make every message acknowledge the partner and end with a question. `partner_has_open_thread` means
+the latest partner turn contains a concrete unanswered request, explicit invitation to elaborate, or genuinely
+unfinished reference whose resolution is needed now. A detail that could merely be interesting to ask about is
+not an open thread. If the latest turn has no explicit question or request, default to no open thread. A direct
+question that the primary `answer` move already resolves does not by itself license a reciprocal question.
+Calibrate question decisions to the Self Domain's observed question rate as an upper tendency, not a quota;
+`follow-up` is appropriate only when asking is the chosen primary move, otherwise use `none`. Also use the
+observed first-person rate and initiative to
 preserve the target's cadence of self-disclosure and topic movement: the latest partner turn is context, not
 an obligation to answer or reflect it. Do not optimize an ideal assistant response.
+
+Do not infer an emotional or support need from ordinary enthusiasm, preferences, factual exchange, or casual
+complaints. Set explicit_affect only when the partner explicitly expresses an affective state that matters to
+the next move. For ordinary conversation, avoid therapeutic validation, emotional interpretation, praise, and
+generic positive appraisal. Match the Self Domain's reflective_marker_rate and evaluative_opener_rate: they are
+observed behavioral ceilings, not targets to satisfy in every response.
 
 Interpret lambda_trace only as how far this action departs from the target's normal behavior to accommodate
 the partner. Reading the partner accurately is not adaptation. Relevant partner facts are not adaptation.
@@ -155,14 +164,16 @@ Primary moves are exclusive contracts:
 - follow-up: ask one relevant question; do not add a self-focused update or extended interpretation.
 - topic-shift: introduce one target-led topic; do not first summarize or validate the partner.
 
-After the primary move, `continuation_move` may be `reciprocal-question` only when all are true: the partner
-left a concrete open thread, missing_information names one useful detail, continuation_value is medium or
-high, and asking fits this target's observed question behavior. It must be one short, directly related
-question. Otherwise use none. A follow-up primary move cannot also have a continuation move.
+After the primary move, `continuation_move` may be `reciprocal-question` only when all are true: the latest
+partner turn explicitly licenses continued inquiry, the primary move does not already resolve that interaction,
+missing_information names one necessary detail, continuation_value is high, and asking strongly fits this
+target's observed question behavior. It must be one short, directly related question. Otherwise use none. A
+follow-up primary move cannot also have a continuation move.
 Keep the fields internally consistent:
 - no open thread -> missing_information="", continuation_value="none", continuation_move="none";
 - open thread with low value -> name the missing detail, but continuation_move="none";
-- open thread with medium/high value -> reciprocal-question is optional, never automatic.
+- open thread with medium value -> continuation_move="none";
+- open thread with high value -> reciprocal-question is optional, never automatic.
 
 The Self Domain is a behavioral prior, not current-world evidence or a checklist of topics to demonstrate.
 Use it primarily for voice, initiative, interaction pattern, and message scale. Never convert a Ca location,
@@ -224,7 +235,9 @@ ACTION CONTRACT:
 Realize the primary move and only its explicitly licensed continuation_move as one natural message at the
 requested scale and in the Self Domain's
 communication signature. This behavioral view intentionally omits identity facts, interests, and old events;
-do not reconstruct or guess them. Do not add any other social move."""
+do not reconstruct or guess them. Do not add any other social move. Do not add a generic compliment,
+validation, emotional interpretation, or reflective explanation merely to sound warm or conversational.
+Match the observed reflective-marker and evaluative-opener rates instead of amplifying them."""
 
 FORMAT_REPAIR_TEMPLATE = """
 
@@ -967,7 +980,7 @@ def _write_generation_outputs(
     _write_json(output_dir / "dataset_manifest.json", dataset_manifest)
     _write_json(output_dir / "run_manifest.json", {
         "created_at_utc": _now(),
-        "protocol": "realtalk_task1_ours_agentic_v2_ntdecision",
+        "protocol": "realtalk_task1_ours_agentic_v4_behavior_calibrated",
         "comparison_status": "protocol_aligned_not_runtime_identical",
         "paper_persona_simulation_model_disclosed": False,
         "implementation_repository_commit": _repository_commit(),
@@ -1079,6 +1092,15 @@ def _observable_statistics(
         raise ValueError(f"no Self Domain evidence for {speaker}")
     lengths = [len(turn["content"]) for turn in target_turns]
     first_person = re.compile(r"\b(?:i|i'm|i've|i'd|me|my|mine|we|our|ours|us)\b", re.I)
+    reflective_marker = re.compile(
+        r"\b(?:i feel|i think|i realize|i(?:'|’)m aware|i(?:'|’)ve realized|"
+        r"i believe|i decided|because i|makes me feel)\b", re.I
+    )
+    evaluative_opener = re.compile(
+        r"^\s*(?:oh\s+)?(?:wow[,! ]+)?(?:that(?:'|’)s|this is|it(?:'|’)s)\s+"
+        r"(?:so\s+)?(?:amazing|awesome|beautiful|cool|fantastic|fascinating|"
+        r"great|incredible|lovely|wonderful)\b", re.I
+    )
     merged_counts = [len(turn.get("message_indices", [0])) for turn in target_turns]
     return {
         "target_message_count": len(target_turns),
@@ -1089,6 +1111,12 @@ def _observable_statistics(
         ),
         "first_person_rate": round(
             statistics.mean(bool(first_person.search(turn["content"])) for turn in target_turns), 4
+        ),
+        "reflective_marker_rate": round(
+            statistics.mean(bool(reflective_marker.search(turn["content"])) for turn in target_turns), 4
+        ),
+        "evaluative_opener_rate": round(
+            statistics.mean(bool(evaluative_opener.search(turn["content"])) for turn in target_turns), 4
         ),
         "median_merged_bubbles": round(float(statistics.median(merged_counts)), 4),
     }
@@ -1141,8 +1169,8 @@ def _action_contract(primary_move: str, continuation_move: str = "none") -> str:
     if continuation_move == "reciprocal-question":
         return (
             primary_contract
-            + " Keep the primary part to one short, direct sentence. Do not explain motivations, "
-            "interpret emotions, reflect on meaning, or add an anecdote. Then ask exactly one short "
+            + " Keep the primary part to one short, direct sentence. Do not add praise, generic "
+            "validation, explain motivations, interpret emotions, reflect on meaning, or add an anecdote. Then ask exactly one short "
             "question about the explicitly identified missing information."
         )
     raise ValueError(f"unknown continuation move: {continuation_move}")
@@ -1231,8 +1259,8 @@ def _validate_decision_context(
             raise ValueError("reciprocal question requires an open partner thread")
         if not situation["missing_information"]:
             raise ValueError("reciprocal question requires named missing information")
-        if situation["continuation_value"] not in {"medium", "high"}:
-            raise ValueError("reciprocal question requires medium or high continuation value")
+        if situation["continuation_value"] != "high":
+            raise ValueError("reciprocal question requires high continuation value")
     if not situation["partner_has_open_thread"]:
         if situation["missing_information"]:
             raise ValueError("closed partner thread cannot declare missing information")
