@@ -413,7 +413,34 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
   --judge-model gpt-4o-mini
 ```
 
-### 6.4 批量生成画像进化与画像熵曲线
+### 6.4 连续执行生成和评估
+
+已经准备好训练集画像和人设后，可以用 `generate-evaluate` 在一个进程中先生成全部选中 case 的回复，再立即计算 Table 2 指标。原来的 `generate` 和 `evaluate` 阶段仍然保留，可以继续单独运行。组合阶段同样支持断点续跑：如果生成已经完成而评估中断，重新执行相同命令会跳过已有 generation，再从评估缓存继续。
+
+批量运行 v4：
+
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
+  --phase generate-evaluate \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --prompt-version v4_task_reframed \
+  --output-dir data/exp2_qwen_plus_v4 \
+  --judge-config-section EvaluationAPI \
+  --eval-device cuda:0 \
+  --eval-batch-size 16 \
+  --judge-model gpt-4o-mini
+```
+
+只运行一个对话时，在相同命令中增加：
+
+```bash
+--case Chat_1_Emi_Elise.json
+```
+
+组合命令要求本地评估依赖和模型缓存已经可用。`--no-sync` 只禁止 uv 在启动时重新同步环境，不会阻止生成阶段调用 `[API]`，也不会阻止评估阶段调用 `[EvaluationAPI]`。
+
+### 6.5 批量生成画像进化与画像熵曲线
 
 不传 `--case` 即从零开始分别回放全部对话的前 90% Session：
 
@@ -620,7 +647,43 @@ uv run python -m src.experiments.exp2_user_modeling \
 
 已有旧 predictions 没有 prompt metadata 时只按 `v1_baseline` 处理。不要把旧目录用于 v2、v3 或 v4。
 
-v4 单独运行示例。为只比较 prompt 版本，先把与 v1-v3 完全相同的 `assets`（用户画像和智能体人设）复制到 v4 的对应 case 目录，不要重新抽取；如果尚无任何 prepared assets，才先对 v4 输出目录运行一次 `--phase prepare`。
+v4 单独运行示例。为只比较 prompt 版本，应复用同一次 `prepare` 产生的用户画像和智能体人设，不要重新抽取。但只能复制每个 case 的 `assets/`，不能复制旧版本的 `generations/`、`states/`、`evaluation/` 或 `memory/`。
+
+源目录必须是**只执行过 prepare、尚未执行 generate** 的干净目录。因为生成阶段会更新 `assets/user_profile_runtime.json`，从已经生成过回复的目录复制 runtime profile 会把旧版本的最终用户状态带入 v4。可以先检查共享 assets 目录：
+
+```bash
+ASSET_SOURCE=data/exp2_shared_assets
+
+find "$ASSET_SOURCE/cases" -path '*/generations/predictions.jsonl' -print
+```
+
+上面的命令应当没有任何输出。为已有目标目录保留备份，再只复制 assets：
+
+```bash
+ASSET_SOURCE=data/exp2_shared_assets
+V4_DIR=data/exp2_qwen_plus_v4
+
+if [ -e "$V4_DIR" ]; then
+  mv "$V4_DIR" "${V4_DIR}_old_copy_$(date +%Y%m%d_%H%M%S)"
+fi
+
+mkdir -p "$V4_DIR/cases"
+for SOURCE_ASSETS in "$ASSET_SOURCE"/cases/*/assets; do
+  CASE_ID=$(basename "$(dirname "$SOURCE_ASSETS")")
+  mkdir -p "$V4_DIR/cases/$CASE_ID"
+  cp -a "$SOURCE_ASSETS" "$V4_DIR/cases/$CASE_ID/"
+done
+```
+
+复制后可以检查目标目录；不应出现旧的 `predictions.jsonl`：
+
+```bash
+find "$V4_DIR/cases" -path '*/generations/predictions.jsonl' -print
+```
+
+如果目标目录包含旧 predictions，其中记录的 `prompt_version` 或 `prompt_sha256` 与 v4 不同，程序会主动报错，防止不同版本结果混写。不要手工把旧记录的版本字段改成 v4。如果没有干净的 prepared assets，才对新的 v4 输出目录重新运行一次 `--phase prepare`。
+
+保留生成和评估分开执行时，生成命令为：
 
 ```bash
 uv run python -m src.experiments.exp2_user_modeling \
@@ -631,6 +694,8 @@ uv run python -m src.experiments.exp2_user_modeling \
   --prompt-version v4_task_reframed \
   --output-dir data/exp2_user_modeling/v4_task_reframed
 ```
+
+也可以将上面的 `--phase generate` 改为 `--phase generate-evaluate`，并补充评估参数，使生成完成后直接开始评估。
 
 ### 13.2 用户状态时序
 

@@ -1485,7 +1485,7 @@ def run(args: argparse.Namespace) -> None:
             build_case_persona(case, paths, args.config)
             build_case_profile(case, paths, args.config)
 
-    if args.phase in ("generate", "all"):
+    if args.phase in ("generate", "generate-evaluate", "all"):
         for case in cases:
             paths = CasePaths.for_case(output_dir, case)
             generated[case.case_id] = run_case_replies(
@@ -1496,7 +1496,7 @@ def run(args: argparse.Namespace) -> None:
             )
 
     evaluation: Dict[str, str] = {}
-    if args.phase in ("evaluate", "all"):
+    if args.phase in ("evaluate", "generate-evaluate", "all"):
         evaluation = evaluate_table2(
             cases=cases,
             output_dir=output_dir,
@@ -1534,8 +1534,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--phase",
-        choices=("prepare", "generate", "evaluate", "all"),
+        choices=("prepare", "generate", "evaluate", "generate-evaluate", "all"),
         default="all",
+        help=(
+            "prepare assets, generate replies, evaluate existing replies, run "
+            "generation followed by evaluation, or run all three stages"
+        ),
     )
     parser.add_argument("--dataset-dir", default="dataset")
     parser.add_argument("--output-dir", default="data/exp2_user_modeling")
@@ -1560,7 +1564,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--eval-device",
         default="cuda:0",
-        help="Hugging Face and BERTScore device used only by --phase evaluate.",
+        help=(
+            "Hugging Face and BERTScore device used by evaluate, "
+            "generate-evaluate, and all."
+        ),
     )
     parser.add_argument("--eval-batch-size", type=int, default=16)
     parser.add_argument(
