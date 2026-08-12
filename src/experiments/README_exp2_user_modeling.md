@@ -599,7 +599,10 @@ uv run python -m src.experiments.exp2_user_modeling_qualitative `
 v1_baseline          已有旧结果对应的基线提示词，不更新 current_state
 v2_state_update      上一轮共情状态 + 每轮 current/projected state 更新
 v3_realtalk_aligned  在 v2 基础上适配 REALTALK 对话行为与 EI 判定边界（默认）
+v4_task_reframed     完全重写的任务优先提示词；独立校准角色、内容和对话行为，不继承 v1-v3 文本
 ```
+
+`v4_task_reframed` 不是在 v3 后追加规则：回复 prompt 与 alignment prompt 均从零重写，但保持核心算法所需的并行执行方式以及 `understanding`、`prediction`、`empathy_state`、`state_update` 输出契约。v4 暂不设为默认版本，必须显式传入并使用独立输出目录。
 
 每条 prediction 和最终 manifest 都保存 prompt 版本及 SHA256。不同版本必须使用不同的 `--output-dir`，程序会拒绝把不同版本追加到同一个 `predictions.jsonl`。
 
@@ -615,7 +618,19 @@ uv run python -m src.experiments.exp2_user_modeling \
   --output-dir data/exp2_user_modeling/v3_realtalk_aligned
 ```
 
-已有旧 predictions 没有 prompt metadata 时只按 `v1_baseline` 处理。不要把旧目录用于 v2 或 v3。
+已有旧 predictions 没有 prompt metadata 时只按 `v1_baseline` 处理。不要把旧目录用于 v2、v3 或 v4。
+
+v4 单独运行示例。为只比较 prompt 版本，先把与 v1-v3 完全相同的 `assets`（用户画像和智能体人设）复制到 v4 的对应 case 目录，不要重新抽取；如果尚无任何 prepared assets，才先对 v4 输出目录运行一次 `--phase prepare`。
+
+```bash
+uv run python -m src.experiments.exp2_user_modeling \
+  --phase generate \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --prompt-version v4_task_reframed \
+  --output-dir data/exp2_user_modeling/v4_task_reframed
+```
 
 ### 13.2 用户状态时序
 
