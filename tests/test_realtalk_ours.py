@@ -16,6 +16,7 @@ from src.experiments.realtalk_ours import (
     RealTalkOursConfig,
     _action_contract,
     _profile_activation_whitelist,
+    _validate_decision_context,
     _prepare_dataset,
     _structured_call,
     _validate_decision_profile_activation,
@@ -122,7 +123,10 @@ class FakeBackend:
                 "update_summary": {"added": ["casual conversation"], "revised": [], "removed": [], "uncertainties": []},
             })
         elif schema_name == "realtalk_ours_agentic_decision_v2":
-            content = json.dumps(_decision())
+            decision = _decision()
+            if "REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:\n(none)" in user_prompt:
+                decision["next_action"]["primary_move"] = "open"
+            content = json.dumps(decision)
         else:
             content = "READY" if max_tokens in {8, 32} else "Akib: FAKE_GENERATED"
         self.token_usage["calls"] += 1
@@ -144,6 +148,7 @@ class FakeLabels:
 
 class RealTalkOursTests(unittest.TestCase):
     def test_action_contracts_isolate_primary_moves(self):
+        self.assertIn("natural greeting", _action_contract("open"))
         self.assertIn("Do not add a return question", _action_contract("answer"))
         self.assertIn("Only ask one relevant question", _action_contract("follow-up"))
         self.assertIn("Do not interpret", _action_contract("self-disclose"))
@@ -160,6 +165,13 @@ class RealTalkOursTests(unittest.TestCase):
         whitelist = _profile_activation_whitelist(domain)
         self.assertIn('"layer": "identity"', whitelist)
         self.assertIn('"value": "likes basketball"', whitelist)
+
+    def test_empty_history_requires_open_move(self):
+        decision = normalize_alignment(_decision())
+        with self.assertRaisesRegex(ValueError, "requires open"):
+            _validate_decision_context(decision, has_history=False)
+        decision["next_action"]["primary_move"] = "open"
+        self.assertIs(_validate_decision_context(decision, has_history=False), decision)
 
     def test_public_table8_reconstruction_has_expected_519_merged_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)

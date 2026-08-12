@@ -9,6 +9,7 @@ INTENSITY = ("low", "medium", "high")
 PROFILE_LAYERS = ("core", "regulation", "cognition", "identity", "behavior")
 ORIENTATIONS = ("self-led", "balanced", "partner-adaptive")
 PRIMARY_MOVES = (
+    "open",
     "self-disclose",
     "answer",
     "acknowledge",

@@ -145,6 +145,7 @@ need and strong evidence that this target would respond that way. Keep partner_a
 departure is needed.
 
 Primary moves are exclusive contracts:
+- open: begin with one natural greeting or check-in; do not invent a current activity or setting.
 - self-disclose: contribute one self-focused update or view; do not interpret, comfort, or question partner.
 - answer: answer the latest question directly; do not add a return question or partner interpretation.
 - acknowledge: give one concise reaction to partner content; do not add advice, an anecdote, or a question.
@@ -157,7 +158,10 @@ weather pattern, job, hobby, food preference, routine, or anecdote into a presen
 in the Self Domain, and never combine several such attributes into a scene. If visible Cb history does not
 establish a specific present fact about the target, keep any new self-expression low-specificity and ordinary
 rather than inventing concrete weather, activities, objects, plans, or anecdotes. When history is empty,
-the next action is a simple greeting or check-in with no constructed current scenario. Calibrate
+primary_move must be open and the next action is a simple greeting or check-in with no constructed current
+scenario. `content_direction` must name only an abstract conversational function, and `self_expression` must
+name only delivery style. Neither field may draft the message or introduce a concrete event, activity, place,
+object, food, weather, plan, anecdote, or hobby. Calibrate
 message_scale against the supplied observable character statistics: typical stays near the target median;
 extended requires a visible exchange that naturally supports it. Return only the schema."""
 
@@ -205,7 +209,9 @@ ACTION CONTRACT:
 {action_contract}
 
 Realize exactly this one primary move as one natural message at the requested scale and in the Self Domain's
-communication signature. Do not add a second social move before or after it."""
+communication signature. Self Domain facts are stable identity and style evidence, not current events: do
+not mention one unless the visible conversation history already establishes it as relevant now. Do not add
+a second social move before or after it."""
 
 FORMAT_REPAIR_TEMPLATE = """
 
@@ -378,8 +384,11 @@ def run_realtalk_ours(
                         activation_whitelist=_profile_activation_whitelist(user_domain),
                     ),
                     schema=ALIGNMENT_SCHEMA,
-                    normalizer=lambda value: _validate_decision_profile_activation(
-                        normalize_alignment(value), user_domain
+                    normalizer=lambda value: _validate_decision_context(
+                        _validate_decision_profile_activation(
+                            normalize_alignment(value), user_domain
+                        ),
+                        has_history=bool(point["context_turns"]),
                     ),
                     max_tokens=1600,
                     max_attempts=config.operation_max_attempts,
@@ -1064,6 +1073,10 @@ def _validate_observable_statistics(
 
 def _action_contract(primary_move: str) -> str:
     contracts = {
+        "open": (
+            "Only begin with one natural greeting or check-in. Do not invent a current "
+            "activity, setting, event, plan, anecdote, or topic detail."
+        ),
         "self-disclose": (
             "Only contribute one self-focused update or view. Do not interpret, "
             "comfort, advise, acknowledge, or question the partner."
@@ -1151,6 +1164,14 @@ def _profile_activation_whitelist(user_domain: dict[str, Any]) -> str:
         for fact in user_domain[layer]
     ]
     return "NONE (relevant_user_domain must be [])" if not facts else _json(facts)
+
+
+def _validate_decision_context(
+    value: dict[str, Any], *, has_history: bool
+) -> dict[str, Any]:
+    if not has_history and value["next_action"]["primary_move"] != "open":
+        raise ValueError("empty history requires open primary_move")
+    return value
 
 
 def _normalize_local_labels(value: Any) -> dict[str, Any]:
