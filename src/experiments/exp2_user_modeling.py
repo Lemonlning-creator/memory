@@ -647,6 +647,29 @@ def run_case_replies(
     """Generate Ours replies while preserving REALTALK history via teacher forcing."""
     if not paths.profile.exists() or not paths.runtime_profile.exists() or not paths.persona.exists():
         raise FileNotFoundError(f"training assets missing for {case.case_id}; run prepare first")
+    persona = load_json(str(paths.persona))
+    try:
+        validate_persona(persona)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"agent persona for {case.case_id} does not match "
+            f"{PERSONA_SCHEMA_VERSION}; run prepare in a new --output-dir"
+        ) from exc
+    if not paths.asset_manifest.exists():
+        raise FileNotFoundError(
+            f"asset manifest missing for {case.case_id}; run prepare in a new --output-dir"
+        )
+    asset_manifest = load_json(str(paths.asset_manifest))
+    current_persona_manifest = persona_schema_manifest()
+    if (
+        asset_manifest.get("persona_schema_version") != PERSONA_SCHEMA_VERSION
+        or asset_manifest.get("persona_schema", {}).get("extraction_prompt_sha256")
+        != current_persona_manifest["extraction_prompt_sha256"]
+    ):
+        raise RuntimeError(
+            f"training assets for {case.case_id} use an older persona extraction "
+            "protocol; run prepare in a new --output-dir"
+        )
     # A prompt-version run may reuse only immutable prepared assets in a fresh
     # output directory.  In that case prepare did not create the per-case
     # memory/generation/state/evaluation directories, so generation must own
