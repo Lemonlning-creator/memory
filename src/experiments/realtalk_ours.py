@@ -378,7 +378,7 @@ def run_realtalk_ours(
                     max_tokens=1600,
                     max_attempts=config.operation_max_attempts,
                     raw_audit=raw_audit,
-                    enable_thinking=True,
+                    enable_thinking=False,
                 )
                 decision = alignment_envelope["data"]
                 generation_envelope = _text_call(
@@ -617,11 +617,10 @@ def _run_preflight(output_dir: Path, backend: ChatBackend) -> dict[str, Any]:
             and value.get("stage_thinking") == {
                 "self_domain": False,
                 "user_domain": False,
-                "decision": True,
+                "decision": False,
                 "generation": False,
             }
             and value.get("nonthinking_generation_succeeded") is True
-            and value.get("thinking_generation_succeeded") is True
         ):
             return value
     available_fn = getattr(backend, "available_models", None)
@@ -640,18 +639,6 @@ def _run_preflight(output_dir: Path, backend: ChatBackend) -> dict[str, Any]:
     )
     if "READY" not in response.content.upper():
         raise ValueError(f"minimal model preflight failed: {response.content!r}")
-    thinking_response = backend.chat(
-        "Think privately, then return exactly READY.",
-        "READY",
-        temperature=0.0,
-        top_p=0.9,
-        max_tokens=32,
-        enable_thinking=True,
-    )
-    if "READY" not in thinking_response.content.upper():
-        raise ValueError(
-            f"thinking model preflight failed: {thinking_response.content!r}"
-        )
     value = {
         "checked_at_utc": _now(),
         "model": backend.model,
@@ -659,13 +646,12 @@ def _run_preflight(output_dir: Path, backend: ChatBackend) -> dict[str, Any]:
         "stage_thinking": {
             "self_domain": False,
             "user_domain": False,
-            "decision": True,
+            "decision": False,
             "generation": False,
         },
         "model_visible": True,
         "nonthinking_generation_succeeded": True,
-        "thinking_generation_succeeded": True,
-        "minimal_generation_attempts": response.attempts + thinking_response.attempts,
+        "minimal_generation_attempts": response.attempts,
     }
     _write_json(path, value)
     return value
@@ -932,7 +918,7 @@ def _write_generation_outputs(
     _write_json(output_dir / "dataset_manifest.json", dataset_manifest)
     _write_json(output_dir / "run_manifest.json", {
         "created_at_utc": _now(),
-        "protocol": "realtalk_task1_ours_agentic_v2",
+        "protocol": "realtalk_task1_ours_agentic_v2_ntdecision",
         "comparison_status": "protocol_aligned_not_runtime_identical",
         "paper_persona_simulation_model_disclosed": False,
         "implementation_repository_commit": _repository_commit(),
@@ -941,7 +927,7 @@ def _write_generation_outputs(
         "stage_thinking": {
             "self_domain": False,
             "user_domain": False,
-            "decision": True,
+            "decision": False,
             "generation": False,
         },
         "training_or_finetuning": False,
@@ -1210,7 +1196,7 @@ def _run_signature(
         "stage_thinking": {
             "self_domain": False,
             "user_domain": False,
-            "decision": True,
+            "decision": False,
             "generation": False,
         },
         "dataset_manifest": dataset_manifest,

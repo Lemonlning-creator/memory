@@ -4,7 +4,7 @@
 
 本实验仅在 REALTALK Persona Simulation 协议下运行 Ours，不训练、不微调、不运行论文基线。数据固定采用论文 Table 8 的逐人 Ca/Cb 分配，Ca 与 Cb 均使用按时间排序的前三个连续 Session；相邻同说话者气泡以换行无损合并，完整规模为 10 位目标人物、519 条目标消息。
 
-协议名固定为 `realtalk_task1_ours_agentic_v2`，所有阶段使用 `qwen3-max-2026-01-23`。Self Domain、User Domain、Generation 关闭 thinking，Decision 开启 thinking。
+协议名固定为 `realtalk_task1_ours_agentic_v2_ntdecision`，所有阶段使用 `qwen3-max-2026-01-23`。Self Domain、User Domain、Decision、Generation 均关闭 thinking。Decision 仍使用严格 Schema、动态 lambda 审计和唯一动作约束；关闭 thinking 用于避免供应商长时间阻塞，并检验过度推理是否造成不必要的伙伴适应。
 
 ## 2. 历史与因果边界
 
