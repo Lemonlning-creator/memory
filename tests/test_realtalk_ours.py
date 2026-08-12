@@ -14,6 +14,7 @@ from src.experiments.realtalk_ours import (
     EXPECTED_MODEL,
     EXPECTED_SPEAKER_TARGETS,
     RealTalkOursConfig,
+    _action_contract,
     _prepare_dataset,
     _structured_call,
     _validate_decision_profile_activation,
@@ -141,6 +142,13 @@ class FakeLabels:
 
 
 class RealTalkOursTests(unittest.TestCase):
+    def test_action_contracts_isolate_primary_moves(self):
+        self.assertIn("Do not add a return question", _action_contract("answer"))
+        self.assertIn("Only ask one relevant question", _action_contract("follow-up"))
+        self.assertIn("Do not interpret", _action_contract("self-disclose"))
+        with self.assertRaisesRegex(ValueError, "unknown primary move"):
+            _action_contract("mixed")
+
     def test_public_table8_reconstruction_has_expected_519_merged_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)
         manifest, prepared = _prepare_dataset(config, select_realtalk_splits(config.dataset_dir))

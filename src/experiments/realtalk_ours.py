@@ -137,6 +137,20 @@ preserve the target's cadence of self-disclosure and topic movement: the latest 
 an obligation to answer or reflect it. Do not optimize empathy, support, reflectiveness, or grounding as
 abstract goals.
 
+Interpret lambda_trace only as how far this action departs from the target's normal behavior to accommodate
+the partner. Reading the partner accurately is not adaptation. Relevant partner facts are not adaptation.
+For routine exchange, use self-led with lambda_trace in [0, 0.25]. Use balanced only when a visible need
+causes a real but still persona-consistent departure. Reserve partner-adaptive for an explicit, substantial
+need and strong evidence that this target would respond that way. Keep partner_adaptation empty when no
+departure is needed.
+
+Primary moves are exclusive contracts:
+- self-disclose: contribute one self-focused update or view; do not interpret, comfort, or question partner.
+- answer: answer the latest question directly; do not add a return question or partner interpretation.
+- acknowledge: give one concise reaction to partner content; do not add advice, an anecdote, or a question.
+- follow-up: ask one relevant question; do not add a self-focused update or extended interpretation.
+- topic-shift: introduce one target-led topic; do not first summarize or validate the partner.
+
 The Self Domain is a behavioral prior, not current-world evidence or a checklist of topics to demonstrate.
 Use it primarily for voice, initiative, interaction pattern, and message scale. Never convert a Ca location,
 weather pattern, job, hobby, food preference, routine, or anecdote into a present event merely because it is
@@ -182,7 +196,11 @@ PRIVATE CURRENT SITUATION:
 PRIVATE NEXT ACTION:
 {next_action}
 
-Realize this as one natural message at the requested scale and in the Self Domain's communication signature."""
+ACTION CONTRACT:
+{action_contract}
+
+Realize exactly this one primary move as one natural message at the requested scale and in the Self Domain's
+communication signature. Do not add a second social move before or after it."""
 
 FORMAT_REPAIR_TEMPLATE = """
 
@@ -374,6 +392,9 @@ def run_realtalk_ours(
                         self_domain=_json(self_domain),
                         situation=_json(decision["situation"]),
                         next_action=_json(decision["next_action"]),
+                        action_contract=_action_contract(
+                            decision["next_action"]["primary_move"]
+                        ),
                     ),
                     speaker=speaker,
                     max_attempts=config.operation_max_attempts,
@@ -1047,6 +1068,35 @@ def _validate_observable_statistics(
             f"observable_statistics changed: expected={expected}, actual={actual}"
         )
     return value
+
+
+def _action_contract(primary_move: str) -> str:
+    contracts = {
+        "self-disclose": (
+            "Only contribute one self-focused update or view. Do not interpret, "
+            "comfort, advise, acknowledge, or question the partner."
+        ),
+        "answer": (
+            "Only answer the latest question directly. Do not add a return "
+            "question, partner interpretation, or unrelated self-disclosure."
+        ),
+        "acknowledge": (
+            "Only give one concise reaction to the partner content. Do not add "
+            "advice, an anecdote, or a question."
+        ),
+        "follow-up": (
+            "Only ask one relevant question. Do not add a self-focused update, "
+            "comfort statement, or extended interpretation."
+        ),
+        "topic-shift": (
+            "Only introduce one target-led topic. Do not first summarize, "
+            "validate, advise, or question the partner."
+        ),
+    }
+    try:
+        return contracts[primary_move]
+    except KeyError as exc:
+        raise ValueError(f"unknown primary move: {primary_move}") from exc
 
 
 def _normalize_generated_message(value: str, speaker: str) -> str:
