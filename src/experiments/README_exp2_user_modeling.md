@@ -649,30 +649,84 @@ uv run python -m src.experiments.exp2_user_modeling \
 
 v4 单独运行示例。为只比较 prompt 版本，应复用同一次 `prepare` 产生的用户画像和智能体人设，不要重新抽取。但只能复制每个 case 的 `assets/`，不能复制旧版本的 `generations/`、`states/`、`evaluation/` 或 `memory/`。
 
-源目录必须是**只执行过 prepare、尚未执行 generate** 的干净目录。因为生成阶段会更新 `assets/user_profile_runtime.json`，从已经生成过回复的目录复制 runtime profile 会把旧版本的最终用户状态带入 v4。可以先检查共享 assets 目录：
-
-```bash
-ASSET_SOURCE=data/exp2_shared_assets
-
-find "$ASSET_SOURCE/cases" -path '*/generations/predictions.jsonl' -print
-```
-
-上面的命令应当没有任何输出。为已有目标目录保留备份，再只复制 assets：
+源目录可以是 prepare-only 目录，也可以是已经跑过 generate 的旧版本目录，但**不能复制旧的 `user_profile_runtime.json`**，因为其中可能带有旧版本结束时的用户状态。下面的脚本只复用不可变的 `agent_persona.json`、`user_profile.json` 和 `asset_manifest.json`，并根据静态画像为 v4 重建全新的 runtime profile：
 
 ```bash
 ASSET_SOURCE=data/exp2_shared_assets
 V4_DIR=data/exp2_qwen_plus_v4
 
-if [ -e "$V4_DIR" ]; then
-  mv "$V4_DIR" "${V4_DIR}_old_copy_$(date +%Y%m%d_%H%M%S)"
-fi
+uv run --no-sync python - "$ASSET_SOURCE" "$V4_DIR" <<'PY'
+import json
+import shutil
+import sys
+from pathlib import Path
 
-mkdir -p "$V4_DIR/cases"
-for SOURCE_ASSETS in "$ASSET_SOURCE"/cases/*/assets; do
-  CASE_ID=$(basename "$(dirname "$SOURCE_ASSETS")")
-  mkdir -p "$V4_DIR/cases/$CASE_ID"
-  cp -a "$SOURCE_ASSETS" "$V4_DIR/cases/$CASE_ID/"
-done
+source = Path(sys.argv[1])
+target = Path(sys.argv[2])
+source_cases = source / "cases"
+
+if not source_cases.is_dir():
+    raise SystemExit(f"asset source does not exist: {source_cases}")
+
+old_predictions = sorted(target.glob("cases/*/generations/predictions.jsonl"))
+if old_predictions:
+    joined = "\n".join(str(path) for path in old_predictions)
+    raise SystemExit(
+        "target already contains predictions; use a new target or move it to a backup:\n"
+        + joined
+    )
+
+copied = 0
+for source_case in sorted(path for path in source_cases.iterdir() if path.is_dir()):
+    source_assets = source_case / "assets"
+    required = [
+        source_assets / "agent_persona.json",
+        source_assets / "user_profile.json",
+        source_assets / "asset_manifest.json",
+    ]
+    missing = [str(path) for path in required if not path.is_file()]
+    if missing:
+        raise SystemExit(
+            f"incomplete assets for {source_case.name}: " + ", ".join(missing)
+        )
+
+    target_assets = target / "cases" / source_case.name / "assets"
+    target_assets.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(required[0], target_assets / "agent_persona.json")
+    shutil.copy2(required[1], target_assets / "user_profile.json")
+
+    with required[1].open("r", encoding="utf-8") as handle:
+        profile = json.load(handle)
+    runtime = {
+        "state_axis": {
+            "static_profile": profile,
+            "current_state": {},
+            "projected_state": {},
+        },
+        "context_axis": {},
+    }
+    with (target_assets / "user_profile_runtime.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
+        json.dump(runtime, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+
+    with required[2].open("r", encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    manifest["profile_path"] = str((target_assets / "user_profile.json").resolve())
+    manifest["runtime_profile_path"] = str(
+        (target_assets / "user_profile_runtime.json").resolve()
+    )
+    manifest["persona_path"] = str((target_assets / "agent_persona.json").resolve())
+    with (target_assets / "asset_manifest.json").open(
+        "w", encoding="utf-8"
+    ) as handle:
+        json.dump(manifest, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+    copied += 1
+
+print(f"prepared clean assets for {copied} cases in {target}")
+PY
 ```
 
 复制后可以检查目标目录；不应出现旧的 `predictions.jsonl`：
