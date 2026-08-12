@@ -147,7 +147,9 @@ departure is needed.
 Primary moves are exclusive contracts:
 - open: begin with one natural greeting or check-in; do not invent a current activity or setting.
 - self-disclose: contribute one self-focused update or view; do not interpret, comfort, or question partner.
-- answer: answer the latest question directly; do not add a return question or partner interpretation.
+- answer: answer the latest question directly; content_direction must state the semantic slot being answered
+  (for example wellbeing, opinion, or plan), not propose an unrelated activity or persona topic; do not add a
+  return question or partner interpretation.
 - acknowledge: give one concise reaction to partner content; do not add advice, an anecdote, or a question.
 - follow-up: ask one relevant question; do not add a self-focused update or extended interpretation.
 - topic-shift: introduce one target-led topic; do not first summarize or validate the partner.
@@ -196,8 +198,8 @@ Output only the message, not the speaker name."""
 GENERATION_USER_TEMPLATE = """REAL CONVERSATION HISTORY BEFORE YOUR NEXT MESSAGE:
 {history}
 
-PRIVATE SELF DOMAIN:
-{self_domain}
+PRIVATE BEHAVIORAL SELF DOMAIN:
+{behavioral_self_domain}
 
 PRIVATE CURRENT SITUATION:
 {situation}
@@ -209,9 +211,8 @@ ACTION CONTRACT:
 {action_contract}
 
 Realize exactly this one primary move as one natural message at the requested scale and in the Self Domain's
-communication signature. Self Domain facts are stable identity and style evidence, not current events: do
-not mention one unless the visible conversation history already establishes it as relevant now. Do not add
-a second social move before or after it."""
+communication signature. This behavioral view intentionally omits identity facts, interests, and old events;
+do not reconstruct or guess them. Do not add a second social move before or after it."""
 
 FORMAT_REPAIR_TEMPLATE = """
 
@@ -404,7 +405,7 @@ def run_realtalk_ours(
                     user_prompt=GENERATION_USER_TEMPLATE.format(
                         speaker=speaker,
                         history=format_turns(point["context_turns"]),
-                        self_domain=_json(self_domain),
+                        behavioral_self_domain=_json(_behavioral_self_domain(self_domain)),
                         situation=_json(decision["situation"]),
                         next_action=_json(decision["next_action"]),
                         action_contract=_action_contract(
@@ -1102,6 +1103,15 @@ def _action_contract(primary_move: str) -> str:
         return contracts[primary_move]
     except KeyError as exc:
         raise ValueError(f"unknown primary move: {primary_move}") from exc
+
+
+def _behavioral_self_domain(self_domain: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "communication_signature": self_domain["communication_signature"],
+        "interaction_policy_prior": self_domain["interaction_policy_prior"],
+        "affective_social_signature": self_domain["affective_social_signature"],
+        "observable_statistics": self_domain["observable_statistics"],
+    }
 
 
 def _normalize_generated_message(value: str, speaker: str) -> str:

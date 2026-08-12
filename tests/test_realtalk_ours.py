@@ -15,6 +15,7 @@ from src.experiments.realtalk_ours import (
     EXPECTED_SPEAKER_TARGETS,
     RealTalkOursConfig,
     _action_contract,
+    _behavioral_self_domain,
     _profile_activation_whitelist,
     _validate_decision_context,
     _prepare_dataset,
@@ -158,6 +159,17 @@ class RealTalkOursTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown primary move"):
             _action_contract("mixed")
 
+    def test_actor_receives_behavioral_self_domain_without_identity_facts(self):
+        domain = _self_domain({
+            "target_message_count": 1, "mean_characters": 1.0,
+            "median_characters": 1.0, "question_rate": 0.0,
+            "first_person_rate": 0.0, "median_merged_bubbles": 1.0,
+        })
+        view = _behavioral_self_domain(domain)
+        self.assertNotIn("identity_context", view)
+        self.assertNotIn("boundaries_and_uncertainty", view)
+        self.assertIn("communication_signature", view)
+
     def test_profile_activation_whitelist_is_explicit_when_empty(self):
         domain = {
             "core": [], "regulation": [], "cognition": [], "identity": [],
@@ -245,6 +257,7 @@ class RealTalkOursTests(unittest.TestCase):
                 self.assertNotIn("user domain", lower)
                 self.assertNotIn("lambda_trace", lower)
                 self.assertNotIn("reflectiveness", lower)
+                self.assertNotIn("identity_context", lower)
             predictions = [json.loads(line) for line in (output / "predictions.jsonl").read_text(encoding="utf-8").splitlines()]
             self.assertEqual(sum(not item["user_domain_completed_session_updates"] for item in predictions), 16)
             self.assertEqual(predictions[16]["user_domain_completed_session_updates"], ["session_1"])
