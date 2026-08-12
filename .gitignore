@@ -7,6 +7,11 @@ user_profile_*.json
 logs/app.log
 
 tests/
+!tests/
+tests/*
+!tests/test_exp3_ablation_study.py
+
+tmp/
 
 *.db
 

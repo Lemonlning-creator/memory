@@ -854,3 +854,85 @@ Judge 缓存指纹包含模型、API 后端、base URL、评估 prompt 和本地
 qualitative 脚本仍只重放前 90% 的真实数据集对话，不生成智能体回复。现在每个合并后的连续同 speaker dialogue bubble 记为一个 turn，并在每个 turn 后记录原始 completeness、entropy、profile hash 和 profile version。完整画像只在画像真实变化时保存快照。
 
 单对话底层横轴使用真实 `turn_index`；多对话聚合图使用归一化训练 turn 进度 `0%–100%`。图中淡线为真实 per-turn 均值，主线为只使用当前及历史数据的 causal EWMA，可视化平滑不改变原始指标；单对话图额外标出真实画像更新点和 Session 边界。
+
+## 14. V6–V10 夜间 Prompt sweep
+
+V6–V10 是一组控制变量明确的最终回复 Prompt。五版使用完全相同的用户画像、智能体人设、输入布局、V5 alignment、状态更新、teacher forcing 历史和评估 Prompt；只改变最终回复策略。V5 已完成目录中的固定 `agent_persona.json` 与 `user_profile.json` 可以直接复用，不需要重新执行 `prepare`。
+
+| 版本 | 唯一主要变量 | 强度 | 主要观察指标 | 假设 |
+|---|---|---|---|---|
+| `v6_last_topic_plain` | 只回应最后一个活跃话题 | mild | Lexical、Grounding、Sentiment | 减少多话题回复和内容漂移 |
+| `v7_recent_style_imitation` | 优先模仿近期真实目标角色回复的表面风格 | medium | Lexical、Reflective、Grounding | 近期真实回复比抽象人设标签更能约束措辞和分析深度 |
+| `v8_frequency_hard_gate` | 将 rare/occasional 行为频率作为硬门控 | strong | Reflective、Grounding、Empathy | 减少反思、追问和共情动作的假阳性 |
+| `v9_evidence_bound_persona` | 严格限制人设事实和个人经历的使用 | strong | Lexical、Intimacy、Empathy | 阻止把知识领域改写成虚构经历或堆叠人设事实 |
+| `v10_balanced_surface_act` | 综合话题、风格、动作频率和证据边界 | medium-strong | 全部 Table 2 指标 | 在不过度压低积极语气的前提下综合收敛 |
+
+五个 system prompt 均为独立完整文本，不是 `V5 + addendum`。它们共享相同的 user prompt 输入布局是为了保持实验控制变量；所有版本都有独立版本名、Prompt SHA256、输出目录和日志。
+
+### 14.1 默认全量十对话 sweep
+
+脚本默认运行全部 10 个 REALTALK 对话，共 117 条测试回复。候选生成模型由 `config.qwen-plus.ini` 的 `[API].model = qwen-plus` 指定；Reflective、Grounding 和 Empathy 的 Judge 由 `[EvaluationAPI].model = gpt-4o-mini` 指定。两者角色不同：Qwen-plus 负责生成 Ours，GPT-4o-mini 只负责评估，不应互换。
+
+确认生成 API 和评估 API 的环境变量已经设置，然后执行：
+
+```bash
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+SWEEP_ROOT=data/exp2_prompt_sweep_v6_v10 \
+bash scripts/run_exp2_prompt_sweep.sh
+```
+
+脚本串行运行，避免五个进程同时争抢显存和 API。执行顺序为最有希望的综合版 V10，然后依次运行 V6、V7、V8、V9；这样即使夜间 API 额度或机器中断，也会优先保留综合候选结果。每版执行 `generate-evaluate`，中断后重新运行完全相同的命令即可续跑；已生成回复和内容绑定的评估缓存会被跳过。
+
+运行完成后查看：
+
+```text
+data/exp2_prompt_sweep_v6_v10/prompt_sweep_summary.md
+data/exp2_prompt_sweep_v6_v10/prompt_sweep_summary.json
+data/exp2_prompt_sweep_v6_v10/<prompt-version>/evaluation/table2_main_results.md
+data/exp2_prompt_sweep_v6_v10/<prompt-version>.log
+```
+
+汇总表会使用 V5 的相同 10 个 case 作为全量基线，再列出 V6–V10，并加粗每项指标的最佳均值。JSON 另外记录相对 V5 的方向统一改进量：Lexical 至 Emotion 使用“新值减 V5”，Intimacy 和 Empathy 使用“V5 减新值”，因此正数始终表示改善。
+
+### 14.2 更快和自定义 case
+
+默认命令已经是全部 10 个对话；也可以显式指定：
+
+```bash
+CASE_SET=all bash scripts/run_exp2_prompt_sweep.sh
+```
+
+临时只跑 Chat 2 + Chat 10（23 条）：
+
+```bash
+CASE_SET=fast2 bash scripts/run_exp2_prompt_sweep.sh
+```
+
+临时使用较有代表性的 Chat 2 + Chat 5 + Chat 10（47 条）：
+
+```bash
+CASE_SET=balanced3 bash scripts/run_exp2_prompt_sweep.sh
+```
+
+使用逗号分隔的自定义 case；设置 `CASE_LIST` 后会忽略 `CASE_SET`：
+
+```bash
+CASE_LIST=Chat_1_Emi_Elise.json,Chat_5_Nicolas_Nebraas.json \
+bash scripts/run_exp2_prompt_sweep.sh
+```
+
+常用覆盖参数：
+
+```bash
+CONFIG=config.qwen-plus.ini \
+JUDGE_MODEL=gpt-4o-mini \
+JUDGE_CONFIG_SECTION=EvaluationAPI \
+EVAL_DEVICE=cuda:0 \
+EVAL_BATCH_SIZE=16 \
+REUSE_REFERENCE_CACHE=1 \
+bash scripts/run_exp2_prompt_sweep.sh
+```
+
+`REUSE_REFERENCE_CACHE=1` 只从 V5 复制 `variant=reference` 的标注，不复制任何 generated 标注、回复、状态或分数。缓存 ID 同时绑定评估器指纹、参考回复哈希和完整上下文哈希；模型、评估 Prompt、候选文本或上下文不一致时不会命中。若希望完全重新标注参考回复，可设置 `REUSE_REFERENCE_CACHE=0`。
+
+每个版本的 runtime user state、Milvus memory、生成回复、alignment state 和评估输出都位于自己的目录中，不会在版本之间共享。脚本不会删除或覆盖 V5 目录，也不会调用画像或人设抽取。
