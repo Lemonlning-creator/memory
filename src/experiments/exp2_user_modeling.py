@@ -39,6 +39,7 @@ from ..prompts.exp2_versions import (
     EVALUATION_PROMPT_VERSION,
     exp2_prompt_versions,
     get_exp2_prompt_bundle,
+    validate_state_update,
 )
 from ..utils import load_json, save_json
 from .extract_profile_persona_en import extract_persona, extract_profile
@@ -48,6 +49,7 @@ SESSION_PATTERN = re.compile(r"session_(\d+)$")
 PROFILE_ALGORITHM = "extract_profile_persona_en.extract_profile:one_shot_train_split"
 PROTOCOL_VERSION = "exp2_protocol_v2_state_update"
 GENERATION_POLICY = "previous_empathy_state_parallel_state_update_v2"
+ANNOTATION_CACHE_KEY_VERSION = 2
 PROFILE_FIELDS = {
     "core": ("summary", "values", "motivations", "concerns"),
     "regulation": ("summary", "stress_response", "conflict_style", "emotion_regulation"),
@@ -611,12 +613,8 @@ def _valid_alignment_payload(
         return False
     if not agent.prompt_bundle.updates_user_state:
         return True
-    state_update = result.get("state_update")
-    return (
-        isinstance(state_update, dict)
-        and isinstance(state_update.get("current_state"), dict)
-        and isinstance(state_update.get("projected_state"), dict)
-    )
+    valid, _ = validate_state_update(result.get("state_update"))
+    return valid
 
 
 def _run_alignment_with_format_retry(
@@ -1100,8 +1098,49 @@ class Table2Evaluator:
         return [float(value) for value in f1.cpu().tolist()]
 
 
-def _annotation_id(example_id: str, variant: str, fingerprint: str) -> str:
-    return f"{example_id}:{variant}:{fingerprint}"
+def _annotation_cache_identity(
+    example_id: str,
+    variant: str,
+    fingerprint: str,
+    candidate: str,
+    turns: Sequence[Dict[str, str]],
+) -> tuple[str, str, str]:
+    """Bind cached labels to the exact candidate and evaluated dialogue context."""
+    candidate_sha256 = hashlib.sha256(candidate.encode("utf-8")).hexdigest()
+    context_sha256 = hashlib.sha256(
+        _format_evaluation_context(turns).encode("utf-8")
+    ).hexdigest()
+    annotation_id = ":".join((
+        example_id,
+        variant,
+        fingerprint,
+        candidate_sha256,
+        context_sha256,
+    ))
+    return annotation_id, candidate_sha256, context_sha256
+
+
+def _matching_legacy_annotation(
+    rows: Sequence[Dict[str, Any]],
+    *,
+    example_id: str,
+    variant: str,
+    fingerprint: str,
+    candidate: str,
+    context_sha256: str,
+) -> Dict[str, Any] | None:
+    """Reuse a legacy cache row only after verifying its evaluated content."""
+    for row in rows:
+        if (
+            row.get("example_id") == example_id
+            and row.get("variant") == variant
+            and row.get("evaluator_fingerprint") == fingerprint
+            and row.get("candidate") == candidate
+            and row.get("context_sha256") == context_sha256
+            and isinstance(row.get("labels"), dict)
+        ):
+            return row
+    return None
 
 
 def evaluate_case_table2(
@@ -1116,19 +1155,45 @@ def evaluate_case_table2(
         )
     chat = load_json(case.dataset_path)
     annotations = JsonlStore(paths.table2_annotations, id_field="annotation_id")
+    existing_annotation_rows = annotations.read_all()
 
     for index, prediction in enumerate(predictions, start=1):
         for variant, field in (
             ("reference", "reference_reply"),
             ("generated", "generated_reply"),
         ):
-            annotation_id = _annotation_id(
-                str(prediction["example_id"]), variant, evaluator.fingerprint
+            candidate = str(prediction[field]).strip()
+            turns = build_candidate_context(chat, prediction, candidate)
+            annotation_id, candidate_sha256, context_sha256 = (
+                _annotation_cache_identity(
+                    str(prediction["example_id"]),
+                    variant,
+                    evaluator.fingerprint,
+                    candidate,
+                    turns,
+                )
             )
             if annotations.contains(annotation_id):
                 continue
-            candidate = str(prediction[field])
-            turns = build_candidate_context(chat, prediction, candidate)
+            legacy = _matching_legacy_annotation(
+                existing_annotation_rows,
+                example_id=str(prediction["example_id"]),
+                variant=variant,
+                fingerprint=evaluator.fingerprint,
+                candidate=candidate,
+                context_sha256=context_sha256,
+            )
+            if legacy is not None:
+                annotations.append({
+                    **legacy,
+                    "annotation_id": annotation_id,
+                    "candidate_sha256": candidate_sha256,
+                    "context_sha256": context_sha256,
+                    "cache_key_version": ANNOTATION_CACHE_KEY_VERSION,
+                    "migrated_from_annotation_id": legacy.get("annotation_id"),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+                continue
             print(
                 f"[Table 2] {case.case_id} {index}/{len(predictions)} "
                 f"{variant}"
@@ -1141,9 +1206,9 @@ def evaluate_case_table2(
                 "variant": variant,
                 "evaluator_fingerprint": evaluator.fingerprint,
                 "candidate": candidate,
-                "context_sha256": hashlib.sha256(
-                    _format_evaluation_context(turns).encode("utf-8")
-                ).hexdigest(),
+                "candidate_sha256": candidate_sha256,
+                "context_sha256": context_sha256,
+                "cache_key_version": ANNOTATION_CACHE_KEY_VERSION,
                 "labels": evaluator.annotate(turns),
                 "created_at": datetime.now(timezone.utc).isoformat(),
             })
@@ -1160,8 +1225,22 @@ def evaluate_case_table2(
     scores: List[Dict[str, Any]] = []
     for prediction, semantic_score in zip(predictions, semantic):
         example_id = str(prediction["example_id"])
-        reference = cached[_annotation_id(example_id, "reference", evaluator.fingerprint)]["labels"]
-        generated = cached[_annotation_id(example_id, "generated", evaluator.fingerprint)]["labels"]
+        annotation_ids: Dict[str, str] = {}
+        for variant, field in (
+            ("reference", "reference_reply"),
+            ("generated", "generated_reply"),
+        ):
+            candidate = str(prediction[field]).strip()
+            turns = build_candidate_context(chat, prediction, candidate)
+            annotation_ids[variant] = _annotation_cache_identity(
+                example_id,
+                variant,
+                evaluator.fingerprint,
+                candidate,
+                turns,
+            )[0]
+        reference = cached[annotation_ids["reference"]]["labels"]
+        generated = cached[annotation_ids["generated"]]["labels"]
         scores.append({
             "example_id": example_id,
             "case_id": case.case_id,
@@ -1332,6 +1411,7 @@ def evaluate_table2(
             "categorical": "accuracy against the reference reply label",
             "continuous": "absolute difference from the reference reply score",
             "evaluation_prompt_version": EVALUATION_PROMPT_VERSION,
+            "annotation_cache_key_version": ANNOTATION_CACHE_KEY_VERSION,
             "evaluation_prompt_sha256": hashlib.sha256("\n".join((
                 REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT,
                 REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT,
@@ -1433,6 +1513,7 @@ def run(args: argparse.Namespace) -> None:
         "protocol_version": PROTOCOL_VERSION,
         "generation_prompts": prompt_bundle.manifest(),
         "evaluation_prompt_version": EVALUATION_PROMPT_VERSION,
+        "annotation_cache_key_version": ANNOTATION_CACHE_KEY_VERSION,
         "persona_schema": persona_schema_manifest(),
         "research_question": "Does explicit user modeling enable better personalized interactions?",
         "phase": args.phase,

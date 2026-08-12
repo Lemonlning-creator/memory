@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
-from typing import Dict
+from typing import Any, Dict
 
 from .templates_en import (
     EMPATHY_ALIGNMENT_REASONING_SYSTEM_PROMPT as BASELINE_ALIGNMENT_SYSTEM_PROMPT,
@@ -12,6 +12,60 @@ from .templates_en import (
 
 DEFAULT_EXP2_PROMPT_VERSION = "v3_realtalk_aligned"
 EVALUATION_PROMPT_VERSION = "realtalk_table2_eval_v1"
+
+CURRENT_STATE_FIELDS = {
+    "emotional_state": str,
+    "emotional_intensity": str,
+    "emotional_valence": str,
+    "energy_level": str,
+    "stress_level": str,
+    "current_concerns": list,
+    "social_openness": str,
+    "mood_trajectory": str,
+    "dominant_topics": list,
+    "coping_mode": str,
+}
+PROJECTED_STATE_FIELDS = {
+    "projected_trend": str,
+    "projected_with_empathy": str,
+    "risk_of_misalignment": str,
+}
+
+
+def validate_state_update(state_update: Any) -> tuple[bool, str]:
+    """Validate the exact fixed state schema emitted by v2/v3 alignment."""
+    if not isinstance(state_update, dict):
+        return False, "state_update must be an object"
+    expected_root = {"current_state", "projected_state"}
+    if set(state_update) != expected_root:
+        return False, (
+            "state_update fields must be exactly "
+            f"{sorted(expected_root)}; actual={sorted(state_update)}"
+        )
+
+    for section_name, schema in (
+        ("current_state", CURRENT_STATE_FIELDS),
+        ("projected_state", PROJECTED_STATE_FIELDS),
+    ):
+        section = state_update.get(section_name)
+        if not isinstance(section, dict):
+            return False, f"{section_name} must be an object"
+        if set(section) != set(schema):
+            return False, (
+                f"{section_name} fields must be exactly {sorted(schema)}; "
+                f"actual={sorted(section)}"
+            )
+        for field, expected_type in schema.items():
+            value = section[field]
+            if expected_type is str:
+                if not isinstance(value, str) or not value.strip():
+                    return False, f"{section_name}.{field} must be a non-empty string"
+            elif not isinstance(value, list) or not all(
+                isinstance(item, str) and item.strip() for item in value
+            ):
+                return False, f"{section_name}.{field} must be a list of non-empty strings"
+
+    return True, ""
 
 
 @dataclass(frozen=True)

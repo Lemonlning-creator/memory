@@ -23,6 +23,7 @@ from .prompts.prompt_loader import (
 from .prompts.exp2_versions import (
     DEFAULT_EXP2_PROMPT_VERSION,
     get_exp2_prompt_bundle,
+    validate_state_update,
 )
 from .epistemic_decay import EpistemicDecayTracker, EXPLORATION_MODES
 
@@ -323,19 +324,15 @@ class StateDrivenCompanionAgent:
         if not self.prompt_bundle.updates_user_state:
             return False
         update = result.get("state_update")
-        if not isinstance(update, dict):
-            print("[State Update] missing state_update object in alignment result")
-            return False
-        current_state = update.get("current_state")
-        projected_state = update.get("projected_state")
-        if not isinstance(current_state, dict) or not isinstance(projected_state, dict):
-            print("[State Update] current_state/projected_state must both be objects")
+        valid, error = validate_state_update(update)
+        if not valid:
+            print(f"[State Update] invalid schema: {error}")
             return False
 
         with self._state_lock:
             state = state_axis(self.user_profile)
-            state["current_state"] = deepcopy(current_state)
-            state["projected_state"] = deepcopy(projected_state)
+            state["current_state"] = deepcopy(update["current_state"])
+            state["projected_state"] = deepcopy(update["projected_state"])
             save_json(self.profile_path, self.user_profile)
         return True
 

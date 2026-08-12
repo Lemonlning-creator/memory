@@ -234,6 +234,7 @@ uv run python -m src.experiments.exp2_user_modeling \
   --phase prepare \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -258,6 +259,7 @@ uv run python -m src.experiments.exp2_user_modeling \
   --phase generate \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -293,6 +295,7 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
   --phase evaluate \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling \
   --eval-device cuda:0 \
   --eval-batch-size 16 \
@@ -329,6 +332,7 @@ data/exp2_user_modeling/
 uv run python -m src.experiments.exp2_user_modeling_qualitative \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -376,6 +380,7 @@ data/exp2_user_modeling/qualitative_figures/
 uv run python -m src.experiments.exp2_user_modeling \
   --phase prepare \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -385,6 +390,7 @@ uv run python -m src.experiments.exp2_user_modeling \
 uv run python -m src.experiments.exp2_user_modeling \
   --phase generate \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -394,6 +400,7 @@ uv run python -m src.experiments.exp2_user_modeling \
 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --phase evaluate \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling \
   --eval-device cuda:0 \
   --eval-batch-size 16 \
@@ -407,6 +414,7 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
 ```bash
 uv run python -m src.experiments.exp2_user_modeling_qualitative \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --output-dir data/exp2_user_modeling
 ```
 
@@ -415,7 +423,8 @@ uv run python -m src.experiments.exp2_user_modeling_qualitative \
 生成和评估均支持断点续跑：
 
 - `predictions.jsonl` 通过 `example_id` 避免重复生成。
-- `table2_annotations.jsonl` 通过评测点、候选类型和评估器指纹避免重复标注。
+- `table2_annotations.jsonl` 的缓存 ID 同时绑定评测点、候选类型、评估器指纹、候选回复 SHA256 和完整评估上下文 SHA256；回复或上下文变化后不会误用旧标注。
+- 旧格式缓存只有在候选回复、上下文哈希和评估器指纹全部一致时才会迁移到新 ID，不会重新调用 Judge。
 - 已成功写入的记录会被跳过。
 - 中断后使用完全相同的命令重新执行即可。
 
@@ -532,12 +541,14 @@ uv run python -m src.experiments.exp2_user_modeling `
   --phase prepare `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
+  --config config.qwen-plus.ini `
   --output-dir data/exp2_user_modeling
 
 uv run python -m src.experiments.exp2_user_modeling `
   --phase generate `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
+  --config config.qwen-plus.ini `
   --output-dir data/exp2_user_modeling
 
 $env:HF_HUB_OFFLINE="1"
@@ -546,6 +557,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling `
   --phase evaluate `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
+  --config config.qwen-plus.ini `
   --output-dir data/exp2_user_modeling `
   --eval-device cuda:0 `
   --eval-batch-size 16 `
@@ -554,6 +566,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling `
 uv run python -m src.experiments.exp2_user_modeling_qualitative `
   --case Chat_1_Emi_Elise.json `
   --train-ratio 0.9 `
+  --config config.qwen-plus.ini `
   --output-dir data/exp2_user_modeling
 ```
 
@@ -588,6 +601,7 @@ uv run python -m src.experiments.exp2_user_modeling \
   --phase generate \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling/v3_realtalk_aligned
 ```
@@ -627,6 +641,7 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
   --phase evaluate \
   --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
   --prompt-version v3_realtalk_aligned \
   --output-dir data/exp2_user_modeling/v3_realtalk_aligned \
   --judge-config-section EvaluationAPI \
@@ -634,7 +649,7 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experimen
   --eval-batch-size 16
 ```
 
-Judge 缓存指纹包含模型、API 后端、base URL、评估 prompt 和本地分类器名称，因此不会误用此前 Qwen 或其他中转后端的标注。
+Judge 缓存指纹包含模型、API 后端、base URL、评估 prompt 和本地分类器名称；缓存 ID 另外包含候选回复与完整上下文哈希，因此不会误用此前模型、prompt、回复或上下文不同的标注。
 
 ### 13.5 turn 级 qualitative 曲线
 
