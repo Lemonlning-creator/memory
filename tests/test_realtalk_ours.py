@@ -15,6 +15,7 @@ from src.experiments.realtalk_ours import (
     EXPECTED_SPEAKER_TARGETS,
     RealTalkOursConfig,
     _action_contract,
+    _profile_activation_whitelist,
     _prepare_dataset,
     _structured_call,
     _validate_decision_profile_activation,
@@ -148,6 +149,17 @@ class RealTalkOursTests(unittest.TestCase):
         self.assertIn("Do not interpret", _action_contract("self-disclose"))
         with self.assertRaisesRegex(ValueError, "unknown primary move"):
             _action_contract("mixed")
+
+    def test_profile_activation_whitelist_is_explicit_when_empty(self):
+        domain = {
+            "core": [], "regulation": [], "cognition": [], "identity": [],
+            "behavior": [], "update_summary": {},
+        }
+        self.assertIn("must be []", _profile_activation_whitelist(domain))
+        domain["identity"] = [{"value": "likes basketball"}]
+        whitelist = _profile_activation_whitelist(domain)
+        self.assertIn('"layer": "identity"', whitelist)
+        self.assertIn('"value": "likes basketball"', whitelist)
 
     def test_public_table8_reconstruction_has_expected_519_merged_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)

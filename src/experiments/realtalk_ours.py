@@ -176,8 +176,13 @@ REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:
 LATEST PARTNER MESSAGE (may be empty):
 {latest_partner_message}
 
-Understand the current situation, activate at most two exactly matching User Domain facts if useful,
-record the adaptive balance, and submit one next action for {speaker}."""
+EXACT USER DOMAIN ACTIVATION WHITELIST:
+{activation_whitelist}
+
+Only copy relevant_user_domain entries verbatim from the whitelist. If it says NONE, return an empty array.
+The only valid question pairing is primary_move="follow-up" with question_mode="follow-up"; every other
+primary_move requires question_mode="none". Understand the current situation, record the adaptive balance,
+and submit one next action for {speaker}."""
 
 GENERATION_SYSTEM_TEMPLATE = """You are {speaker}. Continue the conversation.
 Act as the person represented by the private Self Domain.
@@ -370,6 +375,7 @@ def run_realtalk_ours(
                         user_domain=_json(user_domain),
                         history=_turns_with_ids(point["context_turns"]),
                         latest_partner_message=latest_partner_message,
+                        activation_whitelist=_profile_activation_whitelist(user_domain),
                     ),
                     schema=ALIGNMENT_SCHEMA,
                     normalizer=lambda value: _validate_decision_profile_activation(
@@ -1136,6 +1142,15 @@ def _validate_decision_profile_activation(
     if unknown:
         raise ValueError(f"decision activated unknown User Domain facts: {sorted(unknown)}")
     return value
+
+
+def _profile_activation_whitelist(user_domain: dict[str, Any]) -> str:
+    facts = [
+        {"layer": layer, "value": fact["value"]}
+        for layer in ("core", "regulation", "cognition", "identity", "behavior")
+        for fact in user_domain[layer]
+    ]
+    return "NONE (relevant_user_domain must be [])" if not facts else _json(facts)
 
 
 def _normalize_local_labels(value: Any) -> dict[str, Any]:
