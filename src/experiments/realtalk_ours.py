@@ -159,6 +159,10 @@ After the primary move, `continuation_move` may be `reciprocal-question` only wh
 left a concrete open thread, missing_information names one useful detail, continuation_value is medium or
 high, and asking fits this target's observed question behavior. It must be one short, directly related
 question. Otherwise use none. A follow-up primary move cannot also have a continuation move.
+Keep the fields internally consistent:
+- no open thread -> missing_information="", continuation_value="none", continuation_move="none";
+- open thread with low value -> name the missing detail, but continuation_move="none";
+- open thread with medium/high value -> reciprocal-question is optional, never automatic.
 
 The Self Domain is a behavioral prior, not current-world evidence or a checklist of topics to demonstrate.
 Use it primarily for voice, initiative, interaction pattern, and message scale. Never convert a Ca location,
