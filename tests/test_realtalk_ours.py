@@ -179,6 +179,10 @@ class RealTalkOursTests(unittest.TestCase):
             "exactly one short question",
             _action_contract("answer", "reciprocal-question"),
         )
+        self.assertIn(
+            "Do not explain motivations",
+            _action_contract("self-disclose", "reciprocal-question"),
+        )
         self.assertIn("Do not interpret", _action_contract("self-disclose"))
         with self.assertRaisesRegex(ValueError, "unknown primary move"):
             _action_contract("mixed")

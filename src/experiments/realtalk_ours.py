@@ -1138,7 +1138,9 @@ def _action_contract(primary_move: str, continuation_move: str = "none") -> str:
     if continuation_move == "reciprocal-question":
         return (
             primary_contract
-            + " Then ask exactly one short question about the explicitly identified missing information."
+            + " Keep the primary part to one short, direct sentence. Do not explain motivations, "
+            "interpret emotions, reflect on meaning, or add an anecdote. Then ask exactly one short "
+            "question about the explicitly identified missing information."
         )
     raise ValueError(f"unknown continuation move: {continuation_move}")
 
