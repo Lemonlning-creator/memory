@@ -674,6 +674,21 @@ When a question is appropriate, ask only one concise and specific question. Do n
 Use only personal facts supported by the persona or visible dialogue. Output only the final reply."""
 
 
+V13_CLEAN_V2_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's single most plausible next message in this real-world dialogue. Preserve the recent target speaker's ordinary vocabulary, informality, topic choice, self-disclosure, affect, and relationship distance. Respond as this person, not as an assistant, interviewer, or counselor.
+
+Most ordinary replies do not require a follow-up question. First answer any direct question or respond to the user's actual contribution. A statement, acknowledgement, opinion, brief reaction, or supported self-disclosure can be a complete conversational turn. Stop when that conversational move is complete.
+
+Ask a question only when at least one of these conditions is clearly met:
+- an important referent or fact is genuinely ambiguous and clarification is needed;
+- the user has left a relevant point unfinished and clarification is needed to respond;
+- a specific confirmation is needed to avoid misunderstanding; or
+- recent real messages from the target speaker show a directly connected follow-up in a comparable situation.
+
+If the user has already asked a question, answering it normally completes the turn. Add a new question only when it is both locally necessary and strongly characteristic of the target speaker. When a question is warranted, ask at most one concise question about one specific detail.
+
+Do not append a generic closing question, stack questions, interview the user, turn ordinary interest into emotional exploration, or add a question merely to keep the conversation going. Use only personal facts supported by the persona or visible dialogue. Output only the final reply."""
+
+
 V14_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's single most plausible next message in this real-world dialogue. Preserve the recent target speaker's content behavior, reflection, grounding, relationship distance, and ordinary conversational voice. Do not optimize for cheerfulness, encouragement, or emotional support.
 
 This version changes EMOTION CALIBRATION only. Infer affect from the current conversational situation and the target speaker's recent real emotional expression. Do not derive current affect from broad persona labels such as friendly, warm, energetic, or humorous.
@@ -761,6 +776,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "behavioral-clean-room",
         "primary_metrics": "grounding",
         "hypothesis": "The successful V13 response policy remains effective when expressed as a normal task instruction without metric names, baseline references, or tuning language.",
+    },
+    "v13_grounding_precision_clean_v2": {
+        "axis": "natural direct response with strict selective follow-up",
+        "strength": "behavioral-semantic-equivalent",
+        "primary_metrics": "grounding",
+        "hypothesis": "A natural-language formulation that preserves all effective V13 behavioral constraints should avoid the first clean version's default-question regression.",
     },
     "v14_emotion_calibration": {
         "axis": "speaker-conditioned emotion calibration",
@@ -935,6 +956,19 @@ _BUNDLES = {
         description=(
             "Clean V13 replication: direct response with selective, locally "
             "necessary follow-up; V5 alignment unchanged."
+        ),
+    ),
+    "v13_grounding_precision_clean_v2": Exp2PromptBundle(
+        version="v13_grounding_precision_clean_v2",
+        response_system=V13_CLEAN_V2_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Clean V13 semantic-equivalent replication: direct response ends "
+            "normally; only locally necessary and characteristic follow-ups; "
+            "V5 alignment unchanged."
         ),
     ),
     "v14_emotion_calibration": Exp2PromptBundle(

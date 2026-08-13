@@ -22,26 +22,28 @@ src/experiments/exp2_user_modeling_qualitative.py  # 画像进化与画像熵
 
 ## 1. 当前推荐命令
 
-### 1.1 V13 干净表述复验（推荐先跑）
+### 1.1 V13 干净表述 V2 复验（推荐先跑）
 
-`v13_grounding_precision_clean` 保留 V13 已验证有效的对话行为，但删除 `V7`、`Grounding`、指标和调参过程等实验性措辞。旧版 `v13_grounding_precision` 不修改，已有结果和 Prompt 指纹继续保留。两版共享同一 response user Prompt、V5 alignment、状态更新、模型配置和评估 Prompt。
+`v13_grounding_precision_clean` 的首次复验失败：24 条中 23 条包含问句，Grounding 为 `0.44`，Empathy 为 `1.65`。该版本及其结果继续保留，不覆盖。
+
+`v13_grounding_precision_clean_v2` 以原始 `v13_grounding_precision` 为母版，只删除 `V7`、`Grounding`、指标和调参过程等实验性措辞，保留全部有效行为约束：默认不追问、回答可以结束当前轮、仅在必要且符合角色习惯时问一个具体问题、禁止泛化情绪探索。三个版本共享同一 response user Prompt、V5 alignment、状态更新、模型配置和评估 Prompt。
 
 先在 `diagnostic3` 的同一 24 条回复上运行干净版：
 
 ```bash
 ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
 BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
-SWEEP_ROOT=data/exp2_v13_clean_diagnostic3 \
+SWEEP_ROOT=data/exp2_v13_clean_v2_diagnostic3 \
 CASE_SET=diagnostic3 \
-VERSIONS_CSV=v13_grounding_precision_clean \
+VERSIONS_CSV=v13_grounding_precision_clean_v2 \
 bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
 结果位于：
 
 ```text
-data/exp2_v13_clean_diagnostic3/v13_grounding_precision_clean/evaluation/table2_main_results.md
-data/exp2_v13_clean_diagnostic3/prompt_sweep_summary.md
+data/exp2_v13_clean_v2_diagnostic3/v13_grounding_precision_clean_v2/evaluation/table2_main_results.md
+data/exp2_v13_clean_v2_diagnostic3/prompt_sweep_summary.md
 ```
 
 旧 V13 在这 24 条上的 Grounding 为 `0.6210`，混淆计数为 `TN/FP/FN/TP = 8/7/2/7`。建议仅当干净版 Grounding 不低于 `0.59`、假阳性不超过 8、假阴性不超过 3，并且 Semantic 不低于 `0.82`、Empathy 不高于 `1.25` 时，再运行全量 10 个对话：
@@ -49,9 +51,9 @@ data/exp2_v13_clean_diagnostic3/prompt_sweep_summary.md
 ```bash
 ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
 BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
-SWEEP_ROOT=data/exp2_v13_clean_full \
+SWEEP_ROOT=data/exp2_v13_clean_v2_full \
 CASE_SET=all \
-VERSIONS_CSV=v13_grounding_precision_clean \
+VERSIONS_CSV=v13_grounding_precision_clean_v2 \
 bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
@@ -555,17 +557,18 @@ V11–V15 直接针对完整 V7 中仍未达到论文结果的四个指标。每
 | `v11_lexical_fidelity` | Lexical | 语义正确但引入新实体、新经历和自由联想 | 减少无依据具体内容；自然使用当前对话词汇；保留有证据的自我披露和换题 | Semantic、Sentiment |
 | `v12_reflective_placement` | Reflective | 14 条假阳性、12 条假阴性；总量接近但位置错误 | 总体频率不做单向增减；只纠正哪些轮次应出现真正自我观察 | Empathy、Intimacy |
 | `v13_grounding_precision` | Grounding | 38 条假阳性、11 条假阴性；V7 问句 78 条而 reference 37 条 | 明确减少习惯性追问；仅保留必要澄清、确认和有近期行为证据的具体 follow-up | Reflective、Empathy |
-| `v13_grounding_precision_clean` | V13 复验 | 不改变行为目标，只去掉 V7、指标和调参记录措辞 | 用正常任务语言描述“直接回应；问题可选；仅在确需澄清时问一个具体问题” | 与旧 V13 全指标对照 |
+| `v13_grounding_precision_clean` | 首次干净复验（失败，保留） | “问题可选”的软约束导致 23/24 条回复追问 | 不再用于后续实验 | 历史结果保留 |
+| `v13_grounding_precision_clean_v2` | V13 语义等价复验 | 只删除实验痕迹，不删除有效行为约束 | 默认不追问；回答可以结束；追问必须必要且符合角色；禁止泛化情绪探索 | 与旧 V13 全指标对照 |
 | `v14_emotion_calibration` | Emotion | joy 82 条而 reference 65 条；Emoji 66 条而 reference 2 条 | 按角色和当前场景校准情绪；减少无依据 joy、Emoji 和装饰性积极表达，不全局压低 Paola 等真实高 joy 角色 | Sentiment、Empathy |
 | `v15_metric_integrated` | 四项集成 | 同时存在上述四类错误 | 使用“内容→反思→Grounding→情绪”的短决策流，不拼接四份专项 Prompt | Semantic、Sentiment、Intimacy、Empathy |
 
 五版继续共享相同的 response user Prompt、V5 alignment、状态更新、teacher forcing、模型参数和评估 Prompt。V11–V14 只改变各自的定向策略；V15 从同一 V7 审计中预先集成四个方向，但不预设四个专项都会有效。
 
-`v13_grounding_precision_clean` 是对 V13 的复现实验，不是新的指标定向版本。它不会覆盖旧 V13；应使用独立 `SWEEP_ROOT`。脚本的 `VERSIONS_CSV` 可只选择一个或多个版本，例如：
+V13 的两个 clean 版本均不会覆盖旧 V13，且必须使用独立 `SWEEP_ROOT`。脚本的 `VERSIONS_CSV` 可只选择一个或多个版本，例如：
 
 ```bash
-VERSIONS_CSV=v13_grounding_precision_clean bash scripts/run_exp2_prompt_sweep_v11_v15.sh
-VERSIONS_CSV=v13_grounding_precision_clean,v14_emotion_calibration bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+VERSIONS_CSV=v13_grounding_precision_clean_v2 bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+VERSIONS_CSV=v13_grounding_precision_clean_v2,v14_emotion_calibration bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
 当前默认测试子集是：
