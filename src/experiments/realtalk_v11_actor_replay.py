@@ -46,14 +46,19 @@ PRIVATE NEXT ACTION:
 SOFT ACTION CONTRACT:
 {action_contract}
 
+QUESTION PERMISSION:
+{question_permission}
+
+OPTIONAL ADDITION PERMISSION:
+{optional_addition_permission}
+
 Speak naturally as the target person. Complete the primary move first. Add at most one brief, same-topic
 personal reason, feeling, or immediate reaction only when PRIVATE NEXT ACTION's communicative_intent,
 content_direction, or self_expression already explicitly calls for that kind of personal content. Otherwise
 realize only the primary move. Do not add a second topic, generic reassurance, therapeutic analysis, advice,
-or an interview-like question. A reciprocal question is allowed only when PRIVATE NEXT ACTION explicitly sets
-continuation_move to `reciprocal-question`; otherwise do not append a question beyond a primary `follow-up`
-move. An `open` primary move may itself be the check-in named by its content_direction, but it gets no second
-question.
+or an interview-like question. Follow QUESTION PERMISSION literally. When it says forbidden, the output must
+contain no question and no question mark. An `open` primary move may itself be the one check-in named by its
+content_direction, but it gets no second question.
 
 The observable statistics are descriptive style evidence, not hard ceilings or quotas. In particular, a low
 reflective-marker rate does not prohibit a brief reason or feeling when it naturally belongs to this action.
@@ -177,6 +182,10 @@ def run(
                         row["next_action"]["primary_move"],
                         row["next_action"].get("continuation_move", "none"),
                     ),
+                    question_permission=_question_permission(row["next_action"]),
+                    optional_addition_permission=_optional_addition_permission(
+                        row["next_action"]
+                    ),
                 ),
                 speaker=row["speaker"],
                 max_attempts=3,
@@ -262,6 +271,43 @@ def _soft_action_contract(primary_move: str, continuation_move: str) -> str:
         else " Do not append an additional question."
     )
     return contracts[primary_move] + suffix
+
+
+def _question_permission(action: dict[str, Any]) -> str:
+    primary = action["primary_move"]
+    continuation = action.get("continuation_move", "none")
+    if continuation == "reciprocal-question":
+        return "exactly_one_same_slot_reciprocal_question"
+    if primary == "follow-up":
+        return "exactly_one_primary_follow_up_question"
+    if primary == "open" and any(
+        marker in " ".join(
+            str(action.get(field, ""))
+            for field in ("communicative_intent", "content_direction")
+        ).casefold()
+        for marker in ("check-in", "check in", "inquiry", "how are", "wellbeing")
+    ):
+        return "at_most_one_opening_check_in_question"
+    return "forbidden_no_question_mark"
+
+
+def _optional_addition_permission(action: dict[str, Any]) -> str:
+    if action["primary_move"] == "self-disclose":
+        return "one_brief_same_topic_personal_reason_feeling_or_reaction"
+    description = " ".join(
+        str(action.get(field, ""))
+        for field in ("communicative_intent", "content_direction", "self_expression")
+    ).casefold()
+    markers = (
+        "personal take", "personal response", "personal touch", "personal experience",
+        "personal status", "own view", "own opinion", "own evening", "share own",
+        "reason", "feeling", "motivation",
+    )
+    return (
+        "one_brief_same_topic_personal_reason_feeling_or_reaction"
+        if any(marker in description for marker in markers)
+        else "forbidden_realize_primary_move_only"
+    )
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:

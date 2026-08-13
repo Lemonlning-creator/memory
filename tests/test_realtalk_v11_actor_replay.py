@@ -8,6 +8,8 @@ from unittest.mock import patch
 
 from src.experiments.personaemp.client import ChatResult
 from src.experiments.realtalk_v11_actor_replay import (
+    _optional_addition_permission,
+    _question_permission,
     _soft_action_contract,
     run,
     select_fixed_rows,
@@ -54,6 +56,19 @@ class RealTalkV11ActorReplayTests(unittest.TestCase):
         self.assertIn("already explicitly calls for", GENERATION_USER_PROMPT)
         self.assertIn("Never turn an event", GENERATION_USER_PROMPT)
         self.assertIn("gets no second", GENERATION_USER_PROMPT)
+
+    def test_permissions_are_deterministic_from_frozen_action(self):
+        action = {
+            "primary_move": "answer", "continuation_move": "none",
+            "communicative_intent": "answer the greeting", "content_direction": "wellbeing",
+            "self_expression": "brief personal status",
+        }
+        self.assertEqual(_question_permission(action), "forbidden_no_question_mark")
+        self.assertIn("personal", _optional_addition_permission(action))
+        action["continuation_move"] = "reciprocal-question"
+        self.assertEqual(
+            _question_permission(action), "exactly_one_same_slot_reciprocal_question"
+        )
 
     def test_replay_keeps_v9_message_and_frozen_decision(self):
         with tempfile.TemporaryDirectory() as directory:
