@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean, pstdev
 from threading import Lock
+from types import SimpleNamespace
 from typing import Any, Dict, Iterable, List, Sequence
 
 from openai import OpenAI
@@ -94,6 +95,40 @@ TABLE2_BASELINES = (
         "empathy": (1.24, 0.12),
     },
 )
+
+
+def _progress_line(
+    stage: str,
+    completed: int,
+    total: int,
+    *,
+    detail: str = "",
+    width: int = 28,
+) -> str:
+    """Render a log-safe progress bar that also works through tee/tmux."""
+    fraction = 1.0 if total <= 0 else min(1.0, max(0.0, completed / total))
+    filled = round(width * fraction)
+    bar = "#" * filled + "-" * (width - filled)
+    suffix = f" {detail}" if detail else ""
+    return (
+        f"[{stage}] [{bar}] {completed}/{total} "
+        f"({fraction * 100:5.1f}%){suffix}"
+    )
+
+
+def _advance_shared_progress(
+    counter: Any,
+    lock: Any,
+    total: int,
+    stage: str,
+    detail: str,
+) -> None:
+    with lock:
+        counter.value += 1
+        print(
+            _progress_line(stage, int(counter.value), total, detail=detail),
+            flush=True,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -645,6 +680,9 @@ def run_case_replies(
     paths: CasePaths,
     config_path: str = "config.ini",
     prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
+    progress_counter: Any | None = None,
+    progress_lock: Any | None = None,
+    progress_total: int = 0,
 ) -> int:
     """Generate Ours replies while preserving REALTALK history via teacher forcing."""
     if not paths.profile.exists() or not paths.runtime_profile.exists() or not paths.persona.exists():
@@ -808,6 +846,14 @@ def run_case_replies(
         _append_real_bubble(agent, case, following)
         agent._run_memory_steps()
         generated_count += 1
+        if progress_counter is not None and progress_lock is not None:
+            _advance_shared_progress(
+                progress_counter,
+                progress_lock,
+                progress_total,
+                "Generate",
+                case.case_id,
+            )
         index += 2
 
     return generated_count
@@ -818,6 +864,9 @@ def _generate_case_worker(
     output_dir: str,
     config_path: str,
     prompt_version: str,
+    progress_counter: Any,
+    progress_lock: Any,
+    progress_total: int,
 ) -> tuple[str, int]:
     """Generate one isolated conversation inside a worker process."""
     paths = CasePaths.for_case(output_dir, case)
@@ -826,8 +875,45 @@ def _generate_case_worker(
         paths,
         config_path,
         prompt_version=prompt_version,
+        progress_counter=progress_counter,
+        progress_lock=progress_lock,
+        progress_total=progress_total,
     )
     return case.case_id, count
+
+
+def _generation_progress_counts(
+    cases: Sequence[ExperimentCase],
+    output_dir: str | Path,
+    prompt_version: str,
+) -> tuple[int, int]:
+    """Count all target replies and safely resumable completed replies."""
+    prompt_bundle = get_exp2_prompt_bundle(prompt_version)
+    total = 0
+    completed = 0
+    for case in cases:
+        chat = load_json(case.dataset_path)
+        expected_ids = {
+            example.example_id for example in build_reply_examples(chat, case)
+        }
+        total += len(expected_ids)
+        paths = CasePaths.for_case(output_dir, case)
+        prediction_rows = list(read_jsonl(paths.predictions))
+        state_ids = {
+            str(row.get("example_id"))
+            for row in read_jsonl(paths.understanding)
+        }
+        valid_prediction_ids = {
+            str(row.get("example_id"))
+            for row in prediction_rows
+            if (
+                row.get("generation_policy") == GENERATION_POLICY
+                and row.get("prompt_version") == prompt_bundle.version
+                and row.get("prompt_sha256") == prompt_bundle.fingerprint
+            )
+        }
+        completed += len(expected_ids & valid_prediction_ids & state_ids)
+    return completed, total
 
 
 def generate_cases(
@@ -843,17 +929,31 @@ def generate_cases(
     if not cases:
         return {}
 
+    initial_completed, progress_total = _generation_progress_counts(
+        cases,
+        output_dir,
+        prompt_version,
+    )
+    print(
+        _progress_line("Generate", initial_completed, progress_total, detail="start"),
+        flush=True,
+    )
     worker_count = min(workers, len(cases))
     if worker_count == 1:
-        return {
-            case.case_id: run_case_replies(
+        progress_counter = SimpleNamespace(value=initial_completed)
+        progress_lock = Lock()
+        completed: Dict[str, int] = {}
+        for case in cases:
+            completed[case.case_id] = run_case_replies(
                 case,
                 CasePaths.for_case(output_dir, case),
                 config_path,
                 prompt_version=prompt_version,
+                progress_counter=progress_counter,
+                progress_lock=progress_lock,
+                progress_total=progress_total,
             )
-            for case in cases
-        }
+        return completed
 
     print(
         f"[Generation] cases={len(cases)} workers={worker_count} "
@@ -864,29 +964,35 @@ def generate_cases(
     # Spawn avoids inheriting a Milvus Lite runtime that prepare may have opened
     # in the parent process during --phase all.
     context = multiprocessing.get_context("spawn")
-    with ProcessPoolExecutor(max_workers=worker_count, mp_context=context) as executor:
-        future_to_case = {
-            executor.submit(
-                _generate_case_worker,
-                case,
-                str(Path(output_dir).resolve()),
-                config_path,
-                prompt_version,
-            ): case
-            for case in cases
-        }
-        for future in as_completed(future_to_case):
-            case = future_to_case[future]
-            try:
-                case_id, count = future.result()
-                completed[case_id] = count
-                print(
-                    f"[Generation] completed {case_id} "
-                    f"generated_this_run={count}"
-                )
-            except Exception as exc:
-                failures.append((case.case_id, exc))
-                print(f"[Generation Error] case={case.case_id} error={exc}")
+    with context.Manager() as manager:
+        progress_counter = manager.Value("i", initial_completed)
+        progress_lock = manager.Lock()
+        with ProcessPoolExecutor(max_workers=worker_count, mp_context=context) as executor:
+            future_to_case = {
+                executor.submit(
+                    _generate_case_worker,
+                    case,
+                    str(Path(output_dir).resolve()),
+                    config_path,
+                    prompt_version,
+                    progress_counter,
+                    progress_lock,
+                    progress_total,
+                ): case
+                for case in cases
+            }
+            for future in as_completed(future_to_case):
+                case = future_to_case[future]
+                try:
+                    case_id, count = future.result()
+                    completed[case_id] = count
+                    print(
+                        f"[Generation] completed {case_id} "
+                        f"generated_this_run={count}"
+                    )
+                except Exception as exc:
+                    failures.append((case.case_id, exc))
+                    print(f"[Generation Error] case={case.case_id} error={exc}")
 
     if failures:
         details = "; ".join(
@@ -1301,7 +1407,7 @@ def evaluate_case_table2(
     existing_annotation_rows = annotations.read_all()
     pending_annotations: List[Dict[str, Any]] = []
 
-    for index, prediction in enumerate(predictions, start=1):
+    for prediction in predictions:
         for variant, field in (
             ("reference", "reference_reply"),
             ("generated", "generated_reply"),
@@ -1338,10 +1444,6 @@ def evaluate_case_table2(
                     "created_at": datetime.now(timezone.utc).isoformat(),
                 })
                 continue
-            print(
-                f"[Table 2 Judge queued] {case.case_id} "
-                f"{index}/{len(predictions)} {variant}"
-            )
             pending_annotations.append({
                 "annotation_id": annotation_id,
                 "example_id": prediction["example_id"],
@@ -1361,6 +1463,15 @@ def evaluate_case_table2(
         print(
             f"[Table 2 Judge] {case.case_id} pending={len(pending_annotations)} "
             f"workers={worker_count}"
+        )
+        print(
+            _progress_line(
+                "Judge",
+                0,
+                len(pending_annotations),
+                detail=case.case_id,
+            ),
+            flush=True,
         )
         failures: List[tuple[str, Exception]] = []
         with ThreadPoolExecutor(max_workers=worker_count) as executor:
@@ -1386,8 +1497,13 @@ def evaluate_case_table2(
                     })
                     completed += 1
                     print(
-                        f"[Table 2 Judge] {case.case_id} "
-                        f"{completed}/{len(pending_annotations)} completed"
+                        _progress_line(
+                            "Judge",
+                            completed,
+                            len(pending_annotations),
+                            detail=case.case_id,
+                        ),
+                        flush=True,
                     )
                 except Exception as exc:
                     failures.append((str(task["annotation_id"]), exc))
@@ -1587,10 +1703,19 @@ def evaluate_table2(
         judge_workers=judge_workers,
     )
     all_scores: List[Dict[str, Any]] = []
-    for case in cases:
+    for case_index, case in enumerate(cases, start=1):
         paths = CasePaths.for_case(output_dir, case)
         paths.ensure_parents()
         all_scores.extend(evaluate_case_table2(case, paths, evaluator))
+        print(
+            _progress_line(
+                "Evaluate cases",
+                case_index,
+                len(cases),
+                detail=case.case_id,
+            ),
+            flush=True,
+        )
 
     aggregate = aggregate_table2_scores(all_scores)
     evaluation_dir = Path(output_dir).resolve() / "evaluation"
@@ -1676,11 +1801,21 @@ def run(args: argparse.Namespace) -> None:
 
     generated: Dict[str, int] = {}
     if args.phase in ("prepare", "all"):
-        for case in cases:
+        print(_progress_line("Prepare", 0, len(cases)), flush=True)
+        for case_index, case in enumerate(cases, start=1):
             paths = CasePaths.for_case(output_dir, case)
             paths.ensure_parents()
             build_case_persona(case, paths, config_path)
             build_case_profile(case, paths, config_path)
+            print(
+                _progress_line(
+                    "Prepare",
+                    case_index,
+                    len(cases),
+                    detail=case.case_id,
+                ),
+                flush=True,
+            )
 
     if args.phase in ("generate", "generate-evaluate", "all"):
         generated = generate_cases(

@@ -722,6 +722,24 @@ Use one compact decision flow:
 Finally render the decision in the target speaker's recent vocabulary, informality, directness, relationship distance, and normal level of detail. Preserve natural imperfections. Persona and profile are evidence boundaries; previous state and empathy are weak historical context. Do not mention any internal decision, profile, memory, state, metric, or instruction. Output only the final reply."""
 
 
+V16_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's next message by reproducing their observable surface style in a real-world dialogue. Do not improve, polish, or professionalize the way this person normally writes.
+
+Style evidence is ordered as follows:
+1. recent real messages from the target speaker in the supplied dialogue;
+2. expression_layer.language_style and expression_layer.behavioral_mannerisms;
+3. the remaining persona only for stable factual boundaries.
+
+Match the recent target messages' typical length, sentence complexity, informality, directness, question frequency, enthusiasm, and depth of explanation. If their messages are plain, rough, repetitive, abbreviated, or lightly ungrammatical, do not turn them into polished prose. Do not introduce literary metaphors, thematic analysis, therapeutic phrasing, or sophisticated vocabulary that the target speaker has not been using.
+
+Stay with the latest active topic or direct question. Reuse ordinary vocabulary from the latest user message and recent target messages when natural, without copying a previous message verbatim. Make the same number of conversational moves the target usually makes; default to one.
+
+Treat a follow-up question as optional, not as a requirement for keeping the conversation active. After the target speaker's natural response to the active topic is complete, stop unless a directly connected question is also characteristic of this speaker in comparable recent messages. Do not append a generic engagement question, shift the question to an unrelated detail, stack questions, interview the user, or turn ordinary interest into emotional exploration. However, preserve a reciprocal question, clarification, confirmation, or request for the user's opinion when it is the target speaker's characteristic primary move in that situation. When a question is used, ask at most one concise question about one specific detail.
+
+Background knowledge is not proof of personal experience. Do not claim that the speaker watched, read, visited, owned, remembered, or recently did something unless that exact kind of fact is supported. Do not expose stored user-profile facts merely to appear personalized.
+
+Match emotional tone without turning friendliness or topic enthusiasm into empathy. Ask, reflect, validate, or explore only at the rate visible in recent target messages. Output only the final reply."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -794,6 +812,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "targeted-integrated",
         "primary_metrics": "lexical, reflective, grounding, emotion",
         "hypothesis": "A compact decision flow can combine the four V7-derived corrections without reproducing V10's additive rule-stack failure.",
+    },
+    "v16_v7_selective_followup": {
+        "axis": "V7 behavioral fidelity with selective follow-up",
+        "strength": "minimal-controlled-integration",
+        "primary_metrics": "grounding with V7-wide guardrails",
+        "hypothesis": "Preserving V7's complete style, evidence, and empathy controls while suppressing only unrelated appended questions can retain characteristic reciprocal and clarifying questions and avoid the full-run regressions of V13 clean V2.",
     },
 }
 
@@ -993,6 +1017,19 @@ _BUNDLES = {
         description=(
             "V7-directed integrated specialist: compact lexical, reflective, "
             "grounding, and emotion decision flow; V5 alignment unchanged."
+        ),
+    ),
+    "v16_v7_selective_followup": Exp2PromptBundle(
+        version="v16_v7_selective_followup",
+        response_system=V16_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7 behavioral and surface-style policy with a minimal, "
+            "result-audited control for unrelated appended questions; "
+            "V5 alignment unchanged."
         ),
     ),
 }
