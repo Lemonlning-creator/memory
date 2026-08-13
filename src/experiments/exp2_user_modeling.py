@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import configparser
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from copy import deepcopy
 import hashlib
 import json
 import math
+import multiprocessing
 import os
 import re
 import time
@@ -702,6 +703,10 @@ def run_case_replies(
     completed_ids = {row["example_id"] for row in prediction_rows}
     start_index = _resume_position(bubbles, examples, completed_ids)
 
+    case_memory_manager = MemoryOSLocal(
+        persist_path=str(paths.memory_db),
+        config_path=config_path,
+    )
     agent = StateDrivenCompanionAgent(
         config_path=config_path,
         profile_path=str(paths.runtime_profile),
@@ -711,10 +716,7 @@ def run_case_replies(
         update_mode="static",
         exploration_mode="adaptive",
         prompt_version=prompt_bundle.version,
-    )
-    agent.memory_manager = MemoryOSLocal(
-        persist_path=str(paths.memory_db),
-        config_path=config_path,
+        memory_manager=case_memory_manager,
     )
 
     if completed_ids:
@@ -809,6 +811,96 @@ def run_case_replies(
         index += 2
 
     return generated_count
+
+
+def _generate_case_worker(
+    case: ExperimentCase,
+    output_dir: str,
+    config_path: str,
+    prompt_version: str,
+) -> tuple[str, int]:
+    """Generate one isolated conversation inside a worker process."""
+    paths = CasePaths.for_case(output_dir, case)
+    count = run_case_replies(
+        case,
+        paths,
+        config_path,
+        prompt_version=prompt_version,
+    )
+    return case.case_id, count
+
+
+def generate_cases(
+    cases: Sequence[ExperimentCase],
+    output_dir: str | Path,
+    config_path: str,
+    prompt_version: str,
+    workers: int,
+) -> Dict[str, int]:
+    """Generate independent conversations concurrently and turns sequentially."""
+    if workers < 1:
+        raise ValueError("generate workers must be positive")
+    if not cases:
+        return {}
+
+    worker_count = min(workers, len(cases))
+    if worker_count == 1:
+        return {
+            case.case_id: run_case_replies(
+                case,
+                CasePaths.for_case(output_dir, case),
+                config_path,
+                prompt_version=prompt_version,
+            )
+            for case in cases
+        }
+
+    print(
+        f"[Generation] cases={len(cases)} workers={worker_count} "
+        "(turn order remains sequential within each case)"
+    )
+    completed: Dict[str, int] = {}
+    failures: List[tuple[str, Exception]] = []
+    # Spawn avoids inheriting a Milvus Lite runtime that prepare may have opened
+    # in the parent process during --phase all.
+    context = multiprocessing.get_context("spawn")
+    with ProcessPoolExecutor(max_workers=worker_count, mp_context=context) as executor:
+        future_to_case = {
+            executor.submit(
+                _generate_case_worker,
+                case,
+                str(Path(output_dir).resolve()),
+                config_path,
+                prompt_version,
+            ): case
+            for case in cases
+        }
+        for future in as_completed(future_to_case):
+            case = future_to_case[future]
+            try:
+                case_id, count = future.result()
+                completed[case_id] = count
+                print(
+                    f"[Generation] completed {case_id} "
+                    f"generated_this_run={count}"
+                )
+            except Exception as exc:
+                failures.append((case.case_id, exc))
+                print(f"[Generation Error] case={case.case_id} error={exc}")
+
+    if failures:
+        details = "; ".join(
+            f"{case_id}: {error}" for case_id, error in failures[:3]
+        )
+        raise RuntimeError(
+            f"{len(failures)} generation case(s) failed; completed cases and "
+            f"turns remain cached. Rerun the same command to resume. {details}"
+        )
+
+    return {
+        case.case_id: completed[case.case_id]
+        for case in cases
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -1576,6 +1668,7 @@ def _model_name(config_path: str) -> str:
 def run(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    config_path = str(Path(args.config).resolve())
     all_cases = build_cases(args.dataset_dir, args.train_ratio)
     save_split_manifest(all_cases, output_dir / "split_manifest.json", args.train_ratio)
     cases = _select_cases(all_cases, args.case)
@@ -1586,25 +1679,24 @@ def run(args: argparse.Namespace) -> None:
         for case in cases:
             paths = CasePaths.for_case(output_dir, case)
             paths.ensure_parents()
-            build_case_persona(case, paths, args.config)
-            build_case_profile(case, paths, args.config)
+            build_case_persona(case, paths, config_path)
+            build_case_profile(case, paths, config_path)
 
     if args.phase in ("generate", "generate-evaluate", "all"):
-        for case in cases:
-            paths = CasePaths.for_case(output_dir, case)
-            generated[case.case_id] = run_case_replies(
-                case,
-                paths,
-                args.config,
-                prompt_version=prompt_bundle.version,
-            )
+        generated = generate_cases(
+            cases=cases,
+            output_dir=output_dir,
+            config_path=config_path,
+            prompt_version=prompt_bundle.version,
+            workers=args.generate_workers,
+        )
 
     evaluation: Dict[str, str] = {}
     if args.phase in ("evaluate", "generate-evaluate", "all"):
         evaluation = evaluate_table2(
             cases=cases,
             output_dir=output_dir,
-            config_path=args.config,
+            config_path=config_path,
             judge_model=args.judge_model,
             judge_config_section=args.judge_config_section,
             device=args.eval_device,
@@ -1625,7 +1717,8 @@ def run(args: argparse.Namespace) -> None:
         "created_at": datetime.now(timezone.utc).isoformat(),
         "dataset_dir": str(Path(args.dataset_dir).resolve()),
         "train_ratio": args.train_ratio,
-        "model": _model_name(args.config),
+        "model": _model_name(config_path),
+        "generation_workers": args.generate_workers,
         "cases": [asdict(case) for case in cases],
         "generated_this_run": generated,
         "evaluation": evaluation,
@@ -1675,6 +1768,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--eval-batch-size", type=int, default=16)
+    parser.add_argument(
+        "--generate-workers",
+        type=int,
+        default=3,
+        help=(
+            "Concurrent conversation-level generation processes. Turns within "
+            "each conversation remain sequential (default: 3)."
+        ),
+    )
     parser.add_argument(
         "--judge-workers",
         type=int,

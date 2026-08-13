@@ -54,6 +54,7 @@ class StateDrivenCompanionAgent:
         exploration_mode: str = "adaptive",
         periodic_rebuild_interval: int = 5,
         prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
+        memory_manager: Optional[MemoryOSLocal] = None,
     ):
         # Validate modes
         if modeling_mode not in MODELING_MODES:
@@ -88,7 +89,9 @@ class StateDrivenCompanionAgent:
         save_json(self.profile_path, self.user_profile)
         self.persona_config = load_json(self.persona_path)
 
-        self.memory_manager = MemoryOSLocal()
+        # Experiments can inject a per-case store before any default Milvus
+        # connection is opened. Ordinary app callers keep the original default.
+        self.memory_manager = memory_manager if memory_manager is not None else MemoryOSLocal()
         self._background_memory_running = False
         self._background_memory_lock = threading.Lock()
         self._background_generation = 0

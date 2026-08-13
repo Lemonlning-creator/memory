@@ -36,6 +36,7 @@ BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
 SWEEP_ROOT=data/exp2_v13_clean_v2_diagnostic3 \
 CASE_SET=diagnostic3 \
 VERSIONS_CSV=v13_grounding_precision_clean_v2 \
+GENERATE_WORKERS=3 \
 bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
@@ -54,6 +55,7 @@ BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
 SWEEP_ROOT=data/exp2_v13_clean_v2_full \
 CASE_SET=all \
 VERSIONS_CSV=v13_grounding_precision_clean_v2 \
+GENERATE_WORKERS=3 \
 bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
@@ -398,7 +400,8 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
   --prompt-version v5_relationship_calibrated \
-  --output-dir data/exp2_single_v5
+  --output-dir data/exp2_single_v5 \
+  --generate-workers 1
 ```
 
 生成测试回复：
@@ -452,6 +455,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --config config.qwen-plus.ini \
   --prompt-version v5_relationship_calibrated \
   --output-dir "$V5_DIR" \
+  --generate-workers 3 \
   --judge-config-section EvaluationAPI \
   --judge-model gpt-4o-mini \
   --judge-workers 6 \
@@ -461,7 +465,28 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
 
 `generate-evaluate` 只是依次执行生成和评估。原来的 `generate`、`evaluate` 仍可单独运行。
 
-### 6.4 主要输出
+### 6.4 生成与评估并发
+
+`--generate-workers` 按完整 conversation 并发生成，默认值为 `3`。同一 conversation 内的 turn 仍严格按数据集顺序执行；每个 turn 的回复生成和 alignment 继续并行。因此 `--generate-workers 3` 的生成阶段峰值约为 6 个远程 API 请求。
+
+每个生成进程使用独立的 case 目录和 Milvus 数据库：
+
+```text
+cases/<case_id>/memory/memory.db
+```
+
+实验在构造 Agent 时直接注入该数据库，不再先打开共享的 `data/milvus_memory.db`。普通 App 未显式传入 memory manager 时仍保持原有行为。
+
+- 单个 `--case` 实际只启动 1 个生成进程，即使参数为 3。
+- 推荐3090批量实验使用 `--generate-workers 3`。
+- 如果生成API出现频繁限流，将其降为 `2` 或 `1`。
+- 不要并发同一 conversation 的turn；后续turn依赖上一轮状态和记忆。
+- 中断后重新运行相同命令，各case根据已有prediction独立续跑。
+- `--generate-workers` 只改变调度，不改变Prompt、缓存指纹或评估协议。
+
+`--judge-workers` 只控制远程 Reflective、Grounding 和 Empathy Judge，默认值为 `6`。本地GPU分类器和BERTScore仍由单进程执行。
+
+### 6.5 主要输出
 
 ```text
 data/<experiment>/
@@ -824,7 +849,8 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling `
   --train-ratio 0.9 `
   --config config.qwen-plus.ini `
   --prompt-version v5_relationship_calibrated `
-  --output-dir data/exp2_single_v5
+  --output-dir data/exp2_single_v5 `
+  --generate-workers 1
 
 $env:HF_HUB_OFFLINE="1"
 $env:TRANSFORMERS_OFFLINE="1"
