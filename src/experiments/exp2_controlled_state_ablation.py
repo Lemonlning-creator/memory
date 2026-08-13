@@ -37,7 +37,12 @@ STATE_SCORE_FIELDS = (
     "interpretation",
     "exploration",
 )
-CONDITIONS = ("full_state", "scores_only", "no_state")
+CONDITIONS = (
+    "full_state",
+    "scores_only",
+    "no_state",
+    "scores_plus_level_and_tone",
+)
 HIGHER_IS_BETTER = {
     "lexical",
     "semantic",
@@ -82,6 +87,20 @@ def _selected_state(
         return deepcopy(previous_empathy_state)
     if condition == "no_state" or not previous_empathy_state:
         return {}
+    if condition == "scores_plus_level_and_tone":
+        # This condition is intentionally constructed upward from scores_only,
+        # not downward from full_state. The two abstract string controls are
+        # added only after the three numeric fields pass the same strict check.
+        selected = _selected_state(previous_empathy_state, "scores_only")
+        for field in ("empathy_level", "activated_tone"):
+            value = previous_empathy_state.get(field)
+            if not isinstance(value, str) or not value.strip():
+                raise ValueError(
+                    f"source previous_empathy_state.{field} must be a non-empty "
+                    "string for scores_plus_level_and_tone"
+                )
+            selected[field] = value
+        return selected
 
     selected: Dict[str, Any] = {}
     for field in STATE_SCORE_FIELDS:
@@ -235,6 +254,10 @@ def _condition_manifest(
             "full_state": "exact previous_empathy_state saved by the source run",
             "scores_only": list(STATE_SCORE_FIELDS),
             "no_state": "empty object",
+            "scores_plus_level_and_tone": (
+                "scores_only plus empathy_level and activated_tone; "
+                "response_guidance excluded"
+            ),
         }[condition],
         "source_root": str(source_root),
         "source_prompt_version": bundle.version,

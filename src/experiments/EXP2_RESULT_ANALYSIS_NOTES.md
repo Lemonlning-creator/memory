@@ -179,9 +179,12 @@ response_guidance
 - 即使最终回复 Prompt 没有显式写关系规则，这些字段仍可能间接带入关系深度和回复动作；
 - 它们可能覆盖当前消息和 V7/V18 的 response-act 判断。
 
-这目前是有代码依据的假设，但还不是实验结论。不能在受控消融结果出来前直接删除完整状态。
+初轮受控消融已经确认：保留三个数值、删除其余非数值字段的
+`scores_only` 优于彻底删除状态的 `no_state`，且在 Reflective 和 Empathy
+上优于 `full_state`。但初轮同时删除了 `empathy_level`、`activated_tone` 和
+`response_guidance`，尚不能把改善只归因于某一个字段。
 
-## 6. 当前新增的受控状态消融
+## 6. 受控状态消融结果
 
 入口：
 
@@ -204,7 +207,7 @@ src/experiments/README_exp2_controlled_state_ablation.md
 - V18 response system/user Prompt；
 - 模型、温度和最大输出长度。
 
-只比较：
+初轮比较：
 
 | 条件 | 传入最终回复的上一轮状态 |
 |---|---|
@@ -216,32 +219,110 @@ src/experiments/README_exp2_controlled_state_ablation.md
 
 汇总前脚本会逐 `example_id` 比较三组 `frozen_input_sha256`。只要非消融输入不一致，就拒绝生成报告。
 
-## 7. 受控结果出来后的决策规则
+### 6.1 初轮输入审计
 
-### 情况 A：`scores_only` 稳定优于 `full_state`
-
-如果 Reflective/Grounding 提高且 Empathy 误差降低，并且逐样本 wins 明显多于 losses，则说明自然语言 tone/guidance 是主要干扰。下一步只调整 response-state policy，保留三个数值，不改 V18 Prompt、画像或人设。
-
-### 情况 B：`no_state` 稳定优于另外两组
-
-说明上一轮 Empathy 状态整体对 REALTALK 下一回复模拟帮助较小，甚至产生滞后干扰。下一步让最终回复不读取上一轮 empathy state；alignment 和用户短期状态更新仍可继续用于算法内部与分析，不能据此删除核心算法。
-
-### 情况 C：`full_state` 最好
-
-说明完整状态总体有效，之前版本不稳定主要仍在 response Prompt 的行为选择。下一步保留完整状态，以 V18 为基础分析 Grounding FN/FP，不再围绕“删状态”调参。
-
-### 情况 D：三组宏观结果接近、逐样本胜负混合
-
-说明状态不是主因，不能因为某一项小数点波动立即决定。下一步应固定状态输入后，对 V18 的错误样本按以下四类分析：
+结果目录：
 
 ```text
-Reflective FP
-Reflective FN
-Grounding FP
-Grounding FN
+data/exp2_controlled_state_ablation_v18
 ```
 
-然后只处理占比最大的错误类型，不再同时优化所有指标。
+审计结果：
+
+```text
+condition_count = 3
+example_count = 117
+frozen_input_audit.verified = true
+```
+
+三组的用户消息、teacher-forcing 历史、`relevant_memory`、画像、人设、前置
+`current_state`、V18 response Prompt、模型和温度完全一致；只有传入最终回复的
+上一轮 empathy payload 不同。因此三组之间可以进行受控因果比较。
+
+### 6.2 初轮主结果
+
+| 条件 | Lexical ↑ | Semantic ↑ | Reflective ↑ | Grounding ↑ | Sentiment ↑ | Emotion ↑ | Intimacy ↓ | Empathy ↓ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `full_state` | 0.1082 | 0.8324 | 0.7153 | **0.5872** | 0.6092 | 0.4905 | **0.0667** | 1.2389 |
+| `scores_only` | 0.1050 | 0.8319 | **0.7906** | 0.5681 | 0.5904 | 0.4967 | 0.0738 | **1.1217** |
+| `no_state` | 0.1075 | 0.8330 | 0.7549 | 0.5336 | 0.6124 | 0.4994 | 0.0755 | 1.2359 |
+
+`scores_only` 相对论文 `w/ fine-tune` 已超过 Semantic、Reflective、Sentiment、
+Emotion 和 Empathy，共 5/8 项；Intimacy 只差 `0.0038`，仍未达到的是 Lexical、
+Grounding 和 Intimacy。
+
+初轮结论：
+
+- `no_state` 在 Reflective、Grounding、Empathy 和 Intimacy 上都弱于
+  `scores_only`，所以不能删除上一轮状态整体。
+- 三个 Empathy 数值包含有效信息，必须保留。
+- `scores_only` 相对 `full_state` 将 Reflective 从 `0.7153` 提高到 `0.7906`，
+  将 Empathy 误差从 `1.2389` 降到 `1.1217`。
+- Reflective 逐样本变化为 11 条改善、3 条退化、103 条不变；方向明确但单次
+  运行尚不能声称统计显著。
+- `scores_only` 的 Intimacy 和宏平均 Grounding 弱于 `full_state`，说明被一起
+  删除的 `empathy_level` 或 `activated_tone` 可能仍有价值。
+
+### 6.3 Grounding 诊断
+
+`scores_only` 的 Grounding 混淆矩阵：
+
+```text
+TP = 32
+TN = 39
+FP = 33
+FN = 13
+```
+
+reference Grounding 阳性率为 `38.46%`，generated 为 `55.56%`。当前主要错误是
+误触发 Grounding，而不是漏掉 Grounding，因此后续优化方向是减少假阳性，不是
+增加问题。`full_state` 和 `scores_only` 的问句率同为 `53.85%`，说明 Reflective/
+Empathy 改善并非简单来自减少问号。
+
+Grounding 具有明显 speaker 异质性：`scores_only` 在 Elise、Nebraas、Paola 上
+改善，在 Fahim Khan、Vanessa 上退化，在 Muhhamed 上不变。逐样本微平均为
+13 条改善、12 条退化，但论文采用 speaker 宏平均，所以最终宏平均下降。不能用
+统一的“多问”或“少问”规则解决，必须按目标 speaker 的近期行为频率校准。
+
+### 6.4 对过期 guidance 的直接观察
+
+人工抽查发现多条自然语言 guidance 与当前主题错位：
+
+- 当前讨论 Guardians，guidance 仍要求回应博物馆和恐龙；
+- 当前讨论 Harry Potter，guidance 仍要求回应 Guardians；
+- 当前讨论狼人场景，guidance 仍要求围绕 Sirius/Goblet 追问。
+
+这与既定的一轮滞后时序吻合。三个数值可以表示较抽象的上一轮强度，内容级
+`response_guidance` 却容易在下一轮过期。该观察强烈支持排除 guidance，但初轮
+受控条件仍不能区分 `empathy_level`、`activated_tone` 和 `response_guidance`
+各自的贡献。
+
+## 7. 下一项受控优化：以 `scores_only` 为基线
+
+主优化基线确定为 `scores_only`，不是退回 `full_state`。第四组定义为：
+
+```text
+scores_plus_level_and_tone
+= scores_only
++ empathy_level
++ activated_tone
+```
+
+`response_guidance` 始终排除。这个条件同时提供两组因果比较：
+
+- 相对 `scores_only`：测试加回抽象 level/tone 能否恢复 Intimacy/Grounding，
+  同时保护 Reflective/Empathy。
+- 相对 `full_state`：两组只相差 `response_guidance`，可更直接判断过期 guidance
+  的净影响。
+
+选择规则：
+
+- 如果第四组保持 Reflective `>= 0.77`、Empathy `<= 1.24`，并让 Intimacy
+  回到 `<= 0.07` 或 Grounding 高于 `scores_only`，则采用第四组。
+- 如果第四组退回 `full_state` 的 Reflective/Empathy 水平，则固定采用
+  `scores_only`，不再加回 level/tone。
+- 无论哪组胜出，都保留 alignment、三个 Empathy 数值、`current_state` 更新、
+  用户画像和人设；这不是删除核心算法。
 
 ## 8. 后续不得重复的做法
 
@@ -258,21 +339,26 @@ Grounding FN
 
 ## 9. 下一步顺序
 
-1. 先跑 V18 受控状态消融，不再新增 V26 Prompt。
-2. 查看 `controlled_state_ablation_summary.md` 的官方宏平均和逐样本 wins/losses/ties。
-3. 根据第 7 节四种情况选择状态策略。
-4. 固定胜出的状态策略后，再对 V18 的 Reflective/Grounding 混淆矩阵做错误归因。
-5. 只有在错误归因明确后，才设计下一版 Prompt；下一版必须写清楚只修哪一种错误，不允许把过去所有规则继续叠加。
+1. 只补跑 `scores_plus_level_and_tone`，不重跑已经完成的三组。
+2. 用同一份报告比较第四组与 `scores_only`、`full_state`。
+3. 按第 7 节阈值固定 response-state policy。
+4. 固定策略后，优先处理 Grounding 的 33 条 FP；不再调整已经达标的
+   Reflective 和 Empathy。
+5. Grounding 修改必须是单一、speaker-conditioned 的精确率优化，不允许增加
+   默认追问，也不允许继续叠加过去所有 Prompt 条款。
+6. Lexical 最后处理；允许它作为最终一到两个未超过论文的指标之一。
 
 ## 10. 尚未证明的事项
 
 以下内容目前都只能称为假设：
 
-- 完整 empathy state 一定有害；
+- `response_guidance` 是初轮改善的唯一原因；
+- `empathy_level` 和 `activated_tone` 一定有益或一定有害；
 - V18 response Prompt 单独就能稳定复现 `0.7915` Reflective；
 - 删除关系信息一定能改善 Empathy；
 - 增加关系信息一定能改善个性化；
 - 问句率降低一定能提高 Grounding；
 - 单次温度 0 的三组差异具有统计显著性。
 
-若受控三组差异较小，应考虑增加重复生成，而不是继续凭单次结果改 Prompt。
+第四组完成后，如果胜出策略相对次优策略的差异仍很小或 speaker 方向明显冲突，
+应只重复两个候选条件，而不是重新运行全部四组或继续凭单次结果改 Prompt。

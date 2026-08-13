@@ -35,10 +35,32 @@ class ControlledStateAblationTests(unittest.TestCase):
             },
         )
         self.assertEqual(_selected_state(self.full_state, "no_state"), {})
+        scores_plus = _selected_state(
+            self.full_state,
+            "scores_plus_level_and_tone",
+        )
+        self.assertNotIn("response_guidance", scores_plus)
+        self.assertEqual(
+            scores_plus,
+            {
+                "empathy_level": "medium",
+                "emotional_reaction": 1,
+                "interpretation": 2,
+                "exploration": 0,
+                "activated_tone": "warm but casual",
+            },
+        )
+        self.assertIn("response_guidance", self.full_state)
 
     def test_scores_only_rejects_missing_numeric_contract(self) -> None:
         with self.assertRaises(ValueError):
             _selected_state({"emotional_reaction": 1}, "scores_only")
+
+    def test_scores_plus_rejects_missing_level_or_tone(self) -> None:
+        incomplete = dict(self.full_state)
+        incomplete.pop("activated_tone")
+        with self.assertRaises(ValueError):
+            _selected_state(incomplete, "scores_plus_level_and_tone")
 
     def test_first_state_is_empty_and_later_state_is_source_predecessor(self) -> None:
         predictions = [{"example_id": "a"}, {"example_id": "b"}, {"example_id": "c"}]
@@ -78,15 +100,28 @@ class ControlledStateAblationTests(unittest.TestCase):
         empty_prompt, empty_frozen, empty_payload = _build_response_prompt(
             **common, condition="no_state"
         )
+        scores_plus_prompt, scores_plus_frozen, scores_plus_payload = (
+            _build_response_prompt(
+                **common,
+                condition="scores_plus_level_and_tone",
+            )
+        )
         self.assertEqual(full_frozen, score_frozen)
         self.assertEqual(score_frozen, empty_frozen)
+        self.assertEqual(empty_frozen, scores_plus_frozen)
         self.assertNotEqual(full_prompt, score_prompt)
         self.assertNotEqual(score_prompt, empty_prompt)
+        self.assertNotEqual(full_prompt, scores_plus_prompt)
         self.assertEqual(full_payload, self.full_state)
         self.assertEqual(set(score_payload), {
             "emotional_reaction", "interpretation", "exploration"
         })
         self.assertEqual(empty_payload, {})
+        self.assertNotIn("response_guidance", scores_plus_payload)
+        self.assertEqual(
+            scores_plus_payload["activated_tone"],
+            self.full_state["activated_tone"],
+        )
 
     def test_condition_parser_is_strict(self) -> None:
         self.assertEqual(
