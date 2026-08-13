@@ -193,7 +193,7 @@ USER_DOMAIN_SCHEMA = {
 
 
 ALIGNMENT_SCHEMA = {
-    "name": "realtalk_ours_agentic_decision_v4",
+    "name": "realtalk_ours_agentic_decision_v5",
     "strict": True,
     "schema": {
         "type": "object",
@@ -213,6 +213,14 @@ ALIGNMENT_SCHEMA = {
                         "type": "string",
                         "enum": ["none", "low", "medium", "high"],
                     },
+                    "partner_continuation_need": {
+                        "type": "string",
+                        "enum": ["none", "answer-only", "invite-elaboration", "return-same-slot"],
+                    },
+                    "self_revelation_need": {
+                        "type": "string",
+                        "enum": ["none", "state-only", "brief-reason-or-feeling"],
+                    },
                     "uncertainty": {"type": "string", "enum": list(CONFIDENCE)},
                 },
                 "required": [
@@ -225,6 +233,8 @@ ALIGNMENT_SCHEMA = {
                     "partner_has_open_thread",
                     "missing_information",
                     "continuation_value",
+                    "partner_continuation_need",
+                    "self_revelation_need",
                     "uncertainty",
                 ],
                 "additionalProperties": False,
@@ -273,6 +283,10 @@ ALIGNMENT_SCHEMA = {
                         "type": "string",
                         "enum": ["none", "reciprocal-question"],
                     },
+                    "self_revelation_mode": {
+                        "type": "string",
+                        "enum": ["none", "state-only", "brief-reason-or-feeling"],
+                    },
                 },
                 "required": [
                     "communicative_intent",
@@ -284,6 +298,7 @@ ALIGNMENT_SCHEMA = {
                     "message_scale",
                     "question_mode",
                     "continuation_move",
+                    "self_revelation_mode",
                 ],
                 "additionalProperties": False,
             },
@@ -422,6 +437,23 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
     )
     if primary_move == "follow-up" and continuation_move != "none":
         raise ValueError("follow-up primary_move cannot add a continuation move")
+    partner_continuation_need = _enum(
+        situation["partner_continuation_need"],
+        ("none", "answer-only", "invite-elaboration", "return-same-slot"),
+        "situation.partner_continuation_need",
+    )
+    self_revelation_need = _enum(
+        situation["self_revelation_need"],
+        ("none", "state-only", "brief-reason-or-feeling"),
+        "situation.self_revelation_need",
+    )
+    self_revelation_mode = _enum(
+        action["self_revelation_mode"],
+        ("none", "state-only", "brief-reason-or-feeling"),
+        "next_action.self_revelation_mode",
+    )
+    if self_revelation_mode != self_revelation_need:
+        raise ValueError("self_revelation_mode must equal self_revelation_need")
     return {
         "situation": {
             "topic": _text(situation["topic"], "situation.topic", allow_empty=True),
@@ -441,6 +473,8 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
                 ("none", "low", "medium", "high"),
                 "situation.continuation_value",
             ),
+            "partner_continuation_need": partner_continuation_need,
+            "self_revelation_need": self_revelation_need,
             "uncertainty": _enum(situation["uncertainty"], CONFIDENCE, "situation.uncertainty"),
         },
         "relevant_user_domain": normalized_relevant,
@@ -459,6 +493,7 @@ def normalize_alignment(value: Any) -> dict[str, Any]:
             "message_scale": _enum(action["message_scale"], ("short", "typical", "extended"), "next_action.message_scale"),
             "question_mode": question_mode,
             "continuation_move": continuation_move,
+            "self_revelation_mode": self_revelation_mode,
         },
     }
 

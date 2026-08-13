@@ -144,6 +144,20 @@ not an open thread. If the latest turn has no explicit question or request, defa
     this target commonly asks questions and the exchange clearly presents the same conversational slot to both
     speakers (for example wellbeing, plans, preferences, or background). This is reciprocal turn-taking, not a
     second topic or an invitation to interview the partner.
+
+First classify the local turn shape before choosing an action. `partner_continuation_need` is `answer-only`
+when the partner asks the target something but does not naturally invite another partner turn; it is
+`invite-elaboration` only when the partner has introduced a salient incomplete experience that this target
+would actually ask them to expand; it is `return-same-slot` only when the exchange clearly offers the same
+question slot to both people. Otherwise it is `none`. A question appearing earlier in the history is not a
+current continuation need. Do not ask merely because a related detail is available.
+
+Independently classify `self_revelation_need`. Use `brief-reason-or-feeling` only when the current turn naturally
+calls for the target to reveal why they chose, prefer, feel, or intend something, or when this target commonly
+adds such a reason in this exact interaction shape. Use `state-only` for a plain answer, update, preference, or
+plan with no natural reason. Otherwise use `none`. Descriptive enthusiasm, factual detail, generic agreement,
+and invented rationale are not self-revelation. This decision controls whether the actor may include one brief
+reason or feeling; do not add introspection as conversational polish.
 Calibrate question decisions to the Self Domain's observed question rate as an upper tendency, not a quota.
 This calibration applies separately from reciprocal-question: when question_rate >= 0.65, a `follow-up`
 primary move is a common option when it directly develops the latest partner content; from 0.30 to 0.65 it
@@ -192,6 +206,10 @@ target's observed question behavior and either (a) the latest partner turn expli
 or (b) an answer move naturally returns the same conversational slot to the partner. missing_information must
 name that one directly related detail and continuation_value must be high. Otherwise use none. A follow-up
 primary move cannot also have a continuation move.
+Set continuation_move to reciprocal-question only when partner_continuation_need is `return-same-slot`.
+A primary follow-up requires partner_continuation_need=`invite-elaboration`. Set self_revelation_mode exactly
+equal to self_revelation_need. `brief-reason-or-feeling` must remain one natural clause and must be supported by
+the visible situation or a stable behavioral tendency, never invented merely to demonstrate depth.
 Keep the fields internally consistent:
 - no open thread -> missing_information="", continuation_value="none", continuation_move="none";
 - open thread with low value -> name the missing detail, but continuation_move="none";
@@ -235,7 +253,7 @@ EXACT USER DOMAIN ACTIVATION WHITELIST:
 Only copy relevant_user_domain entries verbatim from the whitelist. If it says NONE, return an empty array.
 The only valid question_mode pairing is primary_move="follow-up" with question_mode="follow-up"; every other
 primary_move requires question_mode="none". Independently decide whether one short reciprocal-question is
-licensed by the three continuation fields and the Self Domain. Understand the current situation, record the
+licensed by the continuation classification and the Self Domain. Understand the current situation, record the
 adaptive balance, and submit one next action for {speaker}."""
 
 GENERATION_SYSTEM_TEMPLATE = """You are {speaker}. Continue the conversation.
@@ -266,6 +284,9 @@ requested scale and in the Self Domain's
 communication signature. This behavioral view intentionally omits identity facts, interests, and old events;
 do not reconstruct or guess them. Do not add any other social move. Do not add a generic compliment,
 validation, emotional interpretation, or reflective explanation merely to sound warm or conversational.
+If self_revelation_mode is `brief-reason-or-feeling`, include one concise, natural clause revealing the target's
+current reason, motivation, or feeling. If it is `state-only`, state the answer, position, update, preference, or
+plan without explaining why. If it is `none`, do not add self-analysis.
 Realize unsupported self-disclosure at low specificity: express an ordinary current stance, inclination,
 preference, intention, or status without adding a new proper-named place, venue, destination, institution,
 media title, detailed outing, prior visit, or decorative scene that is absent from the visible history. Reuse
@@ -1100,7 +1121,7 @@ def _write_generation_outputs(
     _write_json(output_dir / "dataset_manifest.json", dataset_manifest)
     _write_json(output_dir / "run_manifest.json", {
         "created_at_utc": _now(),
-        "protocol": "realtalk_task1_ours_agentic_v8_low_specificity_continuity",
+        "protocol": "realtalk_task1_ours_agentic_v10_turn_shape_calibration",
         "comparison_status": "protocol_aligned_not_runtime_identical",
         "paper_persona_simulation_model_disclosed": False,
         "implementation_repository_commit": _repository_commit(),
@@ -1287,10 +1308,15 @@ def _action_contract(primary_move: str, continuation_move: str = "none") -> str:
     if continuation_move == "none":
         return primary_contract + " Do not add a follow-up question."
     if continuation_move == "reciprocal-question":
+        if primary_move == "answer":
+            primary_contract = (
+                "Answer the latest question directly without partner interpretation, "
+                "unrelated self-disclosure, or an unrelated topic."
+            )
         return (
             primary_contract
-            + " Keep the primary part to one short, direct sentence. Do not add praise, generic "
-            "validation, explain motivations, interpret emotions, reflect on meaning, or add an anecdote. Then ask exactly one short "
+            + " Keep the primary part short and direct. Do not add praise, generic "
+            "validation, interpret emotions, or add an anecdote. Then ask exactly one short "
             "question about the explicitly identified missing information."
         )
     raise ValueError(f"unknown continuation move: {continuation_move}")
@@ -1433,18 +1459,22 @@ def _validate_decision_context(
     if not has_history and value["next_action"]["primary_move"] != "open":
         raise ValueError("empty history requires open primary_move")
     situation = value["situation"]
-    if not situation["partner_has_open_thread"]:
+    continuation_need = situation["partner_continuation_need"]
+    if continuation_need in {"none", "answer-only"}:
         situation["missing_information"] = ""
         situation["continuation_value"] = "none"
         value["next_action"]["continuation_move"] = "none"
     continuation = value["next_action"]["continuation_move"]
     if continuation == "reciprocal-question":
-        if not situation["partner_has_open_thread"]:
-            raise ValueError("reciprocal question requires an open partner thread")
+        if continuation_need != "return-same-slot":
+            raise ValueError("reciprocal question requires return-same-slot continuation need")
         if not situation["missing_information"]:
             raise ValueError("reciprocal question requires named missing information")
         if situation["continuation_value"] != "high":
             raise ValueError("reciprocal question requires high continuation value")
+    if value["next_action"]["primary_move"] == "follow-up":
+        if continuation_need != "invite-elaboration":
+            raise ValueError("follow-up requires invite-elaboration continuation need")
     return value
 
 

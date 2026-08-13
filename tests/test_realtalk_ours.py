@@ -78,6 +78,8 @@ def _decision() -> dict:
             "support_request": False, "open_question": "", "uncertainty": "medium",
             "partner_has_open_thread": False, "missing_information": "",
             "continuation_value": "none",
+            "partner_continuation_need": "none",
+            "self_revelation_need": "none",
         },
         "relevant_user_domain": [],
         "alignment": {
@@ -91,6 +93,7 @@ def _decision() -> dict:
             "partner_adaptation": "match the current topic", "tone": "casual",
             "message_scale": "typical", "question_mode": "none",
             "continuation_move": "none",
+            "self_revelation_mode": "none",
         },
     }
 
@@ -137,7 +140,7 @@ class FakeBackend:
                 "behavior": [{"value": "Converses casually", "confidence": "low", "evidence_ids": [evidence]}],
                 "update_summary": {"added": ["casual conversation"], "revised": [], "removed": [], "uncertainties": []},
             })
-        elif schema_name == "realtalk_ours_agentic_decision_v4":
+        elif schema_name == "realtalk_ours_agentic_decision_v5":
             decision = _decision()
             history = user_prompt.split(
                 "REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:\n", 1
@@ -282,7 +285,11 @@ class RealTalkOursTests(unittest.TestCase):
             "exactly one short question",
             _action_contract("answer", "reciprocal-question"),
         )
-        self.assertIn(
+        self.assertNotIn(
+            "Do not add a return question",
+            _action_contract("answer", "reciprocal-question"),
+        )
+        self.assertNotIn(
             "explain motivations",
             _action_contract("self-disclose", "reciprocal-question"),
         )
@@ -357,6 +364,7 @@ class RealTalkOursTests(unittest.TestCase):
             "partner_has_open_thread": True,
             "missing_information": "the outcome of the partner's plan",
             "continuation_value": "high",
+            "partner_continuation_need": "return-same-slot",
         })
         decision["next_action"]["continuation_move"] = "reciprocal-question"
         self.assertIs(_validate_decision_context(decision, has_history=True), decision)
@@ -367,12 +375,25 @@ class RealTalkOursTests(unittest.TestCase):
             "partner_has_open_thread": False,
             "missing_information": "stale detail",
             "continuation_value": "high",
+            "partner_continuation_need": "none",
         })
         decision["next_action"]["continuation_move"] = "reciprocal-question"
         normalized = _validate_decision_context(decision, has_history=True)
         self.assertEqual(normalized["situation"]["missing_information"], "")
         self.assertEqual(normalized["situation"]["continuation_value"], "none")
         self.assertEqual(normalized["next_action"]["continuation_move"], "none")
+
+    def test_self_revelation_decision_and_actor_mode_must_match(self):
+        decision = _decision()
+        decision["situation"]["self_revelation_need"] = "brief-reason-or-feeling"
+        with self.assertRaisesRegex(ValueError, "must equal"):
+            normalize_alignment(decision)
+        decision["next_action"]["self_revelation_mode"] = "brief-reason-or-feeling"
+        normalized = normalize_alignment(decision)
+        self.assertEqual(
+            normalized["next_action"]["self_revelation_mode"],
+            "brief-reason-or-feeling",
+        )
 
     def test_public_table8_reconstruction_has_expected_519_merged_targets(self):
         config = RealTalkOursConfig(compute_local_metrics=False)
@@ -435,7 +456,7 @@ class RealTalkOursTests(unittest.TestCase):
             self.assertEqual(summary["records"], 21)
             user_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_user_domain_v2"]
             self.assertEqual(len(user_calls), 1)
-            decision_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_decision_v4"]
+            decision_calls = [c for c in backend.calls if c["schema"] == "realtalk_ours_agentic_decision_v5"]
             self.assertEqual(len(decision_calls), 21)
             self.assertTrue(all(c["enable_thinking"] is True for c in decision_calls))
             generation_calls = [c for c in backend.calls if c["max_tokens"] == 300]
