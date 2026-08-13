@@ -16,14 +16,16 @@ provided evidence IDs. Do not infer facts from assistant utterances or external
 knowledge. Copy evidence IDs exactly. Return only valid JSON."""
 
 HIDDEN_CLAIM_EXTRACTION_TEMPLATE = """USER: {user_name}
-ALLOWED PROFILE PATHS (prefer these paths):
+ALLOWED PROFILE PATHS (closed set):
 {profile_paths}
 
 HELD-OUT USER EVIDENCE:
 {evidence}
 
 Extract atomic candidate claims. A claim contains one stable fact only. Exclude
-momentary feelings unless they express a recurring pattern.
+momentary feelings unless they express a recurring pattern. Every path MUST be
+copied exactly from ALLOWED PROFILE PATHS. If no allowed path fits, omit the
+claim; never create a new path.
 
 Return exactly:
 {{"claims":[{{"candidate_id":"E001","path":"layer.field","text":"claim",
@@ -35,10 +37,17 @@ HIDDEN_CLAIM_AUDIT_SYSTEM = """You audit semantic differences between an initial
 user profile and a full user profile. Work at atomic-claim level, not field-name
 level. A full claim is:
 - known: semantically already present in the initial profile;
-- new: absent from the initial profile and directly supported by held-out evidence;
-- refinement: held-out evidence adds compatible, meaningful specificity;
+- new: absent from the initial profile;
+- refinement: compatible, meaningful specificity beyond an initial claim;
 - contradiction: incompatible with the initial profile;
-- unsupported: not directly supported by an extracted held-out evidence claim.
+Evidence support is a separate axis: copy matching held-out evidence claim IDs
+when they exist, otherwise leave matched_evidence_claim_ids empty. Never change
+the novelty relation merely because evidence is absent.
+Hard consistency rules:
+1. new requires an empty matched_initial_claim_ids list.
+2. refinement requires at least one matched_initial_claim_id.
+3. known requires at least one matched_initial_claim_id.
+4. contradiction requires at least one matched_initial_claim_id.
 Return one audit row for every full-profile claim, in input order. Copy all IDs
 exactly and return only valid JSON."""
 
@@ -52,9 +61,8 @@ HELD-OUT EVIDENCE CLAIMS:
 {evidence_claims}
 
 Return exactly:
-{{"audit":[{{"full_claim_id":"P001","relation":"known|new|refinement|contradiction|unsupported",
-"matched_initial_claim_ids":[],"matched_evidence_claim_ids":[],
-"sensitivity":"low|medium|high","rationale":"brief"}}]}}"""
+{{"audit":[{{"full_claim_id":"P001","relation":"known|new|refinement|contradiction",
+"matched_initial_claim_ids":[],"matched_evidence_claim_ids":[]}}]}}"""
 
 DISCLOSURE_CONTROLLER_SYSTEM = """You are the private disclosure controller for
 a realistic user simulator. Decide whether the user's next reply may reveal at
@@ -63,11 +71,11 @@ required. Respect sensitivity, trust, fatigue, and repeated questioning. A
 generic prompt must not trigger unrelated disclosure. Return only valid JSON;
 never draft the visible reply."""
 
-DISCLOSURE_CONTROLLER_TEMPLATE = """HIDDEN TARGET CLAIMS:
+DISCLOSURE_CONTROLLER_TEMPLATE = """AVAILABLE, NOT-YET-DISCLOSED TARGET CLAIMS:
 {hidden_claims}
 
-ALREADY DISCLOSED CLAIM IDS:
-{disclosed_ids}
+NUMBER OF CLAIMS ALREADY DISCLOSED: {disclosed_count}
+Never repeat previously disclosed information.
 
 STATE: trust={trust}, fatigue={fatigue}
 
@@ -94,7 +102,7 @@ REPLY_RENDERER_TEMPLATE = """USER: {user_name}
 KNOWN INITIAL PROFILE CLAIMS:
 {known_claims}
 
-STYLE EXAMPLES:
+CONTENT-FREE SURFACE STYLE GUIDANCE:
 {style_examples}
 
 RECENT CONVERSATION:
@@ -116,7 +124,7 @@ OPENER_TEMPLATE = """USER: {user_name}
 KNOWN INITIAL PROFILE CLAIMS:
 {known_claims}
 
-STYLE EXAMPLES:
+CONTENT-FREE SURFACE STYLE GUIDANCE:
 {style_examples}
 
 Start a short, ordinary conversation. Do not disclose any hidden target claim
@@ -143,7 +151,9 @@ FINAL PROFILE CLAIMS:
 Return exactly:
 {{"hidden_supported_by_initial":[],"hidden_supported_by_final":[],
 "final_claims_new_vs_initial":[],"new_final_claims_supported_by_hidden":[],
-"notes":"brief"}}"""
+"notes":"brief"}}
+Every array must contain ID strings only, for example ["H001", "H004"]. Never
+put claim objects, paths, explanations, null, or booleans in an ID array."""
 
 PROFILE_COVERAGE_JUDGE_TEMPLATE = """HIDDEN TARGET CLAIMS:
 {hidden_claims}
@@ -151,7 +161,30 @@ PROFILE_COVERAGE_JUDGE_TEMPLATE = """HIDDEN TARGET CLAIMS:
 CANDIDATE PROFILE CLAIMS:
 {candidate_claims}
 
-Return exactly: {{"supported_hidden_claim_ids":[],"notes":"brief"}}"""
+Return exactly: {{"supported_hidden_claim_ids":[],"notes":"brief"}}
+supported_hidden_claim_ids must contain ID strings only, never claim objects."""
+
+PROFILE_NOVELTY_JUDGE_TEMPLATE = """INITIAL PROFILE CLAIMS:
+{initial_claims}
+
+FINAL PROFILE CLAIMS:
+{final_claims}
+
+List final-profile claims that are not semantically entailed by the initial
+profile. Return exactly: {{"new_final_claim_ids":[],"notes":"brief"}}
+new_final_claim_ids may contain F-prefixed ID strings from FINAL PROFILE CLAIMS
+only. Never return I-prefixed IDs or claim objects."""
+
+PROFILE_SUPPORT_JUDGE_TEMPLATE = """HIDDEN TARGET CLAIMS:
+{hidden_claims}
+
+NEW FINAL PROFILE CLAIMS:
+{new_final_claims}
+
+List new final claims semantically entailed by the hidden targets. Return
+exactly: {{"supported_final_claim_ids":[],"notes":"brief"}}
+supported_final_claim_ids may contain F-prefixed ID strings from NEW FINAL
+PROFILE CLAIMS only. Never return H-prefixed IDs or claim objects."""
 
 
 @dataclass(frozen=True)
@@ -317,6 +350,7 @@ def extract_heldout_evidence_claims(
         raise ValueError("held-out claim extraction claims must be a list")
     rows: list[Dict[str, Any]] = []
     valid_evidence_ids = set(evidence)
+    valid_paths = set(profile_paths)
     for index, row in enumerate(payload["claims"], 1):
         if not isinstance(row, Mapping):
             raise ValueError("held-out claim row must be an object")
@@ -336,9 +370,12 @@ def extract_heldout_evidence_claims(
         stability = row["stability"]
         if stability not in {"stable", "transient"}:
             raise ValueError(f"{expected_id}.stability must be stable or transient")
+        path = _require_text(row["path"], f"{expected_id}.path")
+        if path not in valid_paths:
+            raise ValueError(f"{expected_id} uses unknown profile path {path}")
         rows.append({
             "candidate_id": expected_id,
-            "path": _require_text(row["path"], f"{expected_id}.path"),
+            "path": path,
             "text": _require_text(row["text"], f"{expected_id}.text"),
             "evidence_ids": evidence_ids,
             "stability": stability,
@@ -346,7 +383,7 @@ def extract_heldout_evidence_claims(
     return rows
 
 
-def build_hidden_claim_manifest(
+def _build_hidden_claim_manifest_once(
     llm: LLMClient,
     user_name: str,
     initial_profile: Mapping[str, Any],
@@ -360,24 +397,46 @@ def build_hidden_claim_manifest(
         raise ValueError("full profile contains no atomic claims")
     paths = sorted({claim.path for claim in initial + full})
     evidence_claims = extract_heldout_evidence_claims(llm, user_name, evidence, paths)
-    raw = llm.chat(
-        HIDDEN_CLAIM_AUDIT_SYSTEM,
-        HIDDEN_CLAIM_AUDIT_TEMPLATE.format(
-            initial_claims=format_claims(initial),
-            full_claims=format_claims(full),
-            evidence_claims=json.dumps(evidence_claims, ensure_ascii=False, indent=2),
-        ),
-        temperature=0.0,
-        max_tokens=4000,
-    )
-    payload = parse_json(raw)
-    _require_exact_keys(payload, {"audit"}, "hidden claim audit")
-    if not isinstance(payload["audit"], list) or len(payload["audit"]) != len(full):
-        raise ValueError("hidden claim audit must contain exactly one row per full claim")
+    audit_rows: list[Any] = []
+    chunk_size = 8
+    for chunk_start in range(0, len(full), chunk_size):
+        chunk = full[chunk_start:chunk_start + chunk_size]
+        raw = llm.chat(
+            HIDDEN_CLAIM_AUDIT_SYSTEM,
+            HIDDEN_CLAIM_AUDIT_TEMPLATE.format(
+                initial_claims=format_claims(initial),
+                full_claims=format_claims(chunk),
+                evidence_claims=json.dumps(
+                    evidence_claims, ensure_ascii=False, indent=2
+                ),
+            ),
+            temperature=0.0,
+            max_tokens=3000,
+        )
+        chunk_payload = parse_json(raw)
+        _require_exact_keys(chunk_payload, {"audit"}, "hidden claim audit chunk")
+        if (
+            not isinstance(chunk_payload["audit"], list)
+            or len(chunk_payload["audit"]) != len(chunk)
+        ):
+            raise ValueError(
+                "hidden claim audit chunk must contain exactly one row per full claim"
+            )
+        actual_ids = [
+            row["full_claim_id"] if isinstance(row, Mapping) and "full_claim_id" in row else None
+            for row in chunk_payload["audit"]
+        ]
+        expected_ids = [claim.claim_id for claim in chunk]
+        if actual_ids != expected_ids:
+            raise ValueError(
+                f"hidden claim audit chunk ID/order mismatch; expected={expected_ids}, "
+                f"actual={actual_ids}"
+            )
+        audit_rows.extend(chunk_payload["audit"])
+    payload = {"audit": audit_rows}
     initial_ids = {claim.claim_id for claim in initial}
     evidence_by_id = {row["candidate_id"]: row for row in evidence_claims}
-    allowed_relations = {"known", "new", "refinement", "contradiction", "unsupported"}
-    allowed_sensitivity = {"low", "medium", "high"}
+    allowed_relations = {"known", "new", "refinement", "contradiction"}
     audit: list[Dict[str, Any]] = []
     hidden: list[HiddenClaim] = []
     for index, (claim, row) in enumerate(zip(full, payload["audit"]), 1):
@@ -386,17 +445,14 @@ def build_hidden_claim_manifest(
         _require_exact_keys(
             row,
             {"full_claim_id", "relation", "matched_initial_claim_ids",
-             "matched_evidence_claim_ids", "sensitivity", "rationale"},
+             "matched_evidence_claim_ids"},
             f"hidden claim audit row {index}",
         )
         if row["full_claim_id"] != claim.claim_id:
             raise ValueError("hidden claim audit rows must preserve full-claim order and IDs")
         relation = row["relation"]
-        sensitivity = row["sensitivity"]
         if relation not in allowed_relations:
             raise ValueError(f"invalid relation for {claim.claim_id}: {relation}")
-        if sensitivity not in allowed_sensitivity:
-            raise ValueError(f"invalid sensitivity for {claim.claim_id}: {sensitivity}")
         matched_initial = _require_string_list(
             row["matched_initial_claim_ids"], f"{claim.claim_id}.matched_initial_claim_ids"
         )
@@ -407,10 +463,12 @@ def build_hidden_claim_manifest(
             raise ValueError(f"{claim.claim_id} cites unknown initial claim IDs")
         if set(matched_evidence) - set(evidence_by_id):
             raise ValueError(f"{claim.claim_id} cites unknown evidence claim IDs")
-        if relation in {"new", "refinement"} and not matched_evidence:
-            raise ValueError(f"{claim.claim_id} is {relation} but has no held-out evidence")
         if relation == "known" and not matched_initial:
             raise ValueError(f"{claim.claim_id} is known but matches no initial claim")
+        if relation == "new" and matched_initial:
+            raise ValueError(f"{claim.claim_id} is new but matches an initial claim")
+        if relation in {"refinement", "contradiction"} and not matched_initial:
+            raise ValueError(f"{claim.claim_id} is {relation} but matches no initial claim")
         evidence_ids: list[str] = []
         for evidence_claim_id in matched_evidence:
             candidate = evidence_by_id[evidence_claim_id]
@@ -419,13 +477,24 @@ def build_hidden_claim_manifest(
             for evidence_id in candidate["evidence_ids"]:
                 if evidence_id not in evidence_ids:
                     evidence_ids.append(evidence_id)
+        layer = claim.path.split(".", 1)[0]
+        sensitivity_by_layer = {
+            "core": "high",
+            "identity": "high",
+            "regulation": "medium",
+            "cognition": "medium",
+            "behavior": "low",
+        }
+        if layer not in sensitivity_by_layer:
+            raise ValueError(f"cannot assign sensitivity for unknown profile layer {layer}")
+        sensitivity = sensitivity_by_layer[layer]
         audit_row = {
             "full_claim": claim.as_dict(),
             "relation": relation,
             "matched_initial_claim_ids": matched_initial,
             "matched_evidence_claim_ids": matched_evidence,
             "sensitivity": sensitivity,
-            "rationale": _require_text(row["rationale"], f"{claim.claim_id}.rationale"),
+            "evidence_supported": bool(evidence_ids),
             "eligible_as_hidden_target": relation in {"new", "refinement"} and bool(evidence_ids),
         }
         audit.append(audit_row)
@@ -445,9 +514,42 @@ def build_hidden_claim_manifest(
         "initial_claims": [claim.as_dict() for claim in initial],
         "full_claims": [claim.as_dict() for claim in full],
         "heldout_evidence_claims": evidence_claims,
+        "sensitivity_policy": {
+            "core": "high", "identity": "high", "regulation": "medium",
+            "cognition": "medium", "behavior": "low",
+        },
         "audit": audit,
         "hidden_claims": [claim.as_dict() for claim in hidden],
     }
+
+
+def build_hidden_claim_manifest(
+    llm: LLMClient,
+    user_name: str,
+    initial_profile: Mapping[str, Any],
+    full_profile: Mapping[str, Any],
+    evidence: Mapping[str, str],
+    max_attempts: int = 3,
+) -> Dict[str, Any]:
+    """Retry generation while preserving the exact hidden-claim validation rules."""
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be positive")
+    last_error: ValueError | json.JSONDecodeError | None = None
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return _build_hidden_claim_manifest_once(
+                llm, user_name, initial_profile, full_profile, evidence
+            )
+        except (ValueError, json.JSONDecodeError) as exc:
+            last_error = exc
+            print(
+                f"[Exp3 hidden-claim schema retry] attempt={attempt}/{max_attempts} "
+                f"error={exc}"
+            )
+    assert last_error is not None
+    raise RuntimeError(
+        f"hidden-claim construction failed strict validation after {max_attempts} attempts"
+    ) from last_error
 
 
 def hidden_claims_from_manifest(manifest: Mapping[str, Any]) -> list[HiddenClaim]:
@@ -531,6 +633,13 @@ def validate_simulator_payload(payload: Mapping[str, Any], allowed_claim_ids: se
         raise ValueError("invalid disclosure_decision")
     if depth not in {"none", "partial", "full"}:
         raise ValueError("invalid disclosure_depth")
+    expected_withheld = decision in {"withhold", "refuse"}
+    if payload["withheld_or_refused"] is not expected_withheld:
+        raise ValueError("withheld_or_refused is inconsistent with disclosure_decision")
+    if decision == "disclose" and (not revealed or depth == "none"):
+        raise ValueError("disclose payload requires evidenced claims and non-none depth")
+    if decision != "disclose" and (revealed or depth != "none"):
+        raise ValueError("non-disclose payload cannot contain revealed claims or disclosure depth")
     trust = payload["trust"]
     fatigue = payload["fatigue"]
     for name, value in (("trust", trust), ("fatigue", fatigue)):
@@ -582,18 +691,62 @@ class HiddenProfileUserSimulator:
     def _renderer_context(self) -> Dict[str, str]:
         return {
             "user_name": self.user_name,
-            "known_claims": format_claims(self.known_claims),
+            "known_claims": json.dumps(
+                [{"path": claim.path, "text": claim.text} for claim in self.known_claims],
+                ensure_ascii=False,
+                indent=2,
+            ),
             "style_examples": json.dumps(self.style_examples[:12], ensure_ascii=False, indent=2),
         }
 
+    def _render_strict(
+        self,
+        prompt: str,
+        allowed_claim_ids: set[str],
+        max_attempts: int = 5,
+    ) -> Dict[str, Any]:
+        last_error: ValueError | json.JSONDecodeError | None = None
+        correction = ""
+        for attempt in range(1, max_attempts + 1):
+            raw = self.llm.chat(
+                REPLY_RENDERER_SYSTEM,
+                prompt + correction,
+                temperature=0.3,
+                max_tokens=400,
+            )
+            try:
+                rendered = _validate_renderer_payload(
+                    parse_json(raw), allowed_claim_ids
+                )
+                if allowed_claim_ids and not rendered["evidenced_claim_ids"]:
+                    raise ValueError(
+                        "renderer must evidence at least one authorized claim "
+                        "when disclosure was approved"
+                    )
+                return rendered
+            except (ValueError, json.JSONDecodeError) as exc:
+                last_error = exc
+                correction = (
+                    "\n\nYOUR PREVIOUS OUTPUT FAILED STRICT VALIDATION: "
+                    f"{exc}. Regenerate the complete JSON object. "
+                    "Do not repair or explain the previous output. Return exactly "
+                    '{"user_reply":"visible reply only","evidenced_claim_ids":[]} '
+                    "with the appropriate authorized hidden IDs in the list."
+                )
+                print(
+                    f"[Exp3 reply-renderer schema retry] attempt={attempt}/{max_attempts} "
+                    f"error={exc}"
+                )
+        assert last_error is not None
+        raise RuntimeError(
+            f"reply renderer failed strict validation after {max_attempts} attempts"
+        ) from last_error
+
     def opening_turn(self) -> Dict[str, Any]:
-        raw = self.llm.chat(
-            REPLY_RENDERER_SYSTEM,
+        rendered = self._render_strict(
             OPENER_TEMPLATE.format(**self._renderer_context()),
-            temperature=0.3,
-            max_tokens=300,
+            set(),
         )
-        rendered = _validate_renderer_payload(parse_json(raw), set())
         return validate_simulator_payload({
             "user_reply": rendered["user_reply"],
             "revealed_claim_ids": [],
@@ -649,23 +802,47 @@ class HiddenProfileUserSimulator:
 
     def respond(self, conversation: Sequence[Mapping[str, str]], agent_message: str) -> Dict[str, Any]:
         agent_message = _require_text(agent_message, "agent_message")
-        raw_controller = self.llm.chat(
-            DISCLOSURE_CONTROLLER_SYSTEM,
-            DISCLOSURE_CONTROLLER_TEMPLATE.format(
-                hidden_claims=format_claims(self.hidden_claims),
-                disclosed_ids=json.dumps(sorted(self.disclosed_ids)),
-                trust=self.trust,
-                fatigue=self.fatigue,
-                conversation=format_conversation(conversation),
-                agent_message=agent_message,
-            ),
-            temperature=0.0,
-            max_tokens=500,
+        controller_prompt = DISCLOSURE_CONTROLLER_TEMPLATE.format(
+            hidden_claims=format_renderable_claims([
+                claim for claim in self.hidden_claims
+                if claim.claim_id not in self.disclosed_ids
+            ]),
+            disclosed_count=len(self.disclosed_ids),
+            trust=self.trust,
+            fatigue=self.fatigue,
+            conversation=format_conversation(conversation),
+            agent_message=agent_message,
         )
-        controller = self._validate_controller(parse_json(raw_controller))
+        controller: Dict[str, Any] | None = None
+        controller_error: ValueError | json.JSONDecodeError | None = None
+        correction = ""
+        for attempt in range(1, 4):
+            raw_controller = self.llm.chat(
+                DISCLOSURE_CONTROLLER_SYSTEM,
+                controller_prompt + correction,
+                temperature=0.0,
+                max_tokens=500,
+            )
+            try:
+                controller = self._validate_controller(parse_json(raw_controller))
+                break
+            except (ValueError, json.JSONDecodeError) as exc:
+                controller_error = exc
+                correction = (
+                    "\n\nYOUR PREVIOUS OUTPUT FAILED STRICT VALIDATION: "
+                    f"{exc}. Regenerate the complete JSON object."
+                )
+                print(
+                    f"[Exp3 disclosure-controller schema retry] attempt={attempt}/3 "
+                    f"error={exc}"
+                )
+        if controller is None:
+            assert controller_error is not None
+            raise RuntimeError(
+                "disclosure controller failed strict validation after 3 attempts"
+            ) from controller_error
         allowed = set(controller["allowed_claim_ids"])
-        raw_reply = self.llm.chat(
-            REPLY_RENDERER_SYSTEM,
+        rendered = self._render_strict(
             REPLY_RENDERER_TEMPLATE.format(
                 **self._renderer_context(),
                 conversation=format_conversation(conversation),
@@ -675,10 +852,8 @@ class HiddenProfileUserSimulator:
                     [self.claim_by_id[value] for value in controller["allowed_claim_ids"]]
                 ),
             ),
-            temperature=0.3,
-            max_tokens=400,
+            allowed,
         )
-        rendered = _validate_renderer_payload(parse_json(raw_reply), allowed)
         revealed = rendered["evidenced_claim_ids"]
         self.disclosed_ids.update(revealed)
         self.trust = controller["next_trust"]
@@ -722,20 +897,47 @@ def evaluate_hidden_coverage(
     if not hidden_claims:
         raise ValueError("hidden claim set cannot be empty")
     candidate = atomic_profile_claims(candidate_profile, "C")
-    raw = judge.chat(
-        PROFILE_DISCOVERY_JUDGE_SYSTEM_PROMPT,
-        PROFILE_COVERAGE_JUDGE_TEMPLATE.format(
-            hidden_claims=format_claims(hidden_claims),
-            candidate_claims=format_claims(candidate),
-        ),
-        temperature=0.0,
-        max_tokens=1200,
+    prompt = PROFILE_COVERAGE_JUDGE_TEMPLATE.format(
+        hidden_claims=format_claims(hidden_claims),
+        candidate_claims=format_claims(candidate),
     )
-    payload = parse_json(raw)
-    _require_exact_keys(payload, {"supported_hidden_claim_ids", "notes"}, "profile coverage judge")
-    if not isinstance(payload["notes"], str):
-        raise ValueError("profile coverage judge notes must be a string")
-    supported = _validated_id_set(payload, "supported_hidden_claim_ids", {c.claim_id for c in hidden_claims})
+    last_error: ValueError | json.JSONDecodeError | None = None
+    correction = ""
+    for attempt in range(1, 4):
+        raw = judge.chat(
+            PROFILE_DISCOVERY_JUDGE_SYSTEM_PROMPT,
+            prompt + correction,
+            temperature=0.0,
+            max_tokens=1200,
+        )
+        try:
+            payload = parse_json(raw)
+            _require_exact_keys(
+                payload, {"supported_hidden_claim_ids", "notes"},
+                "profile coverage judge",
+            )
+            if not isinstance(payload["notes"], str):
+                raise ValueError("profile coverage judge notes must be a string")
+            supported = _validated_id_set(
+                payload, "supported_hidden_claim_ids",
+                {claim.claim_id for claim in hidden_claims},
+            )
+            break
+        except (ValueError, json.JSONDecodeError) as exc:
+            last_error = exc
+            correction = (
+                "\n\nPREVIOUS OUTPUT FAILED STRICT VALIDATION: "
+                f"{exc}. Regenerate the complete JSON object; arrays contain ID "
+                "strings only."
+            )
+            print(
+                f"[Exp3 coverage-judge schema retry] attempt={attempt}/3 error={exc}"
+            )
+    else:
+        assert last_error is not None
+        raise RuntimeError(
+            "profile coverage judge failed strict validation after 3 attempts"
+        ) from last_error
     return {"supported_hidden_claim_ids": sorted(supported), "notes": payload["notes"]}
 
 
@@ -749,32 +951,102 @@ def evaluate_profile_discovery(
         raise ValueError("hidden claim set cannot be empty")
     initial = atomic_profile_claims(initial_profile, "I")
     final = atomic_profile_claims(final_profile, "F")
-    raw = judge.chat(
-        PROFILE_DISCOVERY_JUDGE_SYSTEM_PROMPT,
-        PROFILE_DISCOVERY_JUDGE_TEMPLATE.format(
-            hidden_claims=format_claims(hidden_claims),
-            initial_claims=format_claims(initial),
-            final_claims=format_claims(final),
-        ),
-        temperature=0.0,
-        max_tokens=2000,
+    initial_coverage_result = evaluate_hidden_coverage(
+        judge, hidden_claims, initial_profile
     )
-    payload = parse_json(raw)
-    required = {
-        "hidden_supported_by_initial", "hidden_supported_by_final",
-        "final_claims_new_vs_initial", "new_final_claims_supported_by_hidden", "notes",
-    }
-    _require_exact_keys(payload, required, "profile discovery judge")
-    if not isinstance(payload["notes"], str):
-        raise ValueError("profile discovery judge notes must be a string")
-    hidden_ids = {claim.claim_id for claim in hidden_claims}
+    final_coverage_result = evaluate_hidden_coverage(
+        judge, hidden_claims, final_profile
+    )
+    hidden_initial = set(initial_coverage_result["supported_hidden_claim_ids"])
+    hidden_final = set(final_coverage_result["supported_hidden_claim_ids"])
     final_ids = {claim.claim_id for claim in final}
-    hidden_initial = _validated_id_set(payload, "hidden_supported_by_initial", hidden_ids)
-    hidden_final = _validated_id_set(payload, "hidden_supported_by_final", hidden_ids)
-    new_final = _validated_id_set(payload, "final_claims_new_vs_initial", final_ids)
-    supported_new = _validated_id_set(payload, "new_final_claims_supported_by_hidden", final_ids)
-    if supported_new - new_final:
-        raise ValueError("judge marked a non-new final claim as supported new information")
+
+    novelty_prompt = PROFILE_NOVELTY_JUDGE_TEMPLATE.format(
+        initial_claims=format_claims(initial),
+        final_claims=format_claims(final),
+    )
+    last_error: ValueError | json.JSONDecodeError | None = None
+    correction = ""
+    for attempt in range(1, 4):
+        raw = judge.chat(
+            PROFILE_DISCOVERY_JUDGE_SYSTEM_PROMPT,
+            novelty_prompt + correction,
+            temperature=0.0,
+            max_tokens=1200,
+        )
+        try:
+            payload = parse_json(raw)
+            _require_exact_keys(
+                payload, {"new_final_claim_ids", "notes"},
+                "profile novelty judge",
+            )
+            if not isinstance(payload["notes"], str):
+                raise ValueError("profile novelty judge notes must be a string")
+            new_final = _validated_id_set(
+                payload, "new_final_claim_ids", final_ids
+            )
+            break
+        except (ValueError, json.JSONDecodeError) as exc:
+            last_error = exc
+            correction = (
+                "\n\nPREVIOUS OUTPUT FAILED STRICT VALIDATION: "
+                f"{exc}. Regenerate the complete JSON object using F-prefixed "
+                "ID strings only."
+            )
+            print(
+                f"[Exp3 novelty-judge schema retry] attempt={attempt}/3 error={exc}"
+            )
+    else:
+        assert last_error is not None
+        raise RuntimeError(
+            "profile novelty judge failed strict validation after 3 attempts"
+        ) from last_error
+
+    new_final_claims = [claim for claim in final if claim.claim_id in new_final]
+    if new_final_claims:
+        support_prompt = PROFILE_SUPPORT_JUDGE_TEMPLATE.format(
+            hidden_claims=format_claims(hidden_claims),
+            new_final_claims=format_claims(new_final_claims),
+        )
+        last_error = None
+        correction = ""
+        for attempt in range(1, 4):
+            raw = judge.chat(
+                PROFILE_DISCOVERY_JUDGE_SYSTEM_PROMPT,
+                support_prompt + correction,
+                temperature=0.0,
+                max_tokens=1200,
+            )
+            try:
+                support_payload = parse_json(raw)
+                _require_exact_keys(
+                    support_payload, {"supported_final_claim_ids", "notes"},
+                    "profile support judge",
+                )
+                if not isinstance(support_payload["notes"], str):
+                    raise ValueError("profile support judge notes must be a string")
+                supported_new = _validated_id_set(
+                    support_payload, "supported_final_claim_ids", new_final
+                )
+                break
+            except (ValueError, json.JSONDecodeError) as exc:
+                last_error = exc
+                correction = (
+                    "\n\nPREVIOUS OUTPUT FAILED STRICT VALIDATION: "
+                    f"{exc}. Regenerate using only the listed F-prefixed IDs."
+                )
+                print(
+                    f"[Exp3 support-judge schema retry] attempt={attempt}/3 error={exc}"
+                )
+        else:
+            assert last_error is not None
+            raise RuntimeError(
+                "profile support judge failed strict validation after 3 attempts"
+            ) from last_error
+        support_notes = support_payload["notes"]
+    else:
+        supported_new = set()
+        support_notes = "No new final-profile claims were identified."
     target_count = len(hidden_claims)
     initial_coverage = len(hidden_initial) / target_count
     final_coverage = len(hidden_final) / target_count
@@ -798,7 +1070,12 @@ def evaluate_profile_discovery(
             "hidden_supported_by_final": sorted(hidden_final),
             "final_claims_new_vs_initial": sorted(new_final),
             "new_final_claims_supported_by_hidden": sorted(supported_new),
-            "notes": payload["notes"],
+            "notes": {
+                "initial_coverage": initial_coverage_result["notes"],
+                "final_coverage": final_coverage_result["notes"],
+                "novelty": payload["notes"],
+                "support": support_notes,
+            },
         },
     }
 

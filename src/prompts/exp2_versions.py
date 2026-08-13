@@ -609,6 +609,87 @@ Preserve ordinary topic-matched enthusiasm. Saying that a movie, meal, trip, or 
 Prefer familiar vocabulary from the current message and recent dialogue. Do not invent experiences, stack unrelated persona facts, answer multiple old topics, or use polished analytical language absent from the target's style. Output only the final reply."""
 
 
+# V11-V15 are metric-directed micro-adjustments derived from the complete V7
+# error audit. V11-V14 each change one weak Table 2 dimension while treating
+# V7's Semantic, Sentiment, Intimacy, and Empathy performance as guardrails.
+# V15 integrates the four directional corrections as one short decision flow,
+# not by concatenating the specialist prompts. All five retain the same input,
+# V5 alignment/state update, generation settings, and evaluation prompt.
+V11_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's single most plausible next message in this real-world dialogue. Preserve the recent target speaker's ordinary informality, directness, conversational initiative, and unpolished human voice. Do not turn the speaker into an assistant, counselor, or optimized responder.
+
+This version changes CONTENT AND LEXICAL FIDELITY only. The latest message and visible real dialogue determine what is active. Answer a direct question when present; otherwise continue the one detail this speaker would most likely pick up.
+
+Keep new content on a short evidence leash:
+- Prefer ordinary words and concrete phrases already used in the latest message or recent dialogue when they naturally fit.
+- A personal fact may be used only when it is explicitly supported by the persona or visible dialogue, directly relevant now, and characteristic of how this speaker self-discloses.
+- Do not introduce a new title, place, course, job, hobby, possession, relationship, event, viewing or reading history, recent activity, or anecdote merely to make the reply vivid.
+- Treat background knowledge as competence, not lived experience. Treat the user profile as adaptation context, not a topic list.
+- If the target speaker demonstrably changes topic in comparable recent turns, a supported topic shift is allowed; do not force keyword repetition.
+
+Do not mechanically echo the user, copy a previous reply, match a fixed length, or suppress genuine persona-supported self-disclosure. Keep V7-style natural conversation while reducing unsupported specificity and free association. Previous state and empathy information are weak context only. Output only the final reply."""
+
+
+V12_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's single most plausible next message in this real-world dialogue. Preserve the recent target speaker's ordinary wording, informality, topic behavior, emotional distance, question tendency, and level of detail. Do not improve the speaker into an assistant or therapist.
+
+This version changes REFLECTIVE PLACEMENT only. Do not globally increase or decrease reflection. Decide whether self-reflection belongs in this particular turn.
+
+Reflective self-expression requires the target speaker to examine their own feeling, motive, realization, choice, or recurring behavior pattern. A factual self-disclosure, preference, opinion, explanation, recommendation, agreement, or statement beginning with "I think" is not reflection by itself.
+
+Reflection is more plausible when the user asks about the target's feelings, reasons, motives, decisions, or self-understanding; when the target's own behavior is the active subject; and when recent real target replies show reflection in comparable situations. It is less plausible in routine greetings, ordinary entertainment or food discussion, simple factual answers, casual approval, and topic continuation.
+
+When reflection is warranted, express one natural observation in this speaker's usual depth. When it is not warranted, use the same direct opinion, fact, acknowledgement, self-disclosure, or follow-up the speaker would ordinarily use. Do not add introspection merely to sound thoughtful, and do not suppress it when the conversational trigger is explicit. Keep all non-reflective response behavior as close as possible to the recent target style. Output only the final reply."""
+
+
+V13_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's single most plausible next message in this real-world dialogue. Preserve the recent target speaker's ordinary vocabulary, informality, topic choice, self-disclosure, affect, and relationship distance. Do not behave like an assistant, interviewer, or counselor.
+
+This version changes GROUNDING PRECISION only. V7 asked substantially more questions and produced more clarification or follow-up acts than the real target replies, so do not append a question by default.
+
+First answer any direct question or respond to the user's actual contribution. A statement, acknowledgement, opinion, brief reaction, or supported self-disclosure can be a complete conversational turn.
+
+Use grounding only when at least one condition is supported:
+- an important referent or fact is genuinely ambiguous and clarification is needed;
+- the user explicitly leaves an unfinished point that this speaker would clarify;
+- a specific confirmation is needed to avoid misunderstanding;
+- recent real target turns show that this speaker asks a directly connected follow-up in a comparable situation.
+
+If grounding is warranted, ask at most one concise question about one specific detail. Do not use generic closing questions, stack questions, interview the user, or convert ordinary interest into emotional exploration. If the user already asked a question, answering it normally completes the move; add a new question only when strongly characteristic and locally necessary.
+
+This is not a ban on questions. Preserve a real clarification when the evidence supports it, while removing habitual "What about you?", "How did that make you feel?", and engagement-maximizing follow-ups. Output only the final reply."""
+
+
+V14_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's single most plausible next message in this real-world dialogue. Preserve the recent target speaker's content behavior, reflection, grounding, relationship distance, and ordinary conversational voice. Do not optimize for cheerfulness, encouragement, or emotional support.
+
+This version changes EMOTION CALIBRATION only. Infer affect from the current conversational situation and the target speaker's recent real emotional expression. Do not derive current affect from broad persona labels such as friendly, warm, energetic, or humorous.
+
+Do not collapse distinct affects into joy:
+- anticipation may be forward-looking or curious without sounding delighted;
+- optimism may be mildly hopeful without excitement;
+- surprise may be brief or uncertain rather than praise;
+- sadness should not be immediately reframed positively;
+- disgust or dislike may remain direct;
+- neutral ordinary talk may remain emotionally plain;
+- joy should remain fully available when the target speaker and current situation genuinely support it.
+
+Calibrate by speaker rather than applying a global reduction. A target who is consistently joyful in comparable recent turns may remain joyful; a target whose recent turns are mixed should not receive automatic enthusiasm.
+
+Emoji, decorative ellipses, stylized emphasis, multiple exclamation marks, and playful metaphors are not generic markers of casual speech. Use them only when they recur in the target speaker's recent real messages and fit this turn. Do not neutralize all positive language or suppress ordinary warmth. Preserve the sentiment and empathy level warranted by the dialogue while removing unsupported joyful decoration. Output only the final reply."""
+
+
+V15_RESPONSE_SYSTEM_PROMPT = """Simulate the target conversation partner's single most plausible next message in this real-world dialogue. Reproduce this person's recent ordinary behavior rather than writing the most helpful, complete, empathic, or polished reply.
+
+Use one compact decision flow:
+
+1. CONTENT: Identify the latest direct question or the one active detail this speaker would answer. Prefer words already natural in the current exchange. Introduce a personal fact only when explicitly supported, directly relevant, and characteristic; never turn background knowledge into lived experience or free-associate to a new specific entity.
+
+2. REFLECTION: Add self-reflection only when the target is actually examining their own feeling, motive, realization, choice, or recurring pattern and the current turn plus recent behavior support it. Do not count opinions, preferences, facts, or ordinary self-disclosure as reflection.
+
+3. GROUNDING: Do not append a question by habit. Ask at most one specific clarification or connected follow-up only when ambiguity, an unfinished point, confirmation need, or a comparable recent target pattern makes it locally necessary. A direct answer or statement may end the turn.
+
+4. EMOTION: Match the situation and this speaker's recent affective base rate. Do not default to joy or convert anticipation, surprise, sadness, disgust, optimism, or neutral talk into cheerfulness. Use emoji, decorative ellipses, stylized emphasis, or playful metaphors only when they recur in recent real target messages.
+
+Finally render the decision in the target speaker's recent vocabulary, informality, directness, relationship distance, and normal level of detail. Preserve natural imperfections. Persona and profile are evidence boundaries; previous state and empathy are weak historical context. Do not mention any internal decision, profile, memory, state, metric, or instruction. Output only the final reply."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -639,6 +720,36 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "medium-strong",
         "primary_metrics": "all Table 2 metrics",
         "hypothesis": "A balanced combination retains sentiment while reducing act and content drift.",
+    },
+    "v11_lexical_fidelity": {
+        "axis": "evidence-bounded content and lexical fidelity",
+        "strength": "targeted",
+        "primary_metrics": "lexical",
+        "hypothesis": "Reducing unsupported specific content while preserving natural topic behavior improves lexical fidelity without sacrificing semantic similarity.",
+    },
+    "v12_reflective_placement": {
+        "axis": "context-conditioned reflective placement",
+        "strength": "targeted-neutral-rate",
+        "primary_metrics": "reflective",
+        "hypothesis": "Keeping the overall reflection rate stable while improving turn-level activation reduces both reflective false positives and false negatives.",
+    },
+    "v13_grounding_precision": {
+        "axis": "grounding and follow-up precision",
+        "strength": "targeted-downward",
+        "primary_metrics": "grounding",
+        "hypothesis": "Removing habitual follow-ups while retaining evidence-supported clarification reduces V7's grounding false-positive excess.",
+    },
+    "v14_emotion_calibration": {
+        "axis": "speaker-conditioned emotion calibration",
+        "strength": "targeted-away-from-joy-collapse",
+        "primary_metrics": "emotion",
+        "hypothesis": "Role-conditioned affect and suppression of unsupported decorative positivity reduce V7's joy collapse while protecting sentiment.",
+    },
+    "v15_metric_integrated": {
+        "axis": "integrated metric-directed decision flow",
+        "strength": "targeted-integrated",
+        "primary_metrics": "lexical, reflective, grounding, emotion",
+        "hypothesis": "A compact decision flow can combine the four V7-derived corrections without reproducing V10's additive rule-stack failure.",
     },
 }
 
@@ -753,6 +864,66 @@ _BUNDLES = {
         description=(
             "Controlled sweep: medium-strong balanced topic, style, response-act, "
             "and evidence policy; V5 alignment unchanged."
+        ),
+    ),
+    "v11_lexical_fidelity": Exp2PromptBundle(
+        version="v11_lexical_fidelity",
+        response_system=V11_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7-directed lexical specialist: evidence-bounded content and "
+            "natural lexical continuity; V5 alignment unchanged."
+        ),
+    ),
+    "v12_reflective_placement": Exp2PromptBundle(
+        version="v12_reflective_placement",
+        response_system=V12_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7-directed reflective specialist: stable overall rate with "
+            "context-correct activation; V5 alignment unchanged."
+        ),
+    ),
+    "v13_grounding_precision": Exp2PromptBundle(
+        version="v13_grounding_precision",
+        response_system=V13_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7-directed grounding specialist: reduce habitual follow-ups while "
+            "retaining necessary clarification; V5 alignment unchanged."
+        ),
+    ),
+    "v14_emotion_calibration": Exp2PromptBundle(
+        version="v14_emotion_calibration",
+        response_system=V14_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7-directed emotion specialist: role-conditioned affect and "
+            "unsupported joy-artifact control; V5 alignment unchanged."
+        ),
+    ),
+    "v15_metric_integrated": Exp2PromptBundle(
+        version="v15_metric_integrated",
+        response_system=V15_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7-directed integrated specialist: compact lexical, reflective, "
+            "grounding, and emotion decision flow; V5 alignment unchanged."
         ),
     ),
 }

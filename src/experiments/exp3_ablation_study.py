@@ -74,7 +74,7 @@ from .exp3_user_simulator import (
 from .extract_profile_persona_en import extract_profile
 
 
-PROTOCOL_VERSION = "exp3_component_specific_v3"
+PROTOCOL_VERSION = "exp3_component_specific_v8"
 EXPLICIT_TRAIN_RATIO = 0.9
 ONLINE_TRAIN_RATIO = 0.5
 DEFAULT_FIXED_OMEGA = 0.5
@@ -175,6 +175,11 @@ CONDITIONS: Dict[str, ExperimentCondition] = {
 }
 
 CONDITION_ORDER = tuple(CONDITIONS)
+DEFAULT_CONDITION_KEYS = {
+    TRACK_EXPLICIT: ("explicit_user_modeling", "wo_explicit_user_modeling"),
+    TRACK_EXPLORATION: ("adaptive_exploration",),
+    TRACK_BAYESIAN: ("bayesian_online", "static_profile"),
+}
 
 
 SELF_MODEL_RESPONSE_ADDENDUM = """
@@ -257,7 +262,7 @@ class Exp3Agent(StateDrivenCompanionAgent):
         if self.condition.uses_explicit_profile:
             return super()._run_empathy_alignment(user_input, relevant_memory)
         state = state_axis(self.user_profile)
-        original_profile = state.get("static_profile", {})
+        original_profile = state["static_profile"]
         state["static_profile"] = {}
         try:
             return super()._run_empathy_alignment(user_input, relevant_memory)
@@ -331,11 +336,12 @@ def select_conditions(
     requested_set = set(requested)
     result: Dict[str, list[ExperimentCondition]] = {}
     for track in tracks:
+        allowed_keys = requested_set if requested_set else set(DEFAULT_CONDITION_KEYS[track])
         conditions = [
             CONDITIONS[key]
             for key in CONDITION_ORDER
             if CONDITIONS[key].track == track
-            and (not requested_set or key in requested_set)
+            and key in allowed_keys
         ]
         if requested_set and not conditions:
             continue
@@ -465,6 +471,49 @@ def prepare_condition_assets(
     return target
 
 
+def surface_style_guidance(messages: Sequence[str]) -> list[str]:
+    """Describe writing surface form without exposing any message content."""
+    if not messages or any(not isinstance(message, str) or not message.strip() for message in messages):
+        raise ValueError("style guidance requires non-empty user messages")
+    count = len(messages)
+    word_counts = [len(message.split()) for message in messages]
+    char_counts = [len(message) for message in messages]
+    return [
+        f"mean_words_per_message={mean(word_counts):.2f}",
+        f"mean_characters_per_message={mean(char_counts):.2f}",
+        f"question_mark_message_rate={sum('?' in message for message in messages) / count:.3f}",
+        f"exclamation_mark_message_rate={sum('!' in message for message in messages) / count:.3f}",
+        f"multiline_message_rate={sum(chr(10) in message for message in messages) / count:.3f}",
+    ]
+
+
+def extract_profile_strict(
+    llm: LLMClient,
+    sessions: list[list[Dict[str, Any]]],
+    user_name: str,
+    max_attempts: int = 3,
+) -> Dict[str, Any]:
+    """Retry model generation, but accept only the unchanged fixed profile schema."""
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be positive")
+    last_error: ValueError | None = None
+    for attempt in range(1, max_attempts + 1):
+        profile = extract_profile(llm, sessions, user_name)
+        try:
+            _validate_extracted_profile(profile)
+            return profile
+        except ValueError as exc:
+            last_error = exc
+            print(
+                f"[Exp3 profile schema retry] attempt={attempt}/{max_attempts} "
+                f"error={exc}"
+            )
+    assert last_error is not None
+    raise RuntimeError(
+        f"profile extraction failed the fixed schema after {max_attempts} attempts"
+    ) from last_error
+
+
 def prepare_hidden_profile(
     case: ExperimentCase,
     output_dir: str | Path,
@@ -515,8 +564,9 @@ def prepare_hidden_profile(
     all_keys = session_keys(chat)
     all_sessions = [chat[key] for key in all_keys]
     llm = LLMClient(config_path)
-    hidden_profile = extract_profile(llm, all_sessions, case.user_speaker)
-    _validate_extracted_profile(hidden_profile)
+    hidden_profile = extract_profile_strict(
+        llm, all_sessions, case.user_speaker
+    )
     initial_profile = load_json(str(initial_source))
     _validate_extracted_profile(initial_profile)
 
@@ -544,11 +594,13 @@ def prepare_hidden_profile(
         "held_out_sessions": list(case.test_sessions),
         **claim_manifest,
     }
-    style_examples = [
+    initialization_bubbles = bubbles_for_sessions(chat, case.train_sessions)
+    initialization_messages = [
         bubble.content
-        for bubble in held_out_bubbles
+        for bubble in initialization_bubbles
         if bubble.speaker == case.user_speaker
-    ][:20]
+    ]
+    style_examples = surface_style_guidance(initialization_messages)
     save_json(str(profile_path), hidden_profile)
     save_json(str(claims_path), claim_manifest)
     save_json(str(context_path), {
@@ -561,7 +613,10 @@ def prepare_hidden_profile(
             "semantic new/refinement claims relative to the first-50% profile, "
             "with direct held-out user-message evidence"
         ),
-        "style_source": "held-out 50% user messages only",
+        "style_source": (
+            "content-free surface statistics from initial 50% user messages; "
+            "no raw user utterance is exposed to the renderer"
+        ),
         "style_examples": style_examples,
         "hidden_from_exploration_agent": True,
         "all_sessions": all_keys,
@@ -706,7 +761,7 @@ def run_dataset_replay(
         _append_real_bubble(agent, case, user_bubble)
         relevant_memory = agent.memory_manager.retrieve_relevant_memory(example.user_message)
         before = profile_snapshot(agent.user_profile)
-        static_profile = state_axis(agent.user_profile).get("static_profile", {})
+        static_profile = state_axis(agent.user_profile)["static_profile"]
         omega = agent.epistemic_tracker.compute(static_profile)
         generated_reply, alignment, previous_empathy, model_timing = (
             _generate_with_parallel_alignment(agent, example.user_message, relevant_memory)
@@ -738,12 +793,12 @@ def run_dataset_replay(
         }
         states.append({
             **shared,
-            "current_understanding": alignment.get("understanding", {}),
-            "future_understanding": alignment.get("prediction", {}),
-            "exploration_decision": alignment.get("exploration", {}),
+            "current_understanding": alignment["understanding"],
+            "future_understanding": alignment["prediction"],
+            "exploration_decision": alignment["exploration"],
             "empathy_state_for_next_turn": deepcopy(agent.last_empathy_state),
-            "core_current_state": state.get("current_state", {}),
-            "core_projected_state": state.get("projected_state", {}),
+            "core_current_state": state["current_state"],
+            "core_projected_state": state["projected_state"],
         })
         predictions.append({
             **asdict(example),
@@ -780,6 +835,23 @@ def _simulator_assets(
         raise FileNotFoundError(f"hidden simulator assets missing for {case.case_id}")
     manifest = load_json(str(claims_path))
     context = load_json(str(context_path))
+    required_manifest = {
+        "protocol_version", "case_id", "dataset_sha256",
+        "initialization_sessions", "held_out_sessions", "initial_claims",
+        "full_claims", "heldout_evidence_claims", "sensitivity_policy",
+        "audit", "hidden_claims",
+    }
+    required_context = {
+        "protocol_version", "case_id", "dataset_sha256", "user_name",
+        "hidden_profile_source", "hidden_target_definition", "style_source",
+        "style_examples", "hidden_from_exploration_agent", "all_sessions",
+        "initialization_sessions", "held_out_sessions", "initial_profile_path",
+        "hidden_claim_manifest_path",
+    }
+    if not isinstance(manifest, dict) or set(manifest) != required_manifest:
+        raise RuntimeError(f"hidden claim manifest schema mismatch for {case.case_id}")
+    if not isinstance(context, dict) or set(context) != required_context:
+        raise RuntimeError(f"simulator context schema mismatch for {case.case_id}")
     for field, expected in (
         ("protocol_version", PROTOCOL_VERSION),
         ("case_id", case.case_id),
@@ -787,6 +859,15 @@ def _simulator_assets(
     ):
         if manifest[field] != expected or context[field] != expected:
             raise RuntimeError(f"incompatible simulator {field} for {case.case_id}")
+    if (
+        manifest["initialization_sessions"] != list(case.train_sessions)
+        or manifest["held_out_sessions"] != list(case.test_sessions)
+        or context["initialization_sessions"] != list(case.train_sessions)
+        or context["held_out_sessions"] != list(case.test_sessions)
+        or context["hidden_from_exploration_agent"] is not True
+        or not isinstance(context["style_examples"], list)
+    ):
+        raise RuntimeError(f"simulator split/context mismatch for {case.case_id}")
     return hidden_claims_from_manifest(manifest), context
 
 
@@ -964,7 +1045,7 @@ def run_exploration_simulation(
         conversation.append({"speaker": case.user_speaker, "text": current_user})
         relevant_memory = agent.memory_manager.retrieve_relevant_memory(current_user)
         before = profile_snapshot(agent.user_profile)
-        static_profile = state_axis(agent.user_profile).get("static_profile", {})
+        static_profile = state_axis(agent.user_profile)["static_profile"]
         omega = agent.epistemic_tracker.compute(static_profile)
         reply, alignment, previous_empathy, timing = _generate_with_parallel_alignment(
             agent, current_user, relevant_memory
@@ -1100,7 +1181,7 @@ def dataset_comparison_payload(
             "metrics": aggregate["ours"],
             "degradation_vs_first_condition": degradation,
             "early_middle_late": (
-                stage_aggregates.get(condition.key, {})
+                stage_aggregates[condition.key]
                 if stage_aggregates is not None
                 else {}
             ),
@@ -1278,104 +1359,6 @@ def evaluate_dataset_tracks(
     return outputs
 
 
-def _legacy_render_exploration_table(
-    aggregates: Mapping[str, Mapping[str, Any]],
-    conditions: Sequence[ExperimentCondition],
-) -> str:
-    metrics = (
-        ("final_precision", "Profile Precision ↑"),
-        ("final_recall", "Profile Recall ↑"),
-        ("final_f1", "Profile F1 ↑"),
-        ("recall_gain", "Recall Gain ↑"),
-        ("discovery_efficiency", "Efficiency ↑"),
-        ("mean_user_burden", "Burden ↓"),
-        ("refusal_rate", "Refusal ↓"),
-    )
-    lines = [
-        "# Exp3-B: Adaptive Exploration (50/50 Hidden-Profile Simulation)", "",
-        "| Method | " + " | ".join(label for _, label in metrics) + " |",
-        "| --- | " + " | ".join("---:" for _ in metrics) + " |",
-    ]
-    for condition in conditions:
-        aggregate = aggregates[condition.key]
-        lines.append("| " + condition.label + " | " + " | ".join(
-            _format_stat(aggregate[key]) for key, _ in metrics
-        ) + " |")
-    return "\n".join(lines) + "\n"
-
-
-def _legacy_evaluate_exploration_track(
-    conditions: Sequence[ExperimentCondition],
-    cases: Sequence[ExperimentCase],
-    output_dir: str | Path,
-    config_path: str,
-    judge_model: str | None,
-    judge_config_section: str,
-    sim_seeds: int,
-) -> Dict[str, str]:
-    judge = Exp2JudgeClient(config_path, config_section=judge_config_section, model=judge_model)
-    aggregates: Dict[str, Dict[str, Any]] = {}
-    all_results: Dict[str, list[Dict[str, Any]]] = {}
-    for condition in conditions:
-        rows = []
-        for case in cases:
-            hidden_profile, _ = _simulator_assets(output_dir, case)
-            for seed_index in range(1, sim_seeds + 1):
-                paths = SimulationPaths.for_run(
-                    output_dir, condition, case, seed_index
-                )
-                if paths.evaluation.exists():
-                    result = load_json(str(paths.evaluation))
-                else:
-                    if not paths.generation_summary.exists() or not paths.final_profile.exists():
-                        raise FileNotFoundError(
-                            f"simulation incomplete for {condition.key}/{case.case_id}/seed {seed_index}"
-                        )
-                    summary = load_json(str(paths.generation_summary))
-                    initial_profile = load_json(str(paths.initial_profile))
-                    final_profile = load_json(str(paths.final_profile))
-                    discovery = evaluate_profile_discovery(
-                        judge, hidden_profile, initial_profile, final_profile
-                    )
-                    round_count = int(summary["round_count"])
-                    result = {
-                        "case_id": case.case_id,
-                        "condition": condition.key,
-                        "seed_index": seed_index,
-                        **discovery,
-                        "discovery_efficiency": round(
-                            discovery["recall_gain"] / round_count if round_count else 0.0,
-                            6,
-                        ),
-                        "mean_user_burden": summary["mean_user_burden"],
-                        "refusal_rate": summary["refusal_rate"],
-                        "exploration_question_rate": summary["exploration_question_rate"],
-                        "profile_entropy_reduction": summary["profile_entropy_reduction"],
-                        "round_count": round_count,
-                        "revealed_hidden_claim_count": summary["revealed_hidden_claim_count"],
-                    }
-                    save_json(str(paths.evaluation), result)
-                rows.append(result)
-        all_results[condition.key] = rows
-        aggregates[condition.key] = aggregate_discovery_results(rows)
-
-    result_dir = track_root(output_dir, TRACK_EXPLORATION) / "evaluation"
-    result_dir.mkdir(parents=True, exist_ok=True)
-    json_path = result_dir / "comparison.json"
-    md_path = result_dir / "comparison.md"
-    baseline = conditions[0].key
-    save_json(str(json_path), {
-        "protocol_version": PROTOCOL_VERSION,
-        "reference_condition": baseline,
-        "aggregates": aggregates,
-        "per_run": all_results,
-    })
-    md_path.write_text(
-        render_exploration_table(aggregates, conditions), encoding="utf-8"
-    )
-    return {"comparison_json": str(json_path), "comparison_markdown": str(md_path)}
-
-
 def render_exploration_table(
     aggregates: Mapping[str, Mapping[str, Any]],
     conditions: Sequence[ExperimentCondition],
@@ -1452,9 +1435,14 @@ def _exploration_run_result(
     discovery = evaluate_profile_discovery(
         judge, hidden_claims, initial_profile, final_profile
     )
-    initial_coverage = evaluate_hidden_coverage(judge, hidden_claims, initial_profile)
-    supported_initial = set(initial_coverage["supported_hidden_claim_ids"])
+    supported_initial = set(
+        discovery["judge_annotations"]["hidden_supported_by_initial"]
+    )
+    supported_final = set(
+        discovery["judge_annotations"]["hidden_supported_by_final"]
+    )
     previous_hash = profile_snapshot(initial_profile)["static_profile_sha256"]
+    final_hash = profile_snapshot(final_profile)["static_profile_sha256"]
     previous_supported = set(supported_initial)
     curve = [{
         "turn": 0,
@@ -1462,7 +1450,8 @@ def _exploration_run_result(
         "learned_claim_ids": [],
         "cumulative_revealed_count": 0,
         "cumulative_learned_count": 0,
-        "hidden_coverage": 0.0,
+        "profile_hidden_coverage": 0.0,
+        "end_to_end_coverage": 0.0,
     }]
     cumulative_revealed: set[str] = set()
     first_revealed_turn: Dict[str, int] = {}
@@ -1488,12 +1477,17 @@ def _exploration_run_result(
         candidate_hash = profile_snapshot(candidate)["static_profile_sha256"]
         if candidate_hash != row["profile_after"]["static_profile_sha256"]:
             raise RuntimeError(f"profile snapshot hash mismatch at turn {expected_turn}")
-        if candidate_hash == previous_hash:
+        if expected_turn == round_count:
+            if candidate_hash != final_hash:
+                raise RuntimeError("last profile snapshot does not match final profile")
+            supported = set(supported_final)
+        elif candidate_hash == previous_hash:
             supported = set(previous_supported)
         else:
             coverage = evaluate_hidden_coverage(judge, hidden_claims, candidate)
             supported = set(coverage["supported_hidden_claim_ids"])
         learned = supported - supported_initial
+        evidence_linked = learned & cumulative_revealed
         newly_learned = learned - (previous_supported - supported_initial)
         for claim_id in newly_learned:
             first_learned_turn.setdefault(claim_id, expected_turn)
@@ -1503,17 +1497,16 @@ def _exploration_run_result(
             "learned_claim_ids": sorted(learned),
             "cumulative_revealed_count": len(cumulative_revealed),
             "cumulative_learned_count": len(learned),
-            "hidden_coverage": round(len(learned) / len(hidden_claims), 6),
+            "profile_hidden_coverage": round(len(learned) / len(hidden_claims), 6),
+            "end_to_end_coverage": round(len(evidence_linked) / len(hidden_claims), 6),
         })
         previous_hash = candidate_hash
         previous_supported = supported
 
     learned_final = previous_supported - supported_initial
-    final_judged = set(discovery["judge_annotations"]["hidden_supported_by_final"]) - supported_initial
-    if learned_final != final_judged:
-        raise RuntimeError("final snapshot coverage disagrees with final discovery judgment")
+    evidence_linked_final = learned_final & cumulative_revealed
     elicitation_rate = len(cumulative_revealed) / len(hidden_claims)
-    end_to_end = len(learned_final) / len(hidden_claims)
+    end_to_end = len(evidence_linked_final) / len(hidden_claims)
     uptake = (
         len(learned_final & cumulative_revealed) / len(cumulative_revealed)
         if cumulative_revealed else None
@@ -1522,26 +1515,37 @@ def _exploration_run_result(
     for claim in hidden_claims:
         layer = claim.path.split(".", 1)[0]
         layer_row = per_layer.setdefault(layer, {
-            "target_claim_ids": [], "revealed_claim_ids": [], "learned_claim_ids": [],
+            "target_claim_ids": [], "revealed_claim_ids": [],
+            "profile_learned_claim_ids": [],
+            "evidence_linked_discovered_claim_ids": [],
         })
         layer_row["target_claim_ids"].append(claim.claim_id)
         if claim.claim_id in cumulative_revealed:
             layer_row["revealed_claim_ids"].append(claim.claim_id)
         if claim.claim_id in learned_final:
-            layer_row["learned_claim_ids"].append(claim.claim_id)
+            layer_row["profile_learned_claim_ids"].append(claim.claim_id)
+        if claim.claim_id in evidence_linked_final:
+            layer_row["evidence_linked_discovered_claim_ids"].append(claim.claim_id)
     for layer_row in per_layer.values():
         target_count = len(layer_row["target_claim_ids"])
         layer_row["target_count"] = target_count
         layer_row["elicitation_rate"] = len(layer_row["revealed_claim_ids"]) / target_count
-        layer_row["discovery_rate"] = len(layer_row["learned_claim_ids"]) / target_count
+        layer_row["profile_hidden_coverage"] = len(layer_row["profile_learned_claim_ids"]) / target_count
+        layer_row["end_to_end_discovery_rate"] = (
+            len(layer_row["evidence_linked_discovered_claim_ids"]) / target_count
+        )
     claim_details = [{
         **claim.as_dict(),
         "revealed": claim.claim_id in cumulative_revealed,
         "first_revealed_turn": first_revealed_turn.get(claim.claim_id),
         "learned": claim.claim_id in learned_final,
         "first_learned_turn": first_learned_turn.get(claim.claim_id),
+        "evidence_linked_discovery": claim.claim_id in evidence_linked_final,
     } for claim in hidden_claims]
-    learned_turns = sorted(first_learned_turn.values())
+    discovery_turns = sorted(
+        max(first_revealed_turn[claim_id], first_learned_turn[claim_id])
+        for claim_id in evidence_linked_final
+    )
     return {
         "protocol_version": PROTOCOL_VERSION,
         "case_id": case.case_id,
@@ -1551,13 +1555,18 @@ def _exploration_run_result(
         **discovery,
         "revealed_hidden_claim_ids": sorted(cumulative_revealed),
         "learned_hidden_claim_ids": sorted(learned_final),
+        "evidence_linked_discovered_claim_ids": sorted(evidence_linked_final),
+        "unelicited_learned_claim_ids": sorted(learned_final - cumulative_revealed),
         "elicitation_rate": round(elicitation_rate, 6),
         "uptake_rate": None if uptake is None else round(uptake, 6),
         "end_to_end_discovery_rate": round(end_to_end, 6),
-        "first_discovery_turn": learned_turns[0] if learned_turns else None,
-        "rounds_per_discovery": None if not learned_final else round(round_count / len(learned_final), 6),
-        "discovery_efficiency": round(len(learned_final) / round_count, 6),
-        "coverage_auc": round(mean(point["hidden_coverage"] for point in curve), 6),
+        "first_discovery_turn": discovery_turns[0] if discovery_turns else None,
+        "rounds_per_discovery": (
+            None if not evidence_linked_final
+            else round(round_count / len(evidence_linked_final), 6)
+        ),
+        "discovery_efficiency": round(len(evidence_linked_final) / round_count, 6),
+        "coverage_auc": round(mean(point["end_to_end_coverage"] for point in curve), 6),
         "completion_curve": curve,
         "per_layer": per_layer,
         "claim_details": claim_details,

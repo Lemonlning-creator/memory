@@ -12,7 +12,7 @@
 | Exp3-B Adaptive Exploration | 50/50 | Adaptive；可选 Fixed omega | 隐藏画像模拟用户 | 新增画像、正确性、轮数、完善曲线 |
 | Exp3-C Bayesian Updating | 50/50 | Bayesian Online / Static | 固定 REALTALK 时序回放 | 八项回复指标及 Early/Middle/Late 配对差值 |
 
-默认条件 key：
+可用条件 key：
 
 ```text
 explicit_user_modeling
@@ -22,6 +22,8 @@ fixed_exploration
 bayesian_online
 static_profile
 ```
+
+未传 `--condition` 时，Exp3-A 和 Exp3-C 默认运行各自两组；Exp3-B 默认只运行 `adaptive_exploration` 并输出能力评估。若需要可选的 fixed-omega 比较，必须显式同时传入两个探索条件。
 
 ## Exp3-A：显式用户建模
 
@@ -43,6 +45,8 @@ static_profile
 4. 对 `P*` 中每条 atomic claim 相对 `P0` 做语义审计：`known`、`new`、`refinement`、`contradiction`、`unsupported`。
 5. 隐藏目标 `H` 仅保留具有后 50% 用户消息直接证据的 `new` 或 `refinement`；矛盾与无证据内容不进入目标集合，但保存在审计记录中。
 
+模拟用户的语言风格只使用前 50% 消息计算出的平均长度、问号率等无内容表层统计；原始话术不进入可见回复生成器。后 50% 原始话术只进入私有证据审计。
+
 这里比较的是 claim 语义，而不是简单比较字段是否为空。同一个字段新增了更具体且兼容的信息时，记为 `refinement`。
 
 ### 两阶段模拟用户
@@ -59,7 +63,8 @@ static_profile
 
 - Elicitation：`|R_T| / |H|`
 - Uptake：`|L_T ∩ R_T| / |R_T|`；当 `R_T` 为空时输出 `null`，不写成 0
-- End-to-end discovery：`|L_T| / |H|`
+- Final hidden coverage：`|L_T| / |H|`，同时单独列出未被模拟用户披露却被画像猜中的 claim
+- End-to-end discovery：`|L_T ∩ R_T| / |H|`，只把对话中确实披露且被画像吸收的 claim 计为探索发现
 - 新增画像正确率及 unsupported novel claim rate
 - 首次发现轮次、每发现一条画像所需轮数、每轮发现效率
 - 逐轮累计披露/学习曲线及 Coverage AUC

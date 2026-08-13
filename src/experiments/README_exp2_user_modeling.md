@@ -1,287 +1,287 @@
-# Experiment 2: User Modeling Evaluation
+# Experiment 2：User Modeling Evaluation
 
-本文件说明如何在 NVIDIA RTX 3090 机器上部署和运行实验二。
+本文件说明实验二的设计、3090 环境部署、主实验运行、Table 2 评估、Prompt 版本实验和定性曲线。
 
-实验二有两个相互独立的入口：
+当前有两个相互独立的入口：
 
 ```text
-src/experiments/exp2_user_modeling.py              # Table 2 主结果
+src/experiments/exp2_user_modeling.py              # 主实验与 Table 2
 src/experiments/exp2_user_modeling_qualitative.py  # 画像进化与画像熵
 ```
 
-主结果按以下顺序运行：
+主实验流程：
 
 ```text
-prepare -> generate -> evaluate
+前 90% Session：prepare 用户画像和智能体人设
+后 10% Session：generate 智能体回复 → evaluate Table 2 指标
 ```
 
-Qualitative Analysis 使用独立脚本单独运行，不依赖 `generate` 或 `evaluate`。
+定性分析不生成智能体回复，也不计算 Table 2；它从空画像开始重放前 90% 的真实对话。
 
-## 1. 实验协议
+---
+
+## 1. 当前推荐命令
+
+### 1.1 V11–V15 定向 Prompt 实验
+
+当前 V5 的用户画像和人设已经准备完成，V6–V10 也已经完成。运行 V11–V15 时不需要重新执行 `prepare`：
+
+```bash
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
+SWEEP_ROOT=data/exp2_prompt_sweep_v11_v15_directed \
+CASE_SET=diagnostic3 \
+bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+```
+
+`diagnostic3` 只运行 Chat 1、Chat 4 和 Chat 9，共 24 条测试回复。该子集是根据完整 V7 的逐样本结果选择的：四个待优化指标、问句/Emoji 比例以及 Reflective/Grounding 假阳性率均接近全量 117 条，同时保留 elise、Paola 和 Fahim Khan 三种差异明显的目标角色。脚本依次运行 V11、V12、V13、V14 四个专项版，最后运行集成版 V15。中断后重新执行同一命令即可续跑。
+
+结果位于：
+
+```text
+data/exp2_prompt_sweep_v11_v15_directed/prompt_sweep_summary.md
+data/exp2_prompt_sweep_v11_v15_directed/prompt_sweep_summary.json
+data/exp2_prompt_sweep_v11_v15_directed/<prompt-version>/evaluation/table2_main_results.md
+data/exp2_prompt_sweep_v11_v15_directed/<prompt-version>.log
+```
+
+### 1.2 服务器后台运行
+
+为了避免 VS Code、SSH 或局域网断开后实验停止，使用 `tmux`：
+
+```bash
+cd ~/fxw/memory
+tmux new -s exp2-sweep
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+在 tmux 中执行实验命令。按 `Ctrl+B`，再按 `D` 退出；重新进入：
+
+```bash
+tmux attach -t exp2-sweep
+```
+
+---
+
+## 2. 实验设计
+
+### 2.1 Research Question
+
+> RQ2：Does explicit user modeling enable better personalized interactions?
+
+### 2.2 数据与切分
 
 - 数据集：REALTALK 的 `dataset/Chat_*.json`。
-- 划分：每个对话按 Session 时间顺序进行 9:1 划分。
-- 前 90% Session：一次性抽取用户画像和智能体人设。
-- 后 10% Session：生成智能体回复并进行评估。
-- 测试历史：始终使用数据集中的真实双方回复，即 teacher forcing。
-- 测试输入：真实历史、当前用户消息、训练集用户画像、训练集智能体人设。
-- 评估对象：Ours 生成回复与数据集真实智能体回复。
-- 测试阶段不使用真实目标回复或未来用户消息作为生成输入。
+- 每个对话按 Session 时间顺序进行 9:1 划分。
+- 前 90% Session：一次性抽取被建模用户的用户画像，以及目标智能体的人设。
+- 后 10% Session：生成目标智能体回复并评估。
+- 用户画像和人设只读取训练 Session。
+- 主实验测试阶段不在线更新长期静态画像，但每轮更新短期 `current_state` 和 `projected_state`。
 
-## 2. 主结果指标
-
-最终表格沿用 REALTALK Table 2，并在原始两行后追加 `Ours`：
-
-| 分组 | 指标 | 计算方式 | 方向 |
-|---|---|---|---|
-| Content Similarity | Lexical | ROUGE-L F1 | 越高越好 |
-| Content Similarity | Semantic | BERTScore F1 | 越高越好 |
-| Message-level EI | Reflective | 生成回复标签与真实回复标签的准确率 | 越高越好 |
-| Message-level EI | Grounding | 生成回复标签与真实回复标签的准确率 | 越高越好 |
-| Message-level EI | Sentiment | 生成回复标签与真实回复标签的准确率 | 越高越好 |
-| Message-level EI | Emotion | 生成回复标签与真实回复标签的准确率 | 越高越好 |
-| Message-level EI | Intimacy | 生成回复与真实回复的分数绝对差 | 越低越好 |
-| Message-level EI | Empathy | 生成回复与真实回复的总分绝对差 | 越低越好 |
-
-### 2.1 指标含义
-
-- **Lexical（词汇相似度）**：使用 ROUGE-L F1 比较生成回复与数据集真实回复的最长公共子序列，反映两者在用词和句子片段上的重合程度。取值通常为 0–1，越高表示表层表达越接近真实回复；它不直接代表回复是否自然或正确。
-- **Semantic（语义相似度）**：使用 `roberta-large` 的 BERTScore F1 比较生成回复与真实回复的上下文语义，允许两者使用不同措辞表达相近含义。越高表示整体语义越接近真实回复。
-- **Reflective（反思性语言一致性）**：分别判断生成回复和真实回复是否表现出自我观察、对自身反应的视角理解，或对行为动机和目标的解释，再计算两者标签的一致率。只陈述事实、偏好、决定或普通认可不算反思性语言。取值为 0–1，越高表示生成回复的反思性表达模式与真实回复越一致；它不是对“反思越多越好”的直接评分。
-- **Grounding（共同理解建立行为一致性）**：分别判断生成回复和真实回复是否通过澄清问题、针对前文的相关追问或确认性检查来建立共同理解，再计算标签一致率。普通认可、单纯观察、无关提问或换话题式提问不算 Grounding。取值为 0–1，越高表示生成回复建立共同理解的方式越接近真实回复。
-- **Sentiment（情感倾向一致性）**：使用 CardiffNLP 情感分类器分别标注生成回复和真实回复的正向、中性或负向倾向，再计算标签准确率。取值为 0–1，越高表示两者情感极性越一致。
-- **Emotion（情绪类别一致性）**：使用 CardiffNLP 情绪分类器分别识别生成回复和真实回复的主要情绪，再计算标签准确率。取值为 0–1，越高表示两者表达的主要情绪越一致。
-- **Intimacy（亲密度误差）**：使用 CardiffNLP intimacy 模型分别给生成回复和真实回复评分，然后计算两者的绝对差 `|generated - reference|`。越低表示生成回复的自我披露和亲密程度越接近真实回复。该列不是“亲密度本身”，因此不能解释为数值越高越亲密或越好。
-- **Empathy（共情强度误差）**：按照 EPITOME 的 Emotional Reaction、Interpretation、Exploration 三个维度分别给出 0–2 分，总分范围为 0–6；指标取生成回复总分与真实回复总分的绝对差。越低表示共情强度越接近真实回复。过度共情和共情不足都会增大误差，因此该列不能解释为“共情越多越好”。
-
-Table 2 衡量的是生成回复对真实回复的**模拟一致性**。高分表示生成回复在相应属性上更像数据集中的真实人物回复，并不等同于对回复通用质量、帮助性或安全性的独立评价。
-
-### 2.2 逐样本评估方法
-
-每个测试评测点包含同一条真实用户输入对应的两条候选回复：
+当前代码在每个 REALTALK 文件中使用：
 
 ```text
-reference = REALTALK 数据集中的真实目标角色回复
-generated = Ours 根据历史、用户画像和智能体人设生成的回复
+speaker_1 = 被建模用户
+speaker_2 = 目标智能体
 ```
 
-评估时从该回复所在 Session 的开头按原顺序读取真实对话，截断在目标回复之前，然后分别把 `reference` 和 `generated` 放到完全相同的最后一个位置。这样两条候选回复共享相同的 Session 内历史，评估器不会看到目标回复之后的消息。两条回复分别标注后再进行比较，不把 reference 直接交给分类器或 judge 作为 generated 的评分提示。
+因此当前结果覆盖作为 `speaker_2` 出现的目标角色。如果论文最终要求两个方向都作为目标角色，需要另行补充相反方向；单方向结果不能自动解释为双向全覆盖。
 
-| 指标 | 评估器 | 单条样本计算方法 |
+### 2.3 测试时交互
+
+测试使用 teacher forcing：
+
+1. 当前用户输入来自 REALTALK 数据集。
+2. 目标智能体根据真实历史、训练集用户画像、训练集智能体人设和上一轮状态生成回复。
+3. 为保证所有方法获得相同历史，进入下一轮时写入数据集中的真实目标角色回复，而不是 Ours 刚生成的回复。
+4. Ours 的回复只用于评估，不会污染后续生成历史。
+
+生成模型不能看到当前目标回复和未来用户消息。每条 prediction 中的 `generation_input_audit` 会记录泄漏审计信息。
+
+### 2.4 状态时序
+
+第 `t` 轮遵循以下时序：
+
+```text
+用第 t-1 轮已经完成的状态生成第 t 轮回复
+                 ∥
+根据第 t 轮用户消息运行 alignment
+                 ↓
+将第 t 轮状态保存给第 t+1 轮
+```
+
+回复生成与当前轮 alignment 并行。当前 alignment 不会反向影响已经开始生成的当前回复；其结果供下一轮使用。这是核心算法的既定并行设计。
+
+### 2.5 固定画像与人设结构
+
+用户画像采用 5 层、21 个固定字段，与 `dataset/lsy_user.json` 对齐；字段名固定，内容由训练对话抽取。
+
+智能体人设采用固定英文 schema，与 `dataset/lx_agent.json` 对齐：
+
+```text
+core_layer
+capability_layer
+expression_layer
+```
+
+当前 schema 版本为 `lx_agent_v3_behavior_calibrated_no_catchphrases`。`expression_layer.catchphrases` 已删除，避免少量历史句子被机械复用。生成前会校验字段结构、schema 版本和抽取 Prompt SHA256。
+
+---
+
+## 3. Table 2 评估
+
+最终表格复用 REALTALK Table 2 的两条论文基线，并增加 `Ours`：
+
+| 分组 | 指标 | 评估方法 | 方向 |
+|---|---|---|---|
+| Content Similarity | Lexical | ROUGE-L F1 | 越高越好 |
+| Content Similarity | Semantic | BERTScore F1，`roberta-large` | 越高越好 |
+| Message-level EI | Reflective | reference/generated 二分类标签一致率 | 越高越好 |
+| Message-level EI | Grounding | reference/generated 二分类标签一致率 | 越高越好 |
+| Message-level EI | Sentiment | CardiffNLP 情感标签一致率 | 越高越好 |
+| Message-level EI | Emotion | CardiffNLP 情绪标签一致率 | 越高越好 |
+| Message-level EI | Intimacy | 两侧分数绝对差 | 越低越好 |
+| Message-level EI | Empathy | 两侧 EPITOME 总分绝对差 | 越低越好 |
+
+### 3.1 指标含义
+
+- **Lexical**：生成回复与真实回复的最长公共子序列重合程度。它衡量表层措辞接近程度，不等同于自然性或正确性。
+- **Semantic**：BERTScore 衡量上下文语义接近程度，允许不同措辞表达相近意思。
+- **Reflective**：判断回复是否包含对说话者自身感受、动机或行为模式的真实自我观察。普通事实、偏好或意见不自动算反思。该指标衡量两侧是否一致，不是反思越多越好。
+- **Grounding**：判断回复是否通过具体澄清、确认或紧接前文的相关追问建立共同理解。任意问题或普通认可不自动算 Grounding。
+- **Sentiment**：生成回复和真实回复的正向、中性、负向标签是否一致。
+- **Emotion**：生成回复和真实回复的主要情绪类别是否一致。
+- **Intimacy**：两条回复亲密度分数的绝对误差。它不是生成回复本身的亲密度；过高或过低都会增加误差。
+- **Empathy**：分别从 Emotional Reaction、Interpretation、Exploration 三项给出 0–2 分，总分范围 0–6，再计算两侧总分绝对差。过度共情和共情不足都会增加误差。
+
+Table 2 衡量的是 Ours 对真实人物回复属性的**模拟一致性**，不是通用回复质量、帮助性或安全性的独立评分。
+
+### 3.2 逐样本评估
+
+每个评测点包含：
+
+```text
+reference = REALTALK 中的真实目标角色回复
+generated = Ours 对同一用户输入生成的回复
+```
+
+两条候选共享从当前 Session 开头到目标回复之前的相同真实历史。评估器不会看到目标回复之后的消息，也不会把 reference 作为 generated 的评分提示。
+
+| 指标 | 评估器 | 单样本计算 |
 |---|---|---|
-| Lexical | 项目中的 ROUGE-L 实现 | 直接计算 `ROUGE-L_F1(reference, generated)` |
-| Semantic | BERTScore，`roberta-large` | 计算 `BERTScore_F1(reference, generated)`；运行设备由 `--eval-device` 指定 |
-| Reflective | LLM judge + `REALTALK_REFLECTIVE_EVALUATION_SYSTEM_PROMPT` | 在相同对话历史下分别将 reference 和 generated 标为 `True/False`；标签相同记 1，否则记 0 |
-| Grounding | LLM judge + `REALTALK_GROUNDING_EVALUATION_SYSTEM_PROMPT` | 在相同对话历史下分别将 reference 和 generated 标为 `True/False`；标签相同记 1，否则记 0 |
-| Sentiment | `cardiffnlp/twitter-roberta-base-sentiment-latest` | 分别预测两条回复的最高概率情感倾向标签；标签相同记 1，否则记 0 |
-| Emotion | `cardiffnlp/twitter-roberta-large-emotion-latest` | 分别预测两条回复的最高概率情绪标签；标签相同记 1，否则记 0 |
-| Intimacy | `cardiffnlp/twitter-roberta-large-intimacy-latest` | 分别取得模型输出分数，计算 `abs(score_reference - score_generated)` |
-| Empathy | LLM judge + `REALTALK_EMPATHY_EVALUATION_SYSTEM_PROMPT` | 分别评估 ER、IN、EX 三项，每项 0–2 分；先求两侧总分，再计算 `abs(total_reference - total_generated)` |
+| Lexical | 项目 ROUGE-L 实现 | `ROUGE-L_F1(reference, generated)` |
+| Semantic | BERTScore / `roberta-large` | `BERTScore_F1(reference, generated)` |
+| Reflective | GPT judge | 两侧分别标为 `True/False`，相同记 1 |
+| Grounding | GPT judge | 两侧分别标为 `True/False`，相同记 1 |
+| Sentiment | `cardiffnlp/twitter-roberta-base-sentiment-latest` | 最高概率标签相同记 1 |
+| Emotion | `cardiffnlp/twitter-roberta-large-emotion-latest` | 最高概率标签相同记 1 |
+| Intimacy | `cardiffnlp/twitter-roberta-large-intimacy-latest` | `abs(reference - generated)` |
+| Empathy | GPT judge / EPITOME | `abs(total_reference - total_generated)` |
 
-三个 CardiffNLP 分类器只接收候选回复本身；Reflective、Grounding 和 Empathy judge 接收“相同的 Session 内历史 + 当前候选回复”。分类器输入使用 `truncation=True, max_length=512`，LLM judge 使用 `temperature=0.0`。阶段性调试可以通过 `--judge-model qwen-plus` 运行；严格复现 REALTALK 时应使用论文采用的 `gpt-4o-mini`。
-
-三个 LLM judge prompt 以 REALTALK Appendix C.1–C.3 的定义、正反例和 EPITOME 分档为依据，并适配为当前代码使用的“System prompt + Session 内历史及最后候选回复”输入格式。这里没有复用项目中旧的通用 EI prompt，因为旧 prompt 的直接 0–2 对比方式及附加 appropriateness 字段不符合 Table 2 的标注与聚合协议。适配只明确判定边界和结构化输出：普通认可不自动算 Reflective，任意提问不自动算 Grounding，事实追问不自动算 Empathy Exploration；不改变 Table 2 的指标定义。
-
-离散属性的逐样本分数为：
+离散指标：
 
 ```text
 score_i = 1[label_reference == label_generated]
 ```
 
-Intimacy 和 Empathy 使用绝对误差：
+连续误差指标：
 
 ```text
 error_i = abs(value_reference - value_generated)
 ```
 
-逐样本标注写入：
+Reflective、Grounding 和 Empathy 使用固定的 REALTALK 适配评估 Prompt，位于：
 
 ```text
-cases/<case_id>/evaluation/table2_annotations.jsonl
+src/prompts/eval_templates_en.py
 ```
 
-每个对话的八项平均结果写入：
+评估 Prompt 依据 REALTALK Appendix C.1–C.3 和 EPITOME 分档定义编写，不复用项目中旧的通用 EI Prompt。生成 Prompt 的版本实验不会修改评估 Prompt。
+
+### 3.3 聚合方法
+
+最终结果不是简单平均 10 个对话，也不是对全部消息直接微平均，而是：
+
+1. 合并同一目标 speaker 的全部测试样本。
+2. 对每位目标 speaker 分别计算每项指标的样本均值。
+3. 对所有目标 speaker 做宏平均。
+4. 计算目标 speaker 均值之间的总体标准差。
 
 ```text
-cases/<case_id>/evaluation/table2_scores.json
+mean per target speaker → macro mean and population std across speakers
 ```
 
-### 2.3 聚合方法
+因此 `mean ± std` 表示目标角色之间的平均表现和角色差异，不是多次随机运行的误差或置信区间。
 
-最终结果不是把所有消息直接做微平均，也不是先把十个对话等权平均，而是：
+---
 
-1. 合并属于同一目标 speaker 的全部测试样本。
-2. 对每位目标 speaker 分别计算每个指标的样本平均值。
-3. 对所有目标 speakers 的均值做宏平均，得到表中的 `mean`。
-4. 对目标 speakers 的均值计算总体标准差，得到表中的 `population std`。
+## 4. 3090 环境部署
 
-因此表中的 `mean ± std` 表示“目标角色之间的平均表现及角色差异”，不是多次随机运行的均值和误差，也不是置信区间。完整聚合协议为：
+以下命令以 Linux、Bash 和 Python 3.11 为准。
 
-```text
-mean per target speaker -> macro mean and population std across target speakers
-```
-
-## 3. 3090 环境部署
-
-以下以 Linux + Bash 为主。在仓库根目录执行：
+### 4.1 创建 uv 环境
 
 ```bash
-cd /path/to/memory
-```
-
-### 3.1 安装uv并同步项目环境
-
-如果服务器还没有uv，先安装并确认版本：
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-uv --version
-```
-
-使用uv安装Python 3.11，并根据仓库中的 `pyproject.toml` 和 `uv.lock` 创建或同步 `.venv`：
-
-```bash
+cd ~/fxw/memory
 uv python install 3.11
 uv sync --locked --python 3.11
 ```
 
-不需要手动执行 `source .venv/bin/activate`。基础实验通过 `uv run` 使用项目环境；第3.3节单独安装评估依赖后，评估命令必须使用 `uv run --no-sync`。
+不需要手动激活 `.venv`。
 
-### 3.2 同步项目基础依赖
+### 4.2 安装评估依赖
 
-```bash
-uv sync --locked
-```
-
-### 3.3 安装3090评估依赖（Driver 470 / CUDA 11.x）
-
-当前3090服务器的 NVIDIA Driver 为 `470.256.02`，`nvidia-smi` 显示 CUDA 11.4。该驱动属于CUDA 11.x兼容范围，因此使用PyTorch的CUDA 11.8 wheel，不使用CUDA 12.x wheel：
+当前服务器为 NVIDIA Driver `470.256.02`，系统显示 CUDA 11.4，因此使用 PyTorch CUDA 11.8 wheel，不要安装 CUDA 12.x wheel：
 
 ```bash
 uv pip install "torch==2.7.1" --torch-backend=cu118
-uv pip install --reinstall "transformers==4.57.6" "tokenizers==0.22.2" "huggingface-hub==0.36.2" "bert-score==0.3.13"
+uv pip install --reinstall \
+  "transformers==4.57.6" \
+  "tokenizers==0.22.2" \
+  "huggingface-hub==0.36.2" \
+  "bert-score==0.3.13"
 ```
 
-这里不要求系统额外安装完整的CUDA 11.8 Toolkit；PyTorch wheel会携带所需CUDA运行时。不要在这台Driver 470机器上安装 `cu12x` wheel。
-
-当前 `torch`、`transformers` 和 `bert-score` 尚未写入项目锁文件，因此这里通过 `uv pip` 安装到uv管理的项目 `.venv`。不要在安装后直接执行普通的 `uv run`：它会根据当前锁文件重新同步 Chroma 的传递依赖，并可能把兼容版本回滚为 `tokenizers 0.23.1` 和 `huggingface-hub 1.16.1`。评估统一使用 `uv run --no-sync`。如果之后执行了 `uv sync`，需要重新执行本节。
-
-评估前先检查依赖一致性和实际版本：
-
-```bash
-uv pip check
-uv pip show transformers tokenizers huggingface-hub torch bert-score
-```
-
-预期至少包括：
+当前已验证组合：
 
 ```text
+torch             2.7.1+cu118
 transformers      4.57.6
 tokenizers        0.22.2
 huggingface-hub   0.36.2
-torch             2.7.1+cu118
 bert-score        0.3.13
 ```
 
-验证3090是否被 PyTorch 正确识别：
+这些评估依赖尚未完全由项目锁文件固定。普通 `uv run` 可能重新同步传递依赖并把 Tokenizers 改回不兼容版本；涉及评估的命令必须使用：
 
 ```bash
-uv run --no-sync python -c "import torch; print('torch=', torch.__version__); print('torch_cuda=', torch.version.cuda); print('cuda_available=', torch.cuda.is_available()); print('gpu=', torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"
+uv run --no-sync ...
 ```
 
-预期输出应包含：
+如果之后执行了 `uv sync`，重新执行本节的安装命令。
 
-```text
-torch_cuda= 11.8
-cuda_available= True
-gpu= NVIDIA GeForce RTX 3090
-```
-
-## 4. API 与模型配置
-
-仓库根目录需要 `.env`：
-
-```dotenv
-API_KEY=你的密钥
-BASE_URL=OpenAI兼容接口地址
-```
-
-`config.ini` 中至少确认：
-
-```ini
-[API]
-model = qwen3.6-flash
-embedding_model = text-embedding-v4
-enable_thinking = False
-```
-
-注意：
-
-- 当前记忆向量维度固定为 1536。
-- embedding 服务必须让 `text-embedding-v4` 返回 1536 维向量。
-- 画像、人设和回复生成使用 `config.ini` 中的对话模型。
-- Table 2 的 Reflective、Grounding 和 Empathy 官方评估模型是 `gpt-4o-mini`。
-- 如果当前 `BASE_URL` 不支持 `gpt-4o-mini`，可以通过 `--judge-model` 指定兼容模型，但这会降低与原论文结果的严格可比性。
-
-## 5. 单个对话完整运行
-
-下面以 `Chat_1_Emi_Elise.json` 为例。主实验的 `prepare`、`generate`、`evaluate` 必须使用相同的 `--output-dir`、`--case`、`--train-ratio` 和 `--prompt-version`。定性曲线脚本不生成智能体回复，因此不接收 `--prompt-version`。
-
-### 5.1 阶段一：抽取用户画像和智能体人设
+### 4.3 环境检查
 
 ```bash
-uv run python -m src.experiments.exp2_user_modeling \
-  --phase prepare \
-  --case Chat_1_Emi_Elise.json \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling
+uv pip check
+uv pip show torch transformers tokenizers huggingface-hub bert-score
+
+uv run --no-sync python -c \
+  "import torch; print(torch.__version__); print(torch.version.cuda); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else None)"
 ```
 
-主要输出：
+服务器上预期：
 
 ```text
-data/exp2_user_modeling/cases/chat_1_emi_elise__emi__to__elise/assets/
-├─ agent_persona.json
-├─ user_profile.json
-├─ user_profile_runtime.json
-└─ asset_manifest.json
+2.7.1+cu118
+11.8
+True
+NVIDIA GeForce RTX 3090
 ```
 
-- `user_profile.json`：固定字段的一次性用户画像，便于人工检查。
-- `user_profile_runtime.json`：核心 Agent 运行时需要的包装格式。
-- `agent_persona.json`：智能体人设。
+### 4.4 Hugging Face 模型
 
-### 5.2 阶段二：生成测试集回复
-
-```bash
-uv run python -m src.experiments.exp2_user_modeling \
-  --phase generate \
-  --case Chat_1_Emi_Elise.json \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling
-```
-
-主要输出：
-
-```text
-data/exp2_user_modeling/cases/chat_1_emi_elise__emi__to__elise/generations/predictions.jsonl
-```
-
-每条记录包含：
-
-- 当前真实用户消息；
-- Ours 生成回复；
-- 数据集真实参考回复；
-- 输入泄漏审计字段；
-- 使用的 teacher-forcing 历史策略。
-
-### 5.3 阶段三：计算 Table 2 指标
-
-当前3090已经缓存四个本地评估模型，因此下面使用离线模式，避免每次启动都访问 Hugging Face：
+评估使用四个本地模型：
 
 ```text
 cardiffnlp/twitter-roberta-base-sentiment-latest
@@ -290,367 +290,113 @@ cardiffnlp/twitter-roberta-large-intimacy-latest
 roberta-large
 ```
 
-在一台没有这些缓存的新机器上，第一次运行需要联网并暂时去掉 `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`；缓存完整后再使用下面的离线命令。
+3090 当前已经缓存这些模型，因此正式评估使用：
 
 ```bash
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
-  --phase evaluate \
-  --case Chat_1_Emi_Elise.json \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling \
-  --eval-device cuda:0 \
-  --eval-batch-size 16 \
-  --judge-model gpt-4o-mini
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 ...
 ```
 
-评估模型包括：
+新机器第一次下载模型时暂时去掉这两个环境变量；缓存完整后再使用离线模式。
 
-```text
-cardiffnlp/twitter-roberta-base-sentiment-latest
-cardiffnlp/twitter-roberta-large-emotion-latest
-cardiffnlp/twitter-roberta-large-intimacy-latest
-roberta-large                         # BERTScore
-gpt-4o-mini                           # Reflective/Grounding/Empathy
+---
+
+## 5. API 与模型配置
+
+候选回复生成和 Table 2 Judge 使用相互独立的配置：
+
+```ini
+[API]
+model = qwen-plus
+embedding_model = text-embedding-v4
+enable_thinking = False
+
+[EvaluationAPI]
+model = gpt-4o-mini
+backend = zhizengzeng
+base_url = https://api.zhizengzeng.com/v1
+api_key_env = EVAL_API_KEY
 ```
 
-主要输出：
+- `[API]`：用户画像、人设、alignment 和 Ours 回复生成。
+- `[EvaluationAPI]`：只用于 Reflective、Grounding 和 Empathy Judge。
+- `--judge-model` 可以覆盖 `[EvaluationAPI].model`。
+- 严格与 REALTALK 对比时使用 `gpt-4o-mini`；换成其他 Judge 必须记录为实验偏差。
+- 当前记忆 embedding 固定为 1536 维，embedding 服务也必须返回 1536 维向量。
 
-```text
-data/exp2_user_modeling/
-├─ cases/<case_id>/evaluation/
-│  ├─ table2_annotations.jsonl
-│  └─ table2_scores.json
-└─ evaluation/
-   ├─ table2_main_results.json
-   └─ table2_main_results.md
-```
-
-`table2_main_results.md` 即原论文两行加 `Ours` 的可直接检查表格。
-
-### 5.4 阶段四：画像曲线
+运行前设置密钥，不要提交到仓库：
 
 ```bash
-uv run python -m src.experiments.exp2_user_modeling_qualitative \
-  --case Chat_1_Emi_Elise.json \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --output-dir data/exp2_user_modeling
+export EVAL_API_KEY="your-key"
 ```
 
-该脚本与主结果完全独立：
+生成 API 的密钥和 base URL 按 `config.qwen-plus.ini` 当前字段配置。
 
-- 用户画像从空白状态开始，不读取 `prepare` 生成的一次性画像。
-- 只按时间顺序回放前 90% Session 的 REALTALK 真实双方消息。
-- 不生成智能体回复，不读取后 10% 测试 Session，也不运行 Table 2 指标。
-- 直接调用现有 `MemoryOSLocal` 记忆流水线和 `bayesian_online` 画像更新。
-- 从零开始时预置与一次性画像抽取完全相同的 5 层 21 个固定字段；动态更新只能修改字段内容和置信度，不能新增、删除、改名或移动字段。
-- 在初始状态及每个训练 Session 结束后保存一次画像快照。
+---
 
-单案例输出位于：
+## 6. 主实验运行
+
+### 6.1 参数一致性
+
+同一实验版本的 `prepare`、`generate` 和 `evaluate` 必须保持以下参数一致：
 
 ```text
-data/exp2_user_modeling/cases/<case_id>/qualitative/
-├─ profile_runtime.json
-├─ user_profile.json
-├─ memory/memory.db
-├─ profile_snapshots/
-├─ profile_trajectory.json
-└─ trajectory_manifest.json
+--train-ratio
+--case（如果指定）
+--config
+--prompt-version
+--output-dir
 ```
 
-`profile_runtime.json` 是算法内部使用的贝叶斯画像，包含置信度和证据等更新元数据。最终对外使用 `user_profile.json`：其结构与 `dataset/lsy_user.json` 一致，只包含 5 层、21 个固定字段及画像内容。
+不同 Prompt 版本必须使用不同输出目录。每条 prediction 都记录 Prompt 版本和 SHA256；程序会拒绝把不同版本写进同一个目录。
 
-曲线输出位于：
+### 6.2 单个对话：分阶段运行
 
-```text
-data/exp2_user_modeling/qualitative_figures/
-├─ profile_curves.json
-├─ profile_evolution_curve.png
-└─ profile_entropy_curve.png
-```
+以下以 V5 和 `Chat_1_Emi_Elise.json` 为例。
 
-两条曲线始终使用同一组固定字段。画像进化是 21 个字段中已经填入稳定画像内容的比例；画像熵是这 21 个字段的平均二元熵，尚无内容的字段按最大不确定性 1.0 计算。横轴是前 90% 数据中的时间顺序 Session 编号，包含 Session 0 的空画像起点。
-
-## 6. 批量运行
-
-不传 `--case` 就会处理 `dataset` 下全部 `Chat_*.json`。
-
-### 6.1 批量准备画像和人设
+准备训练 assets：
 
 ```bash
-uv run python -m src.experiments.exp2_user_modeling \
+uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --phase prepare \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling
-```
-
-### 6.2 批量生成回复
-
-```bash
-uv run python -m src.experiments.exp2_user_modeling \
-  --phase generate \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling
-```
-
-### 6.3 批量评估并生成最终表格
-
-```bash
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
-  --phase evaluate \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling \
-  --eval-device cuda:0 \
-  --eval-batch-size 16 \
-  --judge-model gpt-4o-mini
-
-# 远程连接测试
-tmux new -s exp2_v4
-
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
-uv run --no-sync python -u -m src.experiments.exp2_user_modeling \
-  --phase evaluate \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v4_task_reframed \
-  --output-dir data/exp2_qwen_plus_v4 \
-  --judge-config-section EvaluationAPI \
-  --eval-device cuda:0 \
-  --eval-batch-size 16 \
-  --judge-model gpt-4o-mini \
-  2>&1 | tee data/exp2_qwen_plus_v4_evaluate.log
-```
-
-### 6.4 连续执行生成和评估
-
-已经准备好训练集画像和人设后，可以用 `generate-evaluate` 在一个进程中先生成全部选中 case 的回复，再立即计算 Table 2 指标。原来的 `generate` 和 `evaluate` 阶段仍然保留，可以继续单独运行。组合阶段同样支持断点续跑：如果生成已经完成而评估中断，重新执行相同命令会跳过已有 generation，再从评估缓存继续。
-
-批量运行当前关系校准版本 v5：
-
-```bash
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
-  --phase generate-evaluate \
+  --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
   --prompt-version v5_relationship_calibrated \
-  --output-dir data/exp2_qwen_plus_v5_clean \
-  --judge-config-section EvaluationAPI \
-  --eval-device cuda:0 \
-  --eval-batch-size 16 \
-  --judge-model gpt-4o-mini
+  --output-dir data/exp2_single_v5
 ```
 
-只运行一个对话时，在相同命令中增加：
+生成测试回复：
 
 ```bash
---case Chat_1_Emi_Elise.json
-```
-
-组合命令要求本地评估依赖和模型缓存已经可用。`--no-sync` 只禁止 uv 在启动时重新同步环境，不会阻止生成阶段调用 `[API]`，也不会阻止评估阶段调用 `[EvaluationAPI]`。
-
-### 6.5 批量生成画像进化与画像熵曲线
-
-不传 `--case` 即从零开始分别回放全部对话的前 90% Session：
-
-```bash
-uv run python -m src.experiments.exp2_user_modeling_qualitative \
+uv run --no-sync python -m src.experiments.exp2_user_modeling \
+  --phase generate \
+  --case Chat_1_Emi_Elise.json \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
-  --output-dir data/exp2_user_modeling
+  --prompt-version v5_relationship_calibrated \
+  --output-dir data/exp2_single_v5
 ```
 
-## 7. 断点续跑
-
-生成和评估均支持断点续跑：
-
-- `predictions.jsonl` 通过 `example_id` 避免重复生成。
-- `table2_annotations.jsonl` 的缓存 ID 同时绑定评测点、候选类型、评估器指纹、候选回复 SHA256 和完整评估上下文 SHA256；回复或上下文变化后不会误用旧标注。
-- 旧格式缓存只有在候选回复、上下文哈希和评估器指纹全部一致时才会迁移到新 ID，不会重新调用 Judge。
-- 已成功写入的记录会被跳过。
-- 中断后使用完全相同的命令重新执行即可。
-
-不要在不同实验协议之间复用同一个输出目录。修改模型、数据划分或角色方向时，推荐换一个新的目录，例如：
+计算 Table 2：
 
 ```bash
---output-dir data/exp2_user_modeling_run2
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+uv run --no-sync python -m src.experiments.exp2_user_modeling \
+  --phase evaluate \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --prompt-version v5_relationship_calibrated \
+  --output-dir data/exp2_single_v5 \
+  --judge-config-section EvaluationAPI \
+  --judge-model gpt-4o-mini \
+  --eval-device cuda:0 \
+  --eval-batch-size 16
 ```
 
-## 8. 3090显存不足时
+### 6.3 全部对话：从头运行
 
-如果 BERTScore 报 CUDA out of memory，先降低批大小：
-
-```bash
---eval-batch-size 8
-```
-
-仍然不足时使用：
-
-```bash
---eval-batch-size 4
-```
-
-Reflective、Grounding 和 Empathy 通过 API 评估，不占用3090显存。Sentiment、Emotion、Intimacy 和 BERTScore 使用本地 GPU。
-
-## 9. 常见错误
-
-### `ModuleNotFoundError: torch/transformers/bert_score`
-
-说明尚未安装评估依赖。重新执行第3.3节中的安装命令。
-
-### `tokenizers>=0.22.0,<=0.23.0 ... found tokenizers==0.23.1`
-
-这是普通 `uv run` 根据锁文件同步 Chroma 传递依赖造成的版本回滚。重新执行第3.3节的两个 `uv pip install` 命令，确认 `uv pip check` 通过，然后使用 `uv run --no-sync` 启动评估，不要再用普通 `uv run`。
-
-### `torch.cuda.is_available() is False`
-
-检查：
-
-1. NVIDIA 驱动是否正常；
-2. 是否误装了 CPU-only PyTorch；
-3. PyTorch wheel 的 CUDA 版本是否与当前驱动兼容。
-
-### `expanded size of the tensor ... 533 ... existing size 514`
-
-这是回复超过 RoBERTa 上下文上限、但 tokenizer 未自动截断造成的错误。当前评估代码已显式使用 `truncation=True, max_length=512`；同步最新的 `src/experiments/exp2_user_modeling.py` 后，用相同评估命令继续即可，已写入的 JSONL 标注会自动复用。
-
-### `no generated replies ... run --phase generate first`
-
-评估目录中没有该 case 的 `predictions.jsonl`。确认 `prepare`、`generate` 和 `evaluate` 使用了相同的 `--output-dir` 与 `--case`。
-
-### Hugging Face 模型下载失败
-
-如果模型已经在本地缓存，使用文档中的 `HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1`，避免 Transformers 先联网执行 HEAD 请求。若离线模式提示找不到文件，则缓存并不完整，需要先在可联网环境下载上述四个模型。
-
-### `gpt-4o-mini` 调用失败
-
-当前 `BASE_URL` 可能不支持该模型。严格复现实验时应配置支持 `gpt-4o-mini` 的评估 API；临时检查流程时可以传入当前接口支持的模型，但必须在结果中记录这一偏差。
-
-### Milvus 向量维度不匹配
-
-当前代码固定使用 1536 维 embedding。不要复用由1024维或其他维度创建的旧 Milvus 数据库；使用新的 `--output-dir` 重新运行。
-
-### Qualitative Analysis 中断
-
-完整的 qualitative trajectory 会直接复用，不会重复调用模型。若运行在中途失败，脚本不会从非空画像或非空 Milvus 数据库继续，以免破坏“从零开始”的协议；请换一个新的 `--output-dir` 重新运行。该问题不影响 `prepare -> generate -> evaluate` 主结果。
-
-## 10. 当前实验范围说明
-
-当前生成代码对每个 REALTALK 文件使用：
-
-```text
-speaker_1 = 被建模用户
-speaker_2 = 目标智能体
-```
-
-因此现有全部文件只覆盖作为 `speaker_2` 出现的目标 speakers。Table 2 最终写作要求是覆盖全部目标 speakers；在正式全量结果前，还需要补齐相反角色方向。当前单 case 或单方向输出应标记为阶段性结果，不能直接作为最终论文表格。
-
-## 11. 正式运行前检查清单
-
-- [ ] 使用固定代码版本并记录 Git commit。
-- [ ] 9:1 Session 划分未被修改。
-- [ ] 使用新的、干净的输出目录。
-- [ ] embedding 输出维度为1536。
-- [ ] 画像和人设只使用训练 Session。
-- [ ] 生成历史使用数据集真实回复。
-- [ ] `predictions.jsonl` 中参考回复未进入 generation input audit。
-- [ ] 3090被 `torch.cuda.is_available()` 正确识别。
-- [ ] `uv pip check` 显示所有依赖兼容。
-- [ ] 评估使用 `uv run --no-sync`，没有触发依赖回滚。
-- [ ] 四个 Hugging Face 评估模型已缓存，离线加载正常。
-- [ ] 记录 judge model 和三个 CardiffNLP 模型名称。
-- [ ] 最终 `table2_main_results.md` 包含原论文两行和 `Ours`。
-- [ ] 正式论文结果覆盖全部目标 speakers，而不是单个 case。
-
-## 12. Windows PowerShell附录
-
-如果3090机器运行Windows，可以使用下面的PowerShell命令。实验参数和Linux版本完全一致。
-
-### 12.1 环境部署
-
-```powershell
-cd E:\01_Research\03_UserProfile\memory
-uv python install 3.11
-uv sync --locked --python 3.11
-uv pip install "torch==2.7.1" --torch-backend=cu118
-uv pip install --reinstall "transformers==4.57.6" "tokenizers==0.22.2" "huggingface-hub==0.36.2" "bert-score==0.3.13"
-```
-
-### 12.2 单个对话
-
-```powershell
-uv run python -m src.experiments.exp2_user_modeling `
-  --phase prepare `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
-  --config config.qwen-plus.ini `
-  --prompt-version v3_realtalk_aligned `
-  --output-dir data/exp2_user_modeling
-
-uv run python -m src.experiments.exp2_user_modeling `
-  --phase generate `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
-  --config config.qwen-plus.ini `
-  --prompt-version v3_realtalk_aligned `
-  --output-dir data/exp2_user_modeling
-
-$env:HF_HUB_OFFLINE="1"
-$env:TRANSFORMERS_OFFLINE="1"
-uv run --no-sync python -m src.experiments.exp2_user_modeling `
-  --phase evaluate `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
-  --config config.qwen-plus.ini `
-  --prompt-version v3_realtalk_aligned `
-  --output-dir data/exp2_user_modeling `
-  --eval-device cuda:0 `
-  --eval-batch-size 16 `
-  --judge-model gpt-4o-mini
-
-uv run python -m src.experiments.exp2_user_modeling_qualitative `
-  --case Chat_1_Emi_Elise.json `
-  --train-ratio 0.9 `
-  --config config.qwen-plus.ini `
-  --output-dir data/exp2_user_modeling
-```
-
-### 12.3 批量运行
-
-批量运行时去掉 `--case`，依次执行 `prepare`、`generate` 和 `evaluate` 即可。
-
-## 13. Prompt 版本、独立 Judge API 与 turn 级曲线
-
-### 13.1 不可混用的版本
-
-主实验现在同时记录三类版本：
-
-- `protocol_version`：状态传递、teacher forcing、训练/测试划分等实验协议。
-- `generation_prompt_version`：回复生成与 empathy alignment 使用的 prompt bundle。
-- `evaluation_prompt_version`：固定的 REALTALK Table 2 judge prompt。
-
-可用生成 prompt 版本：
-
-```text
-v1_baseline          已有旧结果对应的基线提示词，不更新 current_state
-v2_state_update      上一轮共情状态 + 每轮 current/projected state 更新
-v3_realtalk_aligned  在 v2 基础上适配 REALTALK 对话行为与 EI 判定边界（默认）
-v4_task_reframed     完全重写的任务优先提示词；独立校准角色、内容和对话行为，不继承 v1-v3 文本
-v5_relationship_calibrated  基于关系距离和角色行为频率校准回复；默认不启用反思、追问或共情行为
-```
-
-`v4_task_reframed` 不是在 v3 后追加规则：回复 prompt 与 alignment prompt 均从零重写，但保持核心算法所需的并行执行方式以及 `understanding`、`prediction`、`empathy_state`、`state_update` 输出契约。v4 暂不设为默认版本，必须显式传入并使用独立输出目录。
-
-`v5_relationship_calibrated` 保留 v4 作为已运行版本，不覆盖其 prompt 或结果。v5 同时升级智能体人设抽取：三层英文键和字段保持与 `dataset/lx_agent.json` 一致，但字段内容改为基于训练对话描述 rare/occasional/common/frequent 的真实行为频率，并要求区分关系距离。回复和 alignment 先判断 unfamiliar/casual/familiar/close，再决定是否需要 Reflective、Grounding 和三类 Empathy 行为；这些行为默认关闭，只有当前轮、关系距离和目标角色频率同时支持时才启用。
-
-由于人设抽取 prompt 已改变，v5 必须使用全新输出目录从 `prepare` 开始，不能复制 v1-v4 的 `agent_persona.json` 或整个 assets 目录。用户画像也建议随同一次 prepare 生成，以避免资产 manifest 不一致。推荐流程：
+不传 `--case` 就会处理 `dataset/Chat_*.json` 的全部对话。
 
 ```bash
 V5_DIR=data/exp2_qwen_plus_v5_clean
@@ -670,269 +416,381 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --prompt-version v5_relationship_calibrated \
   --output-dir "$V5_DIR" \
   --judge-config-section EvaluationAPI \
-  --eval-device cuda:0 \
-  --eval-batch-size 16 \
-  --judge-model gpt-4o-mini
-```
-
-每条 prediction 和最终 manifest 都保存 prompt 版本及 SHA256。不同版本必须使用不同的 `--output-dir`，程序会拒绝把不同版本追加到同一个 `predictions.jsonl`。
-
-示例：
-
-```bash
-uv run python -m src.experiments.exp2_user_modeling \
-  --phase generate \
-  --case Chat_1_Emi_Elise.json \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling/v3_realtalk_aligned
-```
-
-已有旧 predictions 没有 prompt metadata 时只按 `v1_baseline` 处理。不要把旧目录用于 v2、v3 或 v4。
-
-v4 单独运行示例。为只比较 prompt 版本，应复用同一次 `prepare` 产生的用户画像和智能体人设，不要重新抽取。但只能复制每个 case 的 `assets/`，不能复制旧版本的 `generations/`、`states/`、`evaluation/` 或 `memory/`。
-
-源目录可以是 prepare-only 目录，也可以是已经跑过 generate 的旧版本目录，但**不能复制旧的 `user_profile_runtime.json`**，因为其中可能带有旧版本结束时的用户状态。下面的脚本只复用不可变的 `agent_persona.json`、`user_profile.json` 和 `asset_manifest.json`，并根据静态画像为 v4 重建全新的 runtime profile：
-
-```bash
-ASSET_SOURCE=data/exp2_shared_assets
-V4_DIR=data/exp2_qwen_plus_v4
-
-uv run --no-sync python - "$ASSET_SOURCE" "$V4_DIR" <<'PY'
-import json
-import shutil
-import sys
-from pathlib import Path
-
-source = Path(sys.argv[1])
-target = Path(sys.argv[2])
-source_cases = source / "cases"
-
-if not source_cases.is_dir():
-    raise SystemExit(f"asset source does not exist: {source_cases}")
-
-old_predictions = sorted(target.glob("cases/*/generations/predictions.jsonl"))
-if old_predictions:
-    joined = "\n".join(str(path) for path in old_predictions)
-    raise SystemExit(
-        "target already contains predictions; use a new target or move it to a backup:\n"
-        + joined
-    )
-
-copied = 0
-for source_case in sorted(path for path in source_cases.iterdir() if path.is_dir()):
-    source_assets = source_case / "assets"
-    required = [
-        source_assets / "agent_persona.json",
-        source_assets / "user_profile.json",
-        source_assets / "asset_manifest.json",
-    ]
-    missing = [str(path) for path in required if not path.is_file()]
-    if missing:
-        raise SystemExit(
-            f"incomplete assets for {source_case.name}: " + ", ".join(missing)
-        )
-
-    target_assets = target / "cases" / source_case.name / "assets"
-    target_assets.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(required[0], target_assets / "agent_persona.json")
-    shutil.copy2(required[1], target_assets / "user_profile.json")
-
-    with required[1].open("r", encoding="utf-8") as handle:
-        profile = json.load(handle)
-    runtime = {
-        "state_axis": {
-            "static_profile": profile,
-            "current_state": {},
-            "projected_state": {},
-        },
-        "context_axis": {},
-    }
-    with (target_assets / "user_profile_runtime.json").open(
-        "w", encoding="utf-8"
-    ) as handle:
-        json.dump(runtime, handle, ensure_ascii=False, indent=2)
-        handle.write("\n")
-
-    with required[2].open("r", encoding="utf-8") as handle:
-        manifest = json.load(handle)
-    manifest["profile_path"] = str((target_assets / "user_profile.json").resolve())
-    manifest["runtime_profile_path"] = str(
-        (target_assets / "user_profile_runtime.json").resolve()
-    )
-    manifest["persona_path"] = str((target_assets / "agent_persona.json").resolve())
-    with (target_assets / "asset_manifest.json").open(
-        "w", encoding="utf-8"
-    ) as handle:
-        json.dump(manifest, handle, ensure_ascii=False, indent=2)
-        handle.write("\n")
-    copied += 1
-
-print(f"prepared clean assets for {copied} cases in {target}")
-PY
-```
-
-复制后可以检查目标目录；不应出现旧的 `predictions.jsonl`：
-
-```bash
-find "$V4_DIR/cases" -path '*/generations/predictions.jsonl' -print
-```
-
-当前版本的 `generate` 会自动为每个 case 创建新的 `memory/`、`generations/`、`states/` 和 `evaluation/` 目录；复制 assets 时不需要手工创建这些目录。若服务器尚未同步该修复、运行时出现 `Open local milvus failed, dir: .../memory not exists`，可以先用下面的兼容命令创建空目录，再重新执行完全相同的生成命令：
-
-```bash
-for CASE_DIR in "$V4_DIR"/cases/*; do
-  [ -d "$CASE_DIR" ] || continue
-  mkdir -p "$CASE_DIR"/{memory,generations,states,evaluation}
-done
-```
-
-该命令只创建缺失目录，不会修改或删除画像、人设、已有生成结果或评估结果。同步当前版本代码后不再需要执行它。
-
-如果目标目录包含旧 predictions，其中记录的 `prompt_version` 或 `prompt_sha256` 与 v4 不同，程序会主动报错，防止不同版本结果混写。不要手工把旧记录的版本字段改成 v4。如果没有干净的 prepared assets，才对新的 v4 输出目录重新运行一次 `--phase prepare`。
-
-保留生成和评估分开执行时，生成命令为：
-
-```bash
-uv run python -m src.experiments.exp2_user_modeling \
-  --phase generate \
-  --case Chat_1_Emi_Elise.json \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v4_task_reframed \
-  --output-dir data/exp2_user_modeling/v4_task_reframed
-```
-
-也可以将上面的 `--phase generate` 改为 `--phase generate-evaluate`，并补充评估参数，使生成完成后直接开始评估。
-
-### 13.2 用户状态时序
-
-第 `t` 轮回复 prompt 在当前 alignment 启动前冻结，因此使用第 `t-1` 轮已经完成的 `current_state` 和 `previous_empathy_state`。当前回复与第 `t` 轮 alignment 并行；alignment 完成后把固定结构的 `current_state` 与 `projected_state` 写入 runtime profile，供第 `t+1` 轮使用。长期静态用户画像在主实验测试阶段保持不变。
-
-### 13.3 固定智能体人设
-
-智能体人设采用从 `dataset/lx_agent.json` 派生的固定英文 schema；当前抽取协议版本为 `lx_agent_v3_behavior_calibrated_no_catchphrases`，JSON 键和字段内容统一使用英文。三层结构保持为 `core_layer`、`capability_layer` 和 `expression_layer`，但主动删除了 `expression_layer.catchphrases`：少量历史语句不应被固化为每轮可复用的生成规则，以免模型机械重复并影响回复分布。抽取 prompt 仍记录关系距离和回复长度、emoji、追问、自我反思、自我披露、建议、共情等行为的实际频率。旧的 `name/personality/tone/...`、`meta_info/strategy_layer/...`、含 `catchphrases` 的 v2 人设或早期抽取 prompt 生成的人设文件不能与新协议混用；请换新的输出目录重新执行 `prepare`。`generate` 会同时校验字段结构、persona schema 版本和抽取 prompt SHA256，不一致时会在调用模型前停止。
-
-### 13.4 GPT-4o-mini 使用独立中转 API
-
-`config.ini` 中的 `[API]` 只用于算法生成；`[EvaluationAPI]` 只用于 Reflective、Grounding 和 Empathy judge。当前评估后端配置为：
-
-```ini
-[EvaluationAPI]
-model = gpt-4o-mini
-backend = zhizengzeng
-base_url = https://api.zhizengzeng.com/v1
-api_key_env = EVAL_API_KEY
-```
-
-运行前只在环境变量中提供密钥，不要把密钥写入仓库：
-
-```bash
-export EVAL_API_KEY="your-key"
-```
-
-评估命令：
-
-```bash
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 uv run --no-sync python -m src.experiments.exp2_user_modeling \
-  --phase evaluate \
-  --case Chat_1_Emi_Elise.json \
-  --train-ratio 0.9 \
-  --config config.qwen-plus.ini \
-  --prompt-version v3_realtalk_aligned \
-  --output-dir data/exp2_user_modeling/v3_realtalk_aligned \
-  --judge-config-section EvaluationAPI \
+  --judge-model gpt-4o-mini \
   --eval-device cuda:0 \
   --eval-batch-size 16
 ```
 
-Judge 缓存指纹包含模型、API 后端、base URL、评估 prompt 和本地分类器名称；缓存 ID 另外包含候选回复与完整上下文哈希，因此不会误用此前模型、prompt、回复或上下文不同的标注。
+`generate-evaluate` 只是依次执行生成和评估。原来的 `generate`、`evaluate` 仍可单独运行。
 
-### 13.5 turn 级 qualitative 曲线
+### 6.4 主要输出
 
-qualitative 脚本仍只重放前 90% 的真实数据集对话，不生成智能体回复。现在每个合并后的连续同 speaker dialogue bubble 记为一个 turn，并在每个 turn 后记录原始 completeness、entropy、profile hash 和 profile version。完整画像只在画像真实变化时保存快照。
+```text
+data/<experiment>/
+├── split_manifest.json
+├── run_manifest.json
+├── cases/<case_id>/
+│   ├── assets/
+│   │   ├── user_profile.json
+│   │   ├── user_profile_runtime.json
+│   │   ├── agent_persona.json
+│   │   └── asset_manifest.json
+│   ├── generations/predictions.jsonl
+│   ├── states/user_understanding.jsonl
+│   ├── memory/memory.db
+│   └── evaluation/
+│       ├── table2_annotations.jsonl
+│       └── table2_scores.json
+└── evaluation/
+    ├── table2_main_results.json
+    └── table2_main_results.md
+```
 
-单对话底层横轴使用真实 `turn_index`；多对话聚合图使用归一化训练 turn 进度 `0%–100%`。图中淡线为真实 per-turn 均值，主线为只使用当前及历史数据的 causal EWMA，可视化平滑不改变原始指标；单对话图额外标出真实画像更新点和 Session 边界。
+`table2_main_results.md` 是 REALTALK 两条原始基线加 `Ours` 的最终表格。
 
-## 14. V6–V10 夜间 Prompt sweep
+---
 
-V6–V10 是一组控制变量明确的最终回复 Prompt。五版使用完全相同的用户画像、智能体人设、输入布局、V5 alignment、状态更新、teacher forcing 历史和评估 Prompt；只改变最终回复策略。V5 已完成目录中的固定 `agent_persona.json` 与 `user_profile.json` 可以直接复用，不需要重新执行 `prepare`。
+## 7. Prompt 版本管理
 
-| 版本 | 唯一主要变量 | 强度 | 主要观察指标 | 假设 |
-|---|---|---|---|---|
-| `v6_last_topic_plain` | 只回应最后一个活跃话题 | mild | Lexical、Grounding、Sentiment | 减少多话题回复和内容漂移 |
-| `v7_recent_style_imitation` | 优先模仿近期真实目标角色回复的表面风格 | medium | Lexical、Reflective、Grounding | 近期真实回复比抽象人设标签更能约束措辞和分析深度 |
-| `v8_frequency_hard_gate` | 将 rare/occasional 行为频率作为硬门控 | strong | Reflective、Grounding、Empathy | 减少反思、追问和共情动作的假阳性 |
-| `v9_evidence_bound_persona` | 严格限制人设事实和个人经历的使用 | strong | Lexical、Intimacy、Empathy | 阻止把知识领域改写成虚构经历或堆叠人设事实 |
-| `v10_balanced_surface_act` | 综合话题、风格、动作频率和证据边界 | medium-strong | 全部 Table 2 指标 | 在不过度压低积极语气的前提下综合收敛 |
+实验同时记录三类版本：
 
-五个 system prompt 均为独立完整文本，不是 `V5 + addendum`。它们共享相同的 user prompt 输入布局是为了保持实验控制变量；所有版本都有独立版本名、Prompt SHA256、输出目录和日志。
+- `protocol_version`：数据切分、teacher forcing 和状态传递协议。
+- `generation_prompt_version`：回复生成与 alignment Prompt bundle。
+- `evaluation_prompt_version`：固定的 REALTALK Table 2 Judge Prompt。
 
-### 14.1 默认全量十对话 sweep
+### 7.1 V1–V5
 
-脚本默认运行全部 10 个 REALTALK 对话，共 117 条测试回复。候选生成模型由 `config.qwen-plus.ini` 的 `[API].model = qwen-plus` 指定；Reflective、Grounding 和 Empathy 的 Judge 由 `[EvaluationAPI].model = gpt-4o-mini` 指定。两者角色不同：Qwen-plus 负责生成 Ours，GPT-4o-mini 只负责评估，不应互换。
+| 版本 | 作用 |
+|---|---|
+| `v1_baseline` | 旧基线，不更新 current state |
+| `v2_state_update` | 增加上一轮 empathy state 和每轮状态更新 |
+| `v3_realtalk_aligned` | 适配 REALTALK 行为与 EI 边界；当前代码默认值 |
+| `v4_task_reframed` | 从零重写任务导向 Prompt，不继承 V1–V3 文本 |
+| `v5_relationship_calibrated` | 按关系距离和角色行为频率校准；当前可复用 assets 来源 |
 
-确认生成 API 和评估 API 的环境变量已经设置，然后执行：
+V5 改变过智能体人设抽取协议，因此 V5 的 assets 不能由 V1–V4 assets 冒充。当前标准 V5 assets 位于：
+
+```text
+data/exp2_qwen_plus_v5_clean
+```
+
+### 7.2 V6–V10 已完成实验
+
+V6–V10 共用 V5 assets、V5 alignment、状态更新、teacher forcing 和评估 Prompt，只改变最终回复 Prompt。
+
+| 版本 | 控制变量 |
+|---|---|
+| `v6_last_topic_plain` | 只回应最后活跃话题 |
+| `v7_recent_style_imitation` | 模仿近期真实目标角色回复的表层风格 |
+| `v8_frequency_hard_gate` | rare/occasional 行为硬门控 |
+| `v9_evidence_bound_persona` | 严格限制人设事实和个人经历使用 |
+| `v10_balanced_surface_act` | 综合话题、风格、动作和证据规则 |
+
+五版均完整运行 10 个对话、117 条回复。主要结果：
+
+| 版本 | Lexical ↑ | Semantic ↑ | Reflective ↑ | Grounding ↑ | Sentiment ↑ | Emotion ↑ | Intimacy ↓ | Empathy ↓ |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| V5 | 0.1047 | 0.8320 | 0.7175 | 0.4842 | 0.5345 | 0.4694 | 0.0774 | 1.2668 |
+| V7 | 0.1012 | 0.8302 | 0.7171 | 0.5661 | 0.6511 | 0.4539 | 0.0703 | 1.1079 |
+
+V7 是该组最佳综合版本。V10 虽把 Reflective 提升到 0.7231，但 Empathy error 恶化到 1.6758，说明把多种全局规则叠在一起并不稳定。
+
+完整结果：
+
+```text
+data/exp2_prompt_sweep_v6_v10/prompt_sweep_summary.md
+```
+
+如需重新运行旧 sweep：
 
 ```bash
 ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
 SWEEP_ROOT=data/exp2_prompt_sweep_v6_v10 \
+CASE_SET=all \
 bash scripts/run_exp2_prompt_sweep.sh
 ```
 
-脚本串行运行，避免五个进程同时争抢显存和 API。执行顺序为最有希望的综合版 V10，然后依次运行 V6、V7、V8、V9；这样即使夜间 API 额度或机器中断，也会优先保留综合候选结果。每版执行 `generate-evaluate`，中断后重新运行完全相同的命令即可续跑；已生成回复和内容绑定的评估缓存会被跳过。
+### 7.3 V11–V15 当前实验
 
-运行完成后查看：
+V11–V15 直接针对完整 V7 中仍未达到论文结果的四个指标。每个专项版都以 V7 的具体错误方向为依据，而不是泛化地增加风格规则：
+
+| 版本 | 专项目标 | V7 错误方向 | Prompt 调整 | 保护指标 |
+|---|---|---|---|---|
+| `v11_lexical_fidelity` | Lexical | 语义正确但引入新实体、新经历和自由联想 | 减少无依据具体内容；自然使用当前对话词汇；保留有证据的自我披露和换题 | Semantic、Sentiment |
+| `v12_reflective_placement` | Reflective | 14 条假阳性、12 条假阴性；总量接近但位置错误 | 总体频率不做单向增减；只纠正哪些轮次应出现真正自我观察 | Empathy、Intimacy |
+| `v13_grounding_precision` | Grounding | 38 条假阳性、11 条假阴性；V7 问句 78 条而 reference 37 条 | 明确减少习惯性追问；仅保留必要澄清、确认和有近期行为证据的具体 follow-up | Reflective、Empathy |
+| `v14_emotion_calibration` | Emotion | joy 82 条而 reference 65 条；Emoji 66 条而 reference 2 条 | 按角色和当前场景校准情绪；减少无依据 joy、Emoji 和装饰性积极表达，不全局压低 Paola 等真实高 joy 角色 | Sentiment、Empathy |
+| `v15_metric_integrated` | 四项集成 | 同时存在上述四类错误 | 使用“内容→反思→Grounding→情绪”的短决策流，不拼接四份专项 Prompt | Semantic、Sentiment、Intimacy、Empathy |
+
+五版继续共享相同的 response user Prompt、V5 alignment、状态更新、teacher forcing、模型参数和评估 Prompt。V11–V14 只改变各自的定向策略；V15 从同一 V7 审计中预先集成四个方向，但不预设四个专项都会有效。
+
+当前默认测试子集是：
 
 ```text
-data/exp2_prompt_sweep_v6_v10/prompt_sweep_summary.md
-data/exp2_prompt_sweep_v6_v10/prompt_sweep_summary.json
-data/exp2_prompt_sweep_v6_v10/<prompt-version>/evaluation/table2_main_results.md
-data/exp2_prompt_sweep_v6_v10/<prompt-version>.log
+Chat_1_Emi_Elise.json    9 条
+Chat_4_Emi_Paola.json    8 条
+Chat_9_Fahim_Akib.json   7 条
+合计                    24 条
 ```
 
-汇总表会使用 V5 的相同 10 个 case 作为全量基线，再列出 V6–V10，并加粗每项指标的最佳均值。JSON 另外记录相对 V5 的方向统一改进量：Lexical 至 Emotion 使用“新值减 V5”，Intimacy 和 Empathy 使用“V5 减新值”，因此正数始终表示改善。
+该子集与 V7 全量结果的关键对照：
 
-### 14.2 更快和自定义 case
+| 统计 | diagnostic3 | V7 全量 |
+|---|---:|---:|
+| Lexical | 0.0981 | 0.1012 |
+| Reflective | 0.7308 | 0.7171 |
+| Grounding | 0.5470 | 0.5661 |
+| Emotion | 0.4815 | 0.4539 |
+| Sentiment | 0.6508 | 0.6511 |
+| Grounding 假阳性率 | 33.3% | 32.5% |
+| Reflective 假阳性率 | 12.5% | 12.0% |
+| 生成问句率 | 70.8% | 66.7% |
+| 生成 Emoji 率 | 58.3% | 56.4% |
 
-默认命令已经是全部 10 个对话；也可以显式指定：
+运行：
 
 ```bash
-CASE_SET=all bash scripts/run_exp2_prompt_sweep.sh
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
+SWEEP_ROOT=data/exp2_prompt_sweep_v11_v15_directed \
+CASE_SET=diagnostic3 \
+bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
-临时只跑 Chat 2 + Chat 10（23 条）：
+其他可选子集：
 
 ```bash
-CASE_SET=fast2 bash scripts/run_exp2_prompt_sweep.sh
+CASE_SET=fast2 bash scripts/run_exp2_prompt_sweep_v11_v15.sh       # Chat 2 + Chat 10，23 条
+CASE_SET=balanced3 bash scripts/run_exp2_prompt_sweep_v11_v15.sh  # Chat 2 + Chat 5 + Chat 10，47 条
 ```
 
-临时使用较有代表性的 Chat 2 + Chat 5 + Chat 10（47 条）：
+只有在定向子集确认 Prompt 值得继续后，再运行全部 10 个对话：
 
 ```bash
-CASE_SET=balanced3 bash scripts/run_exp2_prompt_sweep.sh
+CASE_SET=all bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
-使用逗号分隔的自定义 case；设置 `CASE_LIST` 后会忽略 `CASE_SET`：
+自定义 case：
 
 ```bash
 CASE_LIST=Chat_1_Emi_Elise.json,Chat_5_Nicolas_Nebraas.json \
-bash scripts/run_exp2_prompt_sweep.sh
+bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 ```
 
-常用覆盖参数：
+### 7.4 Sweep 的 asset 和缓存隔离
+
+Sweep helper 只复用不可变文件：
+
+```text
+agent_persona.json
+user_profile.json
+asset_manifest.json
+```
+
+它会为每个版本重建干净的 runtime profile，并使用独立的 Milvus、states、generations 和 evaluation 目录。不会复制旧生成回复或旧 generated 标注。
+
+默认 `REUSE_REFERENCE_CACHE=1` 只复用 `variant=reference` 的 Judge 标注。缓存同时绑定评估器指纹、候选文本哈希和完整上下文哈希；Prompt、模型、候选回复或上下文发生变化时不会误命中。
+
+---
+
+## 8. 定性分析：画像进化与画像熵
+
+定性分析使用独立脚本：
 
 ```bash
-CONFIG=config.qwen-plus.ini \
-JUDGE_MODEL=gpt-4o-mini \
-JUDGE_CONFIG_SECTION=EvaluationAPI \
-EVAL_DEVICE=cuda:0 \
-EVAL_BATCH_SIZE=16 \
-REUSE_REFERENCE_CACHE=1 \
-bash scripts/run_exp2_prompt_sweep.sh
+uv run --no-sync python -m src.experiments.exp2_user_modeling_qualitative \
+  --case Chat_1_Emi_Elise.json \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --output-dir data/exp2_qualitative
 ```
 
-`REUSE_REFERENCE_CACHE=1` 只从 V5 复制 `variant=reference` 的标注，不复制任何 generated 标注、回复、状态或分数。缓存 ID 同时绑定评估器指纹、参考回复哈希和完整上下文哈希；模型、评估 Prompt、候选文本或上下文不一致时不会命中。若希望完全重新标注参考回复，可设置 `REUSE_REFERENCE_CACHE=0`。
+不传 `--case` 会处理全部对话。
 
-每个版本的 runtime user state、Milvus memory、生成回复、alignment state 和评估输出都位于自己的目录中，不会在版本之间共享。脚本不会删除或覆盖 V5 目录，也不会调用画像或人设抽取。
+该流程：
+
+- 从空画像开始，不读取主实验 `prepare` 的一次性画像。
+- 只回放前 90% Session 的真实双方消息。
+- 不生成智能体回复，不读取后 10%，不运行 Table 2。
+- 调用现有 `MemoryOSLocal` 和 `bayesian_online` 更新逻辑。
+- 固定使用与一次性抽取相同的 5 层、21 个字段，不能新增、删除、改名或移动字段。
+- 每个合并后的连续同 speaker dialogue bubble 记作一个 turn。
+- 每个 turn 后记录 completeness、entropy、profile hash 和 profile version。
+
+输出：
+
+```text
+data/exp2_qualitative/
+├── cases/<case_id>/qualitative/
+│   ├── profile_runtime.json
+│   ├── user_profile.json
+│   ├── memory/memory.db
+│   ├── profile_snapshots/
+│   ├── profile_trajectory.json
+│   └── trajectory_manifest.json
+└── qualitative_figures/
+    ├── profile_curves.json
+    ├── profile_evolution_curve.png
+    └── profile_entropy_curve.png
+```
+
+- **画像进化**：21 个字段中已有稳定内容的比例。
+- **画像熵**：21 个字段的平均二元熵；空字段按最大不确定性 1.0 计算。
+- 单对话横轴使用真实 `turn_index`。
+- 多对话聚合横轴使用归一化训练进度 `0%–100%`。
+- 淡线为原始 per-turn 均值，主线为只使用当前和历史点的 causal EWMA。
+- 单对话图会标记真实画像更新点和 Session 边界。
+
+如果 trajectory 已完整生成，会直接复用；如果中途失败，为保证“从零开始”的协议，应换新的输出目录重跑。
+
+---
+
+## 9. 断点续跑与结果隔离
+
+主实验和 sweep 均支持断点续跑：
+
+- `predictions.jsonl` 通过 `example_id` 跳过已有连续前缀。
+- `user_understanding.jsonl` 与 predictions 必须保持一致。
+- `table2_annotations.jsonl` 保存 reference/generated Judge 缓存。
+- 已完成的生成和 Judge 标注不会重复调用 API。
+- 中断后使用完全相同的命令重新执行。
+
+以下改动必须使用新输出目录：
+
+- Prompt 版本或 Prompt 文本变化；
+- 数据切分或 case 方向变化；
+- 人设/画像 schema 或抽取 Prompt 变化；
+- embedding 维度变化；
+- 希望进行完全独立的新实验运行。
+
+不要手工修改已有 prediction 的 `prompt_version` 或 `prompt_sha256`。
+
+实验输出目录已被 `.gitignore` 忽略，不应提交到 GitHub。
+
+---
+
+## 10. 常见错误
+
+### 10.1 `tokenizers ... found tokenizers==0.23.1`
+
+普通 `uv run` 或 `uv sync` 重新同步了不兼容的传递依赖。修复：
+
+```bash
+uv pip install --reinstall \
+  "transformers==4.57.6" \
+  "tokenizers==0.22.2" \
+  "huggingface-hub==0.36.2" \
+  "bert-score==0.3.13"
+uv pip check
+```
+
+之后评估统一使用 `uv run --no-sync`。
+
+### 10.2 `torch.cuda.is_available() is False`
+
+确认：
+
+1. `nvidia-smi` 能识别 GPU；
+2. 安装的是 `torch==2.7.1+cu118`，不是 CPU 或 CUDA 12 wheel；
+3. Python 输出 `torch.version.cuda == 11.8`。
+
+### 10.3 `training assets missing ... run prepare first`
+
+当前输出目录没有该 case 的完整 assets。主实验应先在同一目录运行 `prepare`；Prompt sweep 应确认 `ASSET_SOURCE` 指向完整 V5 目录。
+
+### 10.4 `existing predictions were generated with a different ... prompt version`
+
+目标目录中已有其他 Prompt 版本的 predictions。不要修改 metadata；为新版本使用新目录，或使用对应 sweep 脚本自动创建隔离目录。
+
+### 10.5 `no generated replies ... run --phase generate first`
+
+`evaluate` 指向的目录没有 predictions。检查 `--output-dir`、`--case`、`--train-ratio` 和 `--prompt-version` 是否与 generate 完全一致。
+
+### 10.6 Hugging Face 离线模式找不到模型
+
+缓存不完整。第一次在联网状态去掉：
+
+```text
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
+```
+
+完成四个模型的下载后再恢复离线模式。
+
+### 10.7 `gpt-4o-mini` 调用失败
+
+检查 `[EvaluationAPI]`、`EVAL_API_KEY`、中转站余额和模型支持情况。临时换 Judge 可以验证流程，但不能视为严格复现 REALTALK。
+
+### 10.8 Milvus 向量维度不匹配
+
+当前 embedding 固定为 1536 维。不要复用由 1024 维或其他维度建立的旧 Milvus 数据库；使用新输出目录。
+
+### 10.9 CUDA out of memory
+
+依次降低：
+
+```text
+--eval-batch-size 16 → 8 → 4
+```
+
+Reflective、Grounding 和 Empathy 使用远程 Judge，不占本地 GPU；三个 CardiffNLP 模型和 BERTScore 使用 GPU。
+
+### 10.10 RoBERTa pooler warning
+
+BERTScore 加载基础 `roberta-large` 时可能提示 pooler 权重未初始化。BERTScore 使用 token embeddings，不使用该 pooler；这是预期警告，不表示评估失败。
+
+### 10.11 Milvus `too_many_pings`
+
+本地 gRPC 偶尔会输出 `GOAWAY ... too_many_pings` 并自动调整 keepalive。只要后续生成和评估继续运行，它就是非致命提示。
+
+---
+
+## 11. 正式运行前检查
+
+- [ ] 固定并记录 Git commit。
+- [ ] `--train-ratio 0.9` 未改变。
+- [ ] 画像和人设只读取前 90% Session。
+- [ ] 测试历史使用 REALTALK 真实回复 teacher forcing。
+- [ ] 目标回复和未来消息没有进入 generation input。
+- [ ] 人设 schema 为 `lx_agent_v3_behavior_calibrated_no_catchphrases`。
+- [ ] embedding 输出为 1536 维。
+- [ ] 不同 Prompt 版本使用不同输出目录。
+- [ ] `torch.cuda.is_available()` 为 `True`。
+- [ ] `uv pip check` 通过。
+- [ ] 评估使用 `uv run --no-sync`。
+- [ ] 四个 Hugging Face 模型能在离线模式加载。
+- [ ] 候选生成模型和 Judge 模型分别记录。
+- [ ] `table2_main_results.md` 包含论文两行和 `Ours`。
+- [ ] 正式结果覆盖论文声明的全部目标角色方向。
+
+---
+
+## 12. Windows PowerShell 附录
+
+Linux/3090 是推荐环境。Windows 本地调试时，参数保持不变，仅续行符改为反引号：
+
+```powershell
+uv run --no-sync python -m src.experiments.exp2_user_modeling `
+  --phase generate `
+  --case Chat_1_Emi_Elise.json `
+  --train-ratio 0.9 `
+  --config config.qwen-plus.ini `
+  --prompt-version v5_relationship_calibrated `
+  --output-dir data/exp2_single_v5
+
+$env:HF_HUB_OFFLINE="1"
+$env:TRANSFORMERS_OFFLINE="1"
+
+uv run --no-sync python -m src.experiments.exp2_user_modeling `
+  --phase evaluate `
+  --case Chat_1_Emi_Elise.json `
+  --train-ratio 0.9 `
+  --config config.qwen-plus.ini `
+  --prompt-version v5_relationship_calibrated `
+  --output-dir data/exp2_single_v5 `
+  --judge-config-section EvaluationAPI `
+  --judge-model gpt-4o-mini `
+  --eval-device cuda:0 `
+  --eval-batch-size 16
+```
+
+批量运行时去掉 `--case`。夜间 Prompt sweep 脚本是 Bash 脚本，应在 Linux 3090 上运行。

@@ -7,9 +7,8 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from src.agent import StateDrivenCompanionAgent
-from src.experiments.exp2_user_modeling import ExperimentCase
+from src.experiments.exp2_user_modeling import ExperimentCase, TABLE2_METRICS
 from src.experiments.exp3_ablation_study import (
-    CONDITION_ORDER,
     CONDITIONS,
     EXPLICIT_TRAIN_RATIO,
     ONLINE_TRAIN_RATIO,
@@ -23,12 +22,14 @@ from src.experiments.exp3_ablation_study import (
     scenario_path,
     select_conditions,
     select_tracks,
+    surface_style_guidance,
 )
 from src.experiments.exp3_user_simulator import (
     HiddenClaim,
     HiddenProfileUserSimulator,
     aggregate_discovery_results,
     atomic_profile_claims,
+    build_hidden_claim_manifest,
     validate_simulator_payload,
 )
 from src.prompts.exp2_versions import get_exp2_prompt_bundle
@@ -117,12 +118,15 @@ class Exp3ProtocolTests(unittest.TestCase):
         self.assertEqual(args.online_train_ratio, ONLINE_TRAIN_RATIO)
         self.assertEqual(args.sim_rounds, 20)
 
-    def test_each_track_has_exactly_two_primary_conditions(self) -> None:
+    def test_default_exploration_is_capability_only_without_invented_comparator(self) -> None:
         selected = select_conditions(select_tracks([]), [])
-        self.assertEqual([len(selected[track]) for track in select_tracks([])], [2, 2, 2])
+        self.assertEqual([len(selected[track]) for track in select_tracks([])], [2, 1, 2])
         self.assertEqual(
             [condition.key for values in selected.values() for condition in values],
-            list(CONDITION_ORDER),
+            [
+                "explicit_user_modeling", "wo_explicit_user_modeling",
+                "adaptive_exploration", "bayesian_online", "static_profile",
+            ],
         )
 
     def test_condition_cannot_be_selected_from_wrong_track(self) -> None:
@@ -283,6 +287,45 @@ class Exp3ProtocolTests(unittest.TestCase):
             ],
         )
 
+    def test_dataset_comparison_is_paired_and_bayesian_is_temporally_segmented(self) -> None:
+        conditions = [CONDITIONS["bayesian_online"], CONDITIONS["static_profile"]]
+        metric_stats = {
+            metric: {"mean": 1.0, "std": 0.0} for metric in TABLE2_METRICS
+        }
+        aggregate = {
+            "example_count": 1, "speaker_count": 1, "ours": metric_stats,
+        }
+        reference_score = {
+            "example_id": "e1",
+            **{metric: 1.0 for metric in TABLE2_METRICS},
+        }
+        candidate_score = {
+            "example_id": "e1",
+            **{metric: 0.5 for metric in TABLE2_METRICS},
+        }
+        payload = dataset_comparison_payload(
+            {condition.key: aggregate for condition in conditions},
+            conditions,
+            {
+                "bayesian_online": [reference_score],
+                "static_profile": [candidate_score],
+            },
+            {"e1": "late"},
+            {condition.key: {} for condition in conditions},
+        )
+        self.assertTrue(payload["temporal_segmentation_required"])
+        self.assertEqual(payload["evaluation_scope"], "comparative")
+        comparison = payload["paired_comparisons"][0]
+        self.assertIn("late", comparison["early_middle_late_mean_paired_degradation"])
+        self.assertEqual(comparison["per_example"][0]["example_id"], "e1")
+
+    def test_style_guidance_contains_no_raw_user_content(self) -> None:
+        secret = "I secretly love obscure astronomy documentaries!"
+        guidance = surface_style_guidance([secret, "Really?"])
+        serialized = " ".join(guidance)
+        self.assertNotIn("astronomy", serialized)
+        self.assertIn("mean_words_per_message", serialized)
+
 
 class Exp3SimulatorTests(unittest.TestCase):
     def test_atomic_claims_exclude_redundant_summaries(self) -> None:
@@ -374,6 +417,45 @@ class Exp3SimulatorTests(unittest.TestCase):
         self.assertEqual(result["revealed_claim_ids"], ["H001"])
         self.assertIn("likes quiet films", llm.prompts[1])
         self.assertNotIn("fears abandonment", llm.prompts[1])
+
+    def test_hidden_targets_require_semantic_novelty_and_heldout_evidence(self) -> None:
+        class FakeLLM:
+            def __init__(self):
+                self.calls = 0
+
+            def chat(self, system, prompt, **kwargs):
+                self.calls += 1
+                if self.calls == 1:
+                    return json.dumps({"claims": [{
+                        "candidate_id": "E001", "path": "behavior.interests",
+                        "text": "likes quiet films", "evidence_ids": ["D2"],
+                        "stability": "stable",
+                    }]})
+                return json.dumps({"audit": [
+                    {
+                        "full_claim_id": "P001", "relation": "known",
+                        "matched_initial_claim_ids": ["I001"],
+                        "matched_evidence_claim_ids": [],
+                    },
+                    {
+                        "full_claim_id": "P002", "relation": "new",
+                        "matched_initial_claim_ids": [],
+                        "matched_evidence_claim_ids": ["E001"],
+                    },
+                ]})
+
+        manifest = build_hidden_claim_manifest(
+            FakeLLM(), "User",
+            {"core": {"values": ["kindness"]}},
+            {
+                "core": {"values": ["kindness"]},
+                "behavior": {"interests": ["likes quiet films"]},
+            },
+            {"D2": "I usually prefer quiet films."},
+        )
+        self.assertEqual(len(manifest["hidden_claims"]), 1)
+        self.assertEqual(manifest["hidden_claims"][0]["id"], "H001")
+        self.assertEqual(manifest["hidden_claims"][0]["evidence_ids"], ["D2"])
 
 
 if __name__ == "__main__":

@@ -316,8 +316,7 @@ def _markdown_summary(payload: Dict[str, Any]) -> str:
         "| Version | Axis | Strength | Primary metrics | Hypothesis |",
         "|---|---|---|---|---|",
     ]
-    for version in SWEEP_VERSIONS:
-        spec = EXP2_PROMPT_SWEEP_SPECS[version]
+    for version, spec in payload.get("design", {}).items():
         lines.append(
             f"| {version} | {spec['axis']} | {spec['strength']} | "
             f"{spec['primary_metrics']} | {spec['hypothesis']} |"
@@ -443,7 +442,11 @@ def summarize(
         "sweep_root": str(root),
         "baseline_dir": str(Path(baseline_dir).resolve()) if baseline_dir else None,
         "cases": [case.case_id for case in cases],
-        "design": EXP2_PROMPT_SWEEP_SPECS,
+        "design": {
+            version: EXP2_PROMPT_SWEEP_SPECS[version]
+            for version in versions
+            if version in EXP2_PROMPT_SWEEP_SPECS
+        },
         "results": results,
         "winners": _winner_versions(results),
     }
