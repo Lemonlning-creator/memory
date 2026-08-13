@@ -1,5 +1,12 @@
 # Experiment 2：User Modeling Evaluation
 
+受控检查“完整上一轮状态是否反而干扰回复”的独立脚本与命令见
+`src/experiments/README_exp2_controlled_state_ablation.md`。该测试冻结完成版 V18
+的输入和状态轨迹，只比较完整状态、三个 Empathy 数值与空状态，不修改主实验。
+
+已经确认的全量结果、失败版本诊断、实验混杂因素和后续决策规则统一记录在
+`src/experiments/EXP2_RESULT_ANALYSIS_NOTES.md`，后续设计新 Prompt 前先核对该文档。
+
 本文件说明实验二的设计、3090 环境部署、主实验运行、Table 2 评估、Prompt 版本实验和定性曲线。
 
 当前有两个相互独立的入口：
