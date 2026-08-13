@@ -314,13 +314,44 @@ class StateDrivenCompanionAgent:
                 temperature=0.3,
             ))
             if isinstance(result, dict):
-                self.last_empathy_state = result.get("empathy_state", {})
+                self.last_empathy_state = self._response_state_from_alignment(result)
                 self.last_prediction = result.get("prediction", {})
                 self._apply_alignment_state_update(result)
             return result
         except Exception as e:
             print(f"[Empathy Alignment Error] {e}")
             return {}
+
+    def _response_state_from_alignment(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """Build the completed alignment payload exposed to the next reply."""
+        empathy_state = result.get("empathy_state", {})
+        if not isinstance(empathy_state, dict):
+            return {}
+        if self.prompt_bundle.response_state_policy == "empathy_state":
+            return deepcopy(empathy_state)
+        if self.prompt_bundle.response_state_policy != "relationship_empathy_without_guidance":
+            raise ValueError(
+                "unknown response state policy: "
+                f"{self.prompt_bundle.response_state_policy}"
+            )
+
+        understanding = result.get("understanding", {})
+        if not isinstance(understanding, dict):
+            understanding = {}
+        relationship_distance = understanding.get("relationship_distance", "unknown")
+        if relationship_distance not in {"unfamiliar", "casual", "familiar", "close"}:
+            relationship_distance = "unknown"
+
+        # Keep only slow interpersonal calibration and abstract empathy/tone
+        # controls. response_guidance is deliberately excluded because it is
+        # tied to the preceding message and can cause next-turn topic leakage.
+        return {
+            "relationship_distance": relationship_distance,
+            "emotional_reaction": empathy_state.get("emotional_reaction", 0),
+            "interpretation": empathy_state.get("interpretation", 0),
+            "exploration": empathy_state.get("exploration", 0),
+            "activated_tone": empathy_state.get("activated_tone", ""),
+        }
 
     def _apply_alignment_state_update(self, result: Dict[str, Any]) -> bool:
         """Persist the current-turn state for use by the following turn."""

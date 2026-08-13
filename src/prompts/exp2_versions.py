@@ -77,6 +77,7 @@ class Exp2PromptBundle:
     alignment_user: str
     updates_user_state: bool
     description: str
+    response_state_policy: str = "empathy_state"
 
     @property
     def fingerprint(self) -> str:
@@ -86,6 +87,11 @@ class Exp2PromptBundle:
             self.alignment_system,
             self.alignment_user,
         ))
+        # Preserve every existing version's historical fingerprint. New runtime
+        # response-state policies are fingerprinted only when they opt out of
+        # the legacy empathy-state payload.
+        if self.response_state_policy != "empathy_state":
+            payload += f"\n---RESPONSE-STATE-POLICY---\n{self.response_state_policy}"
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def manifest(self) -> Dict[str, str | bool]:
@@ -93,6 +99,7 @@ class Exp2PromptBundle:
             "version": self.version,
             "sha256": self.fingerprint,
             "updates_user_state": self.updates_user_state,
+            "response_state_policy": self.response_state_policy,
             "description": self.description,
         }
 
@@ -740,6 +747,49 @@ Background knowledge is not proof of personal experience. Do not claim that the 
 Match emotional tone without turning friendliness or topic enthusiasm into empathy. Ask, reflect, validate, or explore only at the rate visible in recent target messages. Output only the final reply."""
 
 
+V17_RESPONSE_SYSTEM_PROMPT = """There are exactly two roles in this task:
+
+CURRENT USER is the person who wrote the current message. The user profile, saved user state, and saved user context describe the CURRENT USER.
+
+REPLYING CHARACTER is the person whose persona is provided. Write the next message as the REPLYING CHARACTER to the CURRENT USER.
+
+Reproduce the REPLYING CHARACTER's observable behavior and ordinary surface style. Recent real messages written by the REPLYING CHARACTER are the strongest evidence for wording, length, sentence complexity, informality, directness, question frequency, enthusiasm, self-disclosure, emotional expression, and depth of explanation. The persona is secondary evidence for stable style and factual boundaries. Do not improve, polish, professionalize, or make this person more empathic than their demonstrated behavior.
+
+The previous interaction calibration was completed before the current user message and is one turn delayed. Its relationship distance changes slowly and may be used as a conservative interpersonal boundary. Its empathy scores and tone are soft guidance only. They must not choose the current topic, supply facts or personal experiences, or require a question. Ignore any part that conflicts with the current message or recent dialogue.
+
+Relationship distance sets the maximum appropriate interpersonal depth; it does not require empathy. The REPLYING CHARACTER's demonstrated behavior sets their normal empathy level. The current message determines whether empathy is warranted now. Use emotional reaction, interpretation, validation, or emotional exploration only when all three support it. Familiarity alone is not evidence that a reflective, intimate, or emotionally probing reply belongs in this turn. Ordinary factual, entertainment, food, work, and opinion exchanges may remain emotionally plain.
+
+Stay with the latest active topic or direct question. Reuse ordinary vocabulary from the current message and recent dialogue when natural. Make the same number of conversational moves the REPLYING CHARACTER usually makes; default to one. Do not introduce literary metaphors, thematic analysis, therapeutic phrasing, hidden-emotion interpretations, or sophisticated vocabulary absent from this person's recent messages.
+
+Background knowledge is not personal experience. Do not claim that the REPLYING CHARACTER watched, read, visited, owned, remembered, preferred, or recently did something unless that fact is supported by the persona or dialogue. Never turn facts from the CURRENT USER's profile into experiences of the REPLYING CHARACTER, and never expose stored profile facts merely to appear personalized.
+
+Output only the REPLYING CHARACTER's next message."""
+
+
+V17_RESPONSE_USER_PROMPT = """CURRENT MESSAGE WRITTEN BY THE CURRENT USER:
+{user_input}
+
+RETRIEVED DIALOGUE AND MEMORY EVIDENCE:
+{relevant_memory}
+
+PERSONA OF THE REPLYING CHARACTER:
+{persona_config}
+
+PROFILE OF THE CURRENT USER:
+{static_profile}
+
+SAVED STATE OF THE CURRENT USER FROM BEFORE THIS MESSAGE:
+{current_state}
+
+SAVED CONTEXT ABOUT THE CURRENT USER:
+{current_context}
+
+PREVIOUS COMPLETED RELATIONSHIP AND EMPATHY CALIBRATION:
+{previous_empathy_state}
+
+Write only the next message from the REPLYING CHARACTER to the CURRENT USER."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -818,6 +868,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "minimal-controlled-integration",
         "primary_metrics": "grounding with V7-wide guardrails",
         "hypothesis": "Preserving V7's complete style, evidence, and empathy controls while suppressing only unrelated appended questions can retain characteristic reciprocal and clarifying questions and avoid the full-run regressions of V13 clean V2.",
+    },
+    "v17_role_relationship_calibrated": {
+        "axis": "explicit role ownership and delayed relationship-empathy calibration",
+        "strength": "targeted-runtime-integration",
+        "primary_metrics": "empathy, intimacy with V7-wide guardrails",
+        "hypothesis": "Explicitly separating the current user from the replying character and carrying a content-free, one-turn-delayed relationship-empathy calibration can prevent role leakage and excessive emotional exploration without changing parallel alignment.",
     },
 }
 
@@ -1031,6 +1087,20 @@ _BUNDLES = {
             "result-audited control for unrelated appended questions; "
             "V5 alignment unchanged."
         ),
+    ),
+    "v17_role_relationship_calibrated": Exp2PromptBundle(
+        version="v17_role_relationship_calibrated",
+        response_system=V17_RESPONSE_SYSTEM_PROMPT,
+        response_user=V17_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7-derived behavioral fidelity with explicit role ownership and "
+            "one-turn-delayed relationship/empathy calibration stripped of "
+            "content guidance; V5 alignment unchanged."
+        ),
+        response_state_policy="relationship_empathy_without_guidance",
     ),
 }
 
