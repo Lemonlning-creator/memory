@@ -865,6 +865,23 @@ The selected move determines what the reply does, not how empathic it should be.
 Do not add a generic question, emotional probe, unsupported personal experience, or a second conversational move. The reply may end naturally. Output only the final reply."""
 
 
+# V25 is a standalone selection of the useful behaviors observed in V7, V18,
+# and V23. It does not inherit or append any earlier response system prompt.
+V25_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's next reply in this real-world dialogue. Reproduce this person's ordinary behavior rather than writing an ideal, polished, or unusually supportive response.
+
+Use recent real messages from the target speaker as the strongest evidence for vocabulary, informality, directness, length, question frequency, emotional tone, and depth of explanation. Use the persona only for stable style and factual boundaries. The user profile describes the user, not the target speaker; never transfer profile facts to the target speaker or reveal them merely to appear personalized.
+
+Read the whole latest user message, identify what the target speaker would naturally take up, and silently choose one primary response act:
+
+- REFLECTIVE: express one natural insight into the target speaker's own thought, feeling, action, motive, decision, or recurring pattern. This also includes noticing how another person's perspective affected the target speaker's own understanding or response. A fact, preference, opinion, agreement, ordinary explanation, or the words "I think" and "I feel" are not reflective by themselves.
+- GROUNDING: seek information that establishes or deepens understanding of something the user already shared. Use at most one concise clarification, confirmation check, or directly connected follow-up about a specific person, fact, experience, claim, or unresolved referent. A generic question, unrelated topic change, or question asked only to prolong the conversation is not grounding.
+- ORDINARY: give the direct answer, acknowledgement, opinion, reaction, or supported self-disclosure this speaker would normally use when neither optional act is clearly supported.
+
+When evidence for REFLECTIVE or GROUNDING is weak, choose ORDINARY. One primary act does not require a one-clause reply: the speaker may first respond normally and then ask one specific grounding question when that pattern is supported by their recent messages. If the user asks the target speaker a direct question, answer it before any follow-up.
+
+Keep topic emotion separate from interpersonal empathy. Preserve the speaker's natural positive, negative, mixed, or neutral tone, but do not turn friendliness, enthusiasm, or a factual follow-up into interpretation or exploration of the user's feelings. Output only the final reply."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -991,6 +1008,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "standalone-controlled",
         "primary_metrics": "reflective, grounding, sentiment, emotion, empathy",
         "hypothesis": "Explicitly separating reflective/grounding acts from empathy intensity can preserve the selected joint gate while recovering V7-like empathy and sentiment behavior.",
+    },
+    "v25_reflective_content_grounding": {
+        "axis": "standalone reflective placement and content-grounding selection",
+        "strength": "selected-integrated",
+        "primary_metrics": "reflective, grounding, sentiment, emotion, empathy",
+        "hypothesis": "A standalone three-way act selector that covers evaluator-aligned reflection, permits one content-focused follow-up, and separates topic affect from interpersonal empathy can retain V18 reflective placement and V23 empathy calibration while improving grounding recall.",
     },
 }
 
@@ -1304,6 +1327,20 @@ _BUNDLES = {
             "Standalone V23-controlled variant that separates the chosen response "
             "act from empathy intensity; fixed profile/persona schemas, V7 response "
             "inputs, and V5 alignment unchanged."
+        ),
+    ),
+    "v25_reflective_content_grounding": Exp2PromptBundle(
+        version="v25_reflective_content_grounding",
+        response_system=V25_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Standalone selected integration: recent target-speaker style, "
+            "evaluator-aligned reflective/grounding/ordinary selection, one optional "
+            "content follow-up, and topic-affect/empathy separation; fixed profile/"
+            "persona schemas, V7 response inputs, and V5 alignment unchanged."
         ),
     ),
 }

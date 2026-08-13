@@ -740,7 +740,34 @@ bash scripts/run_exp2_prompt_sweep_v23_v24.sh
 
 包装脚本默认把正确的联合门控V18加入汇总参考行。V23和V24必须使用各自的新目录，不复用V19–V22生成结果。
 
-### 7.7 Sweep 的 asset 和缓存隔离
+### 7.7 V25：Reflective与内容型Grounding择优集成
+
+`v25_reflective_content_grounding`是独立完整Prompt，不继承或追加V7、V18、V23、V24。它只保留四版结果支持的核心行为：
+
+- 近期真实角色消息决定词汇、长度、语气和问句频率；
+- Reflective/Grounding/Ordinary三选一，弱证据回到Ordinary；
+- Reflective覆盖自我观察、行为动机，以及“他人视角如何影响智能体自身理解或反应”的窄Perspective-taking；
+- Grounding只能针对用户已经提出的具体人物、事实、经历、主张或未决指代；
+- “一个主要动作”不等于只能写一个分句，允许“正常回应＋一个具体内容追问”；
+- 事实型内容追问不自动转化为对用户感受的解释或探索。
+
+完整用户画像、原固定人设、response user Prompt、V5 alignment、上一轮状态和评估Prompt均保持不变；最终回复仍不接收显式`relationship_distance`。
+
+全量运行：
+
+```bash
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
+BEST_FULL_DIR=data/exp2_v16_full/v16_v7_selective_followup \
+SWEEP_ROOT=data/exp2_prompt_sweep_v25 \
+CASE_SET=all \
+GENERATE_WORKERS=3 \
+bash scripts/run_exp2_prompt_sweep_v25.sh
+```
+
+包装脚本默认在报告中同时保留V18（Reflective参考）和V23（Empathy参考）。V25必须使用新的输出目录，不能复用V23/V24结果。
+
+### 7.8 Sweep 的 asset 和缓存隔离
 
 Sweep helper 只复用不可变文件：
 
