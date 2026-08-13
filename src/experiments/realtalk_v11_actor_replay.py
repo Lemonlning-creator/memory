@@ -21,6 +21,7 @@ from .realtalk_ours import (
 
 
 PROTOCOL = "realtalk_task1_ours_v11_soft_actor_replay_v1"
+ACTOR_VIEW_LOGIC_VERSION = "structured_question_permissions_v1"
 FIRST_FIVE = tuple(item["speaker"] for item in REALTALK_PERSONA_SPLITS[:5])
 ALL_TEN = tuple(item["speaker"] for item in REALTALK_PERSONA_SPLITS)
 
@@ -139,6 +140,8 @@ def run(
         "selection": selection,
         "generation_system": stable_hash(GENERATION_SYSTEM_PROMPT),
         "generation_user": stable_hash(GENERATION_USER_PROMPT),
+        "actor_view_logic_version": ACTOR_VIEW_LOGIC_VERSION,
+        "module_sha256": _sha256(Path(__file__)),
         "model": source_model,
     })
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -235,6 +238,8 @@ def run(
             "system": stable_hash(GENERATION_SYSTEM_PROMPT),
             "user": stable_hash(GENERATION_USER_PROMPT),
         },
+        "actor_view_logic_version": ACTOR_VIEW_LOGIC_VERSION,
+        "module_sha256": _sha256(Path(__file__)),
         "output_predictions_sha256": _sha256(output_dir / "predictions.jsonl"),
         "completed_at_utc": datetime.now(UTC).isoformat(),
         "run_signature": signature,

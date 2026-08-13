@@ -58,6 +58,10 @@ class RealTalkV11ActorReplayTests(unittest.TestCase):
         self.assertIn("Never turn an event", GENERATION_USER_PROMPT)
         self.assertIn("gets no second", GENERATION_USER_PROMPT)
 
+    def test_actor_logic_version_is_manifested(self):
+        from src.experiments.realtalk_v11_actor_replay import ACTOR_VIEW_LOGIC_VERSION
+        self.assertEqual(ACTOR_VIEW_LOGIC_VERSION, "structured_question_permissions_v1")
+
     def test_permissions_are_deterministic_from_frozen_action(self):
         action = {
             "primary_move": "answer", "continuation_move": "none",
