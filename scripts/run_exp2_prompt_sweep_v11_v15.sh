@@ -17,6 +17,7 @@ JUDGE_CONFIG_SECTION="${JUDGE_CONFIG_SECTION:-EvaluationAPI}"
 JUDGE_MODEL="${JUDGE_MODEL:-gpt-4o-mini}"
 EVAL_DEVICE="${EVAL_DEVICE:-cuda:0}"
 EVAL_BATCH_SIZE="${EVAL_BATCH_SIZE:-16}"
+JUDGE_WORKERS="${JUDGE_WORKERS:-6}"
 REUSE_REFERENCE_CACHE="${REUSE_REFERENCE_CACHE:-1}"
 UV_BIN="${UV_BIN:-uv}"
 VERSIONS_CSV="${VERSIONS_CSV:-}"
@@ -124,6 +125,7 @@ echo "  cases        : ${CASES[*]:-all 10 conversations}"
 echo "  versions     : ${VERSIONS[*]}"
 echo "  candidate    : [API].model in $CONFIG"
 echo "  judge model  : $JUDGE_MODEL"
+echo "  judge workers: $JUDGE_WORKERS"
 echo "  eval device  : $EVAL_DEVICE"
 
 failures=()
@@ -159,6 +161,7 @@ for version in "${VERSIONS[@]}"; do
     --judge-config-section "$JUDGE_CONFIG_SECTION"
     --eval-device "$EVAL_DEVICE"
     --eval-batch-size "$EVAL_BATCH_SIZE"
+    --judge-workers "$JUDGE_WORKERS"
   )
   if [[ -n "$JUDGE_MODEL" ]]; then
     command+=(--judge-model "$JUDGE_MODEL")

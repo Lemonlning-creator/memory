@@ -353,6 +353,7 @@ api_key_env = EVAL_API_KEY
 - `[API]`：用户画像、人设、alignment 和 Ours 回复生成。
 - `[EvaluationAPI]`：只用于 Reflective、Grounding 和 Empathy Judge。
 - `--judge-model` 可以覆盖 `[EvaluationAPI].model`。
+- `--judge-workers` 控制远程 LLM-as-Judge 并发数，默认 `6`；不改变评估 Prompt、标签定义或缓存指纹。
 - 严格与 REALTALK 对比时使用 `gpt-4o-mini`；换成其他 Judge 必须记录为实验偏差。
 - 当前记忆 embedding 固定为 1536 维，embedding 服务也必须返回 1536 维向量。
 
@@ -423,6 +424,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --output-dir data/exp2_single_v5 \
   --judge-config-section EvaluationAPI \
   --judge-model gpt-4o-mini \
+  --judge-workers 6 \
   --eval-device cuda:0 \
   --eval-batch-size 16
 ```
@@ -450,6 +452,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --output-dir "$V5_DIR" \
   --judge-config-section EvaluationAPI \
   --judge-model gpt-4o-mini \
+  --judge-workers 6 \
   --eval-device cuda:0 \
   --eval-batch-size 16
 ```
@@ -775,6 +778,8 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 
 Reflective、Grounding 和 Empathy 使用远程 Judge，不占本地 GPU；三个 CardiffNLP 模型和 BERTScore 使用 GPU。
 
+远程 Judge 会按候选回复并发执行，默认最多同时处理 6 个候选。每个候选内部仍按相同 Prompt 分别得到 Reflective、Grounding 和 Empathy；结果返回后由主线程顺序写入 `table2_annotations.jsonl`，因此断点缓存不会被多个线程同时写入。本地 Sentiment、Emotion、Intimacy 和 BERTScore 不随 `--judge-workers` 并发，避免争抢单张 3090。若中转站返回频繁的 `429`，将其降为 `4` 或 `2`；不要通过同时启动多个完整 `evaluate` 进程来提高并发。
+
 ### 10.10 RoBERTa pooler warning
 
 BERTScore 加载基础 `roberta-large` 时可能提示 pooler 权重未初始化。BERTScore 使用 token embeddings，不使用该 pooler；这是预期警告，不表示评估失败。
@@ -830,6 +835,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling `
   --output-dir data/exp2_single_v5 `
   --judge-config-section EvaluationAPI `
   --judge-model gpt-4o-mini `
+  --judge-workers 6 `
   --eval-device cuda:0 `
   --eval-batch-size 16
 ```
