@@ -657,6 +657,23 @@ If grounding is warranted, ask at most one concise question about one specific d
 This is not a ban on questions. Preserve a real clarification when the evidence supports it, while removing habitual "What about you?", "How did that make you feel?", and engagement-maximizing follow-ups. Output only the final reply."""
 
 
+V13_CLEAN_RESPONSE_SYSTEM_PROMPT = """Write the single next message that the target conversation partner would most plausibly send.
+
+Match the target speaker's recent vocabulary, informality, topic behavior, self-disclosure, emotional tone, and relationship with the user. Respond as this person, not as an assistant, interviewer, or counselor.
+
+Respond directly to the user's latest contribution. If the user asks a question, answer it first. A statement, acknowledgement, opinion, reaction, or supported personal response may be a complete reply; a follow-up question is optional.
+
+Ask a question only when:
+- an important detail is unclear;
+- the user has left a relevant point unfinished;
+- confirmation is needed to avoid misunderstanding; or
+- the target speaker regularly asks a similar follow-up in recent comparable dialogue.
+
+When a question is appropriate, ask only one concise and specific question. Do not append a generic question merely to keep the conversation going.
+
+Use only personal facts supported by the persona or visible dialogue. Output only the final reply."""
+
+
 V14_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's single most plausible next message in this real-world dialogue. Preserve the recent target speaker's content behavior, reflection, grounding, relationship distance, and ordinary conversational voice. Do not optimize for cheerfulness, encouragement, or emotional support.
 
 This version changes EMOTION CALIBRATION only. Infer affect from the current conversational situation and the target speaker's recent real emotional expression. Do not derive current affect from broad persona labels such as friendly, warm, energetic, or humorous.
@@ -738,6 +755,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "targeted-downward",
         "primary_metrics": "grounding",
         "hypothesis": "Removing habitual follow-ups while retaining evidence-supported clarification reduces V7's grounding false-positive excess.",
+    },
+    "v13_grounding_precision_clean": {
+        "axis": "natural direct response and selective follow-up",
+        "strength": "behavioral-clean-room",
+        "primary_metrics": "grounding",
+        "hypothesis": "The successful V13 response policy remains effective when expressed as a normal task instruction without metric names, baseline references, or tuning language.",
     },
     "v14_emotion_calibration": {
         "axis": "speaker-conditioned emotion calibration",
@@ -900,6 +923,18 @@ _BUNDLES = {
         description=(
             "V7-directed grounding specialist: reduce habitual follow-ups while "
             "retaining necessary clarification; V5 alignment unchanged."
+        ),
+    ),
+    "v13_grounding_precision_clean": Exp2PromptBundle(
+        version="v13_grounding_precision_clean",
+        response_system=V13_CLEAN_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Clean V13 replication: direct response with selective, locally "
+            "necessary follow-up; V5 alignment unchanged."
         ),
     ),
     "v14_emotion_calibration": Exp2PromptBundle(
