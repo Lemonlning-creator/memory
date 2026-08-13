@@ -25,8 +25,9 @@ JUDGE_WORKERS="${JUDGE_WORKERS:-6}"
 REUSE_REFERENCE_CACHE="${REUSE_REFERENCE_CACHE:-1}"
 UV_BIN="${UV_BIN:-uv}"
 VERSIONS_CSV="${VERSIONS_CSV:-}"
+FULL_REFERENCE_DIRS_CSV="${FULL_REFERENCE_DIRS_CSV:-}"
 
-# Run the four specialists first, then their pre-integrated decision flow.
+# Historical default sweep. Newer wrappers set VERSIONS_CSV explicitly.
 DEFAULT_VERSIONS=(
   v11_lexical_fidelity
   v12_reflective_placement
@@ -38,6 +39,11 @@ if [[ -n "$VERSIONS_CSV" ]]; then
   IFS=',' read -r -a VERSIONS <<< "$VERSIONS_CSV"
 else
   VERSIONS=("${DEFAULT_VERSIONS[@]}")
+fi
+
+FULL_REFERENCE_DIRS=()
+if [[ -n "$FULL_REFERENCE_DIRS_CSV" ]]; then
+  IFS=',' read -r -a FULL_REFERENCE_DIRS <<< "$FULL_REFERENCE_DIRS_CSV"
 fi
 if (( ${#VERSIONS[@]} == 0 )); then
   echo "No prompt versions selected; set VERSIONS_CSV to a comma-separated list" >&2
@@ -103,6 +109,12 @@ if [[ ! -f "$BEST_FULL_DIR/evaluation/table2_main_results.json" ]]; then
   echo "Set BEST_FULL_DIR to the accepted historical full-run best directory." >&2
   exit 2
 fi
+for reference_dir in "${FULL_REFERENCE_DIRS[@]}"; do
+  if [[ ! -f "$reference_dir/evaluation/table2_main_results.json" ]]; then
+    echo "Completed full-run metric reference not found: $reference_dir/evaluation/table2_main_results.json" >&2
+    exit 2
+  fi
+done
 if [[ ! -f "$CONFIG" ]]; then
   echo "Config file not found: $CONFIG" >&2
   exit 2
@@ -123,10 +135,16 @@ if [[ "$REUSE_REFERENCE_CACHE" == "1" ]]; then
   REFERENCE_CACHE_ARGS+=(--reuse-reference-cache)
 fi
 
+FULL_REFERENCE_ARGS=()
+for reference_dir in "${FULL_REFERENCE_DIRS[@]}"; do
+  FULL_REFERENCE_ARGS+=(--reference-dir "$reference_dir")
+done
+
 echo "Experiment 2 prompt sweep"
 echo "  asset source : $ASSET_SOURCE"
 echo "  V7 baseline  : $BASELINE_DIR"
 echo "  post-V7 best : $BEST_FULL_DIR"
+echo "  full refs    : ${FULL_REFERENCE_DIRS[*]:-none}"
 echo "  sweep root   : $SWEEP_ROOT"
 echo "  case set     : $CASE_SET"
 echo "  cases        : ${CASES[*]:-all 10 conversations}"
@@ -194,6 +212,7 @@ for version in "${VERSIONS[@]}"; do
     --dataset-dir "$DATASET_DIR"
     --train-ratio "$TRAIN_RATIO"
   )
+  summary_command+=("${FULL_REFERENCE_ARGS[@]}")
   summary_command+=(--version "$version")
   summary_command+=("${CASE_ARGS[@]}")
   "${summary_command[@]}" || true
@@ -208,8 +227,10 @@ summary_command=(
   --dataset-dir "$DATASET_DIR"
   --train-ratio "$TRAIN_RATIO"
 )
-CURRENT_REPORT_VERSION="${VERSIONS[$((${#VERSIONS[@]} - 1))]}"
-summary_command+=(--version "$CURRENT_REPORT_VERSION")
+summary_command+=("${FULL_REFERENCE_ARGS[@]}")
+for version in "${VERSIONS[@]}"; do
+  summary_command+=(--version "$version")
+done
 summary_command+=("${CASE_ARGS[@]}")
 "${summary_command[@]}"
 

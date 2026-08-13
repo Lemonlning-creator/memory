@@ -78,7 +78,6 @@ class Exp2PromptBundle:
     updates_user_state: bool
     description: str
     response_state_policy: str = "empathy_state"
-    uses_train_behavior_evidence: bool = False
 
     @property
     def fingerprint(self) -> str:
@@ -93,8 +92,6 @@ class Exp2PromptBundle:
         # the legacy empathy-state payload.
         if self.response_state_policy != "empathy_state":
             payload += f"\n---RESPONSE-STATE-POLICY---\n{self.response_state_policy}"
-        if self.uses_train_behavior_evidence:
-            payload += "\n---TRAIN-BEHAVIOR-EVIDENCE---\nenabled"
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def manifest(self) -> Dict[str, str | bool]:
@@ -103,7 +100,6 @@ class Exp2PromptBundle:
             "sha256": self.fingerprint,
             "updates_user_state": self.updates_user_state,
             "response_state_policy": self.response_state_policy,
-            "uses_train_behavior_evidence": self.uses_train_behavior_evidence,
             "description": self.description,
         }
 
@@ -794,59 +790,49 @@ PREVIOUS COMPLETED RELATIONSHIP AND EMPATHY CALIBRATION:
 Write only the next message from the REPLYING CHARACTER to the CURRENT USER."""
 
 
-V18_RESPONSE_SYSTEM_PROMPT = """This task has exactly two roles.
+V18_RESPONSE_SYSTEM_PROMPT = V7_RESPONSE_SYSTEM_PROMPT + """
 
-CURRENT USER:
-- wrote the latest input message;
-- is described only by the user profile, user state, and user context;
-- corresponds to the `user` side of recent dialogue and to `user_message` in a training example.
+Before writing, silently choose exactly one primary response-act pattern:
 
-REPLYING CHARACTER:
-- must write the next message now;
-- is described only by the agent persona and agent behavior evidence;
-- corresponds to the `assistant` side of recent dialogue and to `agent_reply` in a training example.
+A. REFLECTIVE. Use one natural self-observation only when the active topic is the target speaker's own feeling, motive, realization, decision, change, or recurring pattern. A fact, preference, opinion, explanation, or phrase such as "I think" or "I feel" is not reflective without awareness of an internal motive or pattern.
 
-Never transfer a fact, preference, experience, emotion, or identity from one role to the other. The final output must contain only the REPLYING CHARACTER's next message to the CURRENT USER.
+B. GROUNDING. Ask at most one concise clarification, confirmation, or directly connected follow-up about a specific detail the user already raised. Do not use a question merely to keep the conversation active, and do not use generic reciprocal, unrelated, stacked, or counselor-style questions.
 
-Choose the reply using four evidence sources with distinct purposes:
-1. The latest CURRENT USER message and recent real dialogue determine the active topic and what requires a response.
-2. Similar train-only examples show how the REPLYING CHARACTER responded to comparable CURRENT USER messages in earlier sessions.
-3. Train-only behavior statistics describe the REPLYING CHARACTER's usual length, sentence count, punctuation, word reuse, and question frequency.
-4. The fixed persona defines the REPLYING CHARACTER's stable style and factual boundaries.
+C. ORDINARY. When neither A nor B is clearly supported, use the direct answer, acknowledgement, opinion, reaction, or supported self-disclosure this speaker would normally give. The reply may end without a question.
 
-Training examples are behavior demonstrations, not events in the current conversation. Do not copy an example, import its topic, or claim its facts. If no example is genuinely comparable, rely on the current dialogue and fixed persona.
-
-Respond to the latest active topic or direct question. Match the REPLYING CHARACTER's observed vocabulary, informality, directness, detail, and number of conversational moves. A question, reflection, self-disclosure, validation, or emotional exploration is optional; use it only when the current message and comparable REPLYING CHARACTER behavior support it.
-
-Do not improve, polish, professionalize, or make the REPLYING CHARACTER more helpful or empathic than the evidence supports. Background knowledge is not personal experience. Do not reveal stored CURRENT USER facts merely to appear personalized. Output only the REPLYING CHARACTER's reply."""
+Do not combine A and B unless a genuine ambiguity makes both indispensable. If evidence for an optional act is weak, choose C. Do not mention this internal choice. Output only the final reply."""
 
 
-V18_RESPONSE_USER_PROMPT = """ROLE OWNERSHIP:
-- CURRENT USER = the writer of the latest message and the person described by USER PROFILE / USER STATE.
-- REPLYING CHARACTER = the person described by REPLYING CHARACTER PERSONA / TRAIN-ONLY AGENT BEHAVIOR EVIDENCE.
+V19_RESPONSE_SYSTEM_PROMPT = V7_RESPONSE_SYSTEM_PROMPT + """
 
-LATEST MESSAGE FROM CURRENT USER:
-{user_input}
+Calibrate reflective self-expression in this turn. Reflection is appropriate when the user asks about the target speaker's reason, feeling, motive, decision, realization, change, or recurring behavior, or when the target speaker's own internal response is already the active topic. When this trigger is present, include one natural observation that connects the speaker's action or feeling to an internal motive, pattern, or perspective.
 
-RECENT DIALOGUE, RETRIEVED MEMORY, AND TRAIN-ONLY BEHAVIOR EVIDENCE:
-{relevant_memory}
+Do not count a fact, preference, opinion, recommendation, agreement, ordinary explanation, or the words "I think" or "I feel" as reflection by itself. Do not add introspection to routine factual or topic-continuation replies. Preserve V7's ordinary question behavior and all other response choices. Output only the final reply."""
 
-REPLYING CHARACTER PERSONA:
-{persona_config}
 
-CURRENT USER PROFILE:
-{static_profile}
+V20_RESPONSE_SYSTEM_PROMPT = V7_RESPONSE_SYSTEM_PROMPT + """
 
-CURRENT USER STATE COMPLETED BEFORE THE LATEST MESSAGE:
-{current_state}
+Calibrate grounding questions in this turn. Ask at most one question, and only when it clarifies an unresolved referent or fact, confirms a plausible interpretation, or asks the user to elaborate on one specific detail, experience, or feeling already raised in the latest message. The connection to that existing detail must be explicit.
 
-CURRENT USER CONTEXT:
-{current_context}
+Do not append a question merely to sustain engagement. Avoid generic reciprocal questions, unrelated topic changes, stacked questions, and counselor-style exploration. A direct answer, acknowledgement, opinion, reaction, or supported self-disclosure may end the turn. Preserve V7's reflective behavior and all other response choices. Output only the final reply."""
 
-PREVIOUS-TURN INTERACTION CALIBRATION:
-{previous_empathy_state}
 
-Write only the REPLYING CHARACTER's next message to the CURRENT USER."""
+V21_RESPONSE_SYSTEM_PROMPT = V7_RESPONSE_SYSTEM_PROMPT + """
+
+Before writing, make two separate yes/no decisions:
+
+REFLECTIVE = yes only if the target speaker's own motive, feeling, realization, decision, change, or recurring pattern is the active subject and a genuine self-observation belongs in the reply. Facts, preferences, opinions, and ordinary explanations are not sufficient.
+
+GROUNDING = yes only if one specific clarification, confirmation, or directly connected follow-up about something the user already raised would deepen mutual understanding. A generic, reciprocal, unrelated, or engagement-maximizing question is not sufficient.
+
+If both are no, write the ordinary V7-style reply and allow it to end without a question. If one is yes, realize only that act. Use both only when each is independently and strongly supported; do not let one optional act justify the other. Do not mention these decisions. Output only the final reply."""
+
+
+V22_RESPONSE_SYSTEM_PROMPT = V7_RESPONSE_SYSTEM_PROMPT + """
+
+Use recent real target-speaker turns as response-act demonstrations, not only as surface-style examples. First match the current situation to a recent situation of the same type: direct question, factual sharing, preference exchange, personal self-disclosure, or emotional disclosure. Preserve whether the target speaker ordinarily used self-reflection, a directly connected grounding question, both, or neither in that comparable situation.
+
+Do not copy the earlier content or import its facts. Do not infer reflection or grounding from broad persona labels such as thoughtful, curious, warm, or supportive. If no genuinely comparable recent behavior is visible, default to an ordinary response without artificial introspection or a generic closing question. Current explicit clarification needs may override this default. Output only the final reply."""
 
 
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
@@ -934,11 +920,35 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "primary_metrics": "empathy, intimacy with V7-wide guardrails",
         "hypothesis": "Explicitly separating the current user from the replying character and carrying a content-free, one-turn-delayed relationship-empathy calibration can prevent role leakage and excessive emotional exploration without changing parallel alignment.",
     },
-    "v18_train_behavior_evidence": {
-        "axis": "role-separated train-only speaker behavior and similar reply exemplars",
-        "strength": "independent evidence-driven generation",
-        "primary_metrics": "lexical, reflective, grounding, sentiment, emotion, empathy",
-        "hypothesis": "Explicit role ownership plus observed response distributions and comparable real training replies provide speaker-specific supervision without transferring user facts to the replying character or changing either fixed schema.",
+    "v18_reflective_grounding_joint_gate": {
+        "axis": "joint placement gate for reflective and grounding response acts",
+        "strength": "targeted-minimal",
+        "primary_metrics": "reflective, grounding",
+        "hypothesis": "A mutually exclusive three-way act decision can correct V7's reflective placement errors and excess grounding questions without stacking the independent V12 and V13 prompts or changing V7's profile, persona, alignment, and style inputs.",
+    },
+    "v19_reflective_trigger_recall": {
+        "axis": "reflective trigger recall with V7 grounding unchanged",
+        "strength": "targeted-moderate",
+        "primary_metrics": "reflective",
+        "hypothesis": "Explicit internal-state triggers recover V7 reflective false negatives while excluding opinions and factual self-disclosure from false reflection.",
+    },
+    "v20_grounding_specificity_gate": {
+        "axis": "specific-detail grounding gate with V7 reflection unchanged",
+        "strength": "targeted-moderate",
+        "primary_metrics": "grounding",
+        "hypothesis": "Requiring every question to bind to a specific unresolved or elaboratable user detail reduces V7 grounding false positives without banning genuine follow-ups.",
+    },
+    "v21_independent_act_decisions": {
+        "axis": "independent reflective and grounding decisions",
+        "strength": "balanced-joint",
+        "primary_metrics": "reflective, grounding",
+        "hypothesis": "Two independent binary decisions retain turns where both acts are genuinely supported while preventing either act from automatically triggering the other.",
+    },
+    "v22_recent_act_imitation": {
+        "axis": "recent target-speaker response-act imitation",
+        "strength": "evidence-conditioned",
+        "primary_metrics": "reflective, grounding, emotion",
+        "hypothesis": "Conditioning act choice on comparable recent real target behavior can improve reflective and grounding placement while preserving V7 and V18's observed emotion fidelity.",
     },
 }
 
@@ -1167,19 +1177,66 @@ _BUNDLES = {
         ),
         response_state_policy="relationship_empathy_without_guidance",
     ),
-    "v18_train_behavior_evidence": Exp2PromptBundle(
-        version="v18_train_behavior_evidence",
+    "v18_reflective_grounding_joint_gate": Exp2PromptBundle(
+        version="v18_reflective_grounding_joint_gate",
         response_system=V18_RESPONSE_SYSTEM_PROMPT,
-        response_user=V18_RESPONSE_USER_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
         alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
         alignment_user=V5_ALIGNMENT_USER_PROMPT,
         updates_user_state=True,
         description=(
-            "Role-separated generation driven by deterministic train-only "
-            "speaker behavior statistics and similar real reply exemplars; "
-            "fixed user-profile/persona schemas and V5 alignment unchanged."
+            "V7 surface-style policy with one joint reflective/grounding/ordinary "
+            "response-act gate; full fixed user profile, original fixed persona, "
+            "V5 alignment, and all other generation inputs unchanged."
         ),
-        uses_train_behavior_evidence=True,
+    ),
+    "v19_reflective_trigger_recall": Exp2PromptBundle(
+        version="v19_reflective_trigger_recall",
+        response_system=V19_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7 plus a reflective-trigger recall rule; complete fixed profile, "
+            "original persona, grounding policy, and V5 alignment unchanged."
+        ),
+    ),
+    "v20_grounding_specificity_gate": Exp2PromptBundle(
+        version="v20_grounding_specificity_gate",
+        response_system=V20_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7 plus a specific-detail grounding gate; complete fixed profile, "
+            "original persona, reflective policy, and V5 alignment unchanged."
+        ),
+    ),
+    "v21_independent_act_decisions": Exp2PromptBundle(
+        version="v21_independent_act_decisions",
+        response_system=V21_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7 plus independent reflective and grounding decisions; complete "
+            "fixed profile, original persona, and V5 alignment unchanged."
+        ),
+    ),
+    "v22_recent_act_imitation": Exp2PromptBundle(
+        version="v22_recent_act_imitation",
+        response_system=V22_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "V7 plus response-act imitation from comparable recent real target "
+            "turns; complete fixed profile, original persona, and V5 alignment unchanged."
+        ),
     ),
 }
 
