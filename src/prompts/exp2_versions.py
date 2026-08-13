@@ -835,6 +835,36 @@ Use recent real target-speaker turns as response-act demonstrations, not only as
 Do not copy the earlier content or import its facts. Do not infer reflection or grounding from broad persona labels such as thoughtful, curious, warm, or supportive. If no genuinely comparable recent behavior is visible, default to an ordinary response without artificial introspection or a generic closing question. Current explicit clarification needs may override this default. Output only the final reply."""
 
 
+# V23 and V24 are deliberately standalone prompts. They select the useful
+# behavior found in V7/V18 instead of inheriting or appending either prompt.
+V23_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's next message in this real-world dialogue. Reproduce this person's ordinary behavior; do not turn them into a more polished, helpful, or empathic speaker.
+
+Use recent real messages from the target speaker as the main evidence for vocabulary, informality, directness, length, question frequency, emotional expression, and depth of explanation. Use the persona only for stable style and factual boundaries. The user profile describes the user, not the target speaker, and must not be exposed merely to appear personalized.
+
+First choose one active point to answer: an explicit question addressed to the target speaker, otherwise the last unfinished point, otherwise the main point of the latest message. Then choose one primary response move:
+
+- REFLECTIVE: one natural self-observation when the active point concerns the target speaker's own feeling, motive, realization, decision, change, or recurring pattern. A fact, preference, opinion, ordinary explanation, or "I think" is not sufficient.
+- GROUNDING: at most one concise clarification, confirmation, or directly connected follow-up about a specific detail the user already raised.
+- ORDINARY: a direct answer, acknowledgement, opinion, reaction, or supported self-disclosure when neither optional move is clearly warranted.
+
+Use the target speaker's normal emotional tone without turning friendliness, enthusiasm, or a personal topic into extra empathy. Do not add a generic question, emotional probe, unsupported personal experience, or a second conversational move. The reply may end naturally. Output only the final reply."""
+
+
+V24_RESPONSE_SYSTEM_PROMPT = """Write the target conversation partner's next message in this real-world dialogue. Reproduce this person's ordinary behavior; do not turn them into a more polished, helpful, or empathic speaker.
+
+Use recent real messages from the target speaker as the main evidence for vocabulary, informality, directness, length, question frequency, emotional expression, and depth of explanation. Use the persona only for stable style and factual boundaries. The user profile describes the user, not the target speaker, and must not be exposed merely to appear personalized.
+
+First choose one active point to answer: an explicit question addressed to the target speaker, otherwise the last unfinished point, otherwise the main point of the latest message. Then choose one primary response move:
+
+- REFLECTIVE: one natural self-observation when the active point concerns the target speaker's own feeling, motive, realization, decision, change, or recurring pattern. A fact, preference, opinion, ordinary explanation, or "I think" is not sufficient.
+- GROUNDING: at most one concise clarification, confirmation, or directly connected follow-up about a specific detail the user already raised.
+- ORDINARY: a direct answer, acknowledgement, opinion, reaction, or supported self-disclosure when neither optional move is clearly warranted.
+
+The selected move determines what the reply does, not how empathic it should be. REFLECTIVE remains about the target speaker and does not require interpreting or validating the user's feelings. GROUNDING seeks a specific detail and does not require emotional exploration. Use validation, advice, intimacy, or emotional support only at the rate visible in the target speaker's recent real messages. Treat the previous-turn empathy state as weak and stale whenever it would intensify the latest turn.
+
+Do not add a generic question, emotional probe, unsupported personal experience, or a second conversational move. The reply may end naturally. Output only the final reply."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -949,6 +979,18 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "evidence-conditioned",
         "primary_metrics": "reflective, grounding, emotion",
         "hypothesis": "Conditioning act choice on comparable recent real target behavior can improve reflective and grounding placement while preserving V7 and V18's observed emotion fidelity.",
+    },
+    "v23_selected_style_joint_gate": {
+        "axis": "selected V7 surface behavior and V18 three-way act gate",
+        "strength": "standalone-minimal",
+        "primary_metrics": "reflective, grounding, sentiment, empathy",
+        "hypothesis": "A short standalone prompt containing only recent-speaker style evidence, one response target, and the V18 three-way act choice can retain the useful behavior without inherited rule accumulation.",
+    },
+    "v24_selected_gate_empathy_independence": {
+        "axis": "V23 selection with explicit response-act/empathy independence",
+        "strength": "standalone-controlled",
+        "primary_metrics": "reflective, grounding, sentiment, emotion, empathy",
+        "hypothesis": "Explicitly separating reflective/grounding acts from empathy intensity can preserve the selected joint gate while recovering V7-like empathy and sentiment behavior.",
     },
 }
 
@@ -1236,6 +1278,32 @@ _BUNDLES = {
         description=(
             "V7 plus response-act imitation from comparable recent real target "
             "turns; complete fixed profile, original persona, and V5 alignment unchanged."
+        ),
+    ),
+    "v23_selected_style_joint_gate": Exp2PromptBundle(
+        version="v23_selected_style_joint_gate",
+        response_system=V23_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Standalone selected prompt: recent target-speaker behavior, one active "
+            "point, and one reflective/grounding/ordinary move; fixed profile/persona "
+            "schemas, V7 response inputs, and V5 alignment unchanged."
+        ),
+    ),
+    "v24_selected_gate_empathy_independence": Exp2PromptBundle(
+        version="v24_selected_gate_empathy_independence",
+        response_system=V24_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Standalone V23-controlled variant that separates the chosen response "
+            "act from empathy intensity; fixed profile/persona schemas, V7 response "
+            "inputs, and V5 alignment unchanged."
         ),
     ),
 }

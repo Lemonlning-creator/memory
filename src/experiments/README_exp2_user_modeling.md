@@ -687,16 +687,16 @@ bash scripts/run_exp2_prompt_sweep_v11_v15.sh
 
 论文目标为Reflective `0.77 ± 0.09`、Grounding `0.62 ± 0.08`。脚本报告继续同时列出论文两行、V7、V7之后已接受的全量最好版本和V18。
 
-### 7.5 V19–V22：基于V7的四个定向版本
+### 7.5 V19–V22：历史定向实验
 
-四版都逐字保留V7 system Prompt，并且继续使用完整用户画像、原固定人设、V7 response user Prompt和V5 alignment。每版只追加一个不同的回复动作校准：
+V19–V22是已经完成的V7定向实验，版本定义必须与已生成结果保持一致，不再回写或改名。四版分别测试Reflective触发、Grounding具体性、两类动作独立判断和近期动作模仿。全量结果表明继续在V7后追加规则不能稳定合并V7与V18的优势，因此后续不再以这些Prompt作为叠加基础。
 
-| 版本 | 唯一新增方向 | 主要目的 |
+| 版本 | 定向变化 | 主要目的 |
 |---|---|---|
-| `v19_reflective_trigger_recall` | 明确自身动机、感受、变化和行为模式触发条件 | 补Reflective假阴性，同时排除普通意见和事实 |
-| `v20_grounding_specificity_gate` | 每个问题必须绑定用户已提出的具体细节 | 压低Grounding假阳性，保留必要澄清和追问 |
-| `v21_independent_act_decisions` | 分别判断Reflective和Grounding是否成立 | 允许两者都真实成立，但禁止相互连带触发 |
-| `v22_recent_act_imitation` | 根据相似的近期真实角色回复选择动作 | 用角色近期行为控制两类动作，并观察是否保留V18的Emotion改善 |
+| `v19_reflective_trigger_recall` | 明确Reflective触发条件 | Reflective专项诊断 |
+| `v20_grounding_specificity_gate` | 问句绑定用户具体细节 | Grounding专项诊断 |
+| `v21_independent_act_decisions` | 独立判断Reflective和Grounding | 两类动作联合诊断 |
+| `v22_recent_act_imitation` | 根据近期真实角色回复选择动作 | 行为证据诊断 |
 
 把已完成的V18全量结果作为专项参考行，运行四版全量实验：
 
@@ -711,9 +711,36 @@ GENERATE_WORKERS=3 \
 bash scripts/run_exp2_prompt_sweep_v19_v22.sh
 ```
 
-如果V18实际目录不同，只修改`FULL_REFERENCE_DIRS_CSV`。需要保留多个全量专项强版本时，用逗号分隔目录。最终汇总会按以下顺序保留：论文两行、V7、`BEST_FULL_DIR`、所有`FULL_REFERENCE_DIRS_CSV`、本批V19–V22。最后一次汇总会包含本批全部版本，而不再只显示最后运行的一版。
+V19–V22包装脚本已经默认把正确的联合门控V18作为全量参考；显式设置`FULL_REFERENCE_DIRS_CSV`可以覆盖该路径。需要保留多个全量专项强版本时，用逗号分隔目录。最终汇总会按以下顺序保留：论文两行、V7、`BEST_FULL_DIR`、V18、当前V19–V22。最后一次汇总会包含本批全部版本，而不再只显示最后运行的一版。
 
-### 7.6 Sweep 的 asset 和缓存隔离
+Sweep运行期间，每完成一个版本都会重写一次`prompt_sweep_summary.md`。中间报告会累计列出本次命令中所有已经产生`table2_main_results.json`的版本，而不是只保留刚完成的一版；因此即使后续版本失败或任务中断，前面已经完成的结果行也会保留。
+
+### 7.6 V23–V24：独立择优Prompt
+
+V23和V24不通过`V7 + addendum`或`V18 + addendum`构造，两个system Prompt均为独立完整文本：
+
+| 版本 | 保留内容 | 唯一差异 |
+|---|---|---|
+| `v23_selected_style_joint_gate` | 近期角色表面风格、一个当前回应点、Reflective/Grounding/Ordinary三选一 | 最小择优版本 |
+| `v24_selected_gate_empathy_independence` | 与V23相同的择优结构 | 明确所选动作不决定共情强度，上一轮Empathy状态仅为弱历史信息 |
+
+两版继续使用与V7/V18相同的response user Prompt、完整固定用户画像、原固定人设、V5 alignment和状态更新协议。最终回复不接收显式`relationship_distance`。
+
+全量运行：
+
+```bash
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
+BEST_FULL_DIR=data/exp2_v16_full/v16_v7_selective_followup \
+SWEEP_ROOT=data/exp2_prompt_sweep_v23_v24 \
+CASE_SET=all \
+GENERATE_WORKERS=3 \
+bash scripts/run_exp2_prompt_sweep_v23_v24.sh
+```
+
+包装脚本默认把正确的联合门控V18加入汇总参考行。V23和V24必须使用各自的新目录，不复用V19–V22生成结果。
+
+### 7.7 Sweep 的 asset 和缓存隔离
 
 Sweep helper 只复用不可变文件：
 

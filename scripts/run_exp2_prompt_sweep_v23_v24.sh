@@ -3,9 +3,8 @@ set -uo pipefail
 
 PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
-export SWEEP_ROOT="${SWEEP_ROOT:-data/exp2_prompt_sweep_v19_v22}"
-export VERSIONS_CSV="${VERSIONS_CSV:-v19_reflective_trigger_recall,v20_grounding_specificity_gate,v21_independent_act_decisions,v22_recent_act_imitation}"
-# The completed joint-gate V18 is the controlled full-run reference.
+export SWEEP_ROOT="${SWEEP_ROOT:-data/exp2_prompt_sweep_v23_v24}"
+export VERSIONS_CSV="${VERSIONS_CSV:-v23_selected_style_joint_gate,v24_selected_gate_empathy_independence}"
 export FULL_REFERENCE_DIRS_CSV="${FULL_REFERENCE_DIRS_CSV:-data/exp2_v18_reflective_grounding/v18_reflective_grounding_joint_gate}"
 
 exec bash "$PROJECT_ROOT/scripts/run_exp2_prompt_sweep_v11_v15.sh"

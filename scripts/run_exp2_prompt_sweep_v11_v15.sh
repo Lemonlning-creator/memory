@@ -156,6 +156,7 @@ echo "  judge workers: $JUDGE_WORKERS"
 echo "  eval device  : $EVAL_DEVICE"
 
 failures=()
+completed_versions=()
 for version in "${VERSIONS[@]}"; do
   target_dir="$SWEEP_ROOT/$version"
   log_path="$SWEEP_ROOT/${version}.log"
@@ -203,6 +204,30 @@ for version in "${VERSIONS[@]}"; do
     failures+=("$version:run")
   fi
 
+  if [[ -s "$target_dir/evaluation/table2_main_results.json" ]]; then
+    completed_versions+=("$version")
+  fi
+
+  if (( ${#completed_versions[@]} > 0 )); then
+    summary_command=(
+      "$UV_BIN" run --no-sync python -u -m src.experiments.exp2_prompt_sweep
+      summarize
+      --sweep-root "$SWEEP_ROOT"
+      --baseline-dir "$BASELINE_DIR"
+      --best-dir "$BEST_FULL_DIR"
+      --dataset-dir "$DATASET_DIR"
+      --train-ratio "$TRAIN_RATIO"
+    )
+    summary_command+=("${FULL_REFERENCE_ARGS[@]}")
+    for completed_version in "${completed_versions[@]}"; do
+      summary_command+=(--version "$completed_version")
+    done
+    summary_command+=("${CASE_ARGS[@]}")
+    "${summary_command[@]}" || true
+  fi
+done
+
+if (( ${#completed_versions[@]} > 0 )); then
   summary_command=(
     "$UV_BIN" run --no-sync python -u -m src.experiments.exp2_prompt_sweep
     summarize
@@ -213,26 +238,14 @@ for version in "${VERSIONS[@]}"; do
     --train-ratio "$TRAIN_RATIO"
   )
   summary_command+=("${FULL_REFERENCE_ARGS[@]}")
-  summary_command+=(--version "$version")
+  for completed_version in "${completed_versions[@]}"; do
+    summary_command+=(--version "$completed_version")
+  done
   summary_command+=("${CASE_ARGS[@]}")
-  "${summary_command[@]}" || true
-done
-
-summary_command=(
-  "$UV_BIN" run --no-sync python -u -m src.experiments.exp2_prompt_sweep
-  summarize
-  --sweep-root "$SWEEP_ROOT"
-  --baseline-dir "$BASELINE_DIR"
-  --best-dir "$BEST_FULL_DIR"
-  --dataset-dir "$DATASET_DIR"
-  --train-ratio "$TRAIN_RATIO"
-)
-summary_command+=("${FULL_REFERENCE_ARGS[@]}")
-for version in "${VERSIONS[@]}"; do
-  summary_command+=(--version "$version")
-done
-summary_command+=("${CASE_ARGS[@]}")
-"${summary_command[@]}"
+  "${summary_command[@]}"
+else
+  echo "No completed prompt versions are available for summary generation." >&2
+fi
 
 echo
 echo "Sweep report: $SWEEP_ROOT/prompt_sweep_summary.md"
