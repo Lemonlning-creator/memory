@@ -16,7 +16,6 @@ from src.prompts.exp2_versions import get_exp2_prompt_bundle
 class ControlledStateAblationTests(unittest.TestCase):
     def setUp(self) -> None:
         self.full_state = {
-            "empathy_level": "medium",
             "emotional_reaction": 1,
             "interpretation": 2,
             "exploration": 0,
@@ -37,13 +36,12 @@ class ControlledStateAblationTests(unittest.TestCase):
         self.assertEqual(_selected_state(self.full_state, "no_state"), {})
         scores_plus = _selected_state(
             self.full_state,
-            "scores_plus_level_and_tone",
+            "scores_plus_tone",
         )
         self.assertNotIn("response_guidance", scores_plus)
         self.assertEqual(
             scores_plus,
             {
-                "empathy_level": "medium",
                 "emotional_reaction": 1,
                 "interpretation": 2,
                 "exploration": 0,
@@ -56,11 +54,11 @@ class ControlledStateAblationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _selected_state({"emotional_reaction": 1}, "scores_only")
 
-    def test_scores_plus_rejects_missing_level_or_tone(self) -> None:
+    def test_scores_plus_rejects_missing_tone(self) -> None:
         incomplete = dict(self.full_state)
         incomplete.pop("activated_tone")
         with self.assertRaises(ValueError):
-            _selected_state(incomplete, "scores_plus_level_and_tone")
+            _selected_state(incomplete, "scores_plus_tone")
 
     def test_first_state_is_empty_and_later_state_is_source_predecessor(self) -> None:
         predictions = [{"example_id": "a"}, {"example_id": "b"}, {"example_id": "c"}]
@@ -103,7 +101,7 @@ class ControlledStateAblationTests(unittest.TestCase):
         scores_plus_prompt, scores_plus_frozen, scores_plus_payload = (
             _build_response_prompt(
                 **common,
-                condition="scores_plus_level_and_tone",
+                condition="scores_plus_tone",
             )
         )
         self.assertEqual(full_frozen, score_frozen)

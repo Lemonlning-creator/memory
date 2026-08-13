@@ -163,7 +163,6 @@ V25 的高问句率有明确 Prompt 因果证据，但多个版本之间的总�
 主实验默认把完整 `empathy_state` 传给下一轮最终回复，其中不只有三个数值，还包括：
 
 ```text
-empathy_level
 emotional_reaction
 interpretation
 exploration
@@ -181,7 +180,7 @@ response_guidance
 
 初轮受控消融已经确认：保留三个数值、删除其余非数值字段的
 `scores_only` 优于彻底删除状态的 `no_state`，且在 Reflective 和 Empathy
-上优于 `full_state`。但初轮同时删除了 `empathy_level`、`activated_tone` 和
+上优于 `full_state`。但初轮同时删除了 `activated_tone` 和
 `response_guidance`，尚不能把改善只归因于某一个字段。
 
 ## 6. 受控状态消融结果
@@ -261,7 +260,7 @@ Grounding 和 Intimacy。
 - Reflective 逐样本变化为 11 条改善、3 条退化、103 条不变；方向明确但单次
   运行尚不能声称统计显著。
 - `scores_only` 的 Intimacy 和宏平均 Grounding 弱于 `full_state`，说明被一起
-  删除的 `empathy_level` 或 `activated_tone` 可能仍有价值。
+  删除的 `activated_tone` 可能仍有价值。
 
 ### 6.3 Grounding 诊断
 
@@ -294,7 +293,7 @@ Grounding 具有明显 speaker 异质性：`scores_only` 在 Elise、Nebraas、P
 
 这与既定的一轮滞后时序吻合。三个数值可以表示较抽象的上一轮强度，内容级
 `response_guidance` 却容易在下一轮过期。该观察强烈支持排除 guidance，但初轮
-受控条件仍不能区分 `empathy_level`、`activated_tone` 和 `response_guidance`
+受控条件仍不能区分 `activated_tone` 和 `response_guidance`
 各自的贡献。
 
 ## 7. 下一项受控优化：以 `scores_only` 为基线
@@ -302,15 +301,14 @@ Grounding 具有明显 speaker 异质性：`scores_only` 在 Elise、Nebraas、P
 主优化基线确定为 `scores_only`，不是退回 `full_state`。第四组定义为：
 
 ```text
-scores_plus_level_and_tone
+scores_plus_tone
 = scores_only
-+ empathy_level
 + activated_tone
 ```
 
 `response_guidance` 始终排除。这个条件同时提供两组因果比较：
 
-- 相对 `scores_only`：测试加回抽象 level/tone 能否恢复 Intimacy/Grounding，
+- 相对 `scores_only`：测试加回抽象 tone 能否恢复 Intimacy/Grounding，
   同时保护 Reflective/Empathy。
 - 相对 `full_state`：两组只相差 `response_guidance`，可更直接判断过期 guidance
   的净影响。
@@ -320,7 +318,7 @@ scores_plus_level_and_tone
 - 如果第四组保持 Reflective `>= 0.77`、Empathy `<= 1.24`，并让 Intimacy
   回到 `<= 0.07` 或 Grounding 高于 `scores_only`，则采用第四组。
 - 如果第四组退回 `full_state` 的 Reflective/Empathy 水平，则固定采用
-  `scores_only`，不再加回 level/tone。
+  `scores_only`，不再加回 tone。
 - 无论哪组胜出，都保留 alignment、三个 Empathy 数值、`current_state` 更新、
   用户画像和人设；这不是删除核心算法。
 
@@ -339,7 +337,7 @@ scores_plus_level_and_tone
 
 ## 9. 下一步顺序
 
-1. 只补跑 `scores_plus_level_and_tone`，不重跑已经完成的三组。
+1. 只补跑 `scores_plus_tone`，不重跑已经完成的三组。
 2. 用同一份报告比较第四组与 `scores_only`、`full_state`。
 3. 按第 7 节阈值固定 response-state policy。
 4. 固定策略后，优先处理 Grounding 的 33 条 FP；不再调整已经达标的
@@ -353,7 +351,7 @@ scores_plus_level_and_tone
 以下内容目前都只能称为假设：
 
 - `response_guidance` 是初轮改善的唯一原因；
-- `empathy_level` 和 `activated_tone` 一定有益或一定有害；
+- `activated_tone` 一定有益或一定有害；
 - V18 response Prompt 单独就能稳定复现 `0.7915` Reflective；
 - 删除关系信息一定能改善 Empathy；
 - 增加关系信息一定能改善个性化；

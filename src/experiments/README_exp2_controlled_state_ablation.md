@@ -17,7 +17,7 @@
 | `full_state` | 来源 V18 保存的完整对象，包括数值、tone 和 response guidance |
 | `scores_only` | 只保留 `emotional_reaction`、`interpretation`、`exploration` 三个数值 |
 | `no_state` | 空对象 `{}` |
-| `scores_plus_level_and_tone` | 以 `scores_only` 为基础，加回 `empathy_level` 和 `activated_tone`；不加回 `response_guidance` |
+| `scores_plus_tone` | 以 `scores_only` 为基础，只加回 `activated_tone`；不加回 `response_guidance` |
 
 第一条回复的 `current_state` 按主实验初始化协议设为空对象；后续回复使用来源 V18 上一个评测点保存的 `core_current_state`。三个条件不会各自更新状态，因此不存在新的随机状态分叉。
 
@@ -34,7 +34,7 @@ uv run --no-sync python -u -m src.experiments.exp2_controlled_state_ablation \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
   --source-prompt-version v18_reflective_grounding_joint_gate \
-  --conditions full_state,scores_only,no_state,scores_plus_level_and_tone \
+  --conditions full_state,scores_only,no_state,scores_plus_tone \
   --temperature 0 \
   --generate-workers 3 \
   --judge-config-section EvaluationAPI \
@@ -46,11 +46,11 @@ uv run --no-sync python -u -m src.experiments.exp2_controlled_state_ablation \
 
 脚本支持断点续跑。已有 prediction 的 `example_id` 会跳过；但只要来源文件哈希、Prompt、模型、温度、条件或 case 集合发生变化，就会拒绝混用旧目录，要求换一个新的 `--output-dir`。
 
-## 在已有三组结果上只补跑 `scores_plus_level_and_tone`
+## 在已有三组结果上只补跑 `scores_plus_tone`
 
 如果 `full_state`、`scores_only` 和 `no_state` 已经位于
 `data/exp2_controlled_state_ablation_v18`，不需要重跑它们。第四组以
-`scores_only` 为基线，只加回 `empathy_level` 和 `activated_tone`：
+`scores_only` 为基线，只加回 `activated_tone`：
 
 ```bash
 HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
@@ -61,7 +61,7 @@ uv run --no-sync python -u -m src.experiments.exp2_controlled_state_ablation \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
   --source-prompt-version v18_reflective_grounding_joint_gate \
-  --conditions scores_plus_level_and_tone \
+  --conditions scores_plus_tone \
   --temperature 0 \
   --generate-workers 3 \
   --judge-config-section EvaluationAPI \
@@ -80,7 +80,7 @@ uv run --no-sync python -u -m src.experiments.exp2_controlled_state_ablation \
   --output-dir data/exp2_controlled_state_ablation_v18 \
   --train-ratio 0.9 \
   --config config.qwen-plus.ini \
-  --conditions full_state,scores_only,no_state,scores_plus_level_and_tone
+  --conditions full_state,scores_only,no_state,scores_plus_tone
 ```
 
 ## 先跑单个对话验证
@@ -120,7 +120,7 @@ data/exp2_controlled_state_ablation_v18/
 ├── full_state/
 ├── scores_only/
 ├── no_state/
-├── scores_plus_level_and_tone/
+├── scores_plus_tone/
 ├── controlled_state_ablation_summary.json
 └── controlled_state_ablation_summary.md
 ```

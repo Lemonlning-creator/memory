@@ -41,7 +41,7 @@ CONDITIONS = (
     "full_state",
     "scores_only",
     "no_state",
-    "scores_plus_level_and_tone",
+    "scores_plus_tone",
 )
 HIGHER_IS_BETTER = {
     "lexical",
@@ -87,19 +87,18 @@ def _selected_state(
         return deepcopy(previous_empathy_state)
     if condition == "no_state" or not previous_empathy_state:
         return {}
-    if condition == "scores_plus_level_and_tone":
+    if condition == "scores_plus_tone":
         # This condition is intentionally constructed upward from scores_only,
-        # not downward from full_state. The two abstract string controls are
-        # added only after the three numeric fields pass the same strict check.
+        # not downward from full_state. The abstract tone control is added only
+        # after the three numeric fields pass the same strict check.
         selected = _selected_state(previous_empathy_state, "scores_only")
-        for field in ("empathy_level", "activated_tone"):
-            value = previous_empathy_state.get(field)
-            if not isinstance(value, str) or not value.strip():
-                raise ValueError(
-                    f"source previous_empathy_state.{field} must be a non-empty "
-                    "string for scores_plus_level_and_tone"
-                )
-            selected[field] = value
+        value = previous_empathy_state.get("activated_tone")
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(
+                "source previous_empathy_state.activated_tone must be a non-empty "
+                "string for scores_plus_tone"
+            )
+        selected["activated_tone"] = value
         return selected
 
     selected: Dict[str, Any] = {}
@@ -254,9 +253,8 @@ def _condition_manifest(
             "full_state": "exact previous_empathy_state saved by the source run",
             "scores_only": list(STATE_SCORE_FIELDS),
             "no_state": "empty object",
-            "scores_plus_level_and_tone": (
-                "scores_only plus empathy_level and activated_tone; "
-                "response_guidance excluded"
+            "scores_plus_tone": (
+                "scores_only plus activated_tone; response_guidance excluded"
             ),
         }[condition],
         "source_root": str(source_root),
