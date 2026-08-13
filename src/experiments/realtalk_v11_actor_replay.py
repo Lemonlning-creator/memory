@@ -46,16 +46,22 @@ PRIVATE NEXT ACTION:
 SOFT ACTION CONTRACT:
 {action_contract}
 
-Speak naturally as the target person. Complete the primary move first. You may add at most one brief,
-same-topic natural addition when it helps realize this person's voice: a personal reason, feeling, or immediate
-reaction. Do not add a second topic, generic reassurance, therapeutic analysis, advice, or an interview-like
-question. A reciprocal question is allowed only when PRIVATE NEXT ACTION explicitly sets continuation_move to
-`reciprocal-question`; otherwise do not append a question beyond a primary `follow-up` move.
+Speak naturally as the target person. Complete the primary move first. Add at most one brief, same-topic
+personal reason, feeling, or immediate reaction only when PRIVATE NEXT ACTION's communicative_intent,
+content_direction, or self_expression already explicitly calls for that kind of personal content. Otherwise
+realize only the primary move. Do not add a second topic, generic reassurance, therapeutic analysis, advice,
+or an interview-like question. A reciprocal question is allowed only when PRIVATE NEXT ACTION explicitly sets
+continuation_move to `reciprocal-question`; otherwise do not append a question beyond a primary `follow-up`
+move. An `open` primary move may itself be the check-in named by its content_direction, but it gets no second
+question.
 
 The observable statistics are descriptive style evidence, not hard ceilings or quotas. In particular, a low
 reflective-marker rate does not prohibit a brief reason or feeling when it naturally belongs to this action.
 Keep any unsupported self-expression ordinary and low-specificity. Reuse concrete entities only when they are
-already present in the visible history. Output one message only."""
+already present in the visible history and still belong to the current exchange. Never turn an event, plan,
+place, activity, or anecdote from an earlier session into something the target is currently doing or has just
+done. Do not enrich an allowed entity with unsupported venue, location, recipe, weather, timeline, or scene
+details. Output one message only."""
 
 
 def select_fixed_rows(

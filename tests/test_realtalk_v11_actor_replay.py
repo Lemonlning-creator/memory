@@ -49,6 +49,12 @@ class RealTalkV11ActorReplayTests(unittest.TestCase):
         reciprocal = _soft_action_contract("answer", "reciprocal-question")
         self.assertIn("exactly one short reciprocal question", reciprocal)
 
+    def test_prompt_requires_policy_support_and_forbids_stale_event_transfer(self):
+        from src.experiments.realtalk_v11_actor_replay import GENERATION_USER_PROMPT
+        self.assertIn("already explicitly calls for", GENERATION_USER_PROMPT)
+        self.assertIn("Never turn an event", GENERATION_USER_PROMPT)
+        self.assertIn("gets no second", GENERATION_USER_PROMPT)
+
     def test_replay_keeps_v9_message_and_frozen_decision(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
