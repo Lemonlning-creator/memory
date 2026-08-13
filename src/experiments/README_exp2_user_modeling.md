@@ -22,7 +22,40 @@ src/experiments/exp2_user_modeling_qualitative.py  # 画像进化与画像熵
 
 ## 1. 当前推荐命令
 
-### 1.1 V11–V15 定向 Prompt 实验
+### 1.1 V13 干净表述复验（推荐先跑）
+
+`v13_grounding_precision_clean` 保留 V13 已验证有效的对话行为，但删除 `V7`、`Grounding`、指标和调参过程等实验性措辞。旧版 `v13_grounding_precision` 不修改，已有结果和 Prompt 指纹继续保留。两版共享同一 response user Prompt、V5 alignment、状态更新、模型配置和评估 Prompt。
+
+先在 `diagnostic3` 的同一 24 条回复上运行干净版：
+
+```bash
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
+SWEEP_ROOT=data/exp2_v13_clean_diagnostic3 \
+CASE_SET=diagnostic3 \
+VERSIONS_CSV=v13_grounding_precision_clean \
+bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+```
+
+结果位于：
+
+```text
+data/exp2_v13_clean_diagnostic3/v13_grounding_precision_clean/evaluation/table2_main_results.md
+data/exp2_v13_clean_diagnostic3/prompt_sweep_summary.md
+```
+
+旧 V13 在这 24 条上的 Grounding 为 `0.6210`，混淆计数为 `TN/FP/FN/TP = 8/7/2/7`。建议仅当干净版 Grounding 不低于 `0.59`、假阳性不超过 8、假阴性不超过 3，并且 Semantic 不低于 `0.82`、Empathy 不高于 `1.25` 时，再运行全量 10 个对话：
+
+```bash
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
+SWEEP_ROOT=data/exp2_v13_clean_full \
+CASE_SET=all \
+VERSIONS_CSV=v13_grounding_precision_clean \
+bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+```
+
+### 1.2 V11–V15 定向 Prompt 实验
 
 当前 V5 的用户画像和人设已经准备完成，V6–V10 也已经完成。运行 V11–V15 时不需要重新执行 `prepare`：
 
@@ -45,7 +78,7 @@ data/exp2_prompt_sweep_v11_v15_directed/<prompt-version>/evaluation/table2_main_
 data/exp2_prompt_sweep_v11_v15_directed/<prompt-version>.log
 ```
 
-### 1.2 服务器后台运行
+### 1.3 服务器后台运行
 
 为了避免 VS Code、SSH 或局域网断开后实验停止，使用 `tmux`：
 
@@ -320,6 +353,7 @@ api_key_env = EVAL_API_KEY
 - `[API]`：用户画像、人设、alignment 和 Ours 回复生成。
 - `[EvaluationAPI]`：只用于 Reflective、Grounding 和 Empathy Judge。
 - `--judge-model` 可以覆盖 `[EvaluationAPI].model`。
+- `--judge-workers` 控制远程 LLM-as-Judge 并发数，默认 `6`；不改变评估 Prompt、标签定义或缓存指纹。
 - 严格与 REALTALK 对比时使用 `gpt-4o-mini`；换成其他 Judge 必须记录为实验偏差。
 - 当前记忆 embedding 固定为 1536 维，embedding 服务也必须返回 1536 维向量。
 
@@ -390,6 +424,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --output-dir data/exp2_single_v5 \
   --judge-config-section EvaluationAPI \
   --judge-model gpt-4o-mini \
+  --judge-workers 6 \
   --eval-device cuda:0 \
   --eval-batch-size 16
 ```
@@ -417,6 +452,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling \
   --output-dir "$V5_DIR" \
   --judge-config-section EvaluationAPI \
   --judge-model gpt-4o-mini \
+  --judge-workers 6 \
   --eval-device cuda:0 \
   --eval-batch-size 16
 ```
@@ -519,10 +555,18 @@ V11–V15 直接针对完整 V7 中仍未达到论文结果的四个指标。每
 | `v11_lexical_fidelity` | Lexical | 语义正确但引入新实体、新经历和自由联想 | 减少无依据具体内容；自然使用当前对话词汇；保留有证据的自我披露和换题 | Semantic、Sentiment |
 | `v12_reflective_placement` | Reflective | 14 条假阳性、12 条假阴性；总量接近但位置错误 | 总体频率不做单向增减；只纠正哪些轮次应出现真正自我观察 | Empathy、Intimacy |
 | `v13_grounding_precision` | Grounding | 38 条假阳性、11 条假阴性；V7 问句 78 条而 reference 37 条 | 明确减少习惯性追问；仅保留必要澄清、确认和有近期行为证据的具体 follow-up | Reflective、Empathy |
+| `v13_grounding_precision_clean` | V13 复验 | 不改变行为目标，只去掉 V7、指标和调参记录措辞 | 用正常任务语言描述“直接回应；问题可选；仅在确需澄清时问一个具体问题” | 与旧 V13 全指标对照 |
 | `v14_emotion_calibration` | Emotion | joy 82 条而 reference 65 条；Emoji 66 条而 reference 2 条 | 按角色和当前场景校准情绪；减少无依据 joy、Emoji 和装饰性积极表达，不全局压低 Paola 等真实高 joy 角色 | Sentiment、Empathy |
 | `v15_metric_integrated` | 四项集成 | 同时存在上述四类错误 | 使用“内容→反思→Grounding→情绪”的短决策流，不拼接四份专项 Prompt | Semantic、Sentiment、Intimacy、Empathy |
 
 五版继续共享相同的 response user Prompt、V5 alignment、状态更新、teacher forcing、模型参数和评估 Prompt。V11–V14 只改变各自的定向策略；V15 从同一 V7 审计中预先集成四个方向，但不预设四个专项都会有效。
+
+`v13_grounding_precision_clean` 是对 V13 的复现实验，不是新的指标定向版本。它不会覆盖旧 V13；应使用独立 `SWEEP_ROOT`。脚本的 `VERSIONS_CSV` 可只选择一个或多个版本，例如：
+
+```bash
+VERSIONS_CSV=v13_grounding_precision_clean bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+VERSIONS_CSV=v13_grounding_precision_clean,v14_emotion_calibration bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+```
 
 当前默认测试子集是：
 
@@ -734,6 +778,8 @@ HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 
 Reflective、Grounding 和 Empathy 使用远程 Judge，不占本地 GPU；三个 CardiffNLP 模型和 BERTScore 使用 GPU。
 
+远程 Judge 会按候选回复并发执行，默认最多同时处理 6 个候选。每个候选内部仍按相同 Prompt 分别得到 Reflective、Grounding 和 Empathy；结果返回后由主线程顺序写入 `table2_annotations.jsonl`，因此断点缓存不会被多个线程同时写入。本地 Sentiment、Emotion、Intimacy 和 BERTScore 不随 `--judge-workers` 并发，避免争抢单张 3090。若中转站返回频繁的 `429`，将其降为 `4` 或 `2`；不要通过同时启动多个完整 `evaluate` 进程来提高并发。
+
 ### 10.10 RoBERTa pooler warning
 
 BERTScore 加载基础 `roberta-large` 时可能提示 pooler 权重未初始化。BERTScore 使用 token embeddings，不使用该 pooler；这是预期警告，不表示评估失败。
@@ -789,6 +835,7 @@ uv run --no-sync python -m src.experiments.exp2_user_modeling `
   --output-dir data/exp2_single_v5 `
   --judge-config-section EvaluationAPI `
   --judge-model gpt-4o-mini `
+  --judge-workers 6 `
   --eval-device cuda:0 `
   --eval-batch-size 16
 ```

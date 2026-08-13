@@ -17,24 +17,30 @@ JUDGE_CONFIG_SECTION="${JUDGE_CONFIG_SECTION:-EvaluationAPI}"
 JUDGE_MODEL="${JUDGE_MODEL:-gpt-4o-mini}"
 EVAL_DEVICE="${EVAL_DEVICE:-cuda:0}"
 EVAL_BATCH_SIZE="${EVAL_BATCH_SIZE:-16}"
+JUDGE_WORKERS="${JUDGE_WORKERS:-6}"
 REUSE_REFERENCE_CACHE="${REUSE_REFERENCE_CACHE:-1}"
 UV_BIN="${UV_BIN:-uv}"
+VERSIONS_CSV="${VERSIONS_CSV:-}"
 
 # Run the four specialists first, then their pre-integrated decision flow.
-VERSIONS=(
+DEFAULT_VERSIONS=(
   v11_lexical_fidelity
   v12_reflective_placement
   v13_grounding_precision
   v14_emotion_calibration
   v15_metric_integrated
 )
-REPORT_VERSIONS=(
-  v11_lexical_fidelity
-  v12_reflective_placement
-  v13_grounding_precision
-  v14_emotion_calibration
-  v15_metric_integrated
-)
+if [[ -n "$VERSIONS_CSV" ]]; then
+  IFS=',' read -r -a VERSIONS <<< "$VERSIONS_CSV"
+else
+  VERSIONS=("${DEFAULT_VERSIONS[@]}")
+fi
+REPORT_VERSIONS=("${VERSIONS[@]}")
+
+if (( ${#VERSIONS[@]} == 0 )); then
+  echo "No prompt versions selected; set VERSIONS_CSV to a comma-separated list" >&2
+  exit 2
+fi
 
 CASES=()
 if [[ -n "${CASE_LIST:-}" ]]; then
@@ -110,7 +116,7 @@ if [[ "$REUSE_REFERENCE_CACHE" == "1" ]]; then
   REFERENCE_CACHE_ARGS+=(--reuse-reference-cache)
 fi
 
-echo "Experiment 2 prompt sweep V11-V15"
+echo "Experiment 2 prompt sweep"
 echo "  asset source : $ASSET_SOURCE"
 echo "  V7 baseline  : $BASELINE_DIR"
 echo "  sweep root   : $SWEEP_ROOT"
@@ -119,6 +125,7 @@ echo "  cases        : ${CASES[*]:-all 10 conversations}"
 echo "  versions     : ${VERSIONS[*]}"
 echo "  candidate    : [API].model in $CONFIG"
 echo "  judge model  : $JUDGE_MODEL"
+echo "  judge workers: $JUDGE_WORKERS"
 echo "  eval device  : $EVAL_DEVICE"
 
 failures=()
@@ -154,6 +161,7 @@ for version in "${VERSIONS[@]}"; do
     --judge-config-section "$JUDGE_CONFIG_SECTION"
     --eval-device "$EVAL_DEVICE"
     --eval-batch-size "$EVAL_BATCH_SIZE"
+    --judge-workers "$JUDGE_WORKERS"
   )
   if [[ -n "$JUDGE_MODEL" ]]; then
     command+=(--judge-model "$JUDGE_MODEL")
@@ -204,4 +212,4 @@ if (( ${#failures[@]} > 0 )); then
   echo "Run this same command again to resume only missing work." >&2
   exit 1
 fi
-echo "All V11-V15 prompt variants completed successfully."
+echo "All selected prompt variants completed successfully."

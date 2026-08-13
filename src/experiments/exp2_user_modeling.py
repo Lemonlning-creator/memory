@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import configparser
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 import hashlib
 import json
@@ -15,6 +15,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean, pstdev
+from threading import Lock
 from typing import Any, Dict, Iterable, List, Sequence
 
 from openai import OpenAI
@@ -917,10 +918,16 @@ class Exp2JudgeClient(LLMClient):
             "completion_tokens": 0,
             "calls": 0,
         }
+        self._usage_lock = Lock()
 
     @property
     def endpoint_identity(self) -> str:
         return f"{self.backend}|{self.base_url}|{self.model}|{self.config_section}"
+
+    def _record_usage(self, response: Any) -> None:
+        """Keep aggregate usage accounting correct across concurrent judge calls."""
+        with self._usage_lock:
+            super()._record_usage(response)
 
     def chat(
         self,
@@ -975,6 +982,7 @@ class Table2Evaluator:
         intimacy_model: str = "cardiffnlp/twitter-roberta-large-intimacy-latest",
         bertscore_model: str = "roberta-large",
         batch_size: int = 16,
+        judge_workers: int = 6,
     ) -> None:
         try:
             import torch
@@ -991,6 +999,8 @@ class Table2Evaluator:
             raise RuntimeError(f"CUDA was requested ({device}) but torch.cuda.is_available() is False")
         if batch_size < 1:
             raise ValueError("eval batch size must be positive")
+        if judge_workers < 1:
+            raise ValueError("judge workers must be positive")
 
         self.judge_llm = judge_llm
         self.device = device
@@ -999,6 +1009,7 @@ class Table2Evaluator:
         self.intimacy_model_name = intimacy_model
         self.bertscore_model = bertscore_model
         self.batch_size = batch_size
+        self.judge_workers = judge_workers
         if device == "cuda":
             pipeline_device = 0
         elif device.startswith("cuda:"):
@@ -1076,9 +1087,9 @@ class Table2Evaluator:
             raise ValueError(f"unexpected Hugging Face classifier output: {result!r}")
         return result
 
-    def annotate(self, turns: Sequence[Dict[str, str]]) -> Dict[str, Any]:
+    def judge_labels(self, turns: Sequence[Dict[str, str]]) -> Dict[str, Any]:
+        """Run only the three independent remote REALTALK judge labels."""
         context = _format_evaluation_context(turns)
-        text = turns[-1]["text"]
         empathy = self._judge_empathy(context)
         return {
             "reflective": self._judge_boolean(
@@ -1091,6 +1102,13 @@ class Table2Evaluator:
                 context,
                 "grounding",
             ),
+            "empathy": empathy,
+            "empathy_total": sum(empathy.values()),
+        }
+
+    def local_labels(self, text: str) -> Dict[str, Any]:
+        """Run the local GPU classifiers in the calling thread."""
+        return {
             "sentiment": _normalize_label(
                 self._top_prediction(self.sentiment_classifier, text)["label"]
             ),
@@ -1100,8 +1118,13 @@ class Table2Evaluator:
             "intimacy": float(
                 self._top_prediction(self.intimacy_classifier, text)["score"]
             ),
-            "empathy": empathy,
-            "empathy_total": sum(empathy.values()),
+        }
+
+    def annotate(self, turns: Sequence[Dict[str, str]]) -> Dict[str, Any]:
+        """Compatibility path for one annotation without outer concurrency."""
+        return {
+            **self.judge_labels(turns),
+            **self.local_labels(turns[-1]["text"]),
         }
 
     def semantic_scores(
@@ -1184,6 +1207,7 @@ def evaluate_case_table2(
     chat = load_json(case.dataset_path)
     annotations = JsonlStore(paths.table2_annotations, id_field="annotation_id")
     existing_annotation_rows = annotations.read_all()
+    pending_annotations: List[Dict[str, Any]] = []
 
     for index, prediction in enumerate(predictions, start=1):
         for variant, field in (
@@ -1223,10 +1247,10 @@ def evaluate_case_table2(
                 })
                 continue
             print(
-                f"[Table 2] {case.case_id} {index}/{len(predictions)} "
-                f"{variant}"
+                f"[Table 2 Judge queued] {case.case_id} "
+                f"{index}/{len(predictions)} {variant}"
             )
-            annotations.append({
+            pending_annotations.append({
                 "annotation_id": annotation_id,
                 "example_id": prediction["example_id"],
                 "case_id": case.case_id,
@@ -1237,9 +1261,58 @@ def evaluate_case_table2(
                 "candidate_sha256": candidate_sha256,
                 "context_sha256": context_sha256,
                 "cache_key_version": ANNOTATION_CACHE_KEY_VERSION,
-                "labels": evaluator.annotate(turns),
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "turns": turns,
             })
+
+    if pending_annotations:
+        worker_count = min(evaluator.judge_workers, len(pending_annotations))
+        print(
+            f"[Table 2 Judge] {case.case_id} pending={len(pending_annotations)} "
+            f"workers={worker_count}"
+        )
+        failures: List[tuple[str, Exception]] = []
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            future_to_task = {
+                executor.submit(evaluator.judge_labels, task["turns"]): task
+                for task in pending_annotations
+            }
+            completed = 0
+            for future in as_completed(future_to_task):
+                task = future_to_task[future]
+                try:
+                    labels = {
+                        **future.result(),
+                        **evaluator.local_labels(task["candidate"]),
+                    }
+                    annotations.append({
+                        key: value
+                        for key, value in task.items()
+                        if key != "turns"
+                    } | {
+                        "labels": labels,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    })
+                    completed += 1
+                    print(
+                        f"[Table 2 Judge] {case.case_id} "
+                        f"{completed}/{len(pending_annotations)} completed"
+                    )
+                except Exception as exc:
+                    failures.append((str(task["annotation_id"]), exc))
+                    print(
+                        f"[Table 2 Judge Error] annotation_id="
+                        f"{task['annotation_id']} error={exc}"
+                    )
+        if failures:
+            details = "; ".join(
+                f"{annotation_id}: {error}"
+                for annotation_id, error in failures[:3]
+            )
+            raise RuntimeError(
+                f"{len(failures)} Table 2 judge annotation(s) failed after "
+                f"retries; completed annotations were cached. Rerun evaluate to "
+                f"resume only failed work. {details}"
+            )
 
     cached = {
         row["annotation_id"]: row
@@ -1383,6 +1456,7 @@ def evaluate_table2(
     judge_config_section: str,
     device: str,
     batch_size: int,
+    judge_workers: int = 6,
     prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
 ) -> Dict[str, str]:
     prompt_bundle = get_exp2_prompt_bundle(prompt_version)
@@ -1418,6 +1492,7 @@ def evaluate_table2(
         judge_llm=judge_llm,
         device=device,
         batch_size=batch_size,
+        judge_workers=judge_workers,
     )
     all_scores: List[Dict[str, Any]] = []
     for case in cases:
@@ -1449,6 +1524,7 @@ def evaluate_table2(
             "judge_backend": judge_llm.backend,
             "judge_base_url": judge_llm.base_url,
             "judge_config_section": judge_config_section,
+            "judge_workers": evaluator.judge_workers,
             "sentiment_model": evaluator.sentiment_model_name,
             "emotion_model": evaluator.emotion_model_name,
             "intimacy_model": evaluator.intimacy_model_name,
@@ -1533,6 +1609,7 @@ def run(args: argparse.Namespace) -> None:
             judge_config_section=args.judge_config_section,
             device=args.eval_device,
             batch_size=args.eval_batch_size,
+            judge_workers=args.judge_workers,
             prompt_version=prompt_bundle.version,
         )
 
@@ -1598,6 +1675,15 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--eval-batch-size", type=int, default=16)
+    parser.add_argument(
+        "--judge-workers",
+        type=int,
+        default=6,
+        help=(
+            "Concurrent remote LLM-as-Judge annotations. Local GPU classifiers "
+            "and BERTScore remain single-process (default: 6)."
+        ),
+    )
     parser.add_argument(
         "--case",
         action="append",
