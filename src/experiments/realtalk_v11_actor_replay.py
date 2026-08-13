@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Iterable
@@ -177,7 +178,11 @@ def run(
                         indent=2,
                     ),
                     situation=json.dumps(row["situation"], ensure_ascii=False, indent=2),
-                    next_action=json.dumps(row["next_action"], ensure_ascii=False, indent=2),
+                    next_action=json.dumps(
+                        _actor_action_view(row["next_action"]),
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
                     action_contract=_soft_action_contract(
                         row["next_action"]["primary_move"],
                         row["next_action"].get("continuation_move", "none"),
@@ -289,6 +294,23 @@ def _question_permission(action: dict[str, Any]) -> str:
     ):
         return "at_most_one_opening_check_in_question"
     return "forbidden_no_question_mark"
+
+
+def _actor_action_view(action: dict[str, Any]) -> dict[str, Any]:
+    """Remove prose that contradicts frozen structured question permissions."""
+    view = dict(action)
+    permission = _question_permission(action)
+    if permission == "forbidden_no_question_mark":
+        for field in ("communicative_intent", "content_direction", "self_expression"):
+            text = str(view.get(field, ""))
+            text = re.sub(
+                r"(?i)(?:,?\s*(?:then\s+)?)?(?:and\s+)?(?:reciprocate|reciprocal|return)[^,.;]*"
+                r"(?:question|inquiry|check[- ]?in|same slot)[^,.;]*",
+                "",
+                text,
+            ).strip(" ,;.-")
+            view[field] = text
+    return view
 
 
 def _optional_addition_permission(action: dict[str, Any]) -> str:

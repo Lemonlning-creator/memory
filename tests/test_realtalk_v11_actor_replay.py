@@ -10,6 +10,7 @@ from src.experiments.personaemp.client import ChatResult
 from src.experiments.realtalk_v11_actor_replay import (
     _optional_addition_permission,
     _question_permission,
+    _actor_action_view,
     _soft_action_contract,
     run,
     select_fixed_rows,
@@ -69,6 +70,19 @@ class RealTalkV11ActorReplayTests(unittest.TestCase):
         self.assertEqual(
             _question_permission(action), "exactly_one_same_slot_reciprocal_question"
         )
+
+    def test_actor_view_removes_prose_that_conflicts_with_structured_permission(self):
+        action = {
+            "primary_move": "answer", "continuation_move": "none",
+            "communicative_intent": "return greeting and reciprocate the check-in",
+            "content_direction": "morning greeting and reciprocal wellbeing inquiry",
+            "self_expression": "casual",
+        }
+        view = _actor_action_view(action)
+        self.assertNotIn("reciprocate", view["communicative_intent"])
+        self.assertNotIn("reciprocal", view["content_direction"])
+        self.assertEqual(view["primary_move"], "answer")
+        self.assertEqual(view["continuation_move"], "none")
 
     def test_replay_keeps_v9_message_and_frozen_decision(self):
         with tempfile.TemporaryDirectory() as directory:
