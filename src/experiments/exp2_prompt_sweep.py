@@ -14,6 +14,7 @@ from ..prompts.exp2_versions import EXP2_PROMPT_SWEEP_SPECS
 from ..utils import load_json, save_json
 from .exp2_user_modeling import (
     PROFILE_ALGORITHM,
+    TABLE2_BASELINES,
     TABLE2_METRICS,
     CasePaths,
     ExperimentCase,
@@ -33,6 +34,28 @@ HIGHER_IS_BETTER = {
     "sentiment",
     "emotion",
 }
+
+
+def _paper_baseline_results() -> list[Dict[str, Any]]:
+    """Render the two published REALTALK Table 2 rows in sweep reports."""
+    rows: list[Dict[str, Any]] = []
+    for baseline in TABLE2_BASELINES:
+        rows.append({
+            "directory": None,
+            "prompt_version": f"Paper: {baseline['method']}",
+            "description": "Published REALTALK Table 2 result over all speakers.",
+            "example_count": None,
+            "speaker_count": None,
+            "result_kind": "paper_baseline",
+            "metrics": {
+                metric: {
+                    "mean": float(baseline[metric][0]),
+                    "std": float(baseline[metric][1]),
+                }
+                for metric in TABLE2_METRICS
+            },
+        })
+    return rows
 
 
 def _select_cases(
@@ -307,6 +330,10 @@ def _winner_versions(results: Iterable[Dict[str, Any]]) -> Dict[str, str]:
 
 def _markdown_summary(payload: Dict[str, Any]) -> str:
     results = payload["results"]
+    prompt_results = payload.get(
+        "prompt_results",
+        [row for row in results if row.get("result_kind") != "paper_baseline"],
+    )
     winners = payload["winners"]
     lines = [
         "# Experiment 2 prompt sweep",
@@ -329,7 +356,11 @@ def _markdown_summary(payload: Dict[str, Any]) -> str:
         "Higher is better for Lexical through Emotion; lower is better for "
         "Intimacy and Empathy.",
         "",
-        "| Version | N | Lexical | Semantic | Reflective | Grounding | Sentiment | Emotion | Intimacy | Empathy |",
+        "The two `Paper:` rows are the published REALTALK Table 2 results over "
+        "all speakers. For a case-subset sweep, treat them as published reference "
+        "values rather than a same-sample statistical comparison.",
+        "",
+        "| Method / Version | N | Lexical | Semantic | Reflective | Grounding | Sentiment | Emotion | Intimacy | Empathy |",
         "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|",
     ))
     for row in results:
@@ -343,18 +374,23 @@ def _markdown_summary(payload: Dict[str, Any]) -> str:
             if winners.get(metric) == row["prompt_version"]:
                 formatted = f"**{formatted}**"
             values.append(formatted)
+        example_count = (
+            "published"
+            if row.get("result_kind") == "paper_baseline"
+            else str(row.get("example_count") or "-")
+        )
         lines.append(
             "| " + " | ".join(
-                [str(row["prompt_version"]), str(row.get("example_count") or "-")] + values
+                [str(row["prompt_version"]), example_count] + values
             ) + " |"
         )
 
     improvements = [
-        row for row in results
+        row for row in prompt_results
         if row.get("oriented_improvement_vs_baseline") is not None
     ]
     if improvements:
-        baseline_version = results[0]["prompt_version"]
+        baseline_version = prompt_results[0]["prompt_version"]
         lines.extend((
             "",
             f"## Directional change versus {baseline_version}",
@@ -386,6 +422,7 @@ def summarize(
     *,
     sweep_root: str | Path,
     baseline_dir: str | Path | None,
+    best_dir: str | Path | None,
     versions: Sequence[str],
     dataset_dir: str | Path,
     train_ratio: float,
@@ -393,13 +430,24 @@ def summarize(
 ) -> Dict[str, Any]:
     root = Path(sweep_root).resolve()
     root.mkdir(parents=True, exist_ok=True)
+    paper_baselines = _paper_baseline_results()
     results: list[Dict[str, Any]] = []
     cases = _select_cases(build_cases(dataset_dir, train_ratio), case_selectors)
 
     if baseline_dir:
         baseline = _load_baseline_result(Path(baseline_dir), cases)
         if baseline is not None:
+            baseline["comparison_role"] = "v7_baseline"
             results.append(baseline)
+
+    if best_dir:
+        best_path = Path(best_dir).resolve()
+        baseline_path = Path(baseline_dir).resolve() if baseline_dir else None
+        if best_path != baseline_path:
+            best = _load_result(best_path)
+            if best is not None:
+                best["comparison_role"] = "best_full_after_v7"
+                results.append(best)
 
     for version in versions:
         result = _load_result(root / version)
@@ -414,6 +462,12 @@ def summarize(
                 "speaker_count": None,
                 "metrics": None,
             }
+        result["comparison_role"] = "current"
+        if any(
+            row.get("directory") == result.get("directory")
+            for row in results
+        ):
+            continue
         results.append(result)
 
     baseline_metrics = (
@@ -441,14 +495,17 @@ def summarize(
         "created_at": datetime.now(timezone.utc).isoformat(),
         "sweep_root": str(root),
         "baseline_dir": str(Path(baseline_dir).resolve()) if baseline_dir else None,
+        "best_dir": str(Path(best_dir).resolve()) if best_dir else None,
         "cases": [case.case_id for case in cases],
+        "paper_baselines": paper_baselines,
         "design": {
             version: EXP2_PROMPT_SWEEP_SPECS[version]
             for version in versions
             if version in EXP2_PROMPT_SWEEP_SPECS
         },
-        "results": results,
-        "winners": _winner_versions(results),
+        "results": [*paper_baselines, *results],
+        "prompt_results": results,
+        "winners": _winner_versions([*paper_baselines, *results]),
     }
     save_json(str(root / "prompt_sweep_summary.json"), payload)
     (root / "prompt_sweep_summary.md").write_text(
@@ -475,6 +532,10 @@ def build_parser() -> argparse.ArgumentParser:
     report = subparsers.add_parser("summarize")
     report.add_argument("--sweep-root", required=True)
     report.add_argument("--baseline-dir")
+    report.add_argument(
+        "--best-dir",
+        help="Completed full-run result selected as the best version after V7 and before the current version.",
+    )
     report.add_argument("--version", action="append", default=[])
     report.add_argument("--dataset-dir", default="dataset")
     report.add_argument("--train-ratio", type=float, default=0.9)
@@ -497,6 +558,7 @@ def main() -> None:
     summarize(
         sweep_root=args.sweep_root,
         baseline_dir=args.baseline_dir,
+        best_dir=args.best_dir,
         versions=args.version or SWEEP_VERSIONS,
         dataset_dir=args.dataset_dir,
         train_ratio=args.train_ratio,

@@ -8,6 +8,9 @@ cd "$PROJECT_ROOT"
 # comparison baseline is V7 because it was the strongest V6-V10 variant.
 ASSET_SOURCE="${ASSET_SOURCE:-data/exp2_qwen_plus_v5_clean}"
 BASELINE_DIR="${BASELINE_DIR:-data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation}"
+# Explicit historical best keeps the report comparison auditable. Update this
+# path only after a completed full-run version is accepted as the new best.
+BEST_FULL_DIR="${BEST_FULL_DIR:-data/exp2_v16_full/v16_v7_selective_followup}"
 SWEEP_ROOT="${SWEEP_ROOT:-data/exp2_prompt_sweep_v11_v15_directed}"
 CONFIG="${CONFIG:-config.qwen-plus.ini}"
 DATASET_DIR="${DATASET_DIR:-dataset}"
@@ -36,8 +39,6 @@ if [[ -n "$VERSIONS_CSV" ]]; then
 else
   VERSIONS=("${DEFAULT_VERSIONS[@]}")
 fi
-REPORT_VERSIONS=("${VERSIONS[@]}")
-
 if (( ${#VERSIONS[@]} == 0 )); then
   echo "No prompt versions selected; set VERSIONS_CSV to a comma-separated list" >&2
   exit 2
@@ -97,6 +98,11 @@ if [[ ! -f "$BASELINE_DIR/evaluation/table2_main_results.json" ]]; then
   echo "Completed V7 baseline not found: $BASELINE_DIR/evaluation/table2_main_results.json" >&2
   exit 2
 fi
+if [[ ! -f "$BEST_FULL_DIR/evaluation/table2_main_results.json" ]]; then
+  echo "Completed post-V7 best result not found: $BEST_FULL_DIR/evaluation/table2_main_results.json" >&2
+  echo "Set BEST_FULL_DIR to the accepted historical full-run best directory." >&2
+  exit 2
+fi
 if [[ ! -f "$CONFIG" ]]; then
   echo "Config file not found: $CONFIG" >&2
   exit 2
@@ -120,6 +126,7 @@ fi
 echo "Experiment 2 prompt sweep"
 echo "  asset source : $ASSET_SOURCE"
 echo "  V7 baseline  : $BASELINE_DIR"
+echo "  post-V7 best : $BEST_FULL_DIR"
 echo "  sweep root   : $SWEEP_ROOT"
 echo "  case set     : $CASE_SET"
 echo "  cases        : ${CASES[*]:-all 10 conversations}"
@@ -183,12 +190,11 @@ for version in "${VERSIONS[@]}"; do
     summarize
     --sweep-root "$SWEEP_ROOT"
     --baseline-dir "$BASELINE_DIR"
+    --best-dir "$BEST_FULL_DIR"
     --dataset-dir "$DATASET_DIR"
     --train-ratio "$TRAIN_RATIO"
   )
-  for sweep_version in "${REPORT_VERSIONS[@]}"; do
-    summary_command+=(--version "$sweep_version")
-  done
+  summary_command+=(--version "$version")
   summary_command+=("${CASE_ARGS[@]}")
   "${summary_command[@]}" || true
 done
@@ -198,12 +204,12 @@ summary_command=(
   summarize
   --sweep-root "$SWEEP_ROOT"
   --baseline-dir "$BASELINE_DIR"
+  --best-dir "$BEST_FULL_DIR"
   --dataset-dir "$DATASET_DIR"
   --train-ratio "$TRAIN_RATIO"
 )
-for version in "${REPORT_VERSIONS[@]}"; do
-  summary_command+=(--version "$version")
-done
+CURRENT_REPORT_VERSION="${VERSIONS[$((${#VERSIONS[@]} - 1))]}"
+summary_command+=(--version "$CURRENT_REPORT_VERSION")
 summary_command+=("${CASE_ARGS[@]}")
 "${summary_command[@]}"
 
