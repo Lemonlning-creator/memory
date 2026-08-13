@@ -13,12 +13,14 @@ from ..persona_schema import PERSONA_SCHEMA_VERSION, persona_schema_manifest, va
 from ..prompts.exp2_versions import EXP2_PROMPT_SWEEP_SPECS
 from ..utils import load_json, save_json
 from .exp2_user_modeling import (
+    BEHAVIOR_EVIDENCE_VERSION,
     PROFILE_ALGORITHM,
     TABLE2_BASELINES,
     TABLE2_METRICS,
     CasePaths,
     ExperimentCase,
     _agent_runtime_profile,
+    _sha256,
     _validate_extracted_profile,
     aggregate_table2_scores,
     build_cases,
@@ -98,11 +100,17 @@ def _asset_protocol(manifest: Dict[str, Any]) -> Dict[str, Any]:
         "train_sessions": manifest.get("train_sessions"),
         "persona_schema_version": manifest.get("persona_schema_version"),
         "persona_prompt_sha256": persona_schema.get("extraction_prompt_sha256"),
+        "behavior_evidence_version": manifest.get("behavior_evidence_version"),
+        "behavior_evidence_sha256": manifest.get("behavior_evidence_sha256"),
     }
 
 
 def _validate_source_assets(case: ExperimentCase, paths: CasePaths) -> None:
-    required = (paths.persona, paths.profile, paths.asset_manifest)
+    required = (
+        paths.persona,
+        paths.profile,
+        paths.asset_manifest,
+    )
     missing = [str(path) for path in required if not path.is_file()]
     if missing:
         raise FileNotFoundError(
@@ -116,6 +124,7 @@ def _validate_source_assets(case: ExperimentCase, paths: CasePaths) -> None:
     _validate_extracted_profile(profile)
 
     current_persona = persona_schema_manifest()
+    has_behavior_evidence = paths.behavior_evidence.is_file()
     expected = {
         "dataset_sha256": case.dataset_sha256,
         "user_speaker": case.user_speaker,
@@ -124,6 +133,12 @@ def _validate_source_assets(case: ExperimentCase, paths: CasePaths) -> None:
         "train_sessions": list(case.train_sessions),
         "persona_schema_version": PERSONA_SCHEMA_VERSION,
         "persona_prompt_sha256": current_persona["extraction_prompt_sha256"],
+        "behavior_evidence_version": (
+            BEHAVIOR_EVIDENCE_VERSION if has_behavior_evidence else None
+        ),
+        "behavior_evidence_sha256": (
+            _sha256(paths.behavior_evidence) if has_behavior_evidence else None
+        ),
     }
     actual = _asset_protocol(manifest)
     if actual != expected:
@@ -150,6 +165,14 @@ def _validate_existing_target(source: CasePaths, target: CasePaths) -> None:
         raise RuntimeError(f"target persona differs from source: {target.persona}")
     if load_json(str(source.profile)) != load_json(str(target.profile)):
         raise RuntimeError(f"target user profile differs from source: {target.profile}")
+    if source.behavior_evidence.is_file() != target.behavior_evidence.is_file():
+        raise RuntimeError("source and target behavior-evidence availability differs")
+    if (
+        source.behavior_evidence.is_file()
+        and load_json(str(source.behavior_evidence))
+        != load_json(str(target.behavior_evidence))
+    ):
+        raise RuntimeError(f"target behavior evidence differs from source: {target.behavior_evidence}")
     source_manifest = load_json(str(source.asset_manifest))
     target_manifest = load_json(str(target.asset_manifest))
     if _asset_protocol(source_manifest) != _asset_protocol(target_manifest):
@@ -233,6 +256,8 @@ def clone_assets(
             target.persona.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source.persona, target.persona)
             shutil.copy2(source.profile, target.profile)
+            if source.behavior_evidence.is_file():
+                shutil.copy2(source.behavior_evidence, target.behavior_evidence)
             profile = load_json(str(source.profile))
             save_json(str(target.runtime_profile), _agent_runtime_profile(profile))
 
@@ -241,6 +266,8 @@ def clone_assets(
             manifest["profile_path"] = str(target.profile)
             manifest["runtime_profile_path"] = str(target.runtime_profile)
             manifest["persona_path"] = str(target.persona)
+            if source.behavior_evidence.is_file():
+                manifest["behavior_evidence_path"] = str(target.behavior_evidence)
             save_json(str(target.asset_manifest), manifest)
             copied_assets += 1
 

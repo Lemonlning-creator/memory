@@ -11,11 +11,11 @@ import multiprocessing
 import os
 import re
 import time
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from statistics import mean, pstdev
+from statistics import mean, median, pstdev
 from threading import Lock
 from types import SimpleNamespace
 from typing import Any, Dict, Iterable, List, Sequence
@@ -52,7 +52,13 @@ SESSION_PATTERN = re.compile(r"session_(\d+)$")
 PROFILE_ALGORITHM = "extract_profile_persona_en.extract_profile:one_shot_train_split"
 PROTOCOL_VERSION = "exp2_protocol_v2_state_update"
 GENERATION_POLICY = "previous_empathy_state_parallel_state_update_v2"
+BEHAVIOR_PROTOCOL_VERSION = "exp2_protocol_v3_train_behavior_evidence"
+BEHAVIOR_GENERATION_POLICY = (
+    "previous_empathy_state_parallel_state_update_v3_behavior_evidence"
+)
 ANNOTATION_CACHE_KEY_VERSION = 2
+BEHAVIOR_EVIDENCE_VERSION = "train_agent_behavior_v1"
+BEHAVIOR_EXEMPLAR_LIMIT = 3
 PROFILE_FIELDS = {
     "core": ("summary", "values", "motivations", "concerns"),
     "regulation": ("summary", "stress_response", "conflict_style", "emotion_regulation"),
@@ -95,6 +101,22 @@ TABLE2_BASELINES = (
         "empathy": (1.24, 0.12),
     },
 )
+
+
+def _experiment_protocol(prompt_bundle: Any) -> str:
+    return (
+        BEHAVIOR_PROTOCOL_VERSION
+        if prompt_bundle.uses_train_behavior_evidence
+        else PROTOCOL_VERSION
+    )
+
+
+def _generation_policy(prompt_bundle: Any) -> str:
+    return (
+        BEHAVIOR_GENERATION_POLICY
+        if prompt_bundle.uses_train_behavior_evidence
+        else GENERATION_POLICY
+    )
 
 
 def _progress_line(
@@ -343,6 +365,7 @@ class CasePaths:
     persona: Path
     profile: Path
     runtime_profile: Path
+    behavior_evidence: Path
     asset_manifest: Path
     memory_db: Path
     predictions: Path
@@ -361,6 +384,7 @@ class CasePaths:
             persona=assets / "agent_persona.json",
             profile=assets / "user_profile.json",
             runtime_profile=assets / "user_profile_runtime.json",
+            behavior_evidence=assets / "agent_behavior_evidence.json",
             asset_manifest=assets / "asset_manifest.json",
             memory_db=case_root / "memory" / "memory.db",
             predictions=case_root / "generations" / "predictions.jsonl",
@@ -374,6 +398,7 @@ class CasePaths:
             self.persona,
             self.profile,
             self.runtime_profile,
+            self.behavior_evidence,
             self.asset_manifest,
             self.memory_db,
             self.predictions,
@@ -612,15 +637,17 @@ def _append_real_bubble(
 def _generate_with_parallel_alignment(
     agent: StateDrivenCompanionAgent,
     user_message: str,
-    relevant_memory: Dict[str, Any],
+    response_memory: Dict[str, Any],
+    alignment_memory: Dict[str, Any] | None = None,
 ) -> tuple[str, Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """Generate with the previous state while aligning the current turn in parallel."""
     previous_empathy_state = deepcopy(agent.last_empathy_state)
+    alignment_memory = alignment_memory if alignment_memory is not None else response_memory
     # Render from the preceding completed state before the concurrent alignment
     # can write the current turn's state.
     response_prompt = agent._response_prompt(
         user_message,
-        relevant_memory,
+        response_memory,
         previous_empathy_state=previous_empathy_state,
     )
     with ThreadPoolExecutor(max_workers=1, thread_name_prefix="exp2-alignment") as executor:
@@ -628,7 +655,7 @@ def _generate_with_parallel_alignment(
             _run_alignment_with_format_retry,
             agent,
             user_message,
-            relevant_memory,
+            alignment_memory,
         )
         generated_reply = agent.llm.chat(
             agent.prompt_bundle.response_system,
@@ -685,7 +712,14 @@ def run_case_replies(
     progress_total: int = 0,
 ) -> int:
     """Generate Ours replies while preserving REALTALK history via teacher forcing."""
-    if not paths.profile.exists() or not paths.runtime_profile.exists() or not paths.persona.exists():
+    prompt_bundle = get_exp2_prompt_bundle(prompt_version)
+    generation_policy = _generation_policy(prompt_bundle)
+    required_assets = (paths.profile, paths.runtime_profile, paths.persona)
+    if prompt_bundle.uses_train_behavior_evidence:
+        required_assets += (paths.behavior_evidence,)
+    if (
+        any(not path.exists() for path in required_assets)
+    ):
         raise FileNotFoundError(f"training assets missing for {case.case_id}; run prepare first")
     persona = load_json(str(paths.persona))
     try:
@@ -698,16 +732,37 @@ def run_case_replies(
     if not paths.asset_manifest.exists():
         raise FileNotFoundError(
             f"asset manifest missing for {case.case_id}; run prepare in a new --output-dir"
-        )
+    )
     asset_manifest = load_json(str(paths.asset_manifest))
+    behavior_evidence: Dict[str, Any] | None = None
+    behavior_evidence_sha256: str | None = None
+    if prompt_bundle.uses_train_behavior_evidence:
+        behavior_evidence = load_json(str(paths.behavior_evidence))
+        try:
+            _validate_behavior_evidence(behavior_evidence, case)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"agent behavior evidence for {case.case_id} is incompatible; "
+                "run prepare in a new --output-dir"
+            ) from exc
+        behavior_evidence_sha256 = _sha256(paths.behavior_evidence)
     current_persona_manifest = persona_schema_manifest()
     if (
         asset_manifest.get("persona_schema_version") != PERSONA_SCHEMA_VERSION
         or asset_manifest.get("persona_schema", {}).get("extraction_prompt_sha256")
         != current_persona_manifest["extraction_prompt_sha256"]
+        or (
+            prompt_bundle.uses_train_behavior_evidence
+            and (
+                asset_manifest.get("behavior_evidence_version")
+                != BEHAVIOR_EVIDENCE_VERSION
+                or asset_manifest.get("behavior_evidence_sha256")
+                != behavior_evidence_sha256
+            )
+        )
     ):
         raise RuntimeError(
-            f"training assets for {case.case_id} use an older persona extraction "
+            f"training assets for {case.case_id} use an older persona/behavior "
             "protocol; run prepare in a new --output-dir"
         )
     # A prompt-version run may reuse only immutable prepared assets in a fresh
@@ -726,12 +781,18 @@ def run_case_replies(
     states = JsonlStore(paths.understanding)
     _assert_consistent_stores(predictions, states)
     prediction_rows = predictions.read_all()
-    prompt_bundle = get_exp2_prompt_bundle(prompt_version)
     incompatible_rows = [
         row for row in prediction_rows
-        if row.get("generation_policy") != GENERATION_POLICY
+        if row.get("generation_policy") != generation_policy
         or row.get("prompt_version") != prompt_bundle.version
         or row.get("prompt_sha256") != prompt_bundle.fingerprint
+        or (
+            prompt_bundle.uses_train_behavior_evidence
+            and (
+                row.get("behavior_evidence_version") != BEHAVIOR_EVIDENCE_VERSION
+                or row.get("behavior_evidence_sha256") != behavior_evidence_sha256
+            )
+        )
     ]
     if incompatible_rows:
         raise RuntimeError(
@@ -756,6 +817,10 @@ def run_case_replies(
         prompt_version=prompt_bundle.version,
         memory_manager=case_memory_manager,
     )
+    if prompt_bundle.uses_train_behavior_evidence:
+        if behavior_evidence is None:
+            raise AssertionError("validated behavior evidence is unavailable")
+        agent.persona_config = _runtime_persona_with_behavior(persona, behavior_evidence)
 
     if completed_ids:
         state_by_id = {row["example_id"]: row for row in states.read_all()}
@@ -795,11 +860,24 @@ def run_case_replies(
         history_count_before = len(agent.memory_manager.short_term_memory)
         _append_real_bubble(agent, case, bubble)
         relevant_memory = agent.memory_manager.retrieve_relevant_memory(example.user_message)
+        response_memory = deepcopy(relevant_memory)
+        behavior_prompt_evidence: Dict[str, Any] | None = None
+        if prompt_bundle.uses_train_behavior_evidence:
+            if behavior_evidence is None:
+                raise AssertionError("validated behavior evidence is unavailable")
+            behavior_prompt_evidence = _behavior_prompt_evidence(
+                behavior_evidence,
+                example.user_message,
+            )
+            response_memory[
+                "train_only_agent_behavior_evidence"
+            ] = behavior_prompt_evidence
         generated_reply, alignment, previous_empathy_state, response_model_timing = (
             _generate_with_parallel_alignment(
                 agent,
                 example.user_message,
-                relevant_memory,
+                response_memory,
+                alignment_memory=relevant_memory,
             )
         )
 
@@ -823,10 +901,16 @@ def run_case_replies(
         predictions.append({
             **asdict(example),
             "generated_reply": generated_reply,
-            "protocol_version": PROTOCOL_VERSION,
-            "generation_policy": GENERATION_POLICY,
+            "protocol_version": _experiment_protocol(prompt_bundle),
+            "generation_policy": generation_policy,
             "prompt_version": prompt_bundle.version,
             "prompt_sha256": prompt_bundle.fingerprint,
+            "behavior_evidence_version": (
+                BEHAVIOR_EVIDENCE_VERSION
+                if prompt_bundle.uses_train_behavior_evidence
+                else None
+            ),
+            "behavior_evidence_sha256": behavior_evidence_sha256,
             "alignment_execution": "parallel_current_alignment_previous_state_for_response",
             "history_policy": "teacher_forcing_real_replies_only",
             "history_bubbles_before_user": history_count_before,
@@ -837,7 +921,16 @@ def run_case_replies(
                 "contains_reference_reply": False,
                 "contains_next_user_message": False,
                 "previous_empathy_state": previous_empathy_state,
-                "relevant_memory": relevant_memory,
+                "relevant_memory": response_memory,
+                "alignment_memory_excludes_agent_behavior_evidence": (
+                    prompt_bundle.uses_train_behavior_evidence
+                ),
+                "train_behavior_exemplar_ids": [
+                    row["pair_id"]
+                    for row in (behavior_prompt_evidence or {}).get(
+                        "similar_real_user_to_agent_examples", []
+                    )
+                ],
             },
             "model_timing": response_model_timing,
             "created_at": created_at,
@@ -889,6 +982,7 @@ def _generation_progress_counts(
 ) -> tuple[int, int]:
     """Count all target replies and safely resumable completed replies."""
     prompt_bundle = get_exp2_prompt_bundle(prompt_version)
+    generation_policy = _generation_policy(prompt_bundle)
     total = 0
     completed = 0
     for case in cases:
@@ -898,6 +992,12 @@ def _generation_progress_counts(
         }
         total += len(expected_ids)
         paths = CasePaths.for_case(output_dir, case)
+        behavior_sha256 = (
+            _sha256(paths.behavior_evidence)
+            if prompt_bundle.uses_train_behavior_evidence
+            and paths.behavior_evidence.is_file()
+            else None
+        )
         prediction_rows = list(read_jsonl(paths.predictions))
         state_ids = {
             str(row.get("example_id"))
@@ -907,9 +1007,17 @@ def _generation_progress_counts(
             str(row.get("example_id"))
             for row in prediction_rows
             if (
-                row.get("generation_policy") == GENERATION_POLICY
+                row.get("generation_policy") == generation_policy
                 and row.get("prompt_version") == prompt_bundle.version
                 and row.get("prompt_sha256") == prompt_bundle.fingerprint
+                and (
+                    not prompt_bundle.uses_train_behavior_evidence
+                    or (
+                        row.get("behavior_evidence_version")
+                        == BEHAVIOR_EVIDENCE_VERSION
+                        and row.get("behavior_evidence_sha256") == behavior_sha256
+                    )
+                )
             )
         }
         completed += len(expected_ids & valid_prediction_ids & state_ids)
@@ -1006,6 +1114,353 @@ def generate_cases(
     return {
         case.case_id: completed[case.case_id]
         for case in cases
+    }
+
+
+_BEHAVIOR_TOKEN_PATTERN = re.compile(r"[A-Za-z0-9]+(?:['\u2019][A-Za-z0-9]+)?")
+_BEHAVIOR_SENTENCE_PATTERN = re.compile(r"[.!?]+")
+_BEHAVIOR_STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "been", "but", "by",
+    "do", "for", "from", "had", "has", "have", "he", "her", "hers",
+    "him", "his", "i", "if", "in", "is", "it", "its", "me", "my",
+    "of", "on", "or", "our", "ours", "she", "so", "that", "the",
+    "their", "them", "they", "this", "to", "us", "was", "we", "were",
+    "what", "when", "where", "which", "who", "why", "with", "you",
+    "your", "yours",
+}
+
+
+def _behavior_tokens(text: str, *, content_only: bool = False) -> List[str]:
+    tokens = [
+        token.lower().replace("\u2019", "'")
+        for token in _BEHAVIOR_TOKEN_PATTERN.findall(text)
+    ]
+    if content_only:
+        return [token for token in tokens if token not in _BEHAVIOR_STOPWORDS]
+    return tokens
+
+
+def _percentile(values: Sequence[float], fraction: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(float(value) for value in values)
+    position = (len(ordered) - 1) * fraction
+    lower = math.floor(position)
+    upper = math.ceil(position)
+    if lower == upper:
+        return ordered[lower]
+    return ordered[lower] + (ordered[upper] - ordered[lower]) * (position - lower)
+
+
+def _numeric_summary(values: Sequence[float]) -> Dict[str, float]:
+    if not values:
+        return {"mean": 0.0, "median": 0.0, "p25": 0.0, "p75": 0.0}
+    return {
+        "mean": round(mean(values), 3),
+        "median": round(median(values), 3),
+        "p25": round(_percentile(values, 0.25), 3),
+        "p75": round(_percentile(values, 0.75), 3),
+    }
+
+
+def _contains_emoji(text: str) -> bool:
+    return any(
+        0x1F000 <= ord(character) <= 0x1FAFF
+        or 0x2600 <= ord(character) <= 0x27BF
+        for character in text
+    )
+
+
+def _training_reply_pairs(
+    chat: Dict[str, Any],
+    case: ExperimentCase,
+) -> List[Dict[str, Any]]:
+    """Collect only chronological train-split user->agent reply pairs."""
+    pairs: List[Dict[str, Any]] = []
+    for session_id in case.train_sessions:
+        bubbles = merge_bubbles(session_id, chat[session_id])
+        for index in range(len(bubbles) - 1):
+            user_bubble = bubbles[index]
+            agent_bubble = bubbles[index + 1]
+            if (
+                user_bubble.speaker != case.user_speaker
+                or agent_bubble.speaker != case.agent_speaker
+            ):
+                continue
+            pairs.append({
+                "pair_id": (
+                    f"{case.case_id}:{session_id}:"
+                    f"{'-'.join(user_bubble.dia_ids)}__to__"
+                    f"{'-'.join(agent_bubble.dia_ids)}"
+                ),
+                "session_id": session_id,
+                "user_message": user_bubble.content,
+                "agent_reply": agent_bubble.content,
+                "user_dia_ids": list(user_bubble.dia_ids),
+                "agent_dia_ids": list(agent_bubble.dia_ids),
+            })
+    return pairs
+
+
+def _rate_label(rate: float) -> str:
+    if rate < 0.10:
+        return "rare"
+    if rate < 0.35:
+        return "occasional"
+    if rate < 0.65:
+        return "common"
+    return "frequent"
+
+
+def _behavior_statistics(pairs: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    replies = [str(pair["agent_reply"]) for pair in pairs]
+    word_counts = [len(_behavior_tokens(reply)) for reply in replies]
+    sentence_counts = [
+        max(1, len(_BEHAVIOR_SENTENCE_PATTERN.findall(reply)))
+        for reply in replies
+    ]
+    question_counts = [reply.count("?") for reply in replies]
+    lexical_overlap = []
+    for pair in pairs:
+        user_terms = set(_behavior_tokens(str(pair["user_message"]), content_only=True))
+        reply_terms = set(_behavior_tokens(str(pair["agent_reply"]), content_only=True))
+        lexical_overlap.append(
+            len(user_terms & reply_terms) / len(reply_terms) if reply_terms else 0.0
+        )
+    total = max(1, len(replies))
+    return {
+        "reply_count": len(replies),
+        "word_count": _numeric_summary(word_counts),
+        "sentence_count": _numeric_summary(sentence_counts),
+        "question_reply_rate": round(
+            sum(count > 0 for count in question_counts) / total, 4
+        ),
+        "multi_question_reply_rate": round(
+            sum(count > 1 for count in question_counts) / total, 4
+        ),
+        "exclamation_reply_rate": round(
+            sum("!" in reply for reply in replies) / total, 4
+        ),
+        "emoji_reply_rate": round(
+            sum(_contains_emoji(reply) for reply in replies) / total, 4
+        ),
+        "lowercase_initial_rate": round(
+            sum(reply[:1].islower() for reply in replies) / total, 4
+        ),
+        "user_word_reuse": _numeric_summary(lexical_overlap),
+    }
+
+
+def _persona_enrichment(statistics: Dict[str, Any]) -> Dict[str, List[str]]:
+    word_count = statistics["word_count"]
+    sentence_count = statistics["sentence_count"]
+    question_rate = float(statistics["question_reply_rate"])
+    multi_question_rate = float(statistics["multi_question_reply_rate"])
+    emoji_rate = float(statistics["emoji_reply_rate"])
+    exclamation_rate = float(statistics["exclamation_reply_rate"])
+    overlap = statistics["user_word_reuse"]
+    return {
+        "language_style": [
+            (
+                "Observed train-split reply length is typically "
+                f"{word_count['p25']:.0f}-{word_count['p75']:.0f} words "
+                f"(median {word_count['median']:.0f})."
+            ),
+            (
+                "Observed train-split replies are typically "
+                f"{sentence_count['p25']:.0f}-{sentence_count['p75']:.0f} "
+                f"sentences (median {sentence_count['median']:.0f})."
+            ),
+            (
+                f"Emoji use is {_rate_label(emoji_rate)} ({emoji_rate:.0%} of replies); "
+                f"exclamation marks are {_rate_label(exclamation_rate)} "
+                f"({exclamation_rate:.0%} of replies)."
+            ),
+            (
+                "Median content-word reuse from the immediately preceding user "
+                f"message is {float(overlap['median']):.0%}."
+            ),
+        ],
+        "behavioral_mannerisms": [
+            (
+                f"Questions are {_rate_label(question_rate)} "
+                f"({question_rate:.0%} of observed train-split replies)."
+            ),
+            (
+                "Multiple questions in one reply are "
+                f"{_rate_label(multi_question_rate)} "
+                f"({multi_question_rate:.0%} of observed train-split replies)."
+            ),
+            (
+                "The retrieved train-split examples define when this speaker "
+                "answers directly, follows up, or self-discloses; imitate an act "
+                "only when a similar observed example supports it."
+            ),
+        ],
+    }
+
+
+def _validate_behavior_evidence(
+    evidence: Dict[str, Any],
+    case: ExperimentCase,
+) -> None:
+    if evidence.get("version") != BEHAVIOR_EVIDENCE_VERSION:
+        raise ValueError("unsupported agent behavior evidence version")
+    if evidence.get("case_id") != case.case_id:
+        raise ValueError("agent behavior evidence case mismatch")
+    if evidence.get("dataset_sha256") != case.dataset_sha256:
+        raise ValueError("agent behavior evidence dataset mismatch")
+    if evidence.get("train_sessions") != list(case.train_sessions):
+        raise ValueError("agent behavior evidence train split mismatch")
+    if evidence.get("agent_speaker") != case.agent_speaker:
+        raise ValueError("agent behavior evidence speaker mismatch")
+    if not isinstance(evidence.get("statistics"), dict):
+        raise ValueError("agent behavior evidence statistics are missing")
+    enrichment = evidence.get("persona_enrichment")
+    if not isinstance(enrichment, dict) or set(enrichment) != {
+        "language_style", "behavioral_mannerisms"
+    }:
+        raise ValueError("agent behavior persona enrichment has an invalid schema")
+    if not all(
+        isinstance(enrichment[field], list)
+        and all(isinstance(item, str) and item.strip() for item in enrichment[field])
+        for field in enrichment
+    ):
+        raise ValueError("agent behavior persona enrichment must contain string lists")
+    pairs = evidence.get("training_pairs")
+    if not isinstance(pairs, list) or not pairs:
+        raise ValueError("agent behavior evidence contains no training reply pairs")
+
+
+def build_case_behavior_evidence(
+    case: ExperimentCase,
+    paths: CasePaths,
+) -> Dict[str, Any]:
+    """Build deterministic, train-only behavior evidence without changing profiles."""
+    paths.behavior_evidence.parent.mkdir(parents=True, exist_ok=True)
+    if paths.behavior_evidence.exists():
+        evidence = load_json(str(paths.behavior_evidence))
+        _validate_behavior_evidence(evidence, case)
+    else:
+        chat = load_json(case.dataset_path)
+        pairs = _training_reply_pairs(chat, case)
+        statistics = _behavior_statistics(pairs)
+        evidence = {
+            "version": BEHAVIOR_EVIDENCE_VERSION,
+            "case_id": case.case_id,
+            "dataset_sha256": case.dataset_sha256,
+            "source": "chronological_train_sessions_only",
+            "train_sessions": list(case.train_sessions),
+            "test_sessions_excluded": list(case.test_sessions),
+            "agent_speaker": case.agent_speaker,
+            "statistics": statistics,
+            "persona_enrichment": _persona_enrichment(statistics),
+            "training_pairs": pairs,
+        }
+        _validate_behavior_evidence(evidence, case)
+        save_json(str(paths.behavior_evidence), evidence)
+
+    if paths.asset_manifest.exists():
+        manifest = load_json(str(paths.asset_manifest))
+        manifest["behavior_evidence_version"] = BEHAVIOR_EVIDENCE_VERSION
+        manifest["behavior_evidence_path"] = str(paths.behavior_evidence)
+        manifest["behavior_evidence_sha256"] = _sha256(paths.behavior_evidence)
+        manifest["behavior_evidence_train_only"] = True
+        save_json(str(paths.asset_manifest), manifest)
+    return evidence
+
+
+def _runtime_persona_with_behavior(
+    persona: Dict[str, Any],
+    evidence: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Enrich existing list values while preserving every persona field exactly."""
+    runtime_persona = deepcopy(persona)
+    enrichment = evidence["persona_enrichment"]
+    for field in ("language_style", "behavioral_mannerisms"):
+        existing = runtime_persona["expression_layer"][field]
+        for item in enrichment[field]:
+            if item not in existing:
+                existing.append(item)
+    validate_persona(runtime_persona)
+    return runtime_persona
+
+
+def _similar_training_exemplars(
+    evidence: Dict[str, Any],
+    user_message: str,
+    limit: int = BEHAVIOR_EXEMPLAR_LIMIT,
+) -> List[Dict[str, Any]]:
+    """Retrieve semantically light, deterministic TF-IDF train-only examples."""
+    pairs = list(evidence["training_pairs"])
+    query_terms = Counter(_behavior_tokens(user_message, content_only=True))
+    if not query_terms or not pairs:
+        return []
+    document_terms = [
+        Counter(_behavior_tokens(str(pair["user_message"]), content_only=True))
+        for pair in pairs
+    ]
+    document_frequency = Counter()
+    for terms in document_terms:
+        document_frequency.update(terms.keys())
+    document_count = len(pairs)
+    inverse_document_frequency = {
+        token: math.log((document_count + 1) / (frequency + 1)) + 1.0
+        for token, frequency in document_frequency.items()
+    }
+    query_weights = {
+        token: frequency * inverse_document_frequency.get(
+            token, math.log(document_count + 1) + 1.0
+        )
+        for token, frequency in query_terms.items()
+    }
+    query_norm = math.sqrt(
+        sum(value * value for value in query_weights.values())
+    ) or 1.0
+    scored: List[tuple[float, int]] = []
+    for index, terms in enumerate(document_terms):
+        common = set(query_terms) & set(terms)
+        if not common:
+            continue
+        document_weights = {
+            token: frequency * inverse_document_frequency[token]
+            for token, frequency in terms.items()
+        }
+        weighted_overlap = sum(
+            query_weights[token] * document_weights[token]
+            for token in common
+        )
+        document_norm = math.sqrt(
+            sum(value * value for value in document_weights.values())
+        ) or 1.0
+        scored.append((weighted_overlap / (query_norm * document_norm), index))
+    scored.sort(key=lambda item: (-item[0], item[1]))
+    return [
+        {
+            "pair_id": pairs[index]["pair_id"],
+            "similarity": round(score, 4),
+            "user_message": pairs[index]["user_message"],
+            "agent_reply": pairs[index]["agent_reply"],
+        }
+        for score, index in scored[:limit]
+    ]
+
+
+def _behavior_prompt_evidence(
+    evidence: Dict[str, Any],
+    user_message: str,
+) -> Dict[str, Any]:
+    return {
+        "source": "chronological_train_sessions_only",
+        "agent_speaker": evidence["agent_speaker"],
+        "surface_behavior_statistics": evidence["statistics"],
+        "similar_real_user_to_agent_examples": _similar_training_exemplars(
+            evidence, user_message
+        ),
+        "usage_boundary": (
+            "Examples are behavior evidence, not text to copy; the current user "
+            "message and current real dialogue remain primary."
+        ),
     }
 
 
@@ -1724,7 +2179,7 @@ def evaluate_table2(
     table_path = evaluation_dir / "table2_main_results.md"
     save_json(str(result_path), {
         "protocol": {
-            "experiment_protocol_version": PROTOCOL_VERSION,
+            "experiment_protocol_version": _experiment_protocol(prompt_bundle),
             "generation_prompts": prompt_bundle.manifest(),
             "lexical": "ROUGE-L F1",
             "semantic": f"BERTScore F1 ({evaluator.bertscore_model})",
@@ -1795,7 +2250,8 @@ def run(args: argparse.Namespace) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     config_path = str(Path(args.config).resolve())
     all_cases = build_cases(args.dataset_dir, args.train_ratio)
-    save_split_manifest(all_cases, output_dir / "split_manifest.json", args.train_ratio)
+    if args.phase != "prepare-behavior":
+        save_split_manifest(all_cases, output_dir / "split_manifest.json", args.train_ratio)
     cases = _select_cases(all_cases, args.case)
     prompt_bundle = get_exp2_prompt_bundle(args.prompt_version)
 
@@ -1807,6 +2263,7 @@ def run(args: argparse.Namespace) -> None:
             paths.ensure_parents()
             build_case_persona(case, paths, config_path)
             build_case_profile(case, paths, config_path)
+            build_case_behavior_evidence(case, paths)
             print(
                 _progress_line(
                     "Prepare",
@@ -1816,6 +2273,37 @@ def run(args: argparse.Namespace) -> None:
                 ),
                 flush=True,
             )
+
+    if args.phase == "prepare-behavior":
+        print(_progress_line("Prepare behavior", 0, len(cases)), flush=True)
+        for case_index, case in enumerate(cases, start=1):
+            paths = CasePaths.for_case(output_dir, case)
+            required = (
+                paths.persona,
+                paths.profile,
+                paths.runtime_profile,
+                paths.asset_manifest,
+            )
+            missing = [str(path) for path in required if not path.is_file()]
+            if missing:
+                raise FileNotFoundError(
+                    f"cannot backfill behavior evidence for {case.case_id}; "
+                    f"prepared assets are missing: {missing}"
+                )
+            validate_persona(load_json(str(paths.persona)))
+            _validate_extracted_profile(load_json(str(paths.profile)))
+            build_case_behavior_evidence(case, paths)
+            print(
+                _progress_line(
+                    "Prepare behavior",
+                    case_index,
+                    len(cases),
+                    detail=case.case_id,
+                ),
+                flush=True,
+            )
+        # This phase intentionally preserves an existing completed run manifest.
+        return
 
     if args.phase in ("generate", "generate-evaluate", "all"):
         generated = generate_cases(
@@ -1842,11 +2330,15 @@ def run(args: argparse.Namespace) -> None:
 
     save_json(str(output_dir / "run_manifest.json"), {
         "experiment": "Experiment 2. User Modeling Evaluation",
-        "protocol_version": PROTOCOL_VERSION,
+        "protocol_version": _experiment_protocol(prompt_bundle),
         "generation_prompts": prompt_bundle.manifest(),
         "evaluation_prompt_version": EVALUATION_PROMPT_VERSION,
         "annotation_cache_key_version": ANNOTATION_CACHE_KEY_VERSION,
         "persona_schema": persona_schema_manifest(),
+        "behavior_evidence_version": BEHAVIOR_EVIDENCE_VERSION,
+        "behavior_evidence_policy": (
+            "deterministic statistics and similar reply examples from train sessions only"
+        ),
         "research_question": "Does explicit user modeling enable better personalized interactions?",
         "phase": args.phase,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -1867,11 +2359,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--phase",
-        choices=("prepare", "generate", "evaluate", "generate-evaluate", "all"),
+        choices=(
+            "prepare",
+            "prepare-behavior",
+            "generate",
+            "evaluate",
+            "generate-evaluate",
+            "all",
+        ),
         default="all",
         help=(
-            "prepare assets, generate replies, evaluate existing replies, run "
-            "generation followed by evaluation, or run all three stages"
+            "prepare assets, backfill train-only behavior evidence without "
+            "overwriting run_manifest.json, generate replies, evaluate existing "
+            "replies, run generation followed by evaluation, or run all stages"
         ),
     )
     parser.add_argument("--dataset-dir", default="dataset")

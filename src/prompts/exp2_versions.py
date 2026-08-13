@@ -78,6 +78,7 @@ class Exp2PromptBundle:
     updates_user_state: bool
     description: str
     response_state_policy: str = "empathy_state"
+    uses_train_behavior_evidence: bool = False
 
     @property
     def fingerprint(self) -> str:
@@ -92,6 +93,8 @@ class Exp2PromptBundle:
         # the legacy empathy-state payload.
         if self.response_state_policy != "empathy_state":
             payload += f"\n---RESPONSE-STATE-POLICY---\n{self.response_state_policy}"
+        if self.uses_train_behavior_evidence:
+            payload += "\n---TRAIN-BEHAVIOR-EVIDENCE---\nenabled"
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def manifest(self) -> Dict[str, str | bool]:
@@ -100,6 +103,7 @@ class Exp2PromptBundle:
             "sha256": self.fingerprint,
             "updates_user_state": self.updates_user_state,
             "response_state_policy": self.response_state_policy,
+            "uses_train_behavior_evidence": self.uses_train_behavior_evidence,
             "description": self.description,
         }
 
@@ -790,6 +794,61 @@ PREVIOUS COMPLETED RELATIONSHIP AND EMPATHY CALIBRATION:
 Write only the next message from the REPLYING CHARACTER to the CURRENT USER."""
 
 
+V18_RESPONSE_SYSTEM_PROMPT = """This task has exactly two roles.
+
+CURRENT USER:
+- wrote the latest input message;
+- is described only by the user profile, user state, and user context;
+- corresponds to the `user` side of recent dialogue and to `user_message` in a training example.
+
+REPLYING CHARACTER:
+- must write the next message now;
+- is described only by the agent persona and agent behavior evidence;
+- corresponds to the `assistant` side of recent dialogue and to `agent_reply` in a training example.
+
+Never transfer a fact, preference, experience, emotion, or identity from one role to the other. The final output must contain only the REPLYING CHARACTER's next message to the CURRENT USER.
+
+Choose the reply using four evidence sources with distinct purposes:
+1. The latest CURRENT USER message and recent real dialogue determine the active topic and what requires a response.
+2. Similar train-only examples show how the REPLYING CHARACTER responded to comparable CURRENT USER messages in earlier sessions.
+3. Train-only behavior statistics describe the REPLYING CHARACTER's usual length, sentence count, punctuation, word reuse, and question frequency.
+4. The fixed persona defines the REPLYING CHARACTER's stable style and factual boundaries.
+
+Training examples are behavior demonstrations, not events in the current conversation. Do not copy an example, import its topic, or claim its facts. If no example is genuinely comparable, rely on the current dialogue and fixed persona.
+
+Respond to the latest active topic or direct question. Match the REPLYING CHARACTER's observed vocabulary, informality, directness, detail, and number of conversational moves. A question, reflection, self-disclosure, validation, or emotional exploration is optional; use it only when the current message and comparable REPLYING CHARACTER behavior support it.
+
+Do not improve, polish, professionalize, or make the REPLYING CHARACTER more helpful or empathic than the evidence supports. Background knowledge is not personal experience. Do not reveal stored CURRENT USER facts merely to appear personalized. Output only the REPLYING CHARACTER's reply."""
+
+
+V18_RESPONSE_USER_PROMPT = """ROLE OWNERSHIP:
+- CURRENT USER = the writer of the latest message and the person described by USER PROFILE / USER STATE.
+- REPLYING CHARACTER = the person described by REPLYING CHARACTER PERSONA / TRAIN-ONLY AGENT BEHAVIOR EVIDENCE.
+
+LATEST MESSAGE FROM CURRENT USER:
+{user_input}
+
+RECENT DIALOGUE, RETRIEVED MEMORY, AND TRAIN-ONLY BEHAVIOR EVIDENCE:
+{relevant_memory}
+
+REPLYING CHARACTER PERSONA:
+{persona_config}
+
+CURRENT USER PROFILE:
+{static_profile}
+
+CURRENT USER STATE COMPLETED BEFORE THE LATEST MESSAGE:
+{current_state}
+
+CURRENT USER CONTEXT:
+{current_context}
+
+PREVIOUS-TURN INTERACTION CALIBRATION:
+{previous_empathy_state}
+
+Write only the REPLYING CHARACTER's next message to the CURRENT USER."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -874,6 +933,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "targeted-runtime-integration",
         "primary_metrics": "empathy, intimacy with V7-wide guardrails",
         "hypothesis": "Explicitly separating the current user from the replying character and carrying a content-free, one-turn-delayed relationship-empathy calibration can prevent role leakage and excessive emotional exploration without changing parallel alignment.",
+    },
+    "v18_train_behavior_evidence": {
+        "axis": "role-separated train-only speaker behavior and similar reply exemplars",
+        "strength": "independent evidence-driven generation",
+        "primary_metrics": "lexical, reflective, grounding, sentiment, emotion, empathy",
+        "hypothesis": "Explicit role ownership plus observed response distributions and comparable real training replies provide speaker-specific supervision without transferring user facts to the replying character or changing either fixed schema.",
     },
 }
 
@@ -1101,6 +1166,20 @@ _BUNDLES = {
             "content guidance; V5 alignment unchanged."
         ),
         response_state_policy="relationship_empathy_without_guidance",
+    ),
+    "v18_train_behavior_evidence": Exp2PromptBundle(
+        version="v18_train_behavior_evidence",
+        response_system=V18_RESPONSE_SYSTEM_PROMPT,
+        response_user=V18_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Role-separated generation driven by deterministic train-only "
+            "speaker behavior statistics and similar real reply exemplars; "
+            "fixed user-profile/persona schemas and V5 alignment unchanged."
+        ),
+        uses_train_behavior_evidence=True,
     ),
 }
 

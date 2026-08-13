@@ -508,6 +508,7 @@ data/<experiment>/
 │   │   ├── user_profile.json
 │   │   ├── user_profile_runtime.json
 │   │   ├── agent_persona.json
+│   │   ├── agent_behavior_evidence.json
 │   │   └── asset_manifest.json
 │   ├── generations/predictions.jsonl
 │   ├── states/user_understanding.jsonl
@@ -521,6 +522,47 @@ data/<experiment>/
 ```
 
 `table2_main_results.md` 是 REALTALK 两条原始基线加 `Ours` 的最终表格。
+
+### 6.6 固定画像字段与训练集行为证据
+
+`user_profile.json` 和 `agent_persona.json` 继续使用原来的严格固定字段，程序不会增加、删除或改名任何画像/人设字段。新增的 `agent_behavior_evidence.json` 是独立的实验派生文件，只由该 case 前 90% 的训练 Session 确定性生成，不调用 LLM，也不读取后 10% 测试 Session。
+
+该文件包含：
+
+- 目标智能体真实训练回复的长度、句数、问句、感叹号、emoji 和词语复用统计；
+- 在不改变字段结构的前提下，运行时追加到 `expression_layer.language_style` 和 `expression_layer.behavioral_mannerisms` 的行为描述；
+- 全部训练集 `user -> agent` 回复对，用于每个测试 turn 检索最多 3 个相似真实样例。
+
+相似样例只提供回复行为证据，不替代当前测试消息，也不会被写回静态人设。生成记录会保存行为证据版本、文件哈希和实际使用的样例 ID，方便审计和版本隔离。
+
+`prepare-behavior` 只把证据文件放进 assets；文件存在不等于生成阶段已经使用。程序按 Prompt bundle 显式门控：只有 `v18_train_behavior_evidence` 会读取、注入和记录它。V1–V17（包括 V7）的运行时人设、retrieved memory 和生成策略保持原样，已有结果不会被重新解释成使用过行为证据。
+
+V18 也不再沿用 V7 中含糊的“target speaker / conversation partner”指代。其 system/user Prompt 明确定义 `CURRENT USER` 与 `REPLYING CHARACTER`：用户画像、用户状态只属于前者；智能体人设、行为统计和训练样例中的 `agent_reply` 只属于后者；最终输出只能由后者回复前者。
+
+同步包含该功能的新代码后，如果已有目录已经包含用户画像和智能体人设，只需在原 asset 目录补跑一次：
+
+```bash
+uv run --no-sync python -m src.experiments.exp2_user_modeling \
+  --phase prepare-behavior \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --output-dir data/exp2_qwen_plus_v5_clean
+```
+
+`prepare-behavior` 会校验已有 `user_profile.json` 和 `agent_persona.json`，只补建缺失的 `agent_behavior_evidence.json`，不会调用画像/人设抽取 API，也不会覆盖该目录已有的 `split_manifest.json` 或 `run_manifest.json`。旧版本仍可不带该文件运行；V18 必须先补齐它，Prompt sweep 会在存在时一并复制。
+
+补齐全量 assets 后，运行 V18：
+
+```bash
+ASSET_SOURCE=data/exp2_qwen_plus_v5_clean \
+BASELINE_DIR=data/exp2_prompt_sweep_v6_v10/v7_recent_style_imitation \
+BEST_FULL_DIR=data/exp2_v16_full/v16_v7_selective_followup \
+SWEEP_ROOT=data/exp2_v18_full \
+CASE_SET=all \
+VERSIONS_CSV=v18_train_behavior_evidence \
+GENERATE_WORKERS=3 \
+bash scripts/run_exp2_prompt_sweep_v11_v15.sh
+```
 
 ---
 
@@ -667,6 +709,7 @@ Sweep helper 只复用不可变文件：
 ```text
 agent_persona.json
 user_profile.json
+agent_behavior_evidence.json
 asset_manifest.json
 ```
 
