@@ -52,7 +52,7 @@ from .realtalk_v13_schemas import (
 )
 
 
-PROTOCOL = "realtalk_task1_ours_agentic_v13_5_progressive_v1"
+PROTOCOL = "realtalk_task1_ours_agentic_v13_6_progressive_v1"
 MODEL = "deepseek-v4-flash"
 GATES = (6, 18, 30, 60, 120, 519)
 SELF_MAX_TOKENS = 4000
@@ -89,10 +89,7 @@ Ca habits. Use at most two currently relevant User Domain facts. Scan the comple
 a multipart question may remain partly unanswered after an intervening reply, and the newest partner turn is not
 necessarily the only open obligation. Record the exact visible source turn ID for the obligation. An
 answer-current-question or answer-earlier-unanswered-question source must contain a literal question mark in the
-visible transcript. Treat the visible question index as an obligation audit: compare every indexed question with
-the target replies listed after it. If an explicit slot was not answered and remains relevant, answer that slot
-before reacting to a newer disclosure or adding a question. A later partner statement does not by itself cancel
-an unanswered question. Then choose one
+visible transcript. Then choose one
 primary move and at most one same-slot companion move. A real message may answer and briefly
 self-disclose, react and reciprocate, or answer and return the same question; do not force every turn into a
 single sterile sentence.
@@ -192,6 +189,7 @@ class V13Config:
     v9_predictions: str
     v9_judge_scored: str
     v9_local_scored: str
+    self_domains_source: str | None = None
     gate: int = 6
     fresh: bool = False
     operation_max_attempts: int = 3
@@ -225,6 +223,7 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
     source_rows = _read_rows(Path(config.v9_predictions))
     judge_rows = _read_rows(Path(config.v9_judge_scored))
     local_rows = _read_rows(Path(config.v9_local_scored))
+    reused_self_domains = _load_self_domains_source(config.self_domains_source)
     manifests = prepare_gate_manifests(
         source_rows, judge_rows, local_rows,
         output / "gate_manifests.json",
@@ -235,6 +234,15 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
     missing = selected - set(point_index)
     if missing:
         raise ValueError(f"gate contains unknown dataset IDs: {sorted(missing)[:3]}")
+    if config.self_domains_source:
+        required_speakers = {
+            _speaker_id(item["speaker"])
+            for item in prepared
+            if any(_result_id(item["speaker"], point) in selected for point in item["points"])
+        }
+        missing_self = required_speakers - set(reused_self_domains)
+        if missing_self:
+            raise ValueError(f"self_domains_source is missing required speakers: {sorted(missing_self)}")
 
     backend = backend or _backend_from_env(config.model)
     preflight = _run_preflight(
@@ -253,9 +261,13 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
             "user": stable_hash(USER_DOMAIN_SCHEMA),
         },
         "implementation_sources": _implementation_source_hashes(),
+        "self_domains_source_sha256": (
+            _sha256(Path(config.self_domains_source)) if config.self_domains_source else None
+        ),
     })
     checkpoint = OperationCheckpoint(output / "checkpoint.json", signature)
     raw_audit = output / "raw_responses.jsonl"
+    self_domains_out: dict[str, Any] = {}
 
     for speaker_data in prepared:
         speaker_points = [
@@ -269,28 +281,36 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
         global_stats = _global_statistics(speaker_data["profile"]["turns"], speaker)
         conditional_stats = conditional_statistics(speaker_data["profile"]["turns"], speaker)
         try:
-            self_envelope = _structured_call(
-                checkpoint=checkpoint,
-                backend=backend,
-                operation_key=f"v13:self:{speaker_id}",
-                system_prompt=SELF_SYSTEM,
-                user_prompt=SELF_USER.format(
-                    speaker=speaker,
-                    history=_turns_with_ids(speaker_data["profile"]["turns"]),
-                    global_stats=_json(global_stats),
-                    conditional_stats=_json(conditional_stats),
-                ),
-                schema=V13_SELF_DOMAIN_SCHEMA,
-                normalizer=lambda value, gs=global_stats, cs=conditional_stats: _validate_self_stats(
-                    normalize_v13_self_domain(value), gs, cs
-                ),
-                max_tokens=SELF_MAX_TOKENS,
-                max_attempts=config.operation_max_attempts,
-                raw_audit=raw_audit,
-                enable_thinking=False,
-                hard_timeout_seconds=config.model_call_timeout_seconds,
-            )
-            self_domain = self_envelope["data"]
+            if speaker_id in reused_self_domains:
+                self_domain = _validate_self_stats(
+                    normalize_v13_self_domain(reused_self_domains[speaker_id]),
+                    global_stats,
+                    conditional_stats,
+                )
+            else:
+                self_envelope = _structured_call(
+                    checkpoint=checkpoint,
+                    backend=backend,
+                    operation_key=f"v13:self:{speaker_id}",
+                    system_prompt=SELF_SYSTEM,
+                    user_prompt=SELF_USER.format(
+                        speaker=speaker,
+                        history=_turns_with_ids(speaker_data["profile"]["turns"]),
+                        global_stats=_json(global_stats),
+                        conditional_stats=_json(conditional_stats),
+                    ),
+                    schema=V13_SELF_DOMAIN_SCHEMA,
+                    normalizer=lambda value, gs=global_stats, cs=conditional_stats: _validate_self_stats(
+                        normalize_v13_self_domain(value), gs, cs
+                    ),
+                    max_tokens=SELF_MAX_TOKENS,
+                    max_attempts=config.operation_max_attempts,
+                    raw_audit=raw_audit,
+                    enable_thinking=False,
+                    hard_timeout_seconds=config.model_call_timeout_seconds,
+                )
+                self_domain = self_envelope["data"]
+            self_domains_out[speaker_id] = self_domain
         except Exception as exc:
             checkpoint.store_excluded_result(
                 f"v13:self:{speaker_id}", _failure("self_domain", speaker, None, exc)
@@ -443,6 +463,14 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
             "user": stable_hash(USER_DOMAIN_SCHEMA),
         },
         "implementation_source_hashes": _implementation_source_hashes(),
+        "self_domain_reuse": {
+            "enabled": bool(config.self_domains_source),
+            "source": config.self_domains_source,
+            "source_sha256": (
+                _sha256(Path(config.self_domains_source)) if config.self_domains_source else None
+            ),
+            "reused_speakers": sorted(set(self_domains_out) & set(reused_self_domains)),
+        },
         "dataset_manifest": dataset_manifest,
         "stage_thinking": {"self": False, "user": False, "decision": False, "actor": False},
         "omega_enabled": False,
@@ -455,7 +483,7 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
         "run_signature": signature,
         "created_at_utc": _now(),
     })
-    _write_json(output / "self_domains.json", _cached_self_domains(checkpoint))
+    _write_json(output / "self_domains.json", self_domains_out)
     return {
         "generation_complete": complete,
         "gate": config.gate,
@@ -956,6 +984,16 @@ def _read_rows(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def _load_self_domains_source(path: str | None) -> dict[str, Any]:
+    if not path:
+        return {}
+    source = Path(path)
+    value = json.loads(source.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError("self_domains_source must contain an object keyed by speaker ID")
+    return value
+
+
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -975,6 +1013,7 @@ def parse_args() -> V13Config:
     parser.add_argument("--v9-predictions", required=True)
     parser.add_argument("--v9-judge-scored", required=True)
     parser.add_argument("--v9-local-scored", required=True)
+    parser.add_argument("--self-domains-source")
     parser.add_argument("--gate", type=int, choices=GATES, default=6)
     parser.add_argument("--fresh", action="store_true")
     parser.add_argument("--model", default=MODEL)
