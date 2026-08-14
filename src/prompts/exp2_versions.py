@@ -1312,6 +1312,21 @@ _BUNDLES = {
             "V5 alignment, and all other generation inputs unchanged."
         ),
     ),
+    "v18_reflective_grounding_scores_only": Exp2PromptBundle(
+        version="v18_reflective_grounding_scores_only",
+        response_system=V18_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "The result-audited V18 response/alignment prompts with the response "
+            "state restricted to emotional_reaction, interpretation, and "
+            "exploration. This is the direct, single-pass form of the controlled "
+            "scores_only condition."
+        ),
+        response_state_policy="scores_only",
+    ),
     "v19_reflective_trigger_recall": Exp2PromptBundle(
         version="v19_reflective_trigger_recall",
         response_system=V19_RESPONSE_SYSTEM_PROMPT,
