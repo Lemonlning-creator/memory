@@ -288,9 +288,15 @@ def run(predictions: Path, dataset_dir: Path, output_dir: Path, model: str) -> d
         }
         for name in metric_names
     } if by_speaker else {}
+    speaker_count = len({item["speaker"] for item in scored})
+    is_full_reconstructed_protocol = len(rows) == 519 and speaker_count == 10
     summary = {
         "status": "complete" if len(scored) == len(rows) and not checkpoint["errors"] else "incomplete",
-        "scope": "small_subset_diagnostic_not_table2_main_result",
+        "scope": (
+            "full_reconstructed_table2_protocol_aligned_comparison"
+            if is_full_reconstructed_protocol
+            else "small_subset_diagnostic_not_table2_main_result"
+        ),
         "judge_protocol": "realtalk_appendix_c_full_prompt_within_session_v3",
         "model_requested": model,
         "messages_input": len(rows),
@@ -304,8 +310,11 @@ def run(predictions: Path, dataset_dir: Path, output_dir: Path, model: str) -> d
         "message_micro": {name: round(statistics.mean(item["metrics"][name] for item in scored), 6) for name in metric_names} if scored else {},
         "paper_table2_reference": PAPER_TABLE2,
         "comparison_warning": (
-            f"Diagnostic subset spanning {len({item['speaker'] for item in scored})} speakers; "
-            "paper values use the complete protocol and are not directly comparable."
+            "Complete reconstructed 519-message protocol; comparison is protocol-aligned, "
+            "but the paper does not disclose an identical base-model runtime."
+            if is_full_reconstructed_protocol
+            else f"Diagnostic subset spanning {speaker_count} speakers; paper values use the "
+            "complete protocol and are not directly comparable."
         ),
         "created_at_utc": _now(),
     }
