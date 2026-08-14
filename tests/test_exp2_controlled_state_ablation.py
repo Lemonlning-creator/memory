@@ -149,6 +149,41 @@ class ControlledStateAblationTests(unittest.TestCase):
         self.assertIn("CURRENT USER PROFILE", v26.response_user)
         self.assertIn("THREE EMPATHY SCORES", v26.response_user)
 
+    def test_v27_changes_only_v18_grounding_policy_and_uses_scores_only(self) -> None:
+        v7 = get_exp2_prompt_bundle("v7_recent_style_imitation")
+        v18 = get_exp2_prompt_bundle("v18_reflective_grounding_scores_only")
+        v27 = get_exp2_prompt_bundle("v27_grounding_three_mode_gate")
+
+        self.assertEqual(v27.response_state_policy, "scores_only")
+        self.assertEqual(v27.response_user, v18.response_user)
+        self.assertEqual(v27.alignment_system, v18.alignment_system)
+        self.assertEqual(v27.alignment_user, v18.alignment_user)
+        self.assertTrue(v18.response_system.startswith(v7.response_system))
+        self.assertTrue(v27.response_system.startswith(v7.response_system))
+        self.assertNotEqual(v27.response_system, v18.response_system)
+
+        reflective_boundary = (
+            "A. REFLECTIVE. Use one natural self-observation only when the active "
+            "topic is the target speaker's own feeling, motive, realization, "
+            "decision, change, or recurring pattern."
+        )
+        self.assertIn(reflective_boundary, v18.response_system)
+        self.assertIn(reflective_boundary, v27.response_system)
+        ordinary_boundary = (
+            "C. ORDINARY. When neither A nor B is clearly supported, use the "
+            "direct answer, acknowledgement, opinion, reaction, or supported "
+            "self-disclosure this speaker would normally give."
+        )
+        self.assertIn(ordinary_boundary, v18.response_system)
+        self.assertIn(ordinary_boundary, v27.response_system)
+        self.assertIn("1. DIRECT_RESPONSE:", v27.response_system)
+        self.assertIn("2. REPAIR_GROUNDING:", v27.response_system)
+        self.assertIn("3. ELABORATION_GROUNDING:", v27.response_system)
+        self.assertIn(
+            "Choose B only for mode 2 or 3. Otherwise choose C.",
+            v27.response_system,
+        )
+
     def test_agent_scores_only_policy_is_strict(self) -> None:
         agent = object.__new__(StateDrivenCompanionAgent)
         agent.prompt_bundle = get_exp2_prompt_bundle("v26_local_evidence_single_act")

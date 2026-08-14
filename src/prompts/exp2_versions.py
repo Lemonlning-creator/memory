@@ -933,6 +933,29 @@ THREE EMPATHY SCORES FROM THE PREVIOUS COMPLETED TURN (weak, delayed calibration
 Write only one next message from the target speaker to the current user."""
 
 
+# V27 is a surgical variant of V18 for the controlled scores-only run. It keeps
+# V7's surface-style policy and V18's REFLECTIVE/ORDINARY boundaries verbatim.
+# The only behavioral change is a three-mode decision inside the GROUNDING
+# branch, based on the V7 -> V18 confusion-matrix audit.
+V27_RESPONSE_SYSTEM_PROMPT = V7_RESPONSE_SYSTEM_PROMPT + """
+
+Before writing, silently choose exactly one primary response-act pattern:
+
+A. REFLECTIVE. Use one natural self-observation only when the active topic is the target speaker's own feeling, motive, realization, decision, change, or recurring pattern. A fact, preference, opinion, explanation, or phrase such as "I think" or "I feel" is not reflective without awareness of an internal motive or pattern.
+
+B. GROUNDING. Silently choose one mode:
+
+1. DIRECT_RESPONSE: answer or acknowledge a complete point; this is the default and is not B.
+2. REPAIR_GROUNDING: ask one specific clarification or confirmation needed for understanding.
+3. ELABORATION_GROUNDING: ask one specific follow-up only when the user left a concrete point open and recent target-speaker messages support that behavior.
+
+Choose B only for mode 2 or 3. Otherwise choose C. Never add a generic, reciprocal, or counselor-style question merely to continue the conversation.
+
+C. ORDINARY. When neither A nor B is clearly supported, use the direct answer, acknowledgement, opinion, reaction, or supported self-disclosure this speaker would normally give. The reply may end without a question.
+
+Do not combine A and B unless a genuine ambiguity makes both indispensable. If evidence for an optional act is weak, choose C. Do not mention this internal choice. Output only the final reply."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -1071,6 +1094,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "controlled-precision",
         "primary_metrics": "grounding precision while preserving reflective and empathy",
         "hypothesis": "Defaulting to one direct response when comparable recent target-speaker behavior is unavailable reduces optional follow-up and topic-expansion false positives without changing the validated reflective boundary.",
+    },
+    "v27_grounding_three_mode_gate": {
+        "axis": "V18 grounding placement through direct, repair, and elaboration modes",
+        "strength": "controlled-confusion-matrix-directed",
+        "primary_metrics": "grounding precision and recall with reflective held fixed",
+        "hypothesis": "Separating direct response from necessary repair and evidence-supported elaboration reduces V18 grounding false positives without globally suppressing true grounding turns or changing V18's reflective boundary.",
     },
 }
 
@@ -1427,6 +1456,21 @@ _BUNDLES = {
             "move, local comparable target-speaker evidence for optional acts, the "
             "validated V18 reflective boundary, fixed profile/persona schemas, and "
             "V5 alignment. Final replies use scores-only previous state."
+        ),
+        response_state_policy="scores_only",
+    ),
+    "v27_grounding_three_mode_gate": Exp2PromptBundle(
+        version="v27_grounding_three_mode_gate",
+        response_system=V27_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Controlled V18 grounding-placement variant: the V7 surface-style "
+            "policy and V18 reflective/ordinary boundaries are unchanged; only "
+            "the grounding branch distinguishes direct response, necessary repair, "
+            "and locally evidenced elaboration. Final replies use scores-only state."
         ),
         response_state_policy="scores_only",
     ),

@@ -488,6 +488,28 @@ policy 固定为 `scores_only`；受控运行使用 V18 作为 `--source-prompt-
 使用 V26 作为 `--response-prompt-version`，因此不会重新运行 prepare 或 alignment。
 一键入口为 `scripts/run_exp2_v26_controlled.sh`。
 
+### 8.7 V7 → V18 混淆矩阵与 V27 假设
+
+V7 和原始 V18 在同一 117 条样本上的 Grounding 混淆矩阵为：
+
+| 版本 | TP | TN | FP | FN | generated positive |
+|---|---:|---:|---:|---:|---:|
+| V7 | 34 | 34 | 38 | 11 | 72 |
+| V18 | 33 | 39 | 33 | 12 | 66 |
+
+V18 修正了 13 条 V7 FP 和 6 条 V7 FN，但同时新产生 8 条 FP 和 7 条 FN；逐样本为
+19 条改善、15 条退化、83 条不变。它确实降低了过触发并将 precision 从 `47.2%`
+提高到 `50.0%`，但 Grounding 位置仍在大量互换。角色层面 Vanessa 明显改善、
+Nebraas 小幅改善、Paola 退化，其余角色宏平均正确率不变。因此不能继续使用统一的
+全局降频规则。
+
+V27 `v27_grounding_three_mode_gate` 固定 V18 的 Reflective/Ordinary 边界和
+`scores_only` 状态接口，只将 Grounding 分成 `DIRECT_RESPONSE`、
+`REPAIR_GROUNDING`、`ELABORATION_GROUNDING`。它验证的唯一假设是：区分完整直接
+回应、必要理解修复和有局部角色证据的具体延展，能减少 FP，同时避免 V26 式的
+全局 Grounding 抑制造成新的 FN。运行入口为
+`scripts/run_exp2_v27_controlled.sh`，结果必须写入新的 V27 目录。
+
 ## 9. 后续不得重复的做法
 
 - 不再通过增加默认追问来优化 Grounding。
@@ -506,8 +528,8 @@ policy 固定为 `scores_only`；受控运行使用 V18 作为 `--source-prompt-
 1. 将主实验 response-state policy 固定为 `scores_only`，不再进行状态字段消融。
 2. 后续 Prompt 对比必须使用同一份冻结状态轨迹，避免重新运行 alignment 造成
    输入混杂。
-3. 只测试第 8.6 节定义的“局部证据可用性 + 单一活跃点”Prompt，不再重复已经
-   完成的 FP 分类。
+3. 下一次只测试第 8.7 节的 V27 Grounding 三模式落点，不同时修改 Reflective、
+   Empathy、画像、人设或评估 Prompt。
 4. 首先检查当前 Session 行为证据不足的 14 条，其中现有结果包含 6 个 FP、0 个
    FN；随后再检查 Muhhamed 和 Elise 的剩余 FP。
 5. Grounding 修改必须是单一的 precision 优化，不允许增加默认追问，也不允许

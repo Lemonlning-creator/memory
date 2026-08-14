@@ -21,6 +21,29 @@
 
 第一条回复的 `current_state` 按主实验初始化协议设为空对象；后续回复使用来源 V18 上一个评测点保存的 `core_current_state`。各条件不会自行更新状态，因此不存在新的随机状态分叉。
 
+## V27：保留 V18，只细分 Grounding 落点
+
+V27 `v27_grounding_three_mode_gate` 是以 V18 + `scores_only` 为直接对照的单变量版本。V7 表面风格策略、V18 的 Reflective 和 Ordinary 原文边界、response user Prompt、画像、人设、V5 alignment、冻结状态轨迹及评估 Prompt 均不变。唯一变化是将 V18 的 Grounding 分支细分为：
+
+- `DIRECT_RESPONSE`：问题或表达已经完整，直接回应；不属于 Grounding，也是默认模式；
+- `REPAIR_GROUNDING`：存在影响理解或准确回应的具体未决信息，允许一次澄清或确认；
+- `ELABORATION_GROUNDING`：用户提出了具体且仍可延展的信息，并且近期真实目标角色在可比场景中确实会追问，允许一次绑定该细节的 follow-up。
+
+一键运行全部 117 条：
+
+```bash
+bash scripts/run_exp2_v27_controlled.sh
+```
+
+脚本默认读取已完成的 V18 来源目录，不重新执行 prepare、Milvus 或 alignment。输出位于：
+
+```text
+data/exp2_v27_controlled/scores_only/
+data/exp2_v27_controlled/controlled_state_ablation_summary.md
+```
+
+必须使用新的输出目录，不能覆盖 V18、V26 或既有状态消融结果。若只想生成、暂不调用 LLM Judge，可执行等价命令并将 `--phase all` 改为 `--phase generate`。
+
 ## V26：冻结 V18 轨迹，只替换最终回复 Prompt
 
 V26 `v26_local_evidence_single_act` 针对 `scores_only` 的 33 条 Grounding FP，只改变最终回复的 response-act 选择：缺少可比较的近期目标 speaker 回复时默认直接回应；用户已经提出直接问题时不自动附加反问；Persona 继续完整传入，但不能单独触发追问或主题扩展。Reflective 边界、画像、人设、V5 alignment 和来源状态轨迹不变。
