@@ -53,7 +53,7 @@ def _decision() -> dict:
 class RealTalkV13Tests(unittest.TestCase):
     def test_direct_question_requires_adaptive_alignment(self):
         value = normalize_v13_decision(_decision())
-        history = [{"turn_id": "session_1:turn_1"}]
+        history = [{"turn_id": "session_1:turn_1", "content": "What are your plans?"}]
         self.assertIs(_validate_decision(value, history, "What are your plans?"), value)
         value["alignment"].update({"orientation": "self-led", "lambda_trace": 0.2})
         with self.assertRaisesRegex(ValueError, "direct partner question"):
@@ -63,7 +63,23 @@ class RealTalkV13Tests(unittest.TestCase):
         value = normalize_v13_decision(_decision())
         value["situation"]["open_obligation"] = "answer-earlier-unanswered-question"
         with self.assertRaisesRegex(ValueError, "exact visible history turn"):
-            _validate_decision(value, [{"turn_id": "session_1:turn_2"}], "A statement")
+            _validate_decision(
+                value,
+                [{"turn_id": "session_1:turn_2", "content": "A statement"}],
+                "A statement",
+            )
+
+    def test_question_obligation_source_must_really_be_a_question(self):
+        value = normalize_v13_decision(_decision())
+        history = [{"turn_id": "session_1:turn_1", "content": "A statement"}]
+        with self.assertRaisesRegex(ValueError, "visible question mark"):
+            _validate_decision(value, history, "A statement")
+
+    def test_none_obligation_discards_redundant_source(self):
+        value = _decision()
+        value["situation"]["open_obligation"] = "none"
+        normalized = normalize_v13_decision(value)
+        self.assertEqual(normalized["situation"]["obligation_source_turn_id"], "")
 
     def test_orientation_and_lambda_ranges_are_coupled(self):
         value = _decision()

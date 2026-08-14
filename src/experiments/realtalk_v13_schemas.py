@@ -324,6 +324,16 @@ def normalize_v13_decision(value: Any) -> dict[str, Any]:
             "layer": _enum(item["layer"], PROFILE_LAYERS, "relevant layer"),
             "value": _text(item["value"], "relevant value"),
         })
+    open_obligation = _enum(
+        situation["open_obligation"], OPEN_OBLIGATIONS, "situation.open_obligation"
+    )
+    obligation_source = _text(
+        situation["obligation_source_turn_id"],
+        "situation.obligation_source_turn_id",
+        allow_empty=True,
+    )
+    if open_obligation in {"none", "open-session"}:
+        obligation_source = ""
     normalized = {
         "situation": {
             "topic": _text(situation["topic"], "situation.topic", allow_empty=True),
@@ -331,14 +341,8 @@ def normalize_v13_decision(value: Any) -> dict[str, Any]:
             "turn_obligation": _enum(
                 situation["turn_obligation"], TURN_OBLIGATIONS, "situation.turn_obligation"
             ),
-            "open_obligation": _enum(
-                situation["open_obligation"], OPEN_OBLIGATIONS, "situation.open_obligation"
-            ),
-            "obligation_source_turn_id": _text(
-                situation["obligation_source_turn_id"],
-                "situation.obligation_source_turn_id",
-                allow_empty=True,
-            ),
+            "open_obligation": open_obligation,
+            "obligation_source_turn_id": obligation_source,
             "explicit_affect": _text(
                 situation["explicit_affect"], "situation.explicit_affect", allow_empty=True
             ),

@@ -52,7 +52,7 @@ from .realtalk_v13_schemas import (
 )
 
 
-PROTOCOL = "realtalk_task1_ours_agentic_v13_2_progressive_v1"
+PROTOCOL = "realtalk_task1_ours_agentic_v13_3_progressive_v1"
 MODEL = "deepseek-v4-flash"
 GATES = (6, 18, 30, 60, 120, 519)
 SELF_MAX_TOKENS = 4000
@@ -87,7 +87,9 @@ assistant response.
 Use the Self Domain as a cross-partner prior. Give current Cb history priority over Ca facts and partner-specific
 Ca habits. Use at most two currently relevant User Domain facts. Scan the complete visible history before deciding:
 a multipart question may remain partly unanswered after an intervening reply, and the newest partner turn is not
-necessarily the only open obligation. Record the exact visible source turn ID for the obligation. Then choose one
+necessarily the only open obligation. Record the exact visible source turn ID for the obligation. An
+answer-current-question or answer-earlier-unanswered-question source must contain a literal question mark in the
+visible transcript. Then choose one
 primary move and at most one same-slot companion move. A real message may answer and briefly
 self-disclose, react and reciprocate, or answer and return the same question; do not force every turn into a
 single sterile sentence.
@@ -235,6 +237,7 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
             "decision": stable_hash(V13_DECISION_SCHEMA),
             "user": stable_hash(USER_DOMAIN_SCHEMA),
         },
+        "implementation_sources": _implementation_source_hashes(),
     })
     checkpoint = OperationCheckpoint(output / "checkpoint.json", signature)
     raw_audit = output / "raw_responses.jsonl"
@@ -417,6 +420,7 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
             "decision": stable_hash(V13_DECISION_SCHEMA),
             "user": stable_hash(USER_DOMAIN_SCHEMA),
         },
+        "implementation_source_hashes": _implementation_source_hashes(),
         "dataset_manifest": dataset_manifest,
         "stage_thinking": {"self": False, "user": False, "decision": False, "actor": False},
         "omega_enabled": False,
@@ -620,11 +624,21 @@ def _validate_decision(value: dict[str, Any], history: list[dict[str, Any]], lat
     open_obligation = situation["open_obligation"]
     source_turn_id = situation["obligation_source_turn_id"]
     visible_turn_ids = {turn["turn_id"] for turn in history}
+    visible_turns = {turn["turn_id"]: turn for turn in history}
     if open_obligation in {"none", "open-session"}:
         if source_turn_id:
             raise ValueError(f"{open_obligation} must not cite an obligation source turn")
     elif source_turn_id not in visible_turn_ids:
         raise ValueError("obligation_source_turn_id must cite an exact visible history turn")
+    if open_obligation.startswith("answer-") and source_turn_id in visible_turns:
+        if "?" not in visible_turns[source_turn_id]["content"]:
+            raise ValueError("an answer obligation source must contain a visible question mark")
+    if open_obligation == "answer-current-question" and history:
+        if source_turn_id != history[-1]["turn_id"]:
+            raise ValueError("answer-current-question must cite the latest visible turn")
+    if open_obligation == "answer-earlier-unanswered-question" and history:
+        if source_turn_id == history[-1]["turn_id"]:
+            raise ValueError("answer-earlier-unanswered-question must cite an earlier visible turn")
     if open_obligation.startswith("answer-") and policy["primary_move"] != "answer":
         raise ValueError("an unanswered question requires answer as the primary move")
     if not has_history:
@@ -858,6 +872,13 @@ def _prompt_hashes() -> dict[str, str]:
             "actor_system": ACTOR_SYSTEM,
             "actor_user": ACTOR_USER,
         }.items()
+    }
+
+
+def _implementation_source_hashes() -> dict[str, str]:
+    return {
+        "runner": _sha256(Path(__file__)),
+        "schemas": _sha256(Path(__file__).with_name("realtalk_v13_schemas.py")),
     }
 
 

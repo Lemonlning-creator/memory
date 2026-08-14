@@ -89,3 +89,8 @@ V13.1 Gate 1 因冗余枚举耦合导致仅 `3/6` 完成，并按协议停止。
 将 Decision 结构简化为“交流义务、主动作、可选辅助动作、问题类型与对象”：问题只需由
 主动作或辅助动作中的恰好一个 `ask` 承载；交流义务不再被要求与主动作使用完全相同的
 枚举词。User Domain 输出上限由 3000 提高到 4000 tokens，以避免完整五层 JSON 截断。
+
+V13.2 Gate 1 完成 `5/6`；唯一失败是 `open_obligation=none` 时附带了冗余来源 ID。
+V13.3 将该 ID 确定性清空，不改变策略；同时验证两类 answer obligation 引用的可见
+turn 必须真实包含问号，并区分最新与更早 turn。运行签名新增 runner/schema 源码 SHA256，
+防止任何代码变化复用旧 checkpoint。
