@@ -338,12 +338,18 @@ def _question_contract(action: dict[str, Any]) -> str:
     primary = action["primary_move"]
     continuation = action["continuation_move"]
     if primary == "follow-up":
-        return "Ask exactly one concrete primary question. Do not add another question."
+        return (
+            "Ask exactly one concrete primary question sentence containing one question mark total. "
+            "Choose one detail to ask about; do not split it into multiple questions."
+        )
     if continuation == "reciprocal-question":
         detail = str(action["missing_information"]).strip()
         if not detail:
             raise ValueError("reciprocal question lacks missing information")
-        return f"After the primary move, ask exactly one short same-slot question about: {detail}"
+        return (
+            "After the primary move, ask exactly one short same-slot question sentence containing "
+            f"one question mark total. If several details are listed, choose one. Ask about: {detail}"
+        )
     return "Do not ask a question and do not use a question mark."
 
 

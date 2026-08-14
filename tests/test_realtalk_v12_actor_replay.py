@@ -92,6 +92,7 @@ class RealTalkV12ActorReplayTests(unittest.TestCase):
 
         reciprocal = _compact_actor_action(action(continuation="reciprocal-question"))
         self.assertIn("their preference", _question_contract(reciprocal))
+        self.assertIn("choose one", _question_contract(reciprocal).casefold())
 
     def test_prompt_excludes_metrics_lambda_and_full_user_domain(self):
         lowered = GENERATION_USER_PROMPT.casefold()
