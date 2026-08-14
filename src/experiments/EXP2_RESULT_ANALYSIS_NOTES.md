@@ -245,6 +245,7 @@ frozen_input_audit.verified = true
 | `full_state` | 0.1082 | 0.8324 | 0.7153 | **0.5872** | 0.6092 | 0.4905 | **0.0667** | 1.2389 |
 | `scores_only` | 0.1050 | 0.8319 | **0.7906** | 0.5681 | 0.5904 | 0.4967 | 0.0738 | **1.1217** |
 | `no_state` | 0.1075 | 0.8330 | 0.7549 | 0.5336 | 0.6124 | 0.4994 | 0.0755 | 1.2359 |
+| `scores_plus_tone` | 0.1040 | 0.8316 | **0.8180** | 0.4941 | 0.5720 | 0.4468 | 0.0744 | 1.1597 |
 
 `scores_only` 相对论文 `w/ fine-tune` 已超过 Semantic、Reflective、Sentiment、
 Emotion 和 Empathy，共 5/8 项；Intimacy 只差 `0.0038`，仍未达到的是 Lexical、
@@ -296,9 +297,9 @@ Grounding 具有明显 speaker 异质性：`scores_only` 在 Elise、Nebraas、P
 受控条件仍不能区分 `activated_tone` 和 `response_guidance`
 各自的贡献。
 
-## 7. 下一项受控优化：以 `scores_only` 为基线
+## 7. 第四组结果与最终状态策略
 
-主优化基线确定为 `scores_only`，不是退回 `full_state`。第四组定义为：
+第四组严格以 `scores_only` 为基线：
 
 ```text
 scores_plus_tone
@@ -306,23 +307,188 @@ scores_plus_tone
 + activated_tone
 ```
 
-`response_guidance` 始终排除。这个条件同时提供两组因果比较：
+`response_guidance` 始终排除。它同时提供两组因果比较：
 
-- 相对 `scores_only`：测试加回抽象 tone 能否恢复 Intimacy/Grounding，
-  同时保护 Reflective/Empathy。
-- 相对 `full_state`：两组只相差 `response_guidance`，可更直接判断过期 guidance
-  的净影响。
+- 相对 `scores_only`：测试加回抽象 tone 能否恢复 Intimacy/Grounding。
+- 相对 `full_state`：两组只相差 `response_guidance`，可观察排除 guidance 后的
+  净变化。
 
-选择规则：
+第四组结果：
 
-- 如果第四组保持 Reflective `>= 0.77`、Empathy `<= 1.24`，并让 Intimacy
-  回到 `<= 0.07` 或 Grounding 高于 `scores_only`，则采用第四组。
-- 如果第四组退回 `full_state` 的 Reflective/Empathy 水平，则固定采用
-  `scores_only`，不再加回 tone。
-- 无论哪组胜出，都保留 alignment、三个 Empathy 数值、`current_state` 更新、
-  用户画像和人设；这不是删除核心算法。
+```text
+Reflective  0.8180
+Grounding    0.4941
+Empathy      1.1597
+Intimacy     0.0744
+```
 
-## 8. 后续不得重复的做法
+相对 `scores_only`，tone 只使 Reflective 提高 `0.0274`，但同时造成：
+
+```text
+Grounding  -0.0741
+Sentiment  -0.0184
+Emotion    -0.0499
+Empathy    +0.0380 error
+Intimacy   +0.0007 error
+Lexical/Semantic 轻微下降
+```
+
+行为诊断：
+
+- Reflective：`TP=14, TN=86, FP=10, FN=7`，比 `scores_only` 少 2 个 FP。
+- Grounding：`TP=31, TN=32, FP=40, FN=14`；相对 `scores_only` 增加 7 个 FP，
+  并增加 1 个 FN。
+- Grounding generated 阳性率从 `55.56%` 升到 `60.68%`。
+- 问句率反而从 `53.85%` 降到 `52.99%`，说明 tone 诱发的是更宽泛的
+  共同理解、情绪承接或隐式探索行为，不是简单增加问号。
+- tone 的影响具有明显 speaker 异质性：它严重损害 Paola 和 Muhhamed 的
+  Grounding，并未形成稳定的整体收益。
+
+最终决定：固定采用 `scores_only`，不再把 `activated_tone` 或
+`response_guidance` 传给最终回复。原因是它是唯一同时达到 Reflective 和
+Empathy 论文目标、且综合损失最小的状态条件。`scores_plus_tone` 虽然取得最高
+Reflective，但其 Grounding、Sentiment、Emotion、Intimacy 和 Empathy 均弱于
+`scores_only`，不具备采用价值。
+
+固定 `scores_only` 不等于删除核心算法：alignment、三个 Empathy 数值、
+`current_state` 更新、用户画像和人设全部保留；只收窄最终回复读取的上一轮状态
+接口。
+
+## 8. `scores_only` Grounding 逐条误差复盘
+
+### 8.1 总体错误并不等于“问号太多”
+
+`scores_only` 的 33 条 Grounding FP 中：
+
+- 21 条包含问号；
+- 12 条完全没有问号，但包含主动概括、解释、个人类比、主题扩展或较丰富的
+  自我披露，仍被 judge 判为 Grounding。
+
+对 21 条带问号 FP 的人工归类：
+
+- 15 条是当前话题相关、但 reference 没有采用的可选追问或互问；
+- 2 条转向过期或无关话题；
+- 4 条是修辞问句、附加问句或软确认，而不是真正必要的澄清。
+
+对 12 条无问号 FP 的人工归类：
+
+- 5 条把普通回应扩写成解释性概括或抽象推论；
+- 6 条增加了个人经历、类比或超出 reference 焦点的自我披露；
+- 1 条把直接回答扩成了多选项推荐。
+
+因此后续不能只写“少问问题”。当前 judge 会把某些内容扩展和主动建立共同话题也
+识别为 Grounding。ORDINARY 分支本身必须保持单一、直接，不能在不需要时通过
+解释、类比或个人经历继续扩展用户的话题。
+
+### 8.2 FN 证明不能全局禁止 Grounding
+
+13 条 FN 可以分成：
+
+- 6 条漏掉 reference 中直接且相关的澄清或追问；
+- 5 条漏掉 reference 中不带问号、但确实推进当前共同话题的信息扩展；
+- 2 条虽然 generated 带问号，但问题过于宽泛或转向另一个焦点，仍被判为
+  非 Grounding。
+
+问号与 Grounding 标签的关系本身很弱：
+
+```text
+reference: Grounding=True  且有问号 18
+reference: Grounding=True  且无问号 27
+reference: Grounding=False 且有问号 19
+
+generated: Grounding=True  且有问号 44
+generated: Grounding=True  且无问号 21
+generated: Grounding=False 且有问号 19
+```
+
+用户消息包含问题时，reference Grounding 阳性率反而只有 `31.82%`；用户消息没有
+问题时为 `42.47%`。这说明“用户问了问题，所以回复后也问一个问题”是错误规则。
+直接回答用户问题通常已经构成完整回复，不需要再附加追问。
+
+### 8.3 最明显、且可由输入观察的错误条件是缺少同 Session 行为证据
+
+当当前 Session 在用户消息前最多只有 2 个 history bubble 时：
+
+```text
+评测点                         14
+reference Grounding 阳性        0
+Grounding FP                    6
+Grounding FN                    0
+```
+
+这 6 条 FP 分布为：Muhhamed 2、Elise 2、Nebraas 1、Fahim Khan 1。它们通常发生在
+缺少可比较的当前 Session 回复时，模型改用抽象 Persona 推断行为，并产生多主题
+回应、可选追问、个人类比或虚构的具体经历。
+
+如果只把这 6 条 FP 改正确、其余样本完全不变，speaker 宏平均 Grounding 的理论值
+可从 `0.5681` 上升到约 `0.6383`，已经超过论文 `0.62`。这只是基于现有标签的
+反事实上限，不代表任意 Prompt 都能无副作用地实现，但它指出了当前最高收益、
+最小改动的测试方向。
+
+合理规则不是硬编码“Session 开头一定不 Grounding”，而是：当看不到同一目标
+speaker 在可比较情境中的近期真实回复时，不允许仅凭 Persona 中的 `frequent`、
+`occasional`、`thoughtful` 或 `curious` 推导可选行为；只回应最后一个直接问题或
+最后一个活跃点，并默认一个普通动作。
+
+### 8.4 speaker 宏平均暴露了两个不同问题
+
+| Speaker | n | Ref Grounding | Gen Grounding | FP | FN | Accuracy |
+|---|---:|---:|---:|---:|---:|---:|
+| Fahim Khan | 7 | 1 | 3 | 3 | 1 | 0.4286 |
+| Muhhamed | 17 | 4 | 14 | 10 | 0 | 0.4118 |
+| Elise | 16 | 4 | 10 | 7 | 1 | 0.5000 |
+| Paola | 16 | 7 | 10 | 4 | 1 | 0.6875 |
+| Nebraas | 28 | 13 | 13 | 4 | 4 | 0.7143 |
+| Vanessa | 33 | 16 | 15 | 5 | 6 | 0.6667 |
+
+- Muhhamed、Elise、Fahim Khan 的主要问题是 Grounding 总频率明显过高，优先提高
+  precision。
+- Nebraas、Vanessa 的生成总频率已经接近 reference，问题是具体回合放错位置；
+  对它们全局降频会把 FP 转换成 FN。
+- 论文采用 speaker 宏平均，因此 Fahim Khan 的一个样本变化比 Vanessa 的一个
+  样本变化权重更大。后续必须同时报告逐样本混淆矩阵和 speaker 宏平均，不能只看
+  117 条的微平均。
+
+Persona 审计没有发现 schema 错误，但发现了使用方式上的问题：Muhhamed Persona
+明确写着“rare direct personal questions”以及“frequent topic expansion”，模型的
+主要过触发确实表现为无问号的主题扩展；Elise Persona 写着“frequent follow-up
+questions”，但 held-out 测试段 reference 仅 `4/16` 为 Grounding，generated 却为
+`10/16`。训练段抽取的粗粒度频率可以约束总体风格，但不能直接充当当前回合的
+Grounding 决策。
+
+### 8.5 Grounding FP 同时污染其他指标
+
+33 条 Grounding FP 的平均 Empathy 绝对误差为 `1.4545`，其余 84 条为 `0.8690`；
+FP 子集的 Reflective accuracy 为 `0.7879`，其余样本为 `0.8571`。因此减少可选
+追问、情绪探索和过度解释，有机会同时保护 Empathy 与 Reflective，而不只是提高
+Grounding。FP 与非 FP 的 Semantic 基本相同，Lexical 也没有显示可直接获益，
+所以本轮不能声称该修改会解决 Lexical。
+
+### 8.6 下一版只应验证一个完整假设
+
+固定 V18、`scores_only`、画像、人设、模型、温度和所有冻结输入，只重写最终回复
+的 response-act 选择逻辑：
+
+1. 先锁定最后一个直接问题；没有直接问题时才选择最后一个活跃点。
+2. 用户已经提出直接问题时，直接回答默认消耗本回合唯一动作，不自动反问。
+3. 只有当前消息存在真正未解决的信息点，并且近期真实目标 speaker 在可比较情境
+   中确实采用过追问或共同话题扩展，才允许 Grounding。
+4. 缺少可比较的近期目标 speaker 回复时，Persona 只能约束措辞和事实边界，不能
+   单独触发追问、类比、解释性扩展或个人经历。
+5. ORDINARY 必须是一个直接回答、简短反应、意见或必要事实；不要通过附加问句、
+   解释性复述、个人平行经历形成第二个动作。
+6. 保留 V18 的 Reflective 判定边界，不修改 Empathy 数值状态，也不新增关系规则。
+
+这是一个“局部证据可用性 + 单一活跃点”的精确率实验，不是继续在 V18 后追加一串
+指标条款。先用同一份冻结轨迹跑该单版本；若 Grounding 提高但 Reflective 或
+Empathy 明显退化，再逐条查看发生变化的样本，不同时开启第二个 Prompt 变量。
+
+实现版本：`v26_local_evidence_single_act`。该 Prompt 为独立重写，response-state
+policy 固定为 `scores_only`；受控运行使用 V18 作为 `--source-prompt-version`，
+使用 V26 作为 `--response-prompt-version`，因此不会重新运行 prepare 或 alignment。
+一键入口为 `scripts/run_exp2_v26_controlled.sh`。
+
+## 9. 后续不得重复的做法
 
 - 不再通过增加默认追问来优化 Grounding。
 - 不再通过增加通用情绪理解、安慰或探索来优化 Empathy。
@@ -335,28 +501,32 @@ scores_plus_tone
 - 不修改 REALTALK Table 2 评估 Prompt 来适配某个生成版本。
 - 不把同一输出目录中的旧 annotation 当作新回复结果；缓存必须绑定 candidate 和 context 哈希。
 
-## 9. 下一步顺序
+## 10. 下一步顺序
 
-1. 只补跑 `scores_plus_tone`，不重跑已经完成的三组。
-2. 用同一份报告比较第四组与 `scores_only`、`full_state`。
-3. 按第 7 节阈值固定 response-state policy。
-4. 固定策略后，优先处理 Grounding 的 33 条 FP；不再调整已经达标的
-   Reflective 和 Empathy。
-5. Grounding 修改必须是单一、speaker-conditioned 的精确率优化，不允许增加
-   默认追问，也不允许继续叠加过去所有 Prompt 条款。
+1. 将主实验 response-state policy 固定为 `scores_only`，不再进行状态字段消融。
+2. 后续 Prompt 对比必须使用同一份冻结状态轨迹，避免重新运行 alignment 造成
+   输入混杂。
+3. 只测试第 8.6 节定义的“局部证据可用性 + 单一活跃点”Prompt，不再重复已经
+   完成的 FP 分类。
+4. 首先检查当前 Session 行为证据不足的 14 条，其中现有结果包含 6 个 FP、0 个
+   FN；随后再检查 Muhhamed 和 Elise 的剩余 FP。
+5. Grounding 修改必须是单一的 precision 优化，不允许增加默认追问，也不允许
+   继续叠加过去所有 Prompt 条款；Nebraas 和 Vanessa 只调整落点，不全局降频。
 6. Lexical 最后处理；允许它作为最终一到两个未超过论文的指标之一。
 
-## 10. 尚未证明的事项
+## 11. 尚未证明的事项
 
 以下内容目前都只能称为假设：
 
-- `response_guidance` 是初轮改善的唯一原因；
-- `activated_tone` 一定有益或一定有害；
+- `activated_tone` 在其他模型、数据集或任务中一定有害；当前结论只适用于本次
+  REALTALK/V18 最终回复接口；
+- `response_guidance` 对所有指标都只有负面作用；它在本次 Grounding/Intimacy
+  上可能提供局部收益，但综合代价更高；
 - V18 response Prompt 单独就能稳定复现 `0.7915` Reflective；
 - 删除关系信息一定能改善 Empathy；
 - 增加关系信息一定能改善个性化；
 - 问句率降低一定能提高 Grounding；
 - 单次温度 0 的三组差异具有统计显著性。
 
-第四组完成后，如果胜出策略相对次优策略的差异仍很小或 speaker 方向明显冲突，
-应只重复两个候选条件，而不是重新运行全部四组或继续凭单次结果改 Prompt。
+最终论文运行前应至少复验一次 `scores_only` 主策略，但不再重复已经被综合结果
+淘汰的 `no_state` 和 `scores_plus_tone`。

@@ -240,13 +240,15 @@ def _condition_manifest(
     source_root: Path,
     cases: Sequence[ExperimentCase],
     source_files: Dict[str, Any],
-    prompt_version: str,
+    source_prompt_version: str,
+    response_prompt_version: str,
     model: str,
     temperature: float,
     max_tokens: int,
 ) -> Dict[str, Any]:
-    bundle = get_exp2_prompt_bundle(prompt_version)
-    return {
+    source_bundle = get_exp2_prompt_bundle(source_prompt_version)
+    response_bundle = get_exp2_prompt_bundle(response_prompt_version)
+    manifest = {
         "protocol_version": CONTROLLED_PROTOCOL_VERSION,
         "condition": condition,
         "state_payload": {
@@ -258,8 +260,8 @@ def _condition_manifest(
             ),
         }[condition],
         "source_root": str(source_root),
-        "source_prompt_version": bundle.version,
-        "source_prompt_sha256": bundle.fingerprint,
+        "source_prompt_version": source_bundle.version,
+        "source_prompt_sha256": source_bundle.fingerprint,
         "model": model,
         "temperature": temperature,
         "max_tokens": max_tokens,
@@ -272,6 +274,18 @@ def _condition_manifest(
         "cases": [case.case_id for case in cases],
         "source_files": source_files,
     }
+    # Preserve the exact historical manifest when replaying the source prompt.
+    # A distinct response prompt is recorded only for controlled prompt replay.
+    if response_bundle.version != source_bundle.version:
+        manifest.update({
+            "response_prompt_version": response_bundle.version,
+            "response_prompt_sha256": response_bundle.fingerprint,
+            "controlled_change": (
+                "response prompt replaced; source dialogue/profile/persona/state "
+                "trajectory frozen"
+            ),
+        })
+    return manifest
 
 
 def _ensure_condition_manifest(root: Path, expected: Dict[str, Any]) -> None:
@@ -388,18 +402,23 @@ def _generate_case(
     source_root: Path,
     target_root: Path,
     config_path: str,
-    prompt_version: str,
+    source_prompt_version: str,
+    response_prompt_version: str,
     condition: str,
     temperature: float,
     max_tokens: int,
     progress: Dict[str, int],
     progress_lock: Lock,
 ) -> tuple[str, int]:
-    bundle = get_exp2_prompt_bundle(prompt_version)
+    bundle = get_exp2_prompt_bundle(response_prompt_version)
     source_paths = CasePaths.for_case(source_root, case)
     target_paths = CasePaths.for_case(target_root, case)
     target_paths.ensure_parents()
-    predictions, states = _validate_source_rows(case, source_paths, prompt_version)
+    predictions, states = _validate_source_rows(
+        case,
+        source_paths,
+        source_prompt_version,
+    )
     source_by_id = {str(row["example_id"]): row for row in predictions}
     preceding_states = _reconstruct_preceding_states(predictions, states)
 
@@ -510,7 +529,8 @@ def generate_condition(
     source_root: Path,
     target_root: Path,
     config_path: str,
-    prompt_version: str,
+    source_prompt_version: str,
+    response_prompt_version: str,
     condition: str,
     temperature: float,
     max_tokens: int,
@@ -538,7 +558,8 @@ def generate_condition(
                 source_root=source_root,
                 target_root=target_root,
                 config_path=config_path,
-                prompt_version=prompt_version,
+                source_prompt_version=source_prompt_version,
+                response_prompt_version=response_prompt_version,
                 condition=condition,
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -708,19 +729,27 @@ def summarize(
     output_root: Path,
     conditions: Sequence[str],
     cases: Sequence[ExperimentCase],
+    source_prompt_version: str = DEFAULT_SOURCE_PROMPT_VERSION,
+    response_prompt_version: str | None = None,
 ) -> Dict[str, Any]:
+    actual_response_prompt = response_prompt_version or source_prompt_version
     rows: list[tuple[str, Dict[str, Any]]] = []
     source = _load_metrics_for_cases(source_root, cases)
     if source is not None:
-        rows.append(("Source V18 (historical, same cases)", source))
+        rows.append((f"Source {source_prompt_version} (historical, same cases)", source))
     for condition in conditions:
         result = _load_metrics(output_root / condition)
         if result is not None:
-            rows.append((condition, result))
+            label = condition
+            if actual_response_prompt != source_prompt_version:
+                label = f"{condition} [{actual_response_prompt}]"
+            rows.append((label, result))
 
     payload: Dict[str, Any] = {
         "protocol_version": CONTROLLED_PROTOCOL_VERSION,
         "source_root": str(source_root),
+        "source_prompt_version": source_prompt_version,
+        "response_prompt_version": actual_response_prompt,
         "conditions": list(conditions),
         "results": {
             label: result for label, result in rows
@@ -749,7 +778,7 @@ def summarize(
 
     headers = ["Method", "N"] + [metric.title() for metric in TABLE2_METRICS]
     lines = [
-        "# Exp2 Controlled Previous-State Ablation",
+        "# Exp2 Controlled Frozen-Trajectory Replay",
         "",
         "| " + " | ".join(headers) + " |",
         "| " + " | ".join(["---"] + ["---:"] * (len(headers) - 1)) + " |",
@@ -775,11 +804,21 @@ def summarize(
             )
             + " |"
         )
+    if actual_response_prompt == source_prompt_version:
+        replay_claim = (
+            f"All ablation rows use the exact same source inputs and "
+            f"{source_prompt_version} response prompt. Only the previous-state "
+            "payload differs."
+        )
+    else:
+        replay_claim = (
+            f"All generated rows replay the exact {source_prompt_version} source "
+            f"trajectory with the {actual_response_prompt} response prompt. Within "
+            "the generated rows, only the requested previous-state condition differs."
+        )
     lines.extend((
         "",
-        "All ablation rows use the exact same source inputs and V18 response prompt. "
-        "Only the previous-state payload differs. The historical V18 row is shown "
-        "for context and is not the randomized control because it was generated earlier.",
+        replay_claim + " The historical source row is shown for context and was generated earlier.",
         "",
         "For paired comparisons, positive oriented deltas and more wins are better; "
         "intimacy/empathy directions are inverted before comparison.",
@@ -834,6 +873,10 @@ def run(args: argparse.Namespace) -> None:
     all_cases = build_cases(args.dataset_dir, args.train_ratio)
     cases = _select_cases(all_cases, args.case)
     conditions = _parse_conditions(args.conditions)
+    response_prompt_version = (
+        args.response_prompt_version or args.source_prompt_version
+    )
+    get_exp2_prompt_bundle(response_prompt_version)
     config_path = str(Path(args.config).resolve())
     source_files = _source_file_manifest(
         source_root,
@@ -851,7 +894,8 @@ def run(args: argparse.Namespace) -> None:
                 source_root=source_root,
                 cases=cases,
                 source_files=source_files,
-                prompt_version=args.source_prompt_version,
+                source_prompt_version=args.source_prompt_version,
+                response_prompt_version=response_prompt_version,
                 model=_config_model(config_path),
                 temperature=args.temperature,
                 max_tokens=args.max_tokens,
@@ -862,7 +906,8 @@ def run(args: argparse.Namespace) -> None:
                 source_root=source_root,
                 target_root=condition_root,
                 config_path=config_path,
-                prompt_version=args.source_prompt_version,
+                source_prompt_version=args.source_prompt_version,
+                response_prompt_version=response_prompt_version,
                 condition=condition,
                 temperature=args.temperature,
                 max_tokens=args.max_tokens,
@@ -891,7 +936,7 @@ def run(args: argparse.Namespace) -> None:
                 device=args.eval_device,
                 batch_size=args.eval_batch_size,
                 judge_workers=args.judge_workers,
-                prompt_version=args.source_prompt_version,
+                prompt_version=response_prompt_version,
             )
 
     if args.phase in ("evaluate", "summarize", "all"):
@@ -900,6 +945,8 @@ def run(args: argparse.Namespace) -> None:
             output_root=output_root,
             conditions=conditions,
             cases=cases,
+            source_prompt_version=args.source_prompt_version,
+            response_prompt_version=response_prompt_version,
         )
         print(f"summary: {output_root / 'controlled_state_ablation_summary.md'}")
 
@@ -907,8 +954,9 @@ def run(args: argparse.Namespace) -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
-            "Controlled Exp2 replay: freeze one completed run and ablate only "
-            "the previous empathy-state payload used by final reply generation."
+            "Controlled Exp2 replay: freeze one completed run, then ablate the "
+            "previous empathy-state payload and optionally replace only the final "
+            "response prompt."
         )
     )
     parser.add_argument(
@@ -924,6 +972,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--source-prompt-version",
         default=DEFAULT_SOURCE_PROMPT_VERSION,
+    )
+    parser.add_argument(
+        "--response-prompt-version",
+        default=None,
+        help=(
+            "Final-response prompt used for replay; defaults to the source prompt. "
+            "The source rows are always validated against --source-prompt-version."
+        ),
     )
     parser.add_argument(
         "--conditions",

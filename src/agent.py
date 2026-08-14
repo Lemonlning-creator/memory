@@ -329,6 +329,20 @@ class StateDrivenCompanionAgent:
             return {}
         if self.prompt_bundle.response_state_policy == "empathy_state":
             return deepcopy(empathy_state)
+        if self.prompt_bundle.response_state_policy == "scores_only":
+            selected: Dict[str, Any] = {}
+            for field in (
+                "emotional_reaction",
+                "interpretation",
+                "exploration",
+            ):
+                value = empathy_state.get(field)
+                if isinstance(value, bool) or not isinstance(value, (int, float)):
+                    raise ValueError(
+                        f"empathy_state.{field} must be numeric for scores_only"
+                    )
+                selected[field] = value
+            return selected
         if self.prompt_bundle.response_state_policy != "relationship_empathy_without_guidance":
             raise ValueError(
                 "unknown response state policy: "

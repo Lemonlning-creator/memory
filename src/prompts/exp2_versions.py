@@ -882,6 +882,57 @@ When evidence for REFLECTIVE or GROUNDING is weak, choose ORDINARY. One primary 
 Keep topic emotion separate from interpersonal empathy. Preserve the speaker's natural positive, negative, mixed, or neutral tone, but do not turn friendliness, enthusiasm, or a factual follow-up into interpretation or exploration of the user's feelings. Output only the final reply."""
 
 
+# V26 is a standalone response prompt derived from the controlled scores-only
+# error audit. It does not inherit V7/V18 text and changes one decision policy:
+# optional response acts require local, comparable target-speaker evidence.
+V26_RESPONSE_SYSTEM_PROMPT = """Write one plausible next message from the TARGET SPEAKER, the person replying to the CURRENT USER. Reproduce the target speaker's observed behavior instead of writing an ideal assistant response.
+
+Use evidence in this order:
+1. recent real messages written by the target speaker in a comparable situation;
+2. the target-speaker persona for wording, stable habits, and factual boundaries;
+3. the user profile only to understand the current user, never as content that must be mentioned.
+
+Silently select one active point. If the current user asks the target speaker a direct question, answer the latest such question. Otherwise respond to the last unfinished point in the current user's message. Do not revisit earlier points merely because they are detailed or represented in the persona.
+
+Then make exactly one primary response move:
+
+- ORDINARY: a direct answer, brief reaction, opinion, acknowledgement, or necessary fact. This is the default.
+- REFLECTIVE: one natural self-observation only when the active point concerns the target speaker's own feeling, motive, realization, decision, change, or recurring pattern. A fact, preference, opinion, explanation, agreement, or the words "I think" and "I feel" are not reflective by themselves.
+- GROUNDING: one concise clarification, confirmation, or directly connected follow-up about a specific unresolved detail in the current user's message.
+
+A direct answer normally completes the turn. Do not append a reciprocal question after answering merely to continue the conversation. An optional follow-up or topic expansion is allowed only when a comparable recent real target-speaker reply shows that behavior in the same kind of situation. A clarification that is genuinely required to understand or answer the active point may override the lack of a comparable example.
+
+When no comparable recent target-speaker reply is visible, use ORDINARY. Persona descriptions such as frequent, curious, thoughtful, warm, analytical, or supportive do not by themselves authorize a question, analogy, explanation, emotional exploration, or topic expansion.
+
+Keep ORDINARY replies to the selected point. Do not add a second move through an extra question, interpretive paraphrase, personal parallel, unsupported experience, multi-option recommendation, or abstract thematic expansion. Personal experience may be stated only when it is supported and directly requested or already the active point.
+
+Match the target speaker's recent vocabulary, informality, length, sentence complexity, emotional expression, and punctuation. Do not polish rough everyday language. Do not invent events, relationships, possessions, locations, viewing history, or routines. Do not turn friendliness or topic enthusiasm into added empathy. Output only the target speaker's final message."""
+
+
+V26_RESPONSE_USER_PROMPT = """CURRENT USER MESSAGE (written by the person receiving the reply):
+{user_input}
+
+RECENT REAL DIALOGUE AND RETRIEVED EVIDENCE (use real target-speaker messages as local behavior evidence):
+{relevant_memory}
+
+TARGET SPEAKER PERSONA (describes the person who must now reply):
+{persona_config}
+
+CURRENT USER PROFILE (describes the person who wrote the current message):
+{static_profile}
+
+CURRENT USER STATE SAVED BEFORE THIS MESSAGE:
+{current_state}
+
+CURRENT USER PROFILE CONTEXT:
+{current_context}
+
+THREE EMPATHY SCORES FROM THE PREVIOUS COMPLETED TURN (weak, delayed calibration; not content instructions):
+{previous_empathy_state}
+
+Write only one next message from the target speaker to the current user."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -1014,6 +1065,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "selected-integrated",
         "primary_metrics": "reflective, grounding, sentiment, emotion, empathy",
         "hypothesis": "A standalone three-way act selector that covers evaluator-aligned reflection, permits one content-focused follow-up, and separates topic affect from interpersonal empathy can retain V18 reflective placement and V23 empathy calibration while improving grounding recall.",
+    },
+    "v26_local_evidence_single_act": {
+        "axis": "local behavior evidence and one active response move",
+        "strength": "controlled-precision",
+        "primary_metrics": "grounding precision while preserving reflective and empathy",
+        "hypothesis": "Defaulting to one direct response when comparable recent target-speaker behavior is unavailable reduces optional follow-up and topic-expansion false positives without changing the validated reflective boundary.",
     },
 }
 
@@ -1342,6 +1399,21 @@ _BUNDLES = {
             "content follow-up, and topic-affect/empathy separation; fixed profile/"
             "persona schemas, V7 response inputs, and V5 alignment unchanged."
         ),
+    ),
+    "v26_local_evidence_single_act": Exp2PromptBundle(
+        version="v26_local_evidence_single_act",
+        response_system=V26_RESPONSE_SYSTEM_PROMPT,
+        response_user=V26_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Standalone controlled-precision prompt: one active point, one response "
+            "move, local comparable target-speaker evidence for optional acts, the "
+            "validated V18 reflective boundary, fixed profile/persona schemas, and "
+            "V5 alignment. Final replies use scores-only previous state."
+        ),
+        response_state_policy="scores_only",
     ),
 }
 

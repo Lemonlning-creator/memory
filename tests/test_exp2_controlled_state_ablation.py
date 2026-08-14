@@ -3,9 +3,11 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
+from src.agent import StateDrivenCompanionAgent
 from src.experiments.exp2_controlled_state_ablation import (
     _audit_condition_inputs,
     _build_response_prompt,
+    _condition_manifest,
     _parse_conditions,
     _reconstruct_preceding_states,
     _selected_state,
@@ -136,6 +138,73 @@ class ControlledStateAblationTests(unittest.TestCase):
                 ["full_state", "no_state"],
                 [],
             )
+
+    def test_v26_is_standalone_role_clear_and_scores_only(self) -> None:
+        v18 = get_exp2_prompt_bundle("v18_reflective_grounding_joint_gate")
+        v26 = get_exp2_prompt_bundle("v26_local_evidence_single_act")
+        self.assertEqual(v26.response_state_policy, "scores_only")
+        self.assertFalse(v26.response_system.startswith(v18.response_system))
+        self.assertIn("no comparable recent target-speaker reply", v26.response_system)
+        self.assertIn("TARGET SPEAKER PERSONA", v26.response_user)
+        self.assertIn("CURRENT USER PROFILE", v26.response_user)
+        self.assertIn("THREE EMPATHY SCORES", v26.response_user)
+
+    def test_agent_scores_only_policy_is_strict(self) -> None:
+        agent = object.__new__(StateDrivenCompanionAgent)
+        agent.prompt_bundle = get_exp2_prompt_bundle("v26_local_evidence_single_act")
+        result = {
+            "empathy_state": {
+                **self.full_state,
+                "extra_field": "must not reach the response",
+            }
+        }
+        self.assertEqual(
+            agent._response_state_from_alignment(result),
+            {
+                "emotional_reaction": 1,
+                "interpretation": 2,
+                "exploration": 0,
+            },
+        )
+        invalid = {"empathy_state": {**self.full_state, "exploration": "0"}}
+        with self.assertRaises(ValueError):
+            agent._response_state_from_alignment(invalid)
+
+    def test_controlled_manifest_separates_source_and_response_prompts(self) -> None:
+        manifest = _condition_manifest(
+            condition="scores_only",
+            source_root=Path("source"),
+            cases=[],
+            source_files={},
+            source_prompt_version="v18_reflective_grounding_joint_gate",
+            response_prompt_version="v26_local_evidence_single_act",
+            model="qwen-plus",
+            temperature=0.0,
+            max_tokens=450,
+        )
+        self.assertEqual(
+            manifest["source_prompt_version"],
+            "v18_reflective_grounding_joint_gate",
+        )
+        self.assertEqual(
+            manifest["response_prompt_version"],
+            "v26_local_evidence_single_act",
+        )
+        self.assertIn("response_prompt_sha256", manifest)
+
+        legacy = _condition_manifest(
+            condition="scores_only",
+            source_root=Path("source"),
+            cases=[],
+            source_files={},
+            source_prompt_version="v18_reflective_grounding_joint_gate",
+            response_prompt_version="v18_reflective_grounding_joint_gate",
+            model="qwen-plus",
+            temperature=0.0,
+            max_tokens=450,
+        )
+        self.assertNotIn("response_prompt_version", legacy)
+        self.assertNotIn("response_prompt_sha256", legacy)
 
 if __name__ == "__main__":
     unittest.main()

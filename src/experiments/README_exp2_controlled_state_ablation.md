@@ -1,6 +1,6 @@
 # Exp2 受控状态消融测试
 
-这个测试用于回答一个单独的问题：V18 最终回复表现的变化，究竟来自回复 Prompt，还是来自每次重跑时发生变化的用户状态轨迹。
+这个测试首先用于回答一个单独的问题：V18 最终回复表现的变化，究竟来自回复 Prompt，还是来自每次重跑时发生变化的用户状态轨迹。它现在也支持用 `--response-prompt-version` 在同一份冻结轨迹上替换最终回复 Prompt；来源目录仍由 `--source-prompt-version` 独立校验。
 
 它不会修改主实验，也不会重新运行 alignment 或 Milvus。脚本读取一份已经完整跑完的 V18 目录，逐条冻结以下输入：
 
@@ -19,7 +19,48 @@
 | `no_state` | 空对象 `{}` |
 | `scores_plus_tone` | 以 `scores_only` 为基础，只加回 `activated_tone`；不加回 `response_guidance` |
 
-第一条回复的 `current_state` 按主实验初始化协议设为空对象；后续回复使用来源 V18 上一个评测点保存的 `core_current_state`。三个条件不会各自更新状态，因此不存在新的随机状态分叉。
+第一条回复的 `current_state` 按主实验初始化协议设为空对象；后续回复使用来源 V18 上一个评测点保存的 `core_current_state`。各条件不会自行更新状态，因此不存在新的随机状态分叉。
+
+## V26：冻结 V18 轨迹，只替换最终回复 Prompt
+
+V26 `v26_local_evidence_single_act` 针对 `scores_only` 的 33 条 Grounding FP，只改变最终回复的 response-act 选择：缺少可比较的近期目标 speaker 回复时默认直接回应；用户已经提出直接问题时不自动附加反问；Persona 继续完整传入，但不能单独触发追问或主题扩展。Reflective 边界、画像、人设、V5 alignment 和来源状态轨迹不变。
+
+一键脚本：
+
+```bash
+bash scripts/run_exp2_v26_controlled.sh
+```
+
+等价完整命令：
+
+```bash
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
+uv run --no-sync python -u -m src.experiments.exp2_controlled_state_ablation \
+  --phase all \
+  --source-dir data/exp2_v18_reflective_grounding/v18_reflective_grounding_joint_gate \
+  --output-dir data/exp2_v26_controlled \
+  --source-prompt-version v18_reflective_grounding_joint_gate \
+  --response-prompt-version v26_local_evidence_single_act \
+  --conditions scores_only \
+  --train-ratio 0.9 \
+  --config config.qwen-plus.ini \
+  --temperature 0 \
+  --generate-workers 3 \
+  --judge-config-section EvaluationAPI \
+  --judge-model gpt-4o-mini \
+  --judge-workers 6 \
+  --eval-device cuda:0 \
+  --eval-batch-size 16
+```
+
+该运行不需要重新执行 prepare，也不重新运行 alignment。输出位于：
+
+```text
+data/exp2_v26_controlled/scores_only/
+data/exp2_v26_controlled/controlled_state_ablation_summary.md
+```
+
+必须使用新的输出目录，不能把 V26 prediction 写入已有 V18 或状态消融目录。
 
 ## 一键运行全部 117 条
 
