@@ -21,6 +21,23 @@
 
 第一条回复的 `current_state` 按主实验初始化协议设为空对象；后续回复使用来源 V18 上一个评测点保存的 `core_current_state`。各条件不会自行更新状态，因此不存在新的随机状态分叉。
 
+## V28：仅保留必要澄清和确认
+
+V28 `v28_repair_grounding_only` 是最后一项窄范围 Grounding 消融。它继续固定 V18 + `scores_only` 的全部输入、Reflective/Ordinary 边界和评估协议，只删除可选的 elaboration/follow-up 入口。仅当最新用户消息中的具体指代、事实或解释必须先被澄清或确认，才能选择 Grounding。
+
+```bash
+bash scripts/run_exp2_v28_controlled.sh
+```
+
+输出位于：
+
+```text
+data/exp2_v28_controlled/scores_only/
+data/exp2_v28_controlled/controlled_state_ablation_summary.md
+```
+
+该版本预期降低 FP，但可能增加 FN；结果必须同时查看混淆矩阵和 speaker 宏平均，不能只看问句率。
+
 ## V27：保留 V18，只细分 Grounding 落点
 
 V27 `v27_grounding_three_mode_gate` 是以 V18 + `scores_only` 为直接对照的单变量版本。V7 表面风格策略、V18 的 Reflective 和 Ordinary 原文边界、response user Prompt、画像、人设、V5 alignment、冻结状态轨迹及评估 Prompt 均不变。唯一变化是将 V18 的 Grounding 分支细分为：

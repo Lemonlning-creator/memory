@@ -510,6 +510,17 @@ V27 `v27_grounding_three_mode_gate` 固定 V18 的 Reflective/Ordinary 边界和
 全局 Grounding 抑制造成新的 FN。运行入口为
 `scripts/run_exp2_v27_controlled.sh`，结果必须写入新的 V27 目录。
 
+V27 全量结果否定了该假设：Grounding 从 V18 `scores_only` 的 `0.5681` 降为
+`0.5312`，混淆矩阵从 `TP/TN/FP/FN=32/39/33/13` 变为
+`34/34/38/11`。它修正 9 条、退化 12 条，generated Grounding 从 65 条升到
+72 条，问句率从 `53.85%` 升到 `60.68%`。`ELABORATION_GROUNDING` 为普通具体
+消息提供了过宽的阳性出口，三模式设计不再继续使用。
+
+V28 `v28_repair_grounding_only` 是最后一个窄消融：保留 V18 的其他全部行为，只
+删除 elaboration/follow-up 阳性入口，Grounding 仅允许为准确理解所必需的澄清或
+确认。它只检验“repair-only 是否以可接受的 recall 代价提高 precision”，不预设
+宏平均一定超过论文。运行入口为 `scripts/run_exp2_v28_controlled.sh`。
+
 ## 9. 后续不得重复的做法
 
 - 不再通过增加默认追问来优化 Grounding。
@@ -528,8 +539,8 @@ V27 `v27_grounding_three_mode_gate` 固定 V18 的 Reflective/Ordinary 边界和
 1. 将主实验 response-state policy 固定为 `scores_only`，不再进行状态字段消融。
 2. 后续 Prompt 对比必须使用同一份冻结状态轨迹，避免重新运行 alignment 造成
    输入混杂。
-3. 下一次只测试第 8.7 节的 V27 Grounding 三模式落点，不同时修改 Reflective、
-   Empathy、画像、人设或评估 Prompt。
+3. 下一次只测试第 8.7 节的 V28 repair-only Grounding，不同时修改 Reflective、
+   Empathy、画像、人设或评估 Prompt；V27 三模式已经淘汰。
 4. 首先检查当前 Session 行为证据不足的 14 条，其中现有结果包含 6 个 FP、0 个
    FN；随后再检查 Muhhamed 和 Elise 的剩余 FP。
 5. Grounding 修改必须是单一的 precision 优化，不允许增加默认追问，也不允许

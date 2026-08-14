@@ -184,6 +184,34 @@ class ControlledStateAblationTests(unittest.TestCase):
             v27.response_system,
         )
 
+    def test_v28_is_v18_repair_only_grounding_with_scores_only(self) -> None:
+        v7 = get_exp2_prompt_bundle("v7_recent_style_imitation")
+        v18 = get_exp2_prompt_bundle("v18_reflective_grounding_scores_only")
+        v28 = get_exp2_prompt_bundle("v28_repair_grounding_only")
+
+        self.assertEqual(v28.response_state_policy, "scores_only")
+        self.assertEqual(v28.response_user, v18.response_user)
+        self.assertEqual(v28.alignment_system, v18.alignment_system)
+        self.assertEqual(v28.alignment_user, v18.alignment_user)
+        self.assertTrue(v28.response_system.startswith(v7.response_system))
+        self.assertNotEqual(v28.response_system, v18.response_system)
+
+        reflective_boundary = (
+            "A. REFLECTIVE. Use one natural self-observation only when the active "
+            "topic is the target speaker's own feeling, motive, realization, "
+            "decision, change, or recurring pattern."
+        )
+        ordinary_boundary = (
+            "C. ORDINARY. When neither A nor B is clearly supported, use the "
+            "direct answer, acknowledgement, opinion, reaction, or supported "
+            "self-disclosure this speaker would normally give."
+        )
+        self.assertIn(reflective_boundary, v28.response_system)
+        self.assertIn(ordinary_boundary, v28.response_system)
+        self.assertIn("clarification or confirmation only", v28.response_system)
+        self.assertIn("must be resolved", v28.response_system)
+        self.assertNotIn("ELABORATION_GROUNDING", v28.response_system)
+
     def test_agent_scores_only_policy_is_strict(self) -> None:
         agent = object.__new__(StateDrivenCompanionAgent)
         agent.prompt_bundle = get_exp2_prompt_bundle("v26_local_evidence_single_act")

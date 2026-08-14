@@ -956,6 +956,23 @@ C. ORDINARY. When neither A nor B is clearly supported, use the direct answer, a
 Do not combine A and B unless a genuine ambiguity makes both indispensable. If evidence for an optional act is weak, choose C. Do not mention this internal choice. Output only the final reply."""
 
 
+# V28 is the final narrow Grounding ablation. It keeps V18's V7 base and its
+# REFLECTIVE/ORDINARY wording verbatim, while removing optional elaboration as
+# a Grounding trigger. Only clarification or confirmation needed for accurate
+# understanding can select the Grounding branch.
+V28_RESPONSE_SYSTEM_PROMPT = V7_RESPONSE_SYSTEM_PROMPT + """
+
+Before writing, silently choose exactly one primary response-act pattern:
+
+A. REFLECTIVE. Use one natural self-observation only when the active topic is the target speaker's own feeling, motive, realization, decision, change, or recurring pattern. A fact, preference, opinion, explanation, or phrase such as "I think" or "I feel" is not reflective without awareness of an internal motive or pattern.
+
+B. GROUNDING. Ask at most one concise clarification or confirmation only when a specific referent, fact, or interpretation in the user's latest message must be resolved to understand the point or respond accurately. A complete question or point needs only a direct response. Do not add a follow-up merely to elaborate, reciprocate, or continue the conversation.
+
+C. ORDINARY. When neither A nor B is clearly supported, use the direct answer, acknowledgement, opinion, reaction, or supported self-disclosure this speaker would normally give. The reply may end without a question.
+
+Do not combine A and B unless a genuine ambiguity makes both indispensable. If evidence for an optional act is weak, choose C. Do not mention this internal choice. Output only the final reply."""
+
+
 EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
     "v6_last_topic_plain": {
         "axis": "last-topic focus",
@@ -1100,6 +1117,12 @@ EXP2_PROMPT_SWEEP_SPECS: Dict[str, Dict[str, str]] = {
         "strength": "controlled-confusion-matrix-directed",
         "primary_metrics": "grounding precision and recall with reflective held fixed",
         "hypothesis": "Separating direct response from necessary repair and evidence-supported elaboration reduces V18 grounding false positives without globally suppressing true grounding turns or changing V18's reflective boundary.",
+    },
+    "v28_repair_grounding_only": {
+        "axis": "V18 grounding restricted to necessary clarification and confirmation",
+        "strength": "controlled-repair-only",
+        "primary_metrics": "grounding precision with reflective held fixed",
+        "hypothesis": "Removing optional elaboration from V18's grounding branch reduces false-positive follow-ups and topic expansion; any recall loss directly measures the cost of the repair-only boundary.",
     },
 }
 
@@ -1471,6 +1494,21 @@ _BUNDLES = {
             "policy and V18 reflective/ordinary boundaries are unchanged; only "
             "the grounding branch distinguishes direct response, necessary repair, "
             "and locally evidenced elaboration. Final replies use scores-only state."
+        ),
+        response_state_policy="scores_only",
+    ),
+    "v28_repair_grounding_only": Exp2PromptBundle(
+        version="v28_repair_grounding_only",
+        response_system=V28_RESPONSE_SYSTEM_PROMPT,
+        response_user=PROMPT_SWEEP_RESPONSE_USER_PROMPT,
+        alignment_system=V5_ALIGNMENT_SYSTEM_PROMPT,
+        alignment_user=V5_ALIGNMENT_USER_PROMPT,
+        updates_user_state=True,
+        description=(
+            "Controlled V18 repair-only Grounding ablation: V7 surface style and "
+            "V18 reflective/ordinary boundaries are unchanged; optional elaboration "
+            "is removed and Grounding is limited to necessary clarification or "
+            "confirmation. Final replies use scores-only state."
         ),
         response_state_policy="scores_only",
     ),
