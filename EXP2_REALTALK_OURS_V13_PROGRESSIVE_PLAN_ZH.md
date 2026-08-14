@@ -72,3 +72,15 @@ Intimacy AD `<0.06`、Empathy AD `<1.24`。
 - 保存嵌套样本 ID、Prompt/Schema/输入文件 SHA256、原始响应、token、重试和检查点。
 - V9/V13 配对 Judge 共享同一 Ground Truth 标签并使用论文 Appendix C Prompt。
 - Gate 1 完成后先人工检查六条 Decision、lambda、Actor 与 V9/GT，再决定是否进入 18 条。
+
+## 6. V13.0 Gate 1 记录与 V13.1 变更
+
+V13.0 Gate 1 完成 `6/6`，零 unresolved。配对结果相对 V9 为：Reflectiveness
+`+0.90`、Grounding `-0.10`、Empathy AD `-0.20`。人工检查发现 Decision 只关注
+最新伙伴消息，可能遗漏完整历史中仍未回答的多部分问题；同时把“被提问”错误地
+扩展成回问许可。
+
+因此 V13.1 只修改通用 Decision 因果约束并从 Gate 1 重启：扫描全部可见历史，输出
+`open_obligation` 与可验证的 `obligation_source_turn_id`；被问问题只产生回答义务，
+回问仍需同槽位交换和条件化 Self 行为共同支持。Self Domain、五层 User Domain、
+lambda 机制、Actor、数据、模型和 Judge 均保持不变。

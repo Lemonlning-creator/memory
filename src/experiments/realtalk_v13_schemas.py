@@ -51,6 +51,14 @@ QUESTION_PLANS = (
     "clarify",
     "follow-up",
 )
+OPEN_OBLIGATIONS = (
+    "none",
+    "open-session",
+    "answer-current-question",
+    "answer-earlier-unanswered-question",
+    "respond-current-disclosure",
+    "continue-current-topic",
+)
 
 
 def _conditional_stat_schema() -> dict[str, Any]:
@@ -148,6 +156,8 @@ V13_DECISION_SCHEMA = {
                     "topic": {"type": "string"},
                     "partner_move": {"type": "string"},
                     "turn_obligation": {"type": "string", "enum": list(TURN_OBLIGATIONS)},
+                    "open_obligation": {"type": "string", "enum": list(OPEN_OBLIGATIONS)},
+                    "obligation_source_turn_id": {"type": "string"},
                     "explicit_affect": {"type": "string"},
                     "support_request": {"type": "boolean"},
                     "uncertainty": {"type": "string", "enum": list(CONFIDENCE)},
@@ -156,6 +166,8 @@ V13_DECISION_SCHEMA = {
                     "topic",
                     "partner_move",
                     "turn_obligation",
+                    "open_obligation",
+                    "obligation_source_turn_id",
                     "explicit_affect",
                     "support_request",
                     "uncertainty",
@@ -318,6 +330,14 @@ def normalize_v13_decision(value: Any) -> dict[str, Any]:
             "partner_move": _text(situation["partner_move"], "situation.partner_move", allow_empty=True),
             "turn_obligation": _enum(
                 situation["turn_obligation"], TURN_OBLIGATIONS, "situation.turn_obligation"
+            ),
+            "open_obligation": _enum(
+                situation["open_obligation"], OPEN_OBLIGATIONS, "situation.open_obligation"
+            ),
+            "obligation_source_turn_id": _text(
+                situation["obligation_source_turn_id"],
+                "situation.obligation_source_turn_id",
+                allow_empty=True,
             ),
             "explicit_affect": _text(
                 situation["explicit_affect"], "situation.explicit_affect", allow_empty=True

@@ -24,6 +24,8 @@ def _decision() -> dict:
             "topic": "plans",
             "partner_move": "asks about plans",
             "turn_obligation": "answer",
+            "open_obligation": "answer-current-question",
+            "obligation_source_turn_id": "session_1:turn_1",
             "explicit_affect": "",
             "support_request": False,
             "uncertainty": "low",
@@ -51,10 +53,17 @@ def _decision() -> dict:
 class RealTalkV13Tests(unittest.TestCase):
     def test_direct_question_requires_adaptive_alignment(self):
         value = normalize_v13_decision(_decision())
-        self.assertIs(_validate_decision(value, True, "What are your plans?"), value)
+        history = [{"turn_id": "session_1:turn_1"}]
+        self.assertIs(_validate_decision(value, history, "What are your plans?"), value)
         value["alignment"].update({"orientation": "self-led", "lambda_trace": 0.2})
         with self.assertRaisesRegex(ValueError, "direct partner question"):
-            _validate_decision(value, True, "What are your plans?")
+            _validate_decision(value, history, "What are your plans?")
+
+    def test_obligation_source_must_be_visible(self):
+        value = normalize_v13_decision(_decision())
+        value["situation"]["open_obligation"] = "answer-earlier-unanswered-question"
+        with self.assertRaisesRegex(ValueError, "exact visible history turn"):
+            _validate_decision(value, [{"turn_id": "session_1:turn_2"}], "A statement")
 
     def test_orientation_and_lambda_ranges_are_coupled(self):
         value = _decision()

@@ -52,7 +52,7 @@ from .realtalk_v13_schemas import (
 )
 
 
-PROTOCOL = "realtalk_task1_ours_agentic_v13_progressive_v1"
+PROTOCOL = "realtalk_task1_ours_agentic_v13_1_progressive_v1"
 MODEL = "deepseek-v4-flash"
 GATES = (6, 18, 30, 60, 120, 519)
 SELF_MAX_TOKENS = 4000
@@ -84,8 +84,10 @@ most likely to do next in this real conversation. The goal is to act as the targ
 assistant response.
 
 Use the Self Domain as a cross-partner prior. Give current Cb history priority over Ca facts and partner-specific
-Ca habits. Use at most two currently relevant User Domain facts. First identify the immediate turn obligation,
-then choose one primary move and at most one same-slot companion move. A real message may answer and briefly
+Ca habits. Use at most two currently relevant User Domain facts. Scan the complete visible history before deciding:
+a multipart question may remain partly unanswered after an intervening reply, and the newest partner turn is not
+necessarily the only open obligation. Record the exact visible source turn ID for the obligation. Then choose one
+primary move and at most one same-slot companion move. A real message may answer and briefly
 self-disclose, react and reciprocate, or answer and return the same question; do not force every turn into a
 single sterile sentence.
 
@@ -93,10 +95,15 @@ Choose reflection_depth=surface for facts, plans, preferences, reactions, and or
 brief-reflective only when the visible turn naturally calls for a reason, motivation, or self-observation and
 the target's observed behavior supports it. Reflection is not conversational polish.
 
-Choose a question only when the target would naturally ask at this exact point. Distinguish a reciprocal return
-of the same slot from clarification and a genuine follow-up. Do not interview the partner merely because more
-detail is available. If the latest partner message directly asks the target a question, the alignment cannot be
-self-led: answering that obligation requires at least balanced alignment. With no history, use self-led and open.
+Choose a question only when the target would naturally ask at this exact point. Being asked a question creates an
+answer obligation, not automatic permission to ask one back. Use a reciprocal question only when the same-slot
+exchange is already established and the target's conditional behavior supports returning it. Distinguish that
+from clarification and a genuine follow-up. Do not ask merely to increase engagement or deepen the dialogue.
+If the latest partner message directly asks the target a question, the alignment cannot be self-led: answering
+that obligation requires at least balanced alignment. With no history, use self-led and open.
+
+The relational register controls surface style; it does not license extra reassurance, concern, praise, or
+psychological interpretation beyond the selected action and the target's observed pattern.
 
 lambda_trace records how much this action adapts to the current partner: self-led 0.00-0.35, balanced 0.36-0.70,
 partner-adaptive 0.71-1.00. It must agree with orientation and materially agree with the chosen policy. Select
@@ -301,7 +308,7 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
                         _validate_decision_profile_activation(
                             normalize_v13_decision(value), ud
                         ),
-                        bool(hist), latest,
+                        hist, latest,
                     ),
                     max_tokens=1500,
                     max_attempts=config.operation_max_attempts,
@@ -599,17 +606,33 @@ def _validate_self_stats(value: dict[str, Any], global_stats: dict[str, Any], co
     return value
 
 
-def _validate_decision(value: dict[str, Any], has_history: bool, latest_partner: str) -> dict[str, Any]:
+def _validate_decision(value: dict[str, Any], history: list[dict[str, Any]], latest_partner: str) -> dict[str, Any]:
     situation = value["situation"]
     alignment = value["alignment"]
     policy = value["behavior_policy"]
+    has_history = bool(history)
+    open_obligation = situation["open_obligation"]
+    source_turn_id = situation["obligation_source_turn_id"]
+    visible_turn_ids = {turn["turn_id"] for turn in history}
+    if open_obligation in {"none", "open-session"}:
+        if source_turn_id:
+            raise ValueError(f"{open_obligation} must not cite an obligation source turn")
+    elif source_turn_id not in visible_turn_ids:
+        raise ValueError("obligation_source_turn_id must cite an exact visible history turn")
+    if open_obligation.startswith("answer-") and policy["primary_move"] != "answer":
+        raise ValueError("an unanswered question requires answer as the primary move")
     if not has_history:
         if policy["primary_move"] != "open" or situation["turn_obligation"] != "open":
             raise ValueError("empty history requires open obligation and primary move")
+        if open_obligation != "open-session":
+            raise ValueError("empty history requires open-session")
         if alignment["orientation"] != "self-led":
             raise ValueError("empty history requires self-led orientation")
-    if latest_partner and "?" in latest_partner and alignment["orientation"] == "self-led":
-        raise ValueError("a direct partner question cannot use self-led alignment")
+    if latest_partner and "?" in latest_partner:
+        if alignment["orientation"] == "self-led":
+            raise ValueError("a direct partner question cannot use self-led alignment")
+        if open_obligation != "answer-current-question":
+            raise ValueError("a current direct question requires answer-current-question")
     return value
 
 
