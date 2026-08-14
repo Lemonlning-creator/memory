@@ -136,6 +136,23 @@ class RealTalkV11ActorReplayTests(unittest.TestCase):
             self.assertTrue(all(row["v9_generated_message"] == "v9 old" for row in output))
             self.assertTrue(all(row["next_action"] == {"primary_move": "answer", "continuation_move": "none"} for row in output))
 
+    def test_reuse_loader_requires_frozen_source_fields(self):
+        from src.experiments.realtalk_v11_actor_replay import _load_reused_rows
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory)
+            source = {
+                "result_id": "a:1", "ground_truth": "truth", "context_hash": "hash",
+                "next_action": {"primary_move": "answer"}, "situation": {},
+                "generated_message": "frozen",
+            }
+            (path / "manifest.json").write_text(json.dumps({"status": "complete"}))
+            (path / "predictions.jsonl").write_text(json.dumps(source) + "\n")
+            reused = _load_reused_rows(path, [source])
+            self.assertEqual(reused["a:1"]["generated_message"], "frozen")
+            changed = dict(source, ground_truth="different")
+            with self.assertRaisesRegex(ValueError, "ground_truth"):
+                _load_reused_rows(path, [changed])
+
 
 if __name__ == "__main__":
     unittest.main()

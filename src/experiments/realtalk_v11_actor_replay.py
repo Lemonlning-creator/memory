@@ -116,6 +116,7 @@ def run(
     *,
     speakers: tuple[str, ...],
     per_session: int = 2,
+    reuse_dir: Path | None = None,
 ) -> dict[str, Any]:
     source_rows = _read_jsonl(source_dir / "predictions.jsonl")
     selected = select_fixed_rows(source_rows, speakers, per_session=per_session)
@@ -134,10 +135,15 @@ def run(
         "self_domains": _sha256(source_dir / "self_domains.json"),
         "run_manifest": _sha256(source_dir / "run_manifest.json"),
     }
+    reused_rows = _load_reused_rows(reuse_dir, selected)
+    reuse_hash = (
+        _sha256(reuse_dir / "predictions.jsonl") if reuse_dir is not None else None
+    )
     signature = stable_hash({
         "protocol": PROTOCOL,
         "source_hashes": source_hashes,
         "selection": selection,
+        "reuse_predictions_sha256": reuse_hash,
         "generation_system": stable_hash(GENERATION_SYSTEM_PROMPT),
         "generation_user": stable_hash(GENERATION_USER_PROMPT),
         "actor_view_logic_version": ACTOR_VIEW_LOGIC_VERSION,
@@ -154,6 +160,9 @@ def run(
     for source in selected:
         row = dict(source)
         result_id = row["result_id"]
+        if result_id in reused_rows:
+            output_rows.append(reused_rows[result_id])
+            continue
         try:
             test_chat = row["test_chat"]
             if test_chat not in chat_cache:
@@ -231,6 +240,10 @@ def run(
         "sample_ids_sha256": stable_hash(selection),
         "records_expected": len(selected),
         "records_complete": len(output_rows),
+        "records_reused": len(reused_rows),
+        "records_generated": len(output_rows) - len(reused_rows),
+        "reuse_dir": str(reuse_dir.resolve()) if reuse_dir is not None else None,
+        "reuse_predictions_sha256": reuse_hash,
         "unresolved_errors": len(unresolved),
         "decision_and_domains_regenerated": False,
         "generation_only_replayed": True,
@@ -341,6 +354,30 @@ def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def _load_reused_rows(
+    reuse_dir: Path | None, selected: list[dict[str, Any]]
+) -> dict[str, dict[str, Any]]:
+    if reuse_dir is None:
+        return {}
+    manifest = json.loads((reuse_dir / "manifest.json").read_text(encoding="utf-8"))
+    if manifest["status"] != "complete":
+        raise ValueError("reuse directory is not complete")
+    reused = {
+        row["result_id"]: row
+        for row in _read_jsonl(reuse_dir / "predictions.jsonl")
+    }
+    selected_by_id = {row["result_id"]: row for row in selected}
+    unknown = set(reused) - set(selected_by_id)
+    if unknown:
+        raise ValueError(f"reuse directory contains unselected IDs: {sorted(unknown)[:3]}")
+    for result_id, row in reused.items():
+        source = selected_by_id[result_id]
+        for field in ("ground_truth", "context_hash", "next_action", "situation"):
+            if row[field] != source[field]:
+                raise ValueError(f"reuse row {result_id} differs from V9 source field {field}")
+    return reused
+
+
 def _write_jsonl(path: Path, rows: Iterable[dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8") as handle:
         for row in rows:
@@ -357,6 +394,8 @@ def main() -> None:
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--cohort", choices=("first5", "second5", "all10"), required=True)
+    parser.add_argument("--per-session", type=int, default=2)
+    parser.add_argument("--reuse-dir", type=Path)
     args = parser.parse_args()
     speakers = {
         "first5": FIRST_FIVE,
@@ -364,7 +403,8 @@ def main() -> None:
         "all10": ALL_TEN,
     }[args.cohort]
     print(json.dumps(run(
-        args.source_dir, args.dataset_dir, args.output_dir, speakers=speakers
+        args.source_dir, args.dataset_dir, args.output_dir, speakers=speakers,
+        per_session=args.per_session, reuse_dir=args.reuse_dir,
     ), ensure_ascii=False, indent=2))
 
 
