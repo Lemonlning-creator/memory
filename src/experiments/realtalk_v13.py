@@ -52,10 +52,11 @@ from .realtalk_v13_schemas import (
 )
 
 
-PROTOCOL = "realtalk_task1_ours_agentic_v13_1_progressive_v1"
+PROTOCOL = "realtalk_task1_ours_agentic_v13_2_progressive_v1"
 MODEL = "deepseek-v4-flash"
 GATES = (6, 18, 30, 60, 120, 519)
 SELF_MAX_TOKENS = 4000
+USER_MAX_TOKENS = 4000
 
 SELF_SYSTEM = """Compile a private cross-partner Self Domain for persona simulation.
 Infer the target's stable voice and behavior from the complete Ca conversation, while separating portable
@@ -90,6 +91,11 @@ necessarily the only open obligation. Record the exact visible source turn ID fo
 primary move and at most one same-slot companion move. A real message may answer and briefly
 self-disclose, react and reciprocate, or answer and return the same question; do not force every turn into a
 single sterile sentence.
+
+The primary move is what the target mainly does. The companion move is either none, a brief reaction,
+self-disclosure, or ask. If a question is planned, exactly one of primary_move or companion_move must be ask;
+otherwise neither may be ask. turn_obligation describes the conversational obligation and need not duplicate
+the primary move label word-for-word, but an unanswered question must still use answer as the primary move.
 
 Choose reflection_depth=surface for facts, plans, preferences, reactions, and ordinary feelings. Choose
 brief-reflective only when the visible turn naturally calls for a reason, motivation, or self-observation and
@@ -728,7 +734,7 @@ def _user_domain_for_point(checkpoint: OperationCheckpoint, backend: Any, raw_au
             normalizer=lambda value, ids=set(allowed): _validate_user_domain_evidence(
                 normalize_user_domain(value), ids
             ),
-            max_tokens=DOMAIN_MAX_TOKENS,
+            max_tokens=USER_MAX_TOKENS,
             max_attempts=config.operation_max_attempts,
             raw_audit=raw_audit,
             enable_thinking=False,

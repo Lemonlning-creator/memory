@@ -38,7 +38,7 @@ def _decision() -> dict:
         },
         "behavior_policy": {
             "primary_move": "answer",
-            "companion_move": "reciprocal-question",
+            "companion_move": "ask",
             "reflection_depth": "surface",
             "question_plan": "reciprocal",
             "question_target": "the partner's plans",
@@ -71,10 +71,15 @@ class RealTalkV13Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "does not match balanced"):
             normalize_v13_decision(value)
 
-    def test_question_plan_and_companion_are_coupled(self):
+    def test_question_plan_requires_exactly_one_ask_move(self):
         value = _decision()
         value["behavior_policy"]["companion_move"] = "none"
-        with self.assertRaisesRegex(ValueError, "reciprocal question plan"):
+        with self.assertRaisesRegex(ValueError, "exactly one ask move"):
+            normalize_v13_decision(value)
+
+        value = _decision()
+        value["behavior_policy"]["primary_move"] = "ask"
+        with self.assertRaisesRegex(ValueError, "exactly one ask move"):
             normalize_v13_decision(value)
 
     def test_actor_contract_has_exact_question_and_reflection_permissions(self):

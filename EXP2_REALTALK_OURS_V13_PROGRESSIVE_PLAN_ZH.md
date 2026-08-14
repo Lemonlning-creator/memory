@@ -84,3 +84,8 @@ V13.0 Gate 1 完成 `6/6`，零 unresolved。配对结果相对 V9 为：Reflect
 `open_obligation` 与可验证的 `obligation_source_turn_id`；被问问题只产生回答义务，
 回问仍需同槽位交换和条件化 Self 行为共同支持。Self Domain、五层 User Domain、
 lambda 机制、Actor、数据、模型和 Judge 均保持不变。
+
+V13.1 Gate 1 因冗余枚举耦合导致仅 `3/6` 完成，并按协议停止。V13.2 不改变方法语义，
+将 Decision 结构简化为“交流义务、主动作、可选辅助动作、问题类型与对象”：问题只需由
+主动作或辅助动作中的恰好一个 `ask` 承载；交流义务不再被要求与主动作使用完全相同的
+枚举词。User Domain 输出上限由 3000 提高到 4000 tokens，以避免完整五层 JSON 截断。

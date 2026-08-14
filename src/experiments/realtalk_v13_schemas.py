@@ -42,7 +42,7 @@ COMPANION_MOVES = (
     "none",
     "brief-reaction",
     "self-disclose",
-    "reciprocal-question",
+    "ask",
 )
 QUESTION_PLANS = (
     "none",
@@ -394,15 +394,12 @@ def _validate_policy(value: dict[str, Any]) -> None:
         raise ValueError("question_target must be empty when no question is planned")
     if question_plan != "none" and not target:
         raise ValueError("a planned question requires question_target")
-    if policy["primary_move"] == "ask" and question_plan not in {"clarify", "follow-up"}:
-        raise ValueError("ask primary move requires clarify or follow-up")
-    if question_plan in {"clarify", "follow-up"} and policy["primary_move"] != "ask":
-        raise ValueError("clarify or follow-up requires ask primary move")
-    if policy["companion_move"] == "reciprocal-question" and question_plan != "reciprocal":
-        raise ValueError("reciprocal companion requires reciprocal question plan")
-    if question_plan == "reciprocal" and policy["companion_move"] != "reciprocal-question":
-        raise ValueError("reciprocal question plan requires reciprocal companion")
+    question_carriers = (
+        int(policy["primary_move"] == "ask") + int(policy["companion_move"] == "ask")
+    )
+    if question_plan == "none" and question_carriers:
+        raise ValueError("an ask move requires a question plan")
+    if question_plan != "none" and question_carriers != 1:
+        raise ValueError("a question plan requires exactly one ask move")
     if question_plan == "opening-check-in" and policy["primary_move"] != "open":
         raise ValueError("opening check-in requires open primary move")
-    if value["situation"]["turn_obligation"] != policy["primary_move"]:
-        raise ValueError("turn_obligation must equal primary_move")
