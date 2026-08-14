@@ -66,6 +66,18 @@ class RealTalkV12ActorReplayTests(unittest.TestCase):
         self.assertIn("do not explain why", _self_revelation_contract(_compact_actor_action(action(revelation="state-only"))))
         self.assertIn("At most one", _self_revelation_contract(_compact_actor_action(action(revelation="brief-reason-or-feeling"))))
 
+    def test_early_v9_schema_gets_deterministic_projection(self):
+        old = action()
+        old.pop("self_revelation_mode")
+        old.pop("missing_information")
+        compact = _compact_actor_action(old, {"missing_information": "partner wellbeing"})
+        self.assertEqual(compact["self_revelation_mode"], "state-only")
+        self.assertEqual(compact["missing_information"], "partner wellbeing")
+        old["primary_move"] = "acknowledge"
+        self.assertEqual(
+            _compact_actor_action(old, {})["self_revelation_mode"], "none"
+        )
+
     def test_question_contract_and_runtime_validation(self):
         plain = _compact_actor_action(action())
         self.assertIn("Do not ask", _question_contract(plain))

@@ -25,6 +25,7 @@ from .realtalk_ours import (
 
 PROTOCOL = "realtalk_task1_ours_v12_disciplined_natural_actor_v1"
 ACTOR_VIEW_LOGIC_VERSION = "compact_structured_action_v1"
+SOURCE_ACTION_COMPATIBILITY_VERSION = "v9_early_schema_deterministic_projection_v1"
 ALL_TEN = tuple(item["speaker"] for item in REALTALK_PERSONA_SPLITS)
 SESSIONS = ("session_1", "session_2", "session_3")
 
@@ -174,6 +175,7 @@ def run(
         "generation_system": stable_hash(GENERATION_SYSTEM_PROMPT),
         "generation_user": stable_hash(GENERATION_USER_PROMPT),
         "actor_view_logic_version": ACTOR_VIEW_LOGIC_VERSION,
+        "source_action_compatibility_version": SOURCE_ACTION_COMPATIBILITY_VERSION,
         "module_sha256": _sha256(Path(__file__)),
         "model": source_model,
     })
@@ -197,7 +199,7 @@ def run(
                 }
             by_id = chat_cache[test_chat]
             context = [by_id[turn_id] for turn_id in row["context_turn_ids"]]
-            actor_action = _compact_actor_action(row["next_action"])
+            actor_action = _compact_actor_action(row["next_action"], row["situation"])
             envelope = _actor_text_call(
                 checkpoint=checkpoint,
                 backend=backend,
@@ -265,6 +267,7 @@ def run(
             "user": stable_hash(GENERATION_USER_PROMPT),
         },
         "actor_view_logic_version": ACTOR_VIEW_LOGIC_VERSION,
+        "source_action_compatibility_version": SOURCE_ACTION_COMPATIBILITY_VERSION,
         "module_sha256": _sha256(Path(__file__)),
         "output_predictions_sha256": _sha256(output_dir / "predictions.jsonl"),
         "completed_at_utc": datetime.now(UTC).isoformat(),
@@ -276,16 +279,32 @@ def run(
     return manifest
 
 
-def _compact_actor_action(action: dict[str, Any]) -> dict[str, Any]:
+def _compact_actor_action(
+    action: dict[str, Any], situation: dict[str, Any] | None = None
+) -> dict[str, Any]:
     fields = (
         "primary_move", "content_direction", "tone", "message_scale",
-        "self_revelation_mode", "question_mode", "continuation_move",
-        "missing_information",
+        "question_mode", "continuation_move",
     )
     missing = [field for field in fields if field not in action]
     if missing:
         raise ValueError(f"frozen action lacks V12 fields: {missing}")
-    return {field: action[field] for field in fields}
+    primary = action["primary_move"]
+    revelation = action.get("self_revelation_mode")
+    if revelation is None:
+        revelation = (
+            "state-only"
+            if primary in {"answer", "self-disclose", "topic-shift"}
+            else "none"
+        )
+    missing_information = action.get("missing_information")
+    if missing_information is None:
+        missing_information = (situation or {}).get("missing_information", "")
+    return {
+        **{field: action[field] for field in fields},
+        "self_revelation_mode": revelation,
+        "missing_information": missing_information,
+    }
 
 
 def _action_contract(action: dict[str, Any]) -> str:
