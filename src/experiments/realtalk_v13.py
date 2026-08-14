@@ -52,7 +52,7 @@ from .realtalk_v13_schemas import (
 )
 
 
-PROTOCOL = "realtalk_task1_ours_agentic_v13_3_progressive_v1"
+PROTOCOL = "realtalk_task1_ours_agentic_v13_4_progressive_v1"
 MODEL = "deepseek-v4-flash"
 GATES = (6, 18, 30, 60, 120, 519)
 SELF_MAX_TOKENS = 4000
@@ -107,6 +107,8 @@ Choose a question only when the target would naturally ask at this exact point. 
 answer obligation, not automatic permission to ask one back. Use a reciprocal question only when the same-slot
 exchange is already established and the target's conditional behavior supports returning it. Distinguish that
 from clarification and a genuine follow-up. Do not ask merely to increase engagement or deepen the dialogue.
+When CONDITIONAL COMPANION-QUESTION EVIDENCE says companion_question_allowed=false, companion_move must not
+be ask and question_plan must remain none unless asking itself is the primary turn obligation.
 If the latest partner message directly asks the target a question, the alignment cannot be self-led: answering
 that obligation requires at least balanced alignment. With no history, use self-led and open.
 
@@ -136,6 +138,12 @@ LATEST PARTNER MESSAGE: {latest_partner}
 
 EXACT USER DOMAIN ACTIVATION WHITELIST:
 {whitelist}
+
+VISIBLE PARTNER QUESTION INDEX (the full transcript above remains authoritative):
+{question_index}
+
+CONDITIONAL COMPANION-QUESTION EVIDENCE:
+{question_evidence}
 
 Only copy relevant_user_domain entries verbatim from the whitelist. Submit one internally consistent policy."""
 
@@ -294,6 +302,9 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
                 ]
                 latest_partner = _turns_with_ids(partner_turns[-1:])
                 latest_text = partner_turns[-1]["content"] if partner_turns else ""
+                question_evidence = _conditional_question_evidence(
+                    self_domain, point["context_turns"]
+                )
                 decision_envelope = _structured_call(
                     checkpoint=checkpoint,
                     backend=backend,
@@ -311,13 +322,17 @@ def run(config: V13Config, backend: Any | None = None) -> dict[str, Any]:
                         ),
                         latest_partner=latest_partner,
                         whitelist=_profile_activation_whitelist(user_domain),
+                        question_index=_json(_partner_question_index(
+                            point["context_turns"], speaker_data["partner"], speaker
+                        )),
+                        question_evidence=_json(question_evidence),
                     ),
                     schema=V13_DECISION_SCHEMA,
-                    normalizer=lambda value, ud=user_domain, hist=point["context_turns"], latest=latest_text: _validate_decision(
+                    normalizer=lambda value, ud=user_domain, hist=point["context_turns"], latest=latest_text, qe=question_evidence: _validate_decision(
                         _validate_decision_profile_activation(
                             normalize_v13_decision(value), ud
                         ),
-                        hist, latest,
+                        hist, latest, qe,
                     ),
                     max_tokens=1500,
                     max_attempts=config.operation_max_attempts,
@@ -616,7 +631,12 @@ def _validate_self_stats(value: dict[str, Any], global_stats: dict[str, Any], co
     return value
 
 
-def _validate_decision(value: dict[str, Any], history: list[dict[str, Any]], latest_partner: str) -> dict[str, Any]:
+def _validate_decision(
+    value: dict[str, Any],
+    history: list[dict[str, Any]],
+    latest_partner: str,
+    question_evidence: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     situation = value["situation"]
     alignment = value["alignment"]
     policy = value["behavior_policy"]
@@ -653,7 +673,50 @@ def _validate_decision(value: dict[str, Any], history: list[dict[str, Any]], lat
             raise ValueError("a direct partner question cannot use self-led alignment")
         if open_obligation != "answer-current-question":
             raise ValueError("a current direct question requires answer-current-question")
+    if (
+        policy["companion_move"] == "ask"
+        and question_evidence is not None
+        and not question_evidence["companion_question_allowed"]
+    ):
+        raise ValueError("conditional Self evidence does not permit a companion question")
     return value
+
+
+def _conditional_question_evidence(
+    self_domain: dict[str, Any], history: list[dict[str, Any]]
+) -> dict[str, Any]:
+    trigger = _turn_trigger(history[-1] if history else None)
+    stats = self_domain["conditional_statistics"][trigger]
+    observations = stats["observations"]
+    rate = stats["question_rate"]
+    return {
+        "trigger": trigger,
+        "observations": observations,
+        "question_rate": rate,
+        "companion_question_allowed": observations < 3 or rate >= 0.5,
+        "rule": "allowed when observations < 3 or question_rate >= 0.5",
+    }
+
+
+def _partner_question_index(
+    history: list[dict[str, Any]], partner: str, speaker: str
+) -> list[dict[str, Any]]:
+    result = []
+    for index, turn in enumerate(history):
+        if turn["speaker"].casefold() != partner.casefold() or "?" not in turn["content"]:
+            continue
+        replies = []
+        for later in history[index + 1:]:
+            if later["speaker"].casefold() == partner.casefold():
+                break
+            if later["speaker"].casefold() == speaker.casefold():
+                replies.append(later["turn_id"])
+        result.append({
+            "source_turn_id": turn["turn_id"],
+            "question_text": turn["content"],
+            "target_reply_turn_ids_before_next_partner_turn": replies,
+        })
+    return result
 
 
 def _actor_contract(policy: dict[str, Any]) -> str:

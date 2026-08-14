@@ -7,6 +7,8 @@ from pathlib import Path
 
 from src.experiments.realtalk_v13 import (
     _actor_contract,
+    _conditional_question_evidence,
+    _partner_question_index,
     _select_gate6,
     _select_gate18,
     _validate_decision,
@@ -80,6 +82,39 @@ class RealTalkV13Tests(unittest.TestCase):
         value["situation"]["open_obligation"] = "none"
         normalized = normalize_v13_decision(value)
         self.assertEqual(normalized["situation"]["obligation_source_turn_id"], "")
+
+    def test_companion_question_respects_conditional_self_evidence(self):
+        value = normalize_v13_decision(_decision())
+        history = [{"turn_id": "session_1:turn_1", "content": "What are your plans?"}]
+        evidence = {
+            "trigger": "after-direct-question",
+            "observations": 8,
+            "question_rate": 0.25,
+            "companion_question_allowed": False,
+            "rule": "test",
+        }
+        with self.assertRaisesRegex(ValueError, "does not permit"):
+            _validate_decision(value, history, "What are your plans?", evidence)
+
+    def test_question_index_preserves_question_and_reply_ids(self):
+        history = [
+            {"turn_id": "s1:t1", "speaker": "B", "content": "How are you?"},
+            {"turn_id": "s1:t2", "speaker": "A", "content": "Good"},
+            {"turn_id": "s1:t3", "speaker": "B", "content": "Nice"},
+        ]
+        self.assertEqual(_partner_question_index(history, "B", "A"), [{
+            "source_turn_id": "s1:t1",
+            "question_text": "How are you?",
+            "target_reply_turn_ids_before_next_partner_turn": ["s1:t2"],
+        }])
+
+    def test_conditional_question_evidence_uses_half_rate_gate(self):
+        domain = {"conditional_statistics": {
+            trigger: {"observations": 4, "question_rate": 0.25}
+            for trigger in TURN_TRIGGERS
+        }}
+        evidence = _conditional_question_evidence(domain, [{"content": "A disclosure"}])
+        self.assertFalse(evidence["companion_question_allowed"])
 
     def test_orientation_and_lambda_ranges_are_coupled(self):
         value = _decision()

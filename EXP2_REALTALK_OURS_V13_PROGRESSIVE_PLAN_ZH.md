@@ -94,3 +94,9 @@ V13.2 Gate 1 完成 `5/6`；唯一失败是 `open_obligation=none` 时附带了�
 V13.3 将该 ID 确定性清空，不改变策略；同时验证两类 answer obligation 引用的可见
 turn 必须真实包含问号，并区分最新与更早 turn。运行签名新增 runner/schema 源码 SHA256，
 防止任何代码变化复用旧 checkpoint。
+
+V13.3 Gate 1 完成 `6/6` 且零 unresolved。相对同批 V9，Reflectiveness `+0.50`、
+Empathy AD 改善 `0.10`、Intimacy AD 从 `0.149` 降至 `0.080`，但 Grounding
+下降 `0.40`，因此不进入 Gate 2。V13.4 保留完整历史并额外提供可审计的伙伴问题
+索引；辅助提问仅在对应 Self 条件统计观测少于 3 条或真实回问率不低于 `0.5` 时
+允许。主动作本身为提问时不受该辅助动作门控。
