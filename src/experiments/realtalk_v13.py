@@ -52,7 +52,7 @@ from .realtalk_v13_schemas import (
 )
 
 
-PROTOCOL = "realtalk_task1_ours_agentic_v13_4_progressive_v1"
+PROTOCOL = "realtalk_task1_ours_agentic_v13_5_progressive_v1"
 MODEL = "deepseek-v4-flash"
 GATES = (6, 18, 30, 60, 120, 519)
 SELF_MAX_TOKENS = 4000
@@ -89,7 +89,10 @@ Ca habits. Use at most two currently relevant User Domain facts. Scan the comple
 a multipart question may remain partly unanswered after an intervening reply, and the newest partner turn is not
 necessarily the only open obligation. Record the exact visible source turn ID for the obligation. An
 answer-current-question or answer-earlier-unanswered-question source must contain a literal question mark in the
-visible transcript. Then choose one
+visible transcript. Treat the visible question index as an obligation audit: compare every indexed question with
+the target replies listed after it. If an explicit slot was not answered and remains relevant, answer that slot
+before reacting to a newer disclosure or adding a question. A later partner statement does not by itself cancel
+an unanswered question. Then choose one
 primary move and at most one same-slot companion move. A real message may answer and briefly
 self-disclose, react and reciprocate, or answer and return the same question; do not force every turn into a
 single sterile sentence.
@@ -173,7 +176,11 @@ EXECUTION CONTRACT:
 Produce one natural target-person message. Complete the primary move and only the licensed companion move.
 Follow the question plan exactly. Surface expression may state facts, status, preferences, plans, or ordinary
 feelings without explaining motives. Brief-reflective expression may contain at most one concise reason or
-self-observation. Match the selected relational register and the target's observed message shape. Current Cb
+self-observation. Treat the target's recent messages in the current Cb transcript as direct surface-style examples:
+preserve their ordinary capitalization, punctuation, contractions, slang, directness, and bubble shape instead
+of polishing them into an ideal conversational response. Do not add a generic enthusiastic opener or explain why
+the partner's topic is interesting unless the policy specifically requires that content. Match the selected
+relational register and the target's observed message shape. Current Cb
 history overrides old Ca details; never present a Ca event as current. Do not add an unplanned second topic,
 question, psychological analysis, generic reassurance, or therapeutic language."""
 

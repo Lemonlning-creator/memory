@@ -100,3 +100,9 @@ Empathy AD 改善 `0.10`、Intimacy AD 从 `0.149` 降至 `0.080`，但 Groundin
 下降 `0.40`，因此不进入 Gate 2。V13.4 保留完整历史并额外提供可审计的伙伴问题
 索引；辅助提问仅在对应 Self 条件统计观测少于 3 条或真实回问率不低于 `0.5` 时
 允许。主动作本身为提问时不受该辅助动作门控。
+
+V13.4 Gate 1 完成 `6/6`、零 unresolved。固定复用同批 Reference/V9 Judge 标签后，
+Reflectiveness `0.70`、Grounding `0.40`、Empathy AD `0.90`；Grounding 较 V9 仍低
+`0.30`，不进入 Gate 2。V13.5 只修改 Prompt：Decision 必须逐项核对问题索引中尚未
+回答的槽位；Actor 将当前 Cb 的近期目标人物消息视为直接表层风格示例，避免把普通
+口语润色为“肯定、解释并深入参与”的助手式表达。Schema、统计门控和数据不变。
