@@ -72,6 +72,30 @@ class RealTalkPairedJudgeTests(unittest.TestCase):
             self.assertIn("delta_v12_minus_v9", summary)
             self.assertEqual(summary["protocol"], "realtalk_appendix_c_paired_v9_v12_v1")
 
+    def test_v13_candidate_is_named_in_protocol_and_summary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            v9 = root / "v9.jsonl"; v13 = root / "v13.jsonl"
+            base = {"result_id": "a:id", "speaker": "A", "ground_truth": "reference"}
+            v9.write_text(json.dumps({**base, "generated_message": "old"}) + "\n")
+            v13.write_text(json.dumps({**base, "generated_message": "new"}) + "\n")
+
+            def fake_chat(*args):
+                prompt = args[-1]
+                if "Return only JSON" in prompt:
+                    return '{"emotional_reaction":0,"interpretation":0,"exploration":0}', {}
+                return "False", {}
+
+            with patch.dict("os.environ", {
+                "REALTALK_JUDGE_API_KEY": "test", "REALTALK_JUDGE_BASE_URL": "https://example.test/v1",
+            }), patch("src.experiments.realtalk_paired_judge._contexts", return_value={"a:id": "history"}), patch(
+                "src.experiments.realtalk_paired_judge._chat", side_effect=fake_chat
+            ):
+                summary = run(v9, v13, root, root / "judge", "gpt-4o-mini", "v13")
+            self.assertIn("v13", summary["methods"])
+            self.assertIn("delta_v13_minus_v9", summary)
+            self.assertEqual(summary["protocol"], "realtalk_appendix_c_paired_v9_v13_v1")
+
 
 if __name__ == "__main__":
     unittest.main()

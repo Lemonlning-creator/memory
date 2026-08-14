@@ -31,8 +31,8 @@ def run(
     model: str,
     candidate_name: str = "v11",
 ) -> dict[str, Any]:
-    if candidate_name not in {"v11", "v12"}:
-        raise ValueError("candidate_name must be v11 or v12")
+    if candidate_name not in {"v11", "v12", "v13"}:
+        raise ValueError("candidate_name must be v11, v12, or v13")
     methods = ("v9", candidate_name)
     api_key = os.environ["REALTALK_JUDGE_API_KEY"]
     base_url = os.environ["REALTALK_JUDGE_BASE_URL"]
@@ -218,7 +218,7 @@ def main() -> None:
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--model", default="gpt-4o-mini")
-    parser.add_argument("--candidate-name", choices=("v11", "v12"), default="v11")
+    parser.add_argument("--candidate-name", choices=("v11", "v12", "v13"), default="v11")
     args = parser.parse_args()
     print(json.dumps(run(
         args.v9_predictions, args.v11_predictions, args.dataset_dir,
