@@ -20,7 +20,6 @@ from .realtalk_gpt_judge import (
 )
 
 
-METHODS = ("v9", "v11")
 METRICS = ("reflectiveness", "grounding", "empathy")
 
 
@@ -30,21 +29,27 @@ def run(
     dataset_dir: Path,
     output_dir: Path,
     model: str,
+    candidate_name: str = "v11",
 ) -> dict[str, Any]:
+    if candidate_name not in {"v11", "v12"}:
+        raise ValueError("candidate_name must be v11 or v12")
+    methods = ("v9", candidate_name)
     api_key = os.environ["REALTALK_JUDGE_API_KEY"]
     base_url = os.environ["REALTALK_JUDGE_BASE_URL"]
     rows = {
         "v9": _read_rows(v9_predictions),
-        "v11": _read_rows(v11_predictions),
+        candidate_name: _read_rows(v11_predictions),
     }
     ids = [row["result_id"] for row in rows["v9"]]
-    if ids != [row["result_id"] for row in rows["v11"]]:
-        raise ValueError("V9 and V11 predictions are not ordered on identical result IDs")
+    if ids != [row["result_id"] for row in rows[candidate_name]]:
+        raise ValueError(
+            f"V9 and {candidate_name.upper()} predictions are not ordered on identical result IDs"
+        )
     if any(
         left["ground_truth"] != right["ground_truth"]
-        for left, right in zip(rows["v9"], rows["v11"])
+        for left, right in zip(rows["v9"], rows[candidate_name])
     ):
-        raise ValueError("V9 and V11 ground truths differ")
+        raise ValueError(f"V9 and {candidate_name.upper()} ground truths differ")
 
     contexts = _contexts(dataset_dir, rows["v9"])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -65,7 +70,7 @@ def run(
         turns = {
             "reference": rows["v9"][index]["ground_truth"],
             "v9": rows["v9"][index]["generated_message"],
-            "v11": rows["v11"][index]["generated_message"],
+            candidate_name: rows[candidate_name][index]["generated_message"],
         }
         for side, turn in turns.items():
             for metric, template, parser in metric_specs:
@@ -95,12 +100,12 @@ def run(
                     json.dumps(checkpoint, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
 
-    scored = {method: [] for method in METHODS}
+    scored = {method: [] for method in methods}
     for index, result_id in enumerate(ids):
         reference = _side_values(checkpoint, result_id, "reference")
         if reference is None:
             continue
-        for method in METHODS:
+        for method in methods:
             candidate = _side_values(checkpoint, result_id, method)
             if candidate is None:
                 continue
@@ -123,10 +128,10 @@ def run(
             })
 
     summaries = {method: _aggregate(items) for method, items in scored.items()}
-    complete = all(len(scored[method]) == len(ids) for method in METHODS)
+    complete = all(len(scored[method]) == len(ids) for method in methods)
     summary = {
         "status": "complete" if complete and not checkpoint["errors"] else "incomplete",
-        "protocol": "realtalk_appendix_c_paired_v9_v11_v1",
+        "protocol": f"realtalk_appendix_c_paired_v9_{candidate_name}_v1",
         "judge_prompt_protocol": "realtalk_appendix_c_full_prompt_within_session_v3",
         "model_requested": model,
         "messages": len(ids),
@@ -136,7 +141,7 @@ def run(
         "judgments_complete": len(checkpoint["judgments"]),
         "unresolved_errors": len(checkpoint["errors"]),
         "methods": summaries,
-        "delta_v11_minus_v9": _delta(summaries),
+        f"delta_{candidate_name}_minus_v9": _delta(summaries, candidate_name),
         "created_at_utc": datetime.now(UTC).isoformat(),
     }
     for method, items in scored.items():
@@ -188,15 +193,15 @@ def _aggregate(items: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _delta(summaries: dict[str, Any]) -> dict[str, float]:
+def _delta(summaries: dict[str, Any], candidate_name: str = "v11") -> dict[str, float]:
     result = {}
     for metric in (
         "reflectiveness_accuracy", "grounding_accuracy", "empathy_absolute_difference"
     ):
-        if not summaries["v9"]["speaker_macro"] or not summaries["v11"]["speaker_macro"]:
+        if not summaries["v9"]["speaker_macro"] or not summaries[candidate_name]["speaker_macro"]:
             continue
         result[metric] = round(
-            summaries["v11"]["speaker_macro"][metric]["mean"]
+            summaries[candidate_name]["speaker_macro"][metric]["mean"]
             - summaries["v9"]["speaker_macro"][metric]["mean"], 6
         )
     return result
@@ -213,10 +218,11 @@ def main() -> None:
     parser.add_argument("--dataset-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--model", default="gpt-4o-mini")
+    parser.add_argument("--candidate-name", choices=("v11", "v12"), default="v11")
     args = parser.parse_args()
     print(json.dumps(run(
         args.v9_predictions, args.v11_predictions, args.dataset_dir,
-        args.output_dir, args.model,
+        args.output_dir, args.model, args.candidate_name,
     ), ensure_ascii=False, indent=2))
 
 
