@@ -111,3 +111,10 @@ V13.5 因过强的问题索引指令导致模型反复把普通披露误标为�
 Domain 出现随机重复触发器，最终仅 `3/6`，按协议停止。V13.6 撤回 V13.5 的问题索引
 强制推断，只保留 Actor 的近期 Cb 表层风格约束；并按 SHA256 复用 V13.4 已验证的
 Self Domain，只重跑实际发生变化的后续阶段，减少无关随机性。
+
+V13.6 Gate 1 完成 `6/6`、零 unresolved，并按 SHA256 复用 V13.4 Self Domain。
+固定 Reference/V9 Judge 标签下，Reflectiveness `1.00`、Grounding `0.40`、Empathy AD
+`1.80`；本地指标为 ROUGE `0.155`、BERTScore `0.849`、Sentiment `0.60`、Emotion
+`0.50`、Intimacy AD `0.093`。该版本过度提升反思并恶化 Empathy，Gate 1 未通过，
+不运行 18 条。当前困难集上最平衡的是 V13.4，但其 Grounding 仍低于匹配 V9，故同样
+不具备扩容资格。
