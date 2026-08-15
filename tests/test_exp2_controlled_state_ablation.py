@@ -12,7 +12,11 @@ from src.experiments.exp2_controlled_state_ablation import (
     _reconstruct_preceding_states,
     _selected_state,
 )
-from src.prompts.exp2_versions import get_exp2_prompt_bundle
+from src.prompts.exp2_versions import (
+    DEFAULT_EXP2_PROMPT_VERSION,
+    exp2_prompt_versions,
+    get_exp2_prompt_bundle,
+)
 
 
 class ControlledStateAblationTests(unittest.TestCase):
@@ -139,82 +143,44 @@ class ControlledStateAblationTests(unittest.TestCase):
                 [],
             )
 
-    def test_v26_is_standalone_role_clear_and_scores_only(self) -> None:
-        v18 = get_exp2_prompt_bundle("v18_reflective_grounding_joint_gate")
-        v26 = get_exp2_prompt_bundle("v26_local_evidence_single_act")
-        self.assertEqual(v26.response_state_policy, "scores_only")
-        self.assertFalse(v26.response_system.startswith(v18.response_system))
-        self.assertIn("no comparable recent target-speaker reply", v26.response_system)
-        self.assertIn("TARGET SPEAKER PERSONA", v26.response_user)
-        self.assertIn("CURRENT USER PROFILE", v26.response_user)
-        self.assertIn("THREE EMPATHY SCORES", v26.response_user)
-
-    def test_v27_changes_only_v18_grounding_policy_and_uses_scores_only(self) -> None:
-        v7 = get_exp2_prompt_bundle("v7_recent_style_imitation")
-        v18 = get_exp2_prompt_bundle("v18_reflective_grounding_scores_only")
-        v27 = get_exp2_prompt_bundle("v27_grounding_three_mode_gate")
-
-        self.assertEqual(v27.response_state_policy, "scores_only")
-        self.assertEqual(v27.response_user, v18.response_user)
-        self.assertEqual(v27.alignment_system, v18.alignment_system)
-        self.assertEqual(v27.alignment_user, v18.alignment_user)
-        self.assertTrue(v18.response_system.startswith(v7.response_system))
-        self.assertTrue(v27.response_system.startswith(v7.response_system))
-        self.assertNotEqual(v27.response_system, v18.response_system)
-
-        reflective_boundary = (
-            "A. REFLECTIVE. Use one natural self-observation only when the active "
-            "topic is the target speaker's own feeling, motive, realization, "
-            "decision, change, or recurring pattern."
-        )
-        self.assertIn(reflective_boundary, v18.response_system)
-        self.assertIn(reflective_boundary, v27.response_system)
-        ordinary_boundary = (
-            "C. ORDINARY. When neither A nor B is clearly supported, use the "
-            "direct answer, acknowledgement, opinion, reaction, or supported "
-            "self-disclosure this speaker would normally give."
-        )
-        self.assertIn(ordinary_boundary, v18.response_system)
-        self.assertIn(ordinary_boundary, v27.response_system)
-        self.assertIn("1. DIRECT_RESPONSE:", v27.response_system)
-        self.assertIn("2. REPAIR_GROUNDING:", v27.response_system)
-        self.assertIn("3. ELABORATION_GROUNDING:", v27.response_system)
+    def test_scores_only_bundle_is_the_single_runtime_default(self) -> None:
+        bundle = get_exp2_prompt_bundle(DEFAULT_EXP2_PROMPT_VERSION)
+        self.assertEqual(bundle.version, "v18_reflective_grounding_scores_only")
+        self.assertEqual(bundle.response_state_policy, "scores_only")
         self.assertIn(
-            "Choose B only for mode 2 or 3. Otherwise choose C.",
-            v27.response_system,
+            "Before writing, silently choose exactly one primary response-act pattern",
+            bundle.response_system,
         )
+        self.assertIn("A. REFLECTIVE.", bundle.response_system)
+        self.assertIn("B. GROUNDING.", bundle.response_system)
+        self.assertIn("C. ORDINARY.", bundle.response_system)
+        self.assertIn("PREVIOUS-TURN EMPATHY STATE", bundle.response_user)
 
-    def test_v28_is_v18_repair_only_grounding_with_scores_only(self) -> None:
-        v7 = get_exp2_prompt_bundle("v7_recent_style_imitation")
-        v18 = get_exp2_prompt_bundle("v18_reflective_grounding_scores_only")
-        v28 = get_exp2_prompt_bundle("v28_repair_grounding_only")
-
-        self.assertEqual(v28.response_state_policy, "scores_only")
-        self.assertEqual(v28.response_user, v18.response_user)
-        self.assertEqual(v28.alignment_system, v18.alignment_system)
-        self.assertEqual(v28.alignment_user, v18.alignment_user)
-        self.assertTrue(v28.response_system.startswith(v7.response_system))
-        self.assertNotEqual(v28.response_system, v18.response_system)
-
-        reflective_boundary = (
-            "A. REFLECTIVE. Use one natural self-observation only when the active "
-            "topic is the target speaker's own feeling, motive, realization, "
-            "decision, change, or recurring pattern."
+    def test_version_registry_holds_only_the_two_v18_forms(self) -> None:
+        self.assertEqual(
+            set(exp2_prompt_versions()),
+            {
+                "v18_reflective_grounding_joint_gate",
+                "v18_reflective_grounding_scores_only",
+            },
         )
-        ordinary_boundary = (
-            "C. ORDINARY. When neither A nor B is clearly supported, use the "
-            "direct answer, acknowledgement, opinion, reaction, or supported "
-            "self-disclosure this speaker would normally give."
-        )
-        self.assertIn(reflective_boundary, v28.response_system)
-        self.assertIn(ordinary_boundary, v28.response_system)
-        self.assertIn("clarification or confirmation only", v28.response_system)
-        self.assertIn("must be resolved", v28.response_system)
-        self.assertNotIn("ELABORATION_GROUNDING", v28.response_system)
+        joint = get_exp2_prompt_bundle("v18_reflective_grounding_joint_gate")
+        scores = get_exp2_prompt_bundle("v18_reflective_grounding_scores_only")
+        self.assertEqual(joint.response_system, scores.response_system)
+        self.assertEqual(joint.response_user, scores.response_user)
+        self.assertEqual(joint.alignment_system, scores.alignment_system)
+        self.assertEqual(joint.alignment_user, scores.alignment_user)
+        self.assertEqual(joint.response_state_policy, "empathy_state")
+        self.assertEqual(scores.response_state_policy, "scores_only")
+        self.assertNotEqual(joint.fingerprint, scores.fingerprint)
+        with self.assertRaises(ValueError):
+            get_exp2_prompt_bundle("v7_recent_style_imitation")
 
     def test_agent_scores_only_policy_is_strict(self) -> None:
         agent = object.__new__(StateDrivenCompanionAgent)
-        agent.prompt_bundle = get_exp2_prompt_bundle("v26_local_evidence_single_act")
+        agent.prompt_bundle = get_exp2_prompt_bundle(
+            "v18_reflective_grounding_scores_only"
+        )
         result = {
             "empathy_state": {
                 **self.full_state,
@@ -240,7 +206,7 @@ class ControlledStateAblationTests(unittest.TestCase):
             cases=[],
             source_files={},
             source_prompt_version="v18_reflective_grounding_joint_gate",
-            response_prompt_version="v26_local_evidence_single_act",
+            response_prompt_version="v18_reflective_grounding_scores_only",
             model="qwen-plus",
             temperature=0.0,
             max_tokens=450,
@@ -251,7 +217,7 @@ class ControlledStateAblationTests(unittest.TestCase):
         )
         self.assertEqual(
             manifest["response_prompt_version"],
-            "v26_local_evidence_single_act",
+            "v18_reflective_grounding_scores_only",
         )
         self.assertIn("response_prompt_sha256", manifest)
 

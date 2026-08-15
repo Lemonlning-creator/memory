@@ -148,7 +148,7 @@ class Exp3ProtocolTests(unittest.TestCase):
 
     def test_no_explicit_prompt_and_context_mask_profile(self) -> None:
         condition = CONDITIONS["wo_explicit_user_modeling"]
-        base = get_exp2_prompt_bundle("v3_realtalk_aligned")
+        base = get_exp2_prompt_bundle("v18_reflective_grounding_scores_only")
         masked = condition_prompt_bundle(base, condition)
         self.assertNotEqual(masked.fingerprint, base.fingerprint)
 
@@ -209,7 +209,7 @@ class Exp3ProtocolTests(unittest.TestCase):
             ),
         ):
             count = run_dataset_replay(
-                case, tmp, condition, "config.ini", "v3_realtalk_aligned", 0.5
+                case, tmp, condition, "config.ini", "v18_reflective_grounding_scores_only", 0.5
             )
         self.assertEqual(count, 1)
         memory = _FakeAgent.instances[0].memory_manager.short_term_memory
@@ -274,7 +274,7 @@ class Exp3ProtocolTests(unittest.TestCase):
             ),
         ):
             generated = run_exploration_simulation(
-                case, tmp, condition, "config.ini", "v3_realtalk_aligned",
+                case, tmp, condition, "config.ini", "v18_reflective_grounding_scores_only",
                 0.5, seed_index=1, max_rounds=2,
             )
         self.assertEqual(generated, 2)

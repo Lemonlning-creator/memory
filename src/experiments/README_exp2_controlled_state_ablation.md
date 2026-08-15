@@ -1,5 +1,12 @@
 # Exp2 受控状态消融测试
 
+> 分支说明（core/v18-scores-only）：提示词版本库已精简为 V18 两个形式
+> （`v18_reflective_grounding_joint_gate` 用于冻结源目录校验，
+> `v18_reflective_grounding_scores_only` 为唯一默认配置）。下文 V26/V27/V28
+> 小节及其 `scripts/run_exp2_v2[678]_controlled.sh` 脚本已随版本库移除，
+> 仅保留为历史记录。标准复现入口见
+> `scripts/run_exp2_v18_scores_only.sh`。
+
 这个测试首先用于回答一个单独的问题：V18 最终回复表现的变化，究竟来自回复 Prompt，还是来自每次重跑时发生变化的用户状态轨迹。它现在也支持用 `--response-prompt-version` 在同一份冻结轨迹上替换最终回复 Prompt；来源目录仍由 `--source-prompt-version` 独立校验。
 
 它不会修改主实验，也不会重新运行 alignment 或 Milvus。脚本读取一份已经完整跑完的 V18 目录，逐条冻结以下输入：
