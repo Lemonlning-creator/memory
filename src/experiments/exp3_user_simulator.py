@@ -342,7 +342,7 @@ def extract_heldout_evidence_claims(
             evidence=json.dumps(evidence, ensure_ascii=False, indent=2),
         ),
         temperature=0.0,
-        max_tokens=3000,
+        max_tokens=8000,
     )
     payload = parse_json(raw)
     _require_exact_keys(payload, {"claims"}, "held-out claim extraction")
@@ -411,7 +411,7 @@ def _build_hidden_claim_manifest_once(
                 ),
             ),
             temperature=0.0,
-            max_tokens=3000,
+            max_tokens=8000,
         )
         chunk_payload = parse_json(raw)
         _require_exact_keys(chunk_payload, {"audit"}, "hidden claim audit chunk")
