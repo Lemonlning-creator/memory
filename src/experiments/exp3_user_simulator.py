@@ -13,11 +13,16 @@ from ..utils import parse_json
 HIDDEN_CLAIM_EXTRACTION_SYSTEM = """You extract stable user-profile claims from
 held-out user utterances. Every claim must be directly supported by one or more
 provided evidence IDs. Do not infer facts from assistant utterances or external
-knowledge. Copy evidence IDs exactly. Return only valid JSON."""
+knowledge. Copy evidence IDs exactly as listed in VALID EVIDENCE IDS; they may
+contain "|" joining several D-IDs and must never be shortened, split, or
+reformatted. Return only valid JSON."""
 
 HIDDEN_CLAIM_EXTRACTION_TEMPLATE = """USER: {user_name}
 ALLOWED PROFILE PATHS (closed set):
 {profile_paths}
+
+VALID EVIDENCE IDS (the only strings you may cite; copy them exactly):
+{evidence_ids}
 
 HELD-OUT USER EVIDENCE:
 {evidence}
@@ -25,13 +30,16 @@ HELD-OUT USER EVIDENCE:
 Extract atomic candidate claims. A claim contains one stable fact only. Exclude
 momentary feelings unless they express a recurring pattern. Every path MUST be
 copied exactly from ALLOWED PROFILE PATHS. If no allowed path fits, omit the
-claim; never create a new path.
+claim; never create a new path. Every evidence ID MUST be copied character for
+character from VALID EVIDENCE IDS; never use a bare D-ID such as D19:29 when the
+valid ID is a longer joined string.
 
 Return exactly:
 {{"claims":[{{"candidate_id":"E001","path":"layer.field","text":"claim",
 "evidence_ids":["existing evidence id"],"stability":"stable"}}]}}
 candidate_id values must be sequential E001, E002, ... . stability is either
-stable or transient."""
+stable or transient. Every claim object MUST contain all five keys:
+candidate_id, path, text, evidence_ids, stability."""
 
 HIDDEN_CLAIM_AUDIT_SYSTEM = """You audit semantic differences between an initial
 user profile and a full user profile. Work at atomic-claim level, not field-name
@@ -339,6 +347,7 @@ def extract_heldout_evidence_claims(
         HIDDEN_CLAIM_EXTRACTION_TEMPLATE.format(
             user_name=user_name,
             profile_paths=json.dumps(list(profile_paths), ensure_ascii=False),
+            evidence_ids=json.dumps(list(evidence), ensure_ascii=False),
             evidence=json.dumps(evidence, ensure_ascii=False, indent=2),
         ),
         temperature=0.0,
