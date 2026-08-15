@@ -1,0 +1,79 @@
+{
+  "schema_version": "exp2_realtalk_artifact_manifest_v1",
+  "created_date": "2026-08-15",
+  "git": {
+    "branch": "paper-boost/exp2-user-modeling-evaluation",
+    "fork": "https://github.com/Nobody-ly/memory.git",
+    "upstream": "https://github.com/Lemonlning-creator/memory.git",
+    "v9_implementation_commit": "5927bbff03fda74eebaeb99e0c57203a644cfd74"
+  },
+  "comparison": {
+    "status": "protocol_aligned_not_runtime_identical",
+    "paper_exact_runtime_model_disclosed": false,
+    "reconstructed_message_count": 519,
+    "speaker_count": 10,
+    "aggregation": "speaker_macro_mean_and_population_std"
+  },
+  "v9": {
+    "status": "generation_and_all_evaluations_complete",
+    "protocol": "realtalk_task1_ours_agentic_v8_low_specificity_continuity",
+    "model": "deepseek-v4-flash",
+    "thinking_enabled": false,
+    "prediction_records": 519,
+    "judge_records": 519,
+    "judge_cells_complete": 3114,
+    "unresolved_errors": 0,
+    "paths": {
+      "generation": "/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-ours-v9-full519-evidencefix-flash-5927bbf",
+      "local_metrics": "/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-ours-v9-full519-local-metrics-v1",
+      "judge": "/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-ours-v9-full519-judge-resume-v1"
+    },
+    "sha256": {
+      "predictions_jsonl": "ba3941f9fd2088f7d6877409c0ed1f468002ded304e782560e1475da3a9bad81",
+      "run_manifest_json": "60d9aae078f5c9045e1a077e43d8139af986a7621181d156ec4dc7bd6492ea71",
+      "dataset_manifest_json": "9bc90f37d1b08146c831bea3ef6556a593f80e845f925f4f2eb49ffb4a62fcea",
+      "local_metrics_summary_json": "b8450fd44098535f59f17dbc596a6d95ff8a59d4ea96d5b5aba3f7039e8f3ff7",
+      "judge_summary_json": "ab1f12778aa1bf46895a0627e78103bbb3648b1c2d46a79d944d512dc270f947"
+    },
+    "speaker_macro": {
+      "rouge_l": 0.153925,
+      "bertscore_f1": 0.857915,
+      "reflectiveness_accuracy": 0.6979,
+      "grounding_accuracy": 0.595898,
+      "sentiment_accuracy": 0.627794,
+      "emotion_accuracy": 0.524401,
+      "intimacy_absolute_difference": 0.072131,
+      "empathy_absolute_difference": 1.215273
+    }
+  },
+  "v13_diagnostics": {
+    "status": "stopped_at_gate_1",
+    "expanded_beyond_6": false,
+    "v13_4": {
+      "records": 6,
+      "unresolved_errors": 0,
+      "path": "/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-ours-v13-4-progressive-v1-3dbcc4c",
+      "sha256": {
+        "run_manifest_json": "ae6a0a80ec92f0207a2a4473545e1ed20943824478cfdc8b02052cc2eee08c82",
+        "predictions_jsonl": "0ae49a62a54329f1ec2912b43d91879d7265e83f466e41555642df1f91c53dd5",
+        "local_metrics_summary_json": "6a69b94eca0aff0fa6af890123e3d8e25a646fa45710b7547dbab5d840988b8f",
+        "paired_judge_summary_json": "a8a909d5958a2e1330be83a725b38244b178a9f73f17c71efcead96a2e745fbd"
+      }
+    },
+    "v13_6": {
+      "records": 6,
+      "unresolved_errors": 0,
+      "path": "/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-ours-v13-6-progressive-v1-a358b28",
+      "sha256": {
+        "run_manifest_json": "97b1b68d816862cccbaa69a2818d95d89fb9e5afb7283f4a0a3d2f73278b768d",
+        "predictions_jsonl": "6ff36d74bd4a46d7e120144cee7ca2c506ebbc7e42774311e9ce7e33aa13932f",
+        "local_metrics_summary_json": "40db2166c5c18534f85d2b3ec291823919b6fb3698703816dc9366dd421d1ea5",
+        "paired_judge_summary_json": "85d52f896eeb37f27b06bcf8afbfce8dad08aa68c2265cc7165d5ec6ff7c52b0"
+      }
+    }
+  },
+  "secrets": {
+    "included_in_git": false,
+    "server_env_files_documented_without_values": true
+  }
+}

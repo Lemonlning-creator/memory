@@ -1,5 +1,11 @@
 # Exp2: REALTALK Table 2 + Ours 最终实验协议
 
+> **执行状态说明（2026-08-15）**：本文保留了实验设计形成过程，其中第 13 节的
+> `qwen3-8b` 是早期预案，不是最终全量运行配置。当前唯一完成 10 人、519 条生成及
+> 八项评价的权威结果是 Ours V9，模型为 `deepseek-v4-flash`。实际配置与结果请以
+> `EXP2_REALTALK_FINAL_REPORT_ZH.md`、`EXP2_REALTALK_V9_FULL519_RESULTS_ZH.md`
+> 和对应运行 manifest 为准。
+
 状态：生成协议冻结稿 v2；GPT 三项评价端点待补  
 方法锚点：`OURS_METHOD_ANCHOR_ZH.md`  
 事实审计：`EXP2_REALTALK_INPUT_OUTPUT_AUDIT_ZH.md`  
@@ -389,7 +395,7 @@ Ours 与论文行同任务、同公开 Ca/Cb 分配、同目标消息和同评�
 | Self/User Domain、State、lambda、Policy | Ours 新增 | 按方法锚点实现，不冒充论文模块 |
 | Cb User Domain 滚动更新 | Ours 新增 | 只使用 `H_t` 已可见信息 |
 
-## 13. 已冻结运行配置与唯一待补项
+## 13. 初始 Qwen 运行预案（历史记录）
 
 生成阶段已经冻结并在 `EXP2_REALTALK_OURS_QWEN3_8B_PLAN_ZH.md` 落地：
 
@@ -403,4 +409,12 @@ Ours 与论文行同任务、同公开 Ca/Cb 分配、同目标消息和同评�
 - Prompt、Schema、数据、源码、模型与解码参数全部进入运行签名和 manifest；
 - API 密钥不进入仓库或实验产物。
 
-唯一待补项是可验证的 `gpt-4o-mini` API 端点。获得端点前可以完成 519 条生成和本地五项指标，但不得创建 `PIPELINE_COMPLETE`。
+该阶段唯一待补项曾是可验证的 `gpt-4o-mini` API 端点。此预案后来被 Agentic V9
+全量运行取代，不能再用于描述当前完成状态。
+
+## 14. 实际完成配置
+
+实际全量结果为 V9：全部阶段使用 `deepseek-v4-flash`，关闭 thinking，完整披露前三个
+Session 历史且不压缩、不裁剪。生成完成 `519/519`，独立 Judge 目录随后完成
+`3114/3114` 个评价单元，零 unresolved。详细配置、哈希和结果以
+`EXP2_REALTALK_FINAL_REPORT_ZH.md` 与 `EXP2_REALTALK_ARTIFACT_MANIFEST.json` 为准。
