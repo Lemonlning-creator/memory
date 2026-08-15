@@ -341,7 +341,7 @@ def extract_heldout_evidence_claims(
             profile_paths=json.dumps(list(profile_paths), ensure_ascii=False),
             evidence=json.dumps(evidence, ensure_ascii=False, indent=2),
         ),
-        temperature=0.0,
+        temperature=0.3,
         max_tokens=3000,
     )
     payload = parse_json(raw)
@@ -410,7 +410,7 @@ def _build_hidden_claim_manifest_once(
                     evidence_claims, ensure_ascii=False, indent=2
                 ),
             ),
-            temperature=0.0,
+            temperature=0.3,
             max_tokens=3000,
         )
         chunk_payload = parse_json(raw)
