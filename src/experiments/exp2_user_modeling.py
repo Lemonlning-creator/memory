@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import argparse
 import configparser
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from copy import deepcopy
 import hashlib
 import json
 import math
+import multiprocessing
 import os
 import re
 import time
@@ -15,6 +16,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import mean, pstdev
+from threading import Lock
+from types import SimpleNamespace
 from typing import Any, Dict, Iterable, List, Sequence
 
 from openai import OpenAI
@@ -92,6 +95,40 @@ TABLE2_BASELINES = (
         "empathy": (1.24, 0.12),
     },
 )
+
+
+def _progress_line(
+    stage: str,
+    completed: int,
+    total: int,
+    *,
+    detail: str = "",
+    width: int = 28,
+) -> str:
+    """Render a log-safe progress bar that also works through tee/tmux."""
+    fraction = 1.0 if total <= 0 else min(1.0, max(0.0, completed / total))
+    filled = round(width * fraction)
+    bar = "#" * filled + "-" * (width - filled)
+    suffix = f" {detail}" if detail else ""
+    return (
+        f"[{stage}] [{bar}] {completed}/{total} "
+        f"({fraction * 100:5.1f}%){suffix}"
+    )
+
+
+def _advance_shared_progress(
+    counter: Any,
+    lock: Any,
+    total: int,
+    stage: str,
+    detail: str,
+) -> None:
+    with lock:
+        counter.value += 1
+        print(
+            _progress_line(stage, int(counter.value), total, detail=detail),
+            flush=True,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -643,6 +680,9 @@ def run_case_replies(
     paths: CasePaths,
     config_path: str = "config.ini",
     prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
+    progress_counter: Any | None = None,
+    progress_lock: Any | None = None,
+    progress_total: int = 0,
 ) -> int:
     """Generate Ours replies while preserving REALTALK history via teacher forcing."""
     if not paths.profile.exists() or not paths.runtime_profile.exists() or not paths.persona.exists():
@@ -701,6 +741,10 @@ def run_case_replies(
     completed_ids = {row["example_id"] for row in prediction_rows}
     start_index = _resume_position(bubbles, examples, completed_ids)
 
+    case_memory_manager = MemoryOSLocal(
+        persist_path=str(paths.memory_db),
+        config_path=config_path,
+    )
     agent = StateDrivenCompanionAgent(
         config_path=config_path,
         profile_path=str(paths.runtime_profile),
@@ -710,10 +754,7 @@ def run_case_replies(
         update_mode="static",
         exploration_mode="adaptive",
         prompt_version=prompt_bundle.version,
-    )
-    agent.memory_manager = MemoryOSLocal(
-        persist_path=str(paths.memory_db),
-        config_path=config_path,
+        memory_manager=case_memory_manager,
     )
 
     if completed_ids:
@@ -805,9 +846,167 @@ def run_case_replies(
         _append_real_bubble(agent, case, following)
         agent._run_memory_steps()
         generated_count += 1
+        if progress_counter is not None and progress_lock is not None:
+            _advance_shared_progress(
+                progress_counter,
+                progress_lock,
+                progress_total,
+                "Generate",
+                case.case_id,
+            )
         index += 2
 
     return generated_count
+
+
+def _generate_case_worker(
+    case: ExperimentCase,
+    output_dir: str,
+    config_path: str,
+    prompt_version: str,
+    progress_counter: Any,
+    progress_lock: Any,
+    progress_total: int,
+) -> tuple[str, int]:
+    """Generate one isolated conversation inside a worker process."""
+    paths = CasePaths.for_case(output_dir, case)
+    count = run_case_replies(
+        case,
+        paths,
+        config_path,
+        prompt_version=prompt_version,
+        progress_counter=progress_counter,
+        progress_lock=progress_lock,
+        progress_total=progress_total,
+    )
+    return case.case_id, count
+
+
+def _generation_progress_counts(
+    cases: Sequence[ExperimentCase],
+    output_dir: str | Path,
+    prompt_version: str,
+) -> tuple[int, int]:
+    """Count all target replies and safely resumable completed replies."""
+    prompt_bundle = get_exp2_prompt_bundle(prompt_version)
+    total = 0
+    completed = 0
+    for case in cases:
+        chat = load_json(case.dataset_path)
+        expected_ids = {
+            example.example_id for example in build_reply_examples(chat, case)
+        }
+        total += len(expected_ids)
+        paths = CasePaths.for_case(output_dir, case)
+        prediction_rows = list(read_jsonl(paths.predictions))
+        state_ids = {
+            str(row.get("example_id"))
+            for row in read_jsonl(paths.understanding)
+        }
+        valid_prediction_ids = {
+            str(row.get("example_id"))
+            for row in prediction_rows
+            if (
+                row.get("generation_policy") == GENERATION_POLICY
+                and row.get("prompt_version") == prompt_bundle.version
+                and row.get("prompt_sha256") == prompt_bundle.fingerprint
+            )
+        }
+        completed += len(expected_ids & valid_prediction_ids & state_ids)
+    return completed, total
+
+
+def generate_cases(
+    cases: Sequence[ExperimentCase],
+    output_dir: str | Path,
+    config_path: str,
+    prompt_version: str,
+    workers: int,
+) -> Dict[str, int]:
+    """Generate independent conversations concurrently and turns sequentially."""
+    if workers < 1:
+        raise ValueError("generate workers must be positive")
+    if not cases:
+        return {}
+
+    initial_completed, progress_total = _generation_progress_counts(
+        cases,
+        output_dir,
+        prompt_version,
+    )
+    print(
+        _progress_line("Generate", initial_completed, progress_total, detail="start"),
+        flush=True,
+    )
+    worker_count = min(workers, len(cases))
+    if worker_count == 1:
+        progress_counter = SimpleNamespace(value=initial_completed)
+        progress_lock = Lock()
+        completed: Dict[str, int] = {}
+        for case in cases:
+            completed[case.case_id] = run_case_replies(
+                case,
+                CasePaths.for_case(output_dir, case),
+                config_path,
+                prompt_version=prompt_version,
+                progress_counter=progress_counter,
+                progress_lock=progress_lock,
+                progress_total=progress_total,
+            )
+        return completed
+
+    print(
+        f"[Generation] cases={len(cases)} workers={worker_count} "
+        "(turn order remains sequential within each case)"
+    )
+    completed: Dict[str, int] = {}
+    failures: List[tuple[str, Exception]] = []
+    # Spawn avoids inheriting a Milvus Lite runtime that prepare may have opened
+    # in the parent process during --phase all.
+    context = multiprocessing.get_context("spawn")
+    with context.Manager() as manager:
+        progress_counter = manager.Value("i", initial_completed)
+        progress_lock = manager.Lock()
+        with ProcessPoolExecutor(max_workers=worker_count, mp_context=context) as executor:
+            future_to_case = {
+                executor.submit(
+                    _generate_case_worker,
+                    case,
+                    str(Path(output_dir).resolve()),
+                    config_path,
+                    prompt_version,
+                    progress_counter,
+                    progress_lock,
+                    progress_total,
+                ): case
+                for case in cases
+            }
+            for future in as_completed(future_to_case):
+                case = future_to_case[future]
+                try:
+                    case_id, count = future.result()
+                    completed[case_id] = count
+                    print(
+                        f"[Generation] completed {case_id} "
+                        f"generated_this_run={count}"
+                    )
+                except Exception as exc:
+                    failures.append((case.case_id, exc))
+                    print(f"[Generation Error] case={case.case_id} error={exc}")
+
+    if failures:
+        details = "; ".join(
+            f"{case_id}: {error}" for case_id, error in failures[:3]
+        )
+        raise RuntimeError(
+            f"{len(failures)} generation case(s) failed; completed cases and "
+            f"turns remain cached. Rerun the same command to resume. {details}"
+        )
+
+    return {
+        case.case_id: completed[case.case_id]
+        for case in cases
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -917,10 +1116,16 @@ class Exp2JudgeClient(LLMClient):
             "completion_tokens": 0,
             "calls": 0,
         }
+        self._usage_lock = Lock()
 
     @property
     def endpoint_identity(self) -> str:
         return f"{self.backend}|{self.base_url}|{self.model}|{self.config_section}"
+
+    def _record_usage(self, response: Any) -> None:
+        """Keep aggregate usage accounting correct across concurrent judge calls."""
+        with self._usage_lock:
+            super()._record_usage(response)
 
     def chat(
         self,
@@ -975,6 +1180,7 @@ class Table2Evaluator:
         intimacy_model: str = "cardiffnlp/twitter-roberta-large-intimacy-latest",
         bertscore_model: str = "roberta-large",
         batch_size: int = 16,
+        judge_workers: int = 6,
     ) -> None:
         try:
             import torch
@@ -991,6 +1197,8 @@ class Table2Evaluator:
             raise RuntimeError(f"CUDA was requested ({device}) but torch.cuda.is_available() is False")
         if batch_size < 1:
             raise ValueError("eval batch size must be positive")
+        if judge_workers < 1:
+            raise ValueError("judge workers must be positive")
 
         self.judge_llm = judge_llm
         self.device = device
@@ -999,6 +1207,7 @@ class Table2Evaluator:
         self.intimacy_model_name = intimacy_model
         self.bertscore_model = bertscore_model
         self.batch_size = batch_size
+        self.judge_workers = judge_workers
         if device == "cuda":
             pipeline_device = 0
         elif device.startswith("cuda:"):
@@ -1076,9 +1285,9 @@ class Table2Evaluator:
             raise ValueError(f"unexpected Hugging Face classifier output: {result!r}")
         return result
 
-    def annotate(self, turns: Sequence[Dict[str, str]]) -> Dict[str, Any]:
+    def judge_labels(self, turns: Sequence[Dict[str, str]]) -> Dict[str, Any]:
+        """Run only the three independent remote REALTALK judge labels."""
         context = _format_evaluation_context(turns)
-        text = turns[-1]["text"]
         empathy = self._judge_empathy(context)
         return {
             "reflective": self._judge_boolean(
@@ -1091,6 +1300,13 @@ class Table2Evaluator:
                 context,
                 "grounding",
             ),
+            "empathy": empathy,
+            "empathy_total": sum(empathy.values()),
+        }
+
+    def local_labels(self, text: str) -> Dict[str, Any]:
+        """Run the local GPU classifiers in the calling thread."""
+        return {
             "sentiment": _normalize_label(
                 self._top_prediction(self.sentiment_classifier, text)["label"]
             ),
@@ -1100,8 +1316,13 @@ class Table2Evaluator:
             "intimacy": float(
                 self._top_prediction(self.intimacy_classifier, text)["score"]
             ),
-            "empathy": empathy,
-            "empathy_total": sum(empathy.values()),
+        }
+
+    def annotate(self, turns: Sequence[Dict[str, str]]) -> Dict[str, Any]:
+        """Compatibility path for one annotation without outer concurrency."""
+        return {
+            **self.judge_labels(turns),
+            **self.local_labels(turns[-1]["text"]),
         }
 
     def semantic_scores(
@@ -1184,8 +1405,9 @@ def evaluate_case_table2(
     chat = load_json(case.dataset_path)
     annotations = JsonlStore(paths.table2_annotations, id_field="annotation_id")
     existing_annotation_rows = annotations.read_all()
+    pending_annotations: List[Dict[str, Any]] = []
 
-    for index, prediction in enumerate(predictions, start=1):
+    for prediction in predictions:
         for variant, field in (
             ("reference", "reference_reply"),
             ("generated", "generated_reply"),
@@ -1222,11 +1444,7 @@ def evaluate_case_table2(
                     "created_at": datetime.now(timezone.utc).isoformat(),
                 })
                 continue
-            print(
-                f"[Table 2] {case.case_id} {index}/{len(predictions)} "
-                f"{variant}"
-            )
-            annotations.append({
+            pending_annotations.append({
                 "annotation_id": annotation_id,
                 "example_id": prediction["example_id"],
                 "case_id": case.case_id,
@@ -1237,9 +1455,72 @@ def evaluate_case_table2(
                 "candidate_sha256": candidate_sha256,
                 "context_sha256": context_sha256,
                 "cache_key_version": ANNOTATION_CACHE_KEY_VERSION,
-                "labels": evaluator.annotate(turns),
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "turns": turns,
             })
+
+    if pending_annotations:
+        worker_count = min(evaluator.judge_workers, len(pending_annotations))
+        print(
+            f"[Table 2 Judge] {case.case_id} pending={len(pending_annotations)} "
+            f"workers={worker_count}"
+        )
+        print(
+            _progress_line(
+                "Judge",
+                0,
+                len(pending_annotations),
+                detail=case.case_id,
+            ),
+            flush=True,
+        )
+        failures: List[tuple[str, Exception]] = []
+        with ThreadPoolExecutor(max_workers=worker_count) as executor:
+            future_to_task = {
+                executor.submit(evaluator.judge_labels, task["turns"]): task
+                for task in pending_annotations
+            }
+            completed = 0
+            for future in as_completed(future_to_task):
+                task = future_to_task[future]
+                try:
+                    labels = {
+                        **future.result(),
+                        **evaluator.local_labels(task["candidate"]),
+                    }
+                    annotations.append({
+                        key: value
+                        for key, value in task.items()
+                        if key != "turns"
+                    } | {
+                        "labels": labels,
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    })
+                    completed += 1
+                    print(
+                        _progress_line(
+                            "Judge",
+                            completed,
+                            len(pending_annotations),
+                            detail=case.case_id,
+                        ),
+                        flush=True,
+                    )
+                except Exception as exc:
+                    failures.append((str(task["annotation_id"]), exc))
+                    print(
+                        f"[Table 2 Judge Error] annotation_id="
+                        f"{task['annotation_id']} error={exc}"
+                    )
+        if failures:
+            details = "; ".join(
+                f"{annotation_id}: {error}"
+                for annotation_id, error in failures[:3]
+            )
+            raise RuntimeError(
+                f"{len(failures)} Table 2 judge annotation(s) failed after "
+                f"retries; completed annotations were cached. Rerun evaluate to "
+                f"resume only failed work. {details}"
+            )
 
     cached = {
         row["annotation_id"]: row
@@ -1383,6 +1664,7 @@ def evaluate_table2(
     judge_config_section: str,
     device: str,
     batch_size: int,
+    judge_workers: int = 6,
     prompt_version: str = DEFAULT_EXP2_PROMPT_VERSION,
 ) -> Dict[str, str]:
     prompt_bundle = get_exp2_prompt_bundle(prompt_version)
@@ -1418,12 +1700,22 @@ def evaluate_table2(
         judge_llm=judge_llm,
         device=device,
         batch_size=batch_size,
+        judge_workers=judge_workers,
     )
     all_scores: List[Dict[str, Any]] = []
-    for case in cases:
+    for case_index, case in enumerate(cases, start=1):
         paths = CasePaths.for_case(output_dir, case)
         paths.ensure_parents()
         all_scores.extend(evaluate_case_table2(case, paths, evaluator))
+        print(
+            _progress_line(
+                "Evaluate cases",
+                case_index,
+                len(cases),
+                detail=case.case_id,
+            ),
+            flush=True,
+        )
 
     aggregate = aggregate_table2_scores(all_scores)
     evaluation_dir = Path(output_dir).resolve() / "evaluation"
@@ -1449,6 +1741,7 @@ def evaluate_table2(
             "judge_backend": judge_llm.backend,
             "judge_base_url": judge_llm.base_url,
             "judge_config_section": judge_config_section,
+            "judge_workers": evaluator.judge_workers,
             "sentiment_model": evaluator.sentiment_model_name,
             "emotion_model": evaluator.emotion_model_name,
             "intimacy_model": evaluator.intimacy_model_name,
@@ -1500,6 +1793,7 @@ def _model_name(config_path: str) -> str:
 def run(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    config_path = str(Path(args.config).resolve())
     all_cases = build_cases(args.dataset_dir, args.train_ratio)
     save_split_manifest(all_cases, output_dir / "split_manifest.json", args.train_ratio)
     cases = _select_cases(all_cases, args.case)
@@ -1507,32 +1801,42 @@ def run(args: argparse.Namespace) -> None:
 
     generated: Dict[str, int] = {}
     if args.phase in ("prepare", "all"):
-        for case in cases:
+        print(_progress_line("Prepare", 0, len(cases)), flush=True)
+        for case_index, case in enumerate(cases, start=1):
             paths = CasePaths.for_case(output_dir, case)
             paths.ensure_parents()
-            build_case_persona(case, paths, args.config)
-            build_case_profile(case, paths, args.config)
+            build_case_persona(case, paths, config_path)
+            build_case_profile(case, paths, config_path)
+            print(
+                _progress_line(
+                    "Prepare",
+                    case_index,
+                    len(cases),
+                    detail=case.case_id,
+                ),
+                flush=True,
+            )
 
     if args.phase in ("generate", "generate-evaluate", "all"):
-        for case in cases:
-            paths = CasePaths.for_case(output_dir, case)
-            generated[case.case_id] = run_case_replies(
-                case,
-                paths,
-                args.config,
-                prompt_version=prompt_bundle.version,
-            )
+        generated = generate_cases(
+            cases=cases,
+            output_dir=output_dir,
+            config_path=config_path,
+            prompt_version=prompt_bundle.version,
+            workers=args.generate_workers,
+        )
 
     evaluation: Dict[str, str] = {}
     if args.phase in ("evaluate", "generate-evaluate", "all"):
         evaluation = evaluate_table2(
             cases=cases,
             output_dir=output_dir,
-            config_path=args.config,
+            config_path=config_path,
             judge_model=args.judge_model,
             judge_config_section=args.judge_config_section,
             device=args.eval_device,
             batch_size=args.eval_batch_size,
+            judge_workers=args.judge_workers,
             prompt_version=prompt_bundle.version,
         )
 
@@ -1548,7 +1852,8 @@ def run(args: argparse.Namespace) -> None:
         "created_at": datetime.now(timezone.utc).isoformat(),
         "dataset_dir": str(Path(args.dataset_dir).resolve()),
         "train_ratio": args.train_ratio,
-        "model": _model_name(args.config),
+        "model": _model_name(config_path),
+        "generation_workers": args.generate_workers,
         "cases": [asdict(case) for case in cases],
         "generated_this_run": generated,
         "evaluation": evaluation,
@@ -1598,6 +1903,24 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument("--eval-batch-size", type=int, default=16)
+    parser.add_argument(
+        "--generate-workers",
+        type=int,
+        default=3,
+        help=(
+            "Concurrent conversation-level generation processes. Turns within "
+            "each conversation remain sequential (default: 3)."
+        ),
+    )
+    parser.add_argument(
+        "--judge-workers",
+        type=int,
+        default=6,
+        help=(
+            "Concurrent remote LLM-as-Judge annotations. Local GPU classifiers "
+            "and BERTScore remain single-process (default: 6)."
+        ),
+    )
     parser.add_argument(
         "--case",
         action="append",
