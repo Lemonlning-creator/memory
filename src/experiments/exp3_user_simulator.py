@@ -396,7 +396,22 @@ def _build_hidden_claim_manifest_once(
     if not full:
         raise ValueError("full profile contains no atomic claims")
     paths = sorted({claim.path for claim in initial + full})
-    evidence_claims = extract_heldout_evidence_claims(llm, user_name, evidence, paths)
+    # 大证据集（如 nicolas 165 气泡）一次性抽取会超过 API 响应窗口：
+    # 即便 [API] timeout=300 仍超时。改为程序按块拆分，逐块抽取后合并，
+    # 再按全局顺序重编号 —— 每块内证据 ID 独立校验、跨块无引用，
+    # 合并后的 candidate_id 连续唯一，audit 阶段引用不受影响。
+    evidence_claims: list[Dict[str, Any]] = []
+    extraction_chunk_size = 40
+    evidence_items = list(evidence.items())
+    for chunk_start in range(0, len(evidence_items), extraction_chunk_size):
+        chunk_evidence = dict(
+            evidence_items[chunk_start:chunk_start + extraction_chunk_size]
+        )
+        evidence_claims.extend(
+            extract_heldout_evidence_claims(llm, user_name, chunk_evidence, paths)
+        )
+    for index, row in enumerate(evidence_claims, 1):
+        row["candidate_id"] = f"E{index:03d}"
     audit_rows: list[Any] = []
     chunk_size = 8
     for chunk_start in range(0, len(full), chunk_size):
