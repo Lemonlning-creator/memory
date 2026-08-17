@@ -17,11 +17,14 @@ class LLMClient:
         api_config = config["API"]
         self.model = api_config.get("model")
         self.enable_thinking = api_config.getboolean("enable_thinking", fallback=False)
+        # 大输入抽取（如 165 气泡的 held-out 证据）单次请求可远超 60s，
+        # 超时由 [API] timeout 控制，默认 60s
+        self.timeout = api_config.getfloat("timeout", fallback=60.0)
 
         self.client = OpenAI(
             api_key = os.getenv("API_KEY"),
             base_url = os.getenv("BASE_URL"),
-            timeout=60.0,
+            timeout=self.timeout,
         )
         self.last_model_timing: Dict[str, float | None] = {"first_char_seconds": None}
         self.token_usage = {
