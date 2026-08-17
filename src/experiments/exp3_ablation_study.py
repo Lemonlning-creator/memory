@@ -578,12 +578,15 @@ def prepare_hidden_profile(
     for bubble in held_out_bubbles:
         if bubble.speaker != case.user_speaker:
             continue
-        evidence_id = "|".join(bubble.dia_ids)
-        if not evidence_id:
+        if not bubble.dia_ids:
             raise ValueError(f"empty held-out evidence ID in {case.case_id}")
-        if evidence_id in heldout_evidence:
-            raise ValueError(f"duplicate held-out evidence ID {evidence_id}")
-        heldout_evidence[evidence_id] = bubble.content
+        # 每个 dia_id 都作为证据键指向完整气泡：模型天然只输出裸 dia_id，
+        # 而联合键（如 D19:28|D19:29）会被 qwen-plus 缩短成裸 dia_id 导致
+        # 严格校验失败。单个 dia_id 作为键同时满足协议描述与模型输出习惯。
+        for evidence_id in bubble.dia_ids:
+            if evidence_id in heldout_evidence:
+                raise ValueError(f"duplicate held-out evidence ID {evidence_id}")
+            heldout_evidence[evidence_id] = bubble.content
     if not heldout_evidence:
         raise ValueError(f"no held-out user evidence for {case.case_id}")
     claim_manifest = build_hidden_claim_manifest(
