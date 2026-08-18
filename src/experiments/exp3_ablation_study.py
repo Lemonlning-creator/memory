@@ -801,7 +801,7 @@ def run_dataset_replay(
             **shared,
             "current_understanding": alignment["understanding"],
             "future_understanding": alignment["prediction"],
-            "exploration_decision": alignment["exploration"],
+            "exploration_decision": alignment["empathy_state"]["exploration"],
             "empathy_state_for_next_turn": deepcopy(agent.last_empathy_state),
             "core_current_state": state["current_state"],
             "core_projected_state": state["projected_state"],
@@ -1081,7 +1081,9 @@ def run_exploration_simulation(
             "agent_reply": reply,
             "agent_reply_is_part_of_interactive_history": True,
             "omega": omega,
-            "exploration_decision": alignment["exploration"],
+            # V5 对齐契约中 exploration 是 empathy_state 内的 0-2 分数，不存在顶层键；
+            # 模型偶尔会自发输出顶层 exploration 键，读顶层会在其省略时 KeyError。
+            "exploration_decision": alignment["empathy_state"]["exploration"],
             "future_understanding": alignment["prediction"],
             "empathy_state_for_next_turn": deepcopy(agent.last_empathy_state),
             "previous_empathy_state": previous_empathy,
