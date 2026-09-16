@@ -29,6 +29,8 @@
 Python 3.11+；建议 Linux 执行正式实验。以下前四步不调用付费模型：
 
 ```bash
+git clone --single-branch --branch release/exp2-realtalk-v9-clean https://github.com/Lemonlning-creator/memory.git memory-v9
+cd memory-v9
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[test]'
@@ -57,6 +59,8 @@ python -m release_tools.cli generate --scope full --output results/v9-full --new
 后续本地五项、Judge 三项、最终报告命令见 [RUNBOOK](docs/RUNBOOK_ZH.md)。本轮整理没有重新生成或重新 Judge 已有 V9。
 
 ## 干净结果放在哪里
+
+整理后的代码：本地 `D:\codex_workspace\memory-exp2-v9-release\`；服务器 `/amax/xidian_ty/Ly/personaemp-exp2/releases/exp2-realtalk-v9-code/`。
 
 完整结果包独立于代码，原始实验目录保持不动：
 

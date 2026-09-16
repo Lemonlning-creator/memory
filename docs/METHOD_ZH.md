@@ -80,6 +80,8 @@ Output only the message, not the speaker name.
 
 User Prompt 的完整内容见 `contracts/generation_user_template.txt`；包含动作合同、低具体度新自我表达、人物统计校准等规则。没有统一 2–4 句限制，但确有统计驱动的长度引导。不能简写为“完全无约束”。
 
+其中 `{action_contract}` 由原代码 `_action_contract(primary_move, continuation_move)` 生成，并非另一次模型调用；完整规则以该函数为准。部分分支还有一句式/简短主回复约束。本归档保留这些限制，不把模板占位符误当成实际完整输入。
+
 ## 固定配置
 
 | 阶段 | 模型 | temperature | top_p | max_tokens | thinking |

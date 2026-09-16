@@ -13,6 +13,8 @@
 - 完整包：519 条生成、519 条本地指标、519 条 GPT 评分记录、3,114 个固定判断、10 份 Self Domain，零 unresolved。
 - 结果包 48 个文件在服务器封装后校验，再下载本地复验，哈希全部一致。
 - 本地 Windows 单测：42 passed、1 skipped；跳过项为原版 POSIX alarm 超时测试。
+- 服务器从 Git bundle 创建独立干净 checkout，并新建虚拟环境安装 `.[test]`：43 passed，包含 POSIX 超时测试；未改动原实验虚拟环境。
+- 用已冻结结果实际执行新 report 入口，519 条 ID/历史/真值一致性与八项齐全验收通过；该步骤仅重新汇总，不重新推理或 Judge。
 - 凭据模式扫描：没有发现 API key、GitHub token 或私钥块；真实 .env、缓存和对话数据不进入 Git。
 
 ## 结果包
