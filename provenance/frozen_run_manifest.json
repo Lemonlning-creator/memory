@@ -1,0 +1,110 @@
+{
+  "created_at_utc": "2026-08-13T05:35:23.013530+00:00",
+  "protocol": "realtalk_task1_ours_agentic_v8_low_specificity_continuity",
+  "comparison_status": "protocol_aligned_not_runtime_identical",
+  "paper_persona_simulation_model_disclosed": false,
+  "implementation_repository_commit": "5927bbff03fda74eebaeb99e0c57203a644cfd74",
+  "ours_model": "deepseek-v4-flash",
+  "all_ours_stages_use_same_model": true,
+  "stage_thinking": {
+    "self_domain": false,
+    "user_domain": false,
+    "decision": false,
+    "generation": false
+  },
+  "training_or_finetuning": false,
+  "omega_enabled": false,
+  "future_user_state_enabled": false,
+  "history_compression_enabled": false,
+  "history_truncation_enabled": false,
+  "full_three_session_history": true,
+  "user_domain_update_frequency": "after_session_1_and_after_session_2",
+  "multiple_policy_candidates_enabled": false,
+  "verification_or_rewrite_enabled": false,
+  "response_length_restriction": null,
+  "generated_output_rollout": false,
+  "decoding": {
+    "self_domain": {
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "max_tokens": 3000
+    },
+    "user_domain": {
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "max_tokens": 3000
+    },
+    "decision": {
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "max_tokens": 1600
+    },
+    "generation": {
+      "temperature": 0.6,
+      "top_p": 0.9,
+      "max_tokens": 300
+    },
+    "seed": null
+  },
+  "structured_logical_attempts": 3,
+  "config": {
+    "dataset_dir": "dataset",
+    "output_dir": "/amax/xidian_ty/Ly/personaemp-exp2/runs/realtalk-ours-v9-full519-evidencefix-flash-5927bbf",
+    "profile_sessions": 3,
+    "test_sessions": 3,
+    "max_eval_points_per_speaker": 0,
+    "eval_points_per_session": 0,
+    "eval_point_position_mode": "full-span",
+    "operation_max_attempts": 3,
+    "speaker_filter": [],
+    "compute_local_metrics": false,
+    "compute_bertscore": true,
+    "continue_on_error": true,
+    "preflight_only": false,
+    "fresh": true,
+    "resume": false,
+    "decision_thinking": false,
+    "model_call_timeout_seconds": 240,
+    "model": "deepseek-v4-flash"
+  },
+  "dataset_manifest_sha256": "156c0a8ca2376695305de6e6aed06240cf487a4539f9985642fc2059dbc627bb",
+  "prompt_hashes": {
+    "self_domain_system": "0f47c0c5899d07f95d122e1db3c138896a1a13258fc19db893381214f32c8e7c",
+    "self_domain_user": "17c287f07614e6055e7e085acd85a105bea2bcf99a104e45585f453512d75b99",
+    "user_domain_system": "ef93c4a4000b74a4eec2524adb87f46cecc2b528e804e3b6a9fc81cf7cb2aab1",
+    "user_domain_user": "20246b6aba31a75be14363dce15c22c61eb6987fbde2928a3d01ed078f59013c",
+    "decision_system": "fe8a4aebc560ebf046a7ad56ad82bb4867b7fe27631879301dc791ee20157183",
+    "decision_user": "88cb234354b2ef3c16c97abb9625120eaa13f55f611b0874a1618a7170a0ce4f",
+    "generation_system": "92d67cd7961d981e67f0f3128fd6844fca218ca21f55e1ee6fe7ad945c8814d5",
+    "generation_user": "e6ebc972686752c883bb670a87eee2fe8a5933363b1c8a54b80af30ca98d26b6",
+    "format_repair": "422c389b1acc75fc7e4ded88c0fb53bf24a3903d80242bfbd4771bf00939a825"
+  },
+  "schema_hashes": {
+    "self_domain": "f67cd82d675305ff66c5a738bf07db116f024b16b29827241c543ba19bf5a35c",
+    "user_domain": "91084197754db6649a29fbfbb8e66063e97517dd9cf57d3ac39ce80418672d82",
+    "decision": "c3c235db2d597f87897fa7fe0625e6e32e8dd8f31d4fb9ac4e3c8e9e8a54cdcb"
+  },
+  "source_sha256": "ba14cefce8798cfcd9214bab539ef6fbcd755925743346fb65a0c313f387b70b",
+  "preflight": {
+    "checked_at_utc": "2026-08-13T04:12:31.206913+00:00",
+    "model": "deepseek-v4-flash",
+    "base_url_host": "dashscope.aliyuncs.com",
+    "stage_thinking": {
+      "self_domain": false,
+      "user_domain": false,
+      "decision": false,
+      "generation": false
+    },
+    "model_visible": true,
+    "nonthinking_generation_succeeded": true,
+    "minimal_generation_attempts": 1
+  },
+  "run_signature": "f9674eb8abb06e54ceacb94fbd7eee37f2dcecb1709ff709e96689ed03b6aa5b",
+  "token_usage": {
+    "prompt_tokens": 5550793,
+    "completion_tokens": 307489,
+    "calls": 1072
+  },
+  "gpt_evaluation_status": "pending_verified_gpt-4o-mini_endpoint",
+  "pipeline_complete": false
+}

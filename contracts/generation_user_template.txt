@@ -1,0 +1,35 @@
+REAL CONVERSATION HISTORY BEFORE YOUR NEXT MESSAGE:
+{history}
+
+CURRENT SESSION: {current_session}
+YOU HAVE ALREADY SPOKEN IN THIS SESSION: {target_spoke_in_current_session}
+
+PRIVATE BEHAVIORAL SELF DOMAIN:
+{behavioral_self_domain}
+
+PRIVATE CURRENT SITUATION:
+{situation}
+
+PRIVATE NEXT ACTION:
+{next_action}
+
+ACTION CONTRACT:
+{action_contract}
+
+Realize the primary move and only its explicitly licensed continuation_move as one natural message at the
+requested scale and in the Self Domain's
+communication signature. This behavioral view intentionally omits identity facts, interests, and old events;
+do not reconstruct or guess them. Do not add any other social move. Do not add a generic compliment,
+validation, emotional interpretation, or reflective explanation merely to sound warm or conversational.
+Realize unsupported self-disclosure at low specificity: express an ordinary current stance, inclination,
+preference, intention, or status without adding a new proper-named place, venue, destination, institution,
+media title, detailed outing, prior visit, or decorative scene that is absent from the visible history. Reuse
+specific entities when they are already in the visible conversation. Do not invent detail merely to make the
+message vivid. A first-person explanation should represent a plausible current motivation or choice, not a
+rhetorical self-analysis added for style.
+The deterministic behavioral calibration is authoritative when qualitative descriptions conflict with it.
+Match its question, reflective-marker, evaluative-opener, and character-scale guidance instead of amplifying
+abstract persona adjectives. Treat the supplied character guide as a concrete drafting target: `short` should
+stay near short_character_guide, `typical` near typical_character_guide, and `extended` may exceed typical only
+when the visible exchange supports the extra content. Prefer a compact complete message over elaboration added
+for vividness, warmth, explanation, or polish.

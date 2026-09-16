@@ -1,0 +1,96 @@
+{
+  "dataset": "REALTALK public preprocessed conversations",
+  "official_repository_commit": "b903e06a9770bf4e5fe9018c3e132889666d3b4a",
+  "table8_speaker_specific_splits": [
+    {
+      "speaker": "Emi",
+      "train_chat": "Chat_4_Emi_Paola.json",
+      "test_chat": "Chat_1_Emi_Elise.json"
+    },
+    {
+      "speaker": "Nicolas",
+      "train_chat": "Chat_5_Nicolas_Nebraas.json",
+      "test_chat": "Chat_6_Vanessa_Nicolas.json"
+    },
+    {
+      "speaker": "Kevin",
+      "train_chat": "Chat_3_Kevin_Paola.json",
+      "test_chat": "Chat_2_Kevin_Elise.json"
+    },
+    {
+      "speaker": "Akib",
+      "train_chat": "Chat_9_Fahim_Akib.json",
+      "test_chat": "Chat_8_Akib_Muhhamed.json"
+    },
+    {
+      "speaker": "Muhhamed",
+      "train_chat": "Chat_10_Fahim_Muhhamed.json",
+      "test_chat": "Chat_8_Akib_Muhhamed.json"
+    },
+    {
+      "speaker": "Nebraas",
+      "train_chat": "Chat_5_Nicolas_Nebraas.json",
+      "test_chat": "Chat_7_Nebraas_Vanessa.json"
+    },
+    {
+      "speaker": "Paola",
+      "train_chat": "Chat_4_Emi_Paola.json",
+      "test_chat": "Chat_3_Kevin_Paola.json"
+    },
+    {
+      "speaker": "Vanessa",
+      "train_chat": "Chat_7_Nebraas_Vanessa.json",
+      "test_chat": "Chat_6_Vanessa_Nicolas.json"
+    },
+    {
+      "speaker": "elise",
+      "train_chat": "Chat_2_Kevin_Elise.json",
+      "test_chat": "Chat_1_Emi_Elise.json"
+    },
+    {
+      "speaker": "Fahim Khan",
+      "train_chat": "Chat_10_Fahim_Muhhamed.json",
+      "test_chat": "Chat_9_Fahim_Akib.json"
+    }
+  ],
+  "profile_sessions": 3,
+  "test_sessions": 3,
+  "sample_unit": "merged consecutive same-speaker message M_t",
+  "merge_consecutive_same_speaker_within_session": true,
+  "merged_bubbles_preserve_text_with_newlines_and_source_ids": true,
+  "history_compression_enabled": false,
+  "history_truncation_enabled": false,
+  "full_three_session_history": true,
+  "evaluation_point_selection": {
+    "method": "prefix_or_full_protocol"
+  },
+  "generated_outputs_are_never_rolled_into_history": true,
+  "source_files_sha256": {
+    "Chat_10_Fahim_Muhhamed.json": "26135a9e3482f40bea4c71de570a2d994a361848111067e60587be1dd82a0127",
+    "Chat_1_Emi_Elise.json": "4e947998a751a1ba2c3710fc873b90fbcbc234fda7a5e4e75db2b762e0f25a36",
+    "Chat_2_Kevin_Elise.json": "4ac6e319c206731aa9a025c93325eb1edb43686cf39473f058c87ae7deb2d62a",
+    "Chat_3_Kevin_Paola.json": "10c9208016538cbe7a28aafa6cfd72587b072677964c36ec242159fdf58961f2",
+    "Chat_4_Emi_Paola.json": "80aa012ed6a918f5b317bd942b4d4811a158d27a6e07b7a5c6182994107a9367",
+    "Chat_5_Nicolas_Nebraas.json": "32dd7c45786b1a26861dc1574a1bb698a855196fd2ae3fc0c091f3c9ab2d6d06",
+    "Chat_6_Vanessa_Nicolas.json": "9d5ee072ab5a0667ef71d5644d7cd3a4c6777a1e6e2252bf306f310d982e40ac",
+    "Chat_7_Nebraas_Vanessa.json": "b5716bb093217980e747dec0d98996829b569febc09587a025efc6b79806e9ce",
+    "Chat_8_Akib_Muhhamed.json": "814f64ad7e8a46f0398f550fe84184e2ba495a292290b9ff96ffc95448280800",
+    "Chat_9_Fahim_Akib.json": "05b9b4331bf0e25a2a64dc89c404622c83a61ab5e7c935fb7d844449caf6dd39"
+  },
+  "source_files_aggregate_sha256": "c1513b6fd9a4c8528f86ac50ced9ae5b80a338c460880eafc7ff8189716ea91c",
+  "targets_by_speaker": {
+    "Emi": 37,
+    "Nicolas": 117,
+    "Kevin": 25,
+    "Akib": 37,
+    "Muhhamed": 37,
+    "Nebraas": 51,
+    "Paola": 23,
+    "Vanessa": 116,
+    "elise": 36,
+    "Fahim Khan": 40
+  },
+  "total_targets": 519,
+  "paper_reported_exact_target_count": null,
+  "reconstructed_target_count": true
+}

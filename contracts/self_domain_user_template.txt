@@ -1,0 +1,10 @@
+TARGET SPEAKER: {speaker}
+SOURCE: the first {session_count} sessions of the target's paper-assigned Ca conversation.
+
+COMPLETE LOSSLESSLY MERGED CONVERSATION WITH SESSION AND TURN IDS:
+{full_context}
+
+DETERMINISTIC OBSERVABLE STATISTICS (copy exactly):
+{observable_statistics}
+
+Build the fixed cross-partner Self Domain for acting as {speaker}.

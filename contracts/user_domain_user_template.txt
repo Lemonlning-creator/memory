@@ -1,0 +1,10 @@
+TARGET SPEAKER (the agent): {speaker}
+PARTNER (the modeled user): {partner}
+
+PREVIOUS USER DOMAIN:
+{previous_domain}
+
+COMPLETE FINISHED SESSION WITH SESSION AND TURN IDS:
+{completed_session}
+
+Update the five layers using this completed session. Evidence IDs must identify partner turns.

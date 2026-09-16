@@ -1,0 +1,151 @@
+{
+  "aggregation_for_table2": "speaker_macro_mean_and_population_std",
+  "speaker_count": 10,
+  "message_count": 519,
+  "by_speaker": {
+    "Emi": {
+      "rouge_l": 0.224197,
+      "sentiment_accuracy": 0.891892,
+      "emotion_accuracy": 0.864865,
+      "intimacy_absolute_difference": 0.072145,
+      "bertscore_f1": 0.882675
+    },
+    "Nicolas": {
+      "rouge_l": 0.106661,
+      "sentiment_accuracy": 0.324786,
+      "emotion_accuracy": 0.273504,
+      "intimacy_absolute_difference": 0.079364,
+      "bertscore_f1": 0.841215
+    },
+    "Kevin": {
+      "rouge_l": 0.163316,
+      "sentiment_accuracy": 0.76,
+      "emotion_accuracy": 0.68,
+      "intimacy_absolute_difference": 0.072201,
+      "bertscore_f1": 0.856092
+    },
+    "Akib": {
+      "rouge_l": 0.151827,
+      "sentiment_accuracy": 0.621622,
+      "emotion_accuracy": 0.324324,
+      "intimacy_absolute_difference": 0.060888,
+      "bertscore_f1": 0.852251
+    },
+    "Muhhamed": {
+      "rouge_l": 0.121403,
+      "sentiment_accuracy": 0.432432,
+      "emotion_accuracy": 0.27027,
+      "intimacy_absolute_difference": 0.060091,
+      "bertscore_f1": 0.855334
+    },
+    "Nebraas": {
+      "rouge_l": 0.141906,
+      "sentiment_accuracy": 0.627451,
+      "emotion_accuracy": 0.490196,
+      "intimacy_absolute_difference": 0.077069,
+      "bertscore_f1": 0.849389
+    },
+    "Paola": {
+      "rouge_l": 0.193909,
+      "sentiment_accuracy": 0.869565,
+      "emotion_accuracy": 0.782609,
+      "intimacy_absolute_difference": 0.074006,
+      "bertscore_f1": 0.87447
+    },
+    "Vanessa": {
+      "rouge_l": 0.130976,
+      "sentiment_accuracy": 0.422414,
+      "emotion_accuracy": 0.413793,
+      "intimacy_absolute_difference": 0.074019,
+      "bertscore_f1": 0.847919
+    },
+    "elise": {
+      "rouge_l": 0.155806,
+      "sentiment_accuracy": 0.777778,
+      "emotion_accuracy": 0.694444,
+      "intimacy_absolute_difference": 0.080476,
+      "bertscore_f1": 0.864539
+    },
+    "Fahim Khan": {
+      "rouge_l": 0.14925,
+      "sentiment_accuracy": 0.55,
+      "emotion_accuracy": 0.45,
+      "intimacy_absolute_difference": 0.071055,
+      "bertscore_f1": 0.855262
+    }
+  },
+  "speaker_macro": {
+    "rouge_l": {
+      "mean": 0.153925,
+      "std_population": 0.032585,
+      "display": "0.15 +/- 0.03"
+    },
+    "sentiment_accuracy": {
+      "mean": 0.627794,
+      "std_population": 0.186125,
+      "display": "0.63 +/- 0.19"
+    },
+    "emotion_accuracy": {
+      "mean": 0.524401,
+      "std_population": 0.205479,
+      "display": "0.52 +/- 0.21"
+    },
+    "intimacy_absolute_difference": {
+      "mean": 0.072131,
+      "std_population": 0.006526,
+      "display": "0.07 +/- 0.01"
+    },
+    "bertscore_f1": {
+      "mean": 0.857915,
+      "std_population": 0.011965,
+      "display": "0.86 +/- 0.01"
+    }
+  },
+  "message_micro": {
+    "rouge_l": 0.141496,
+    "sentiment_accuracy": 0.539499,
+    "emotion_accuracy": 0.456647,
+    "intimacy_absolute_difference": 0.073592,
+    "bertscore_f1": 0.853156
+  },
+  "classifier_metadata": {
+    "provider": "pinned_huggingface_pipeline",
+    "emotion_model": "cardiffnlp/twitter-roberta-large-emotion-latest",
+    "emotion_revision": "1651a1393c6afeff010a924f1cbcc5985d0a86a7",
+    "sentiment_model": "cardiffnlp/twitter-roberta-base-sentiment-latest",
+    "sentiment_revision": "3216a57f2a0d9c45a2e6c20157c20c49fb4bf9c7",
+    "intimacy_model": "cardiffnlp/twitter-roberta-large-intimacy-latest",
+    "intimacy_revision": "5dd134a50a2773b0b93a14720c300567b5731126",
+    "emotion_labels": [
+      "anger",
+      "anticipation",
+      "disgust",
+      "fear",
+      "joy",
+      "love",
+      "optimism",
+      "pessimism",
+      "sadness",
+      "surprise",
+      "trust"
+    ],
+    "sentiment_labels": [
+      "positive",
+      "negative",
+      "neutral"
+    ],
+    "top1_pipeline_semantics": true
+  },
+  "bertscore_metadata": {
+    "metric": "BERTScore F1",
+    "language": "en",
+    "model": "roberta-large",
+    "num_layers": 17,
+    "idf": false,
+    "rescale_with_baseline": false,
+    "bert_score_version": "0.3.13",
+    "transformers_version": "4.57.6",
+    "requires_training": false,
+    "paper_disclosure": "REALTALK reports BERTScore but does not publish its package version or checkpoint revision; this is the standard English bert-score configuration."
+  }
+}

@@ -1,0 +1,22 @@
+Reflectiveness Classification
+You are an evaluator trained to determine if a speaker's language is reflective, indicating self-awareness. Reflective language is characterized by self-observation, perspective-taking, and intentionality. This means that the speaker is not only aware of their thoughts, feelings, or actions but also able to express this awareness clearly.
+
+A reflective response often includes one or more of the following traits:
+- Self-observation: The speaker describes their own emotional or cognitive state (e.g., "I feel uncertain about..." or "I'm aware that...").
+- Perspective-taking: The speaker shows an understanding of how their actions or emotions affect others or acknowledges another person's perspective on the situation (e.g., "I understand that my response may seem...").
+- Intentionality: The speaker explains the reasoning behind their behavior or decisions, revealing their underlying motivations or goals (e.g., "I decided to respond this way because...").
+
+Example Statements
+- "I realize I tend to get defensive when I receive feedback, and I think it's because I want to do well."
+Reflective or Not Reflective: Reflective
+Reason: This statement shows self-observation and insight into motivation.
+- "I did what I thought was best for the project."
+Reflective or Not Reflective: Not Reflective
+Reason: While the speaker describes their decision, they don't analyze or acknowledge the emotions or motivations behind their choice or consider its impact on others.
+
+Given this dialogue context:
+{history}
+
+Determine whether the speaker's last message ({turn}) is reflective or not.
+Reflective language includes phrases like 'I feel...', 'I think...', or similar reflective expressions.
+Respond only with 'True' for reflective or 'False' for not reflective.

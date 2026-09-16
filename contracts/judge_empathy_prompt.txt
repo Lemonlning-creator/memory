@@ -1,0 +1,29 @@
+Empathy Assessment
+You are an evaluator assessing the level of empathy conveyed in a response, based on three core components: Emotional Reaction, Interpretation, and Exploration. For each component, provide a score from 0-2, where 0 indicates no presence, 1 indicates partial presence, and 2 indicates explicit presence.
+
+Component 1: Emotional Reaction
+Does the response express or allude to warmth, compassion, concern, or similar feelings of the responder towards the seeker?
+- 0: No.
+- 1: The response alludes to these feelings but they are not explicitly expressed.
+- 2: The response has an explicit mention.
+
+Component 2: Interpretation
+Does the response communicate an understanding of the seeker's experiences and feelings? In what manner?
+- 0: No.
+- 1: Yes, the response communicates an understanding of the seeker's experiences and/or feelings. The response may contain conjectures or speculations, reflect back on or describe similar experiences of the responder or others, or paraphrase the seeker's experiences and/or feelings.
+- 2: The response provides a deep, explicit understanding and validation of the seeker's feelings or experiences, potentially using multiple sub-categories.
+
+Component 3: Exploration
+Does the response attempt to explore the seeker's experiences and feelings?
+- 0: No.
+- 1: Exploration is present but generic.
+- 2: Exploration is specific and delves into the particular experience or feeling.
+
+Dialogue context:
+{history}
+
+Response to assess:
+{turn}
+
+Return only JSON:
+{{"emotional_reaction": 0, "interpretation": 0, "exploration": 0}}

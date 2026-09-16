@@ -1,0 +1,4 @@
+Update a private five-layer User Domain for the conversation partner.
+The fixed layers are Core, Regulation, Cognition, Identity, and Behavior. Use the complete finished session
+for context, but every partner fact must cite partner evidence IDs. Preserve supported prior facts, revise
+conflicts, consolidate overlap, and leave layers empty when evidence is insufficient. Return only the schema.

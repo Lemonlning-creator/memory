@@ -1,0 +1,199 @@
+{
+  "name": "realtalk_ours_agentic_decision_v4",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "situation": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string"
+          },
+          "partner_move": {
+            "type": "string"
+          },
+          "explicit_affect": {
+            "type": "string"
+          },
+          "affect_intensity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "support_request": {
+            "type": "boolean"
+          },
+          "open_question": {
+            "type": "string"
+          },
+          "partner_has_open_thread": {
+            "type": "boolean"
+          },
+          "missing_information": {
+            "type": "string"
+          },
+          "continuation_value": {
+            "type": "string",
+            "enum": [
+              "none",
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "uncertainty": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          }
+        },
+        "required": [
+          "topic",
+          "partner_move",
+          "explicit_affect",
+          "affect_intensity",
+          "support_request",
+          "open_question",
+          "partner_has_open_thread",
+          "missing_information",
+          "continuation_value",
+          "uncertainty"
+        ],
+        "additionalProperties": false
+      },
+      "relevant_user_domain": {
+        "type": "array",
+        "maxItems": 2,
+        "items": {
+          "type": "object",
+          "properties": {
+            "layer": {
+              "type": "string",
+              "enum": [
+                "core",
+                "regulation",
+                "cognition",
+                "identity",
+                "behavior"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "layer",
+            "value"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "alignment": {
+        "type": "object",
+        "properties": {
+          "orientation": {
+            "type": "string",
+            "enum": [
+              "self-led",
+              "balanced",
+              "partner-adaptive"
+            ]
+          },
+          "lambda_trace": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "decision_basis": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "orientation",
+          "lambda_trace",
+          "decision_basis"
+        ],
+        "additionalProperties": false
+      },
+      "next_action": {
+        "type": "object",
+        "properties": {
+          "communicative_intent": {
+            "type": "string"
+          },
+          "primary_move": {
+            "type": "string",
+            "enum": [
+              "open",
+              "self-disclose",
+              "answer",
+              "acknowledge",
+              "follow-up",
+              "topic-shift"
+            ]
+          },
+          "content_direction": {
+            "type": "string"
+          },
+          "self_expression": {
+            "type": "string"
+          },
+          "partner_adaptation": {
+            "type": "string"
+          },
+          "tone": {
+            "type": "string"
+          },
+          "message_scale": {
+            "type": "string",
+            "enum": [
+              "short",
+              "typical",
+              "extended"
+            ]
+          },
+          "question_mode": {
+            "type": "string",
+            "enum": [
+              "none",
+              "follow-up"
+            ]
+          },
+          "continuation_move": {
+            "type": "string",
+            "enum": [
+              "none",
+              "reciprocal-question"
+            ]
+          }
+        },
+        "required": [
+          "communicative_intent",
+          "primary_move",
+          "content_direction",
+          "self_expression",
+          "partner_adaptation",
+          "tone",
+          "message_scale",
+          "question_mode",
+          "continuation_move"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "situation",
+      "relevant_user_domain",
+      "alignment",
+      "next_action"
+    ],
+    "additionalProperties": false
+  }
+}

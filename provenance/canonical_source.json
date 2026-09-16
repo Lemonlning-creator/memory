@@ -1,0 +1,177 @@
+{
+  "canonical_implementation_commit": "5927bbff03fda74eebaeb99e0c57203a644cfd74",
+  "canonical_predictions_sha256": "ba3941f9fd2088f7d6877409c0ed1f468002ded304e782560e1475da3a9bad81",
+  "policy": "Core and transitive Python dependencies copied byte-for-byte; release wrappers are separate.",
+  "files": {
+    "src/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/epistemic_decay.py": "7b6bebee24d7b540afc34c2806726515334010a086b1a5afc97e68ace4aacab9",
+    "src/experiments/__init__.py": "934fe054fbf0c6b60a73a80577713e71523f477f084900ea99a222451b94eb92",
+    "src/experiments/exp1_protocol.py": "0853e5bea98d051885e0fca96af8a218b50ca93b2f31c60a63b5fd74c7ad53df",
+    "src/experiments/exp1_schema.py": "13cd2c070c37d2b8e21cb24f9e6a78530e2a53209bc0bb7db10a868633d28a1e",
+    "src/experiments/exp2_generation.py": "a57bfdb466f1e23e61cae1a53575354922d28487325b3df1ddadc31ce71d8406",
+    "src/experiments/operation_checkpoint.py": "74349e3a9025a91708d9e8ec4985453b66ac98ef7d8a29c1c3a0e50665481547",
+    "src/experiments/persona_simulation.py": "5916f06a1dff89a9f1628cc27493778fc03c63c730e6dc41faa63f8aafa20bdb",
+    "src/experiments/personaemp/__init__.py": "589ef680f32db6fb68c92a47142ecad74cb0e78200457c572e9737fa9eddad9b",
+    "src/experiments/personaemp/client.py": "5905c3b53a416cb8e155beb09447d0fb413c12f5ad3c0d988df6b299bca37f60",
+    "src/experiments/personaemp/dataset.py": "c78a7e8af4b7d5e79bf44a494bc3f758f5ec2ba1f63972e42c5985b21c9393f4",
+    "src/experiments/realtalk_evaluator.py": "0ab9723dd613a782fbd29ab91b599c9a68137bcef7d28960bfbd9e1397c4713e",
+    "src/experiments/realtalk_gpt_judge.py": "9100b7b18c1474790d0377812dfac7c13a3c93a685e6ad3ea97e9409f6197f3e",
+    "src/experiments/realtalk_local_metrics.py": "f3d9c714a81f0228e7c57a9d39cf7ffd1a64d2adbeecdaa63992853079b2b40a",
+    "src/experiments/realtalk_ours.py": "ba14cefce8798cfcd9214bab539ef6fbcd755925743346fb65a0c313f387b70b",
+    "src/experiments/realtalk_ours_schemas.py": "1a856035b3835cf1ad0334048aba40e7134417e23d3efbc6384562b40ce4184f",
+    "src/llm_client.py": "ac4ead4dd8810d6c35d5b8e066aa0c78633c341ea24e7493d44988b0afb7ddb6",
+    "src/metrics.py": "698124cd60ef5b6a2ae3feea9af62210a1f3ea8460360f8949406f575b7b7ea8",
+    "src/prompts/__init__.py": "fcf12dcac757de238222bc603271f65391636860a7cdf654fe8f47bac368bcc6",
+    "src/prompts/eval_templates_en.py": "52dd2f746c497aaa699bc21386c67ee40f47d2274e02bd6a86ca98fca05f4356",
+    "src/prompts/templates.py": "da6152e5292eea7f5448f5ff5b604ae2d9f82f29898ef0dded63618db7609117",
+    "src/prompts/templates_en.py": "4cf426a7c14c2276d953fba29f7a9fabd66d7bd0d92c65ddb72dca984141591a",
+    "src/utils.py": "5760723a9a4715c8f5c21af16057c3e05b83567f444ead15e8d9fe60e176dae7",
+    "tests/test_operation_checkpoint.py": "612dc5d7b636d3a41e03cff5d688d6ef4b8b8df623e7cf501c1ab023a7d7fb49",
+    "tests/test_realtalk_evaluator.py": "c8332cb530abdd5aee94b6e41293eab55478a753f92f3fe00cf88415307fb607",
+    "tests/test_realtalk_gpt_judge.py": "c124d0493d899a3e610977aa1e175c08279d0cf016e096b690a50ed69705303a",
+    "tests/test_realtalk_local_metrics.py": "04d68cddb405f3b523ac7d642a12c3bdc0ff294f50aeb9178ca93c6c8eb72349",
+    "tests/test_realtalk_ours.py": "62bbbb41018c22c161efd58dafb63503a44cdae7bed5e8f20ac2a9ee0eb271a0"
+  },
+  "import_edges": [
+    [
+      "src/experiments/exp1_protocol.py",
+      "src/experiments/persona_simulation.py"
+    ],
+    [
+      "src/experiments/exp2_generation.py",
+      "src/experiments/persona_simulation.py"
+    ],
+    [
+      "src/experiments/exp2_generation.py",
+      "src/llm_client.py"
+    ],
+    [
+      "src/experiments/exp2_generation.py",
+      "src/metrics.py"
+    ],
+    [
+      "src/experiments/exp2_generation.py",
+      "src/prompts/templates_en.py"
+    ],
+    [
+      "src/experiments/persona_simulation.py",
+      "src/llm_client.py"
+    ],
+    [
+      "src/experiments/persona_simulation.py",
+      "src/prompts/eval_templates_en.py"
+    ],
+    [
+      "src/experiments/persona_simulation.py",
+      "src/utils.py"
+    ],
+    [
+      "src/experiments/personaemp/__init__.py",
+      "src/experiments/personaemp/dataset.py"
+    ],
+    [
+      "src/experiments/realtalk_evaluator.py",
+      "src/experiments/exp1_schema.py"
+    ],
+    [
+      "src/experiments/realtalk_gpt_judge.py",
+      "src/experiments/exp1_protocol.py"
+    ],
+    [
+      "src/experiments/realtalk_gpt_judge.py",
+      "src/utils.py"
+    ],
+    [
+      "src/experiments/realtalk_local_metrics.py",
+      "src/experiments/exp1_protocol.py"
+    ],
+    [
+      "src/experiments/realtalk_local_metrics.py",
+      "src/experiments/exp2_generation.py"
+    ],
+    [
+      "src/experiments/realtalk_local_metrics.py",
+      "src/experiments/operation_checkpoint.py"
+    ],
+    [
+      "src/experiments/realtalk_local_metrics.py",
+      "src/experiments/realtalk_evaluator.py"
+    ],
+    [
+      "src/experiments/realtalk_local_metrics.py",
+      "src/experiments/realtalk_ours.py"
+    ],
+    [
+      "src/experiments/realtalk_ours.py",
+      "src/experiments/exp1_protocol.py"
+    ],
+    [
+      "src/experiments/realtalk_ours.py",
+      "src/experiments/exp2_generation.py"
+    ],
+    [
+      "src/experiments/realtalk_ours.py",
+      "src/experiments/operation_checkpoint.py"
+    ],
+    [
+      "src/experiments/realtalk_ours.py",
+      "src/experiments/personaemp/client.py"
+    ],
+    [
+      "src/experiments/realtalk_ours.py",
+      "src/experiments/realtalk_evaluator.py"
+    ],
+    [
+      "src/experiments/realtalk_ours.py",
+      "src/experiments/realtalk_ours_schemas.py"
+    ],
+    [
+      "src/experiments/realtalk_ours.py",
+      "src/metrics.py"
+    ],
+    [
+      "src/metrics.py",
+      "src/epistemic_decay.py"
+    ],
+    [
+      "src/prompts/__init__.py",
+      "src/prompts/templates.py"
+    ],
+    [
+      "tests/test_operation_checkpoint.py",
+      "src/experiments/operation_checkpoint.py"
+    ],
+    [
+      "tests/test_realtalk_evaluator.py",
+      "src/experiments/realtalk_evaluator.py"
+    ],
+    [
+      "tests/test_realtalk_gpt_judge.py",
+      "src/experiments/realtalk_gpt_judge.py"
+    ],
+    [
+      "tests/test_realtalk_local_metrics.py",
+      "src/experiments/realtalk_local_metrics.py"
+    ],
+    [
+      "tests/test_realtalk_ours.py",
+      "src/experiments/exp1_protocol.py"
+    ],
+    [
+      "tests/test_realtalk_ours.py",
+      "src/experiments/operation_checkpoint.py"
+    ],
+    [
+      "tests/test_realtalk_ours.py",
+      "src/experiments/personaemp/client.py"
+    ],
+    [
+      "tests/test_realtalk_ours.py",
+      "src/experiments/realtalk_ours.py"
+    ],
+    [
+      "tests/test_realtalk_ours.py",
+      "src/experiments/realtalk_ours_schemas.py"
+    ]
+  ]
+}

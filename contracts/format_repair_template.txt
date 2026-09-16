@@ -1,0 +1,11 @@
+
+
+FORMAT REPAIR REQUIRED
+The previous response failed the strict contract:
+{error}
+
+Previous response:
+{raw}
+
+Return the same intended content corrected only to satisfy the requested schema. Do not add new evidence,
+new facts, a new state interpretation, or a different behavior policy.

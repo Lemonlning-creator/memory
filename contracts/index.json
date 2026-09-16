@@ -1,0 +1,31 @@
+{
+  "source": "frozen Python constants",
+  "files_sha256": {
+    "alignment_schema.json": "d6f21cf2ddc9d5d169d0584818349675fad314a3146539ca092dfbba8d069849",
+    "alignment_system_prompt.txt": "fe8a4aebc560ebf046a7ad56ad82bb4867b7fe27631879301dc791ee20157183",
+    "alignment_user_template.txt": "88cb234354b2ef3c16c97abb9625120eaa13f55f611b0874a1618a7170a0ce4f",
+    "format_repair_template.txt": "422c389b1acc75fc7e4ded88c0fb53bf24a3903d80242bfbd4771bf00939a825",
+    "generation_system_template.txt": "92d67cd7961d981e67f0f3128fd6844fca218ca21f55e1ee6fe7ad945c8814d5",
+    "generation_user_template.txt": "e6ebc972686752c883bb670a87eee2fe8a5933363b1c8a54b80af30ca98d26b6",
+    "judge_empathy_prompt.txt": "e5e0c2e3b981d44f53651fd7f00e27f69d571e6ab7958b5715d7ed490191b87f",
+    "judge_grounding_prompt.txt": "ce2da276c0ff896c620320fb0e27d745be76fa6a715815059818ba542f115d84",
+    "judge_reflectiveness_prompt.txt": "e1acc0b7a1cda4a04bc357b2cab3c2a3bfc40b1507bbc819b36febc025544625",
+    "self_domain_schema.json": "1c11ab6fd568114636265d7e9def720431e3c08edc26f5691d68bff3ff9a2300",
+    "self_domain_system_prompt.txt": "0f47c0c5899d07f95d122e1db3c138896a1a13258fc19db893381214f32c8e7c",
+    "self_domain_user_template.txt": "17c287f07614e6055e7e085acd85a105bea2bcf99a104e45585f453512d75b99",
+    "user_domain_schema.json": "bf67803485e3380972eba1318842d4a9f4d218973b5ff741ce19aab6ba44a99c",
+    "user_domain_system_prompt.txt": "ef93c4a4000b74a4eec2524adb87f46cecc2b528e804e3b6a9fc81cf7cb2aab1",
+    "user_domain_user_template.txt": "20246b6aba31a75be14363dce15c22c61eb6987fbde2928a3d01ed078f59013c"
+  },
+  "canonical_prompt_hashes": {
+    "self_domain_system": "0f47c0c5899d07f95d122e1db3c138896a1a13258fc19db893381214f32c8e7c",
+    "self_domain_user": "17c287f07614e6055e7e085acd85a105bea2bcf99a104e45585f453512d75b99",
+    "user_domain_system": "ef93c4a4000b74a4eec2524adb87f46cecc2b528e804e3b6a9fc81cf7cb2aab1",
+    "user_domain_user": "20246b6aba31a75be14363dce15c22c61eb6987fbde2928a3d01ed078f59013c",
+    "decision_system": "fe8a4aebc560ebf046a7ad56ad82bb4867b7fe27631879301dc791ee20157183",
+    "decision_user": "88cb234354b2ef3c16c97abb9625120eaa13f55f611b0874a1618a7170a0ce4f",
+    "generation_system": "92d67cd7961d981e67f0f3128fd6844fca218ca21f55e1ee6fe7ad945c8814d5",
+    "generation_user": "e6ebc972686752c883bb670a87eee2fe8a5933363b1c8a54b80af30ca98d26b6",
+    "format_repair": "422c389b1acc75fc7e4ded88c0fb53bf24a3903d80242bfbd4771bf00939a825"
+  }
+}

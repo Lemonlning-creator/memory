@@ -1,0 +1,233 @@
+{
+  "name": "realtalk_ours_agentic_self_domain_v4",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "identity_context": {
+        "type": "object",
+        "properties": {
+          "self_descriptions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "life_background": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "relationships": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "recurring_interests": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "self_descriptions",
+          "life_background",
+          "relationships",
+          "recurring_interests"
+        ],
+        "additionalProperties": false
+      },
+      "communication_signature": {
+        "type": "object",
+        "properties": {
+          "tone": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vocabulary_and_phrasing": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "information_density": {
+            "type": "string"
+          },
+          "typical_message_scale": {
+            "type": "string"
+          },
+          "expression_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "tone",
+          "vocabulary_and_phrasing",
+          "information_density",
+          "typical_message_scale",
+          "expression_patterns"
+        ],
+        "additionalProperties": false
+      },
+      "interaction_policy_prior": {
+        "type": "object",
+        "properties": {
+          "initiative": {
+            "type": "string"
+          },
+          "self_disclosure": {
+            "type": "string"
+          },
+          "question_behavior": {
+            "type": "string"
+          },
+          "topic_continuation": {
+            "type": "string"
+          },
+          "topic_shift": {
+            "type": "string"
+          },
+          "advice_behavior": {
+            "type": "string"
+          },
+          "response_to_partner_emotion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "initiative",
+          "self_disclosure",
+          "question_behavior",
+          "topic_continuation",
+          "topic_shift",
+          "advice_behavior",
+          "response_to_partner_emotion"
+        ],
+        "additionalProperties": false
+      },
+      "affective_social_signature": {
+        "type": "object",
+        "properties": {
+          "emotion_expression": {
+            "type": "string"
+          },
+          "sentiment_style": {
+            "type": "string"
+          },
+          "introspection_style": {
+            "type": "string"
+          },
+          "follow_up_style": {
+            "type": "string"
+          },
+          "warmth_style": {
+            "type": "string"
+          },
+          "closeness_style": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "emotion_expression",
+          "sentiment_style",
+          "introspection_style",
+          "follow_up_style",
+          "warmth_style",
+          "closeness_style"
+        ],
+        "additionalProperties": false
+      },
+      "boundaries_and_uncertainty": {
+        "type": "object",
+        "properties": {
+          "stable_boundaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "uncertain_attributes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "stable_boundaries",
+          "uncertain_attributes"
+        ],
+        "additionalProperties": false
+      },
+      "observable_statistics": {
+        "type": "object",
+        "properties": {
+          "target_message_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "mean_characters": {
+            "type": "number",
+            "minimum": 0
+          },
+          "median_characters": {
+            "type": "number",
+            "minimum": 0
+          },
+          "question_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "first_person_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "reflective_marker_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evaluative_opener_rate": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "median_merged_bubbles": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "target_message_count",
+          "mean_characters",
+          "median_characters",
+          "question_rate",
+          "first_person_rate",
+          "reflective_marker_rate",
+          "evaluative_opener_rate",
+          "median_merged_bubbles"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "identity_context",
+      "communication_signature",
+      "interaction_policy_prior",
+      "affective_social_signature",
+      "boundaries_and_uncertainty",
+      "observable_statistics"
+    ],
+    "additionalProperties": false
+  }
+}

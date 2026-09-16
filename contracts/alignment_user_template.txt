@@ -1,0 +1,26 @@
+TARGET SPEAKER: {speaker}
+PARTNER: {partner}
+
+FIXED SELF DOMAIN:
+{self_domain}
+
+CURRENT USER DOMAIN:
+{user_domain}
+
+REAL CAUSAL HISTORY BEFORE THE TARGET MESSAGE:
+{history}
+
+CURRENT SESSION: {current_session}
+TARGET SPEAKER HAS ALREADY SPOKEN IN THIS SESSION: {target_spoke_in_current_session}
+
+LATEST PARTNER MESSAGE (may be empty):
+{latest_partner_message}
+
+EXACT USER DOMAIN ACTIVATION WHITELIST:
+{activation_whitelist}
+
+Only copy relevant_user_domain entries verbatim from the whitelist. If it says NONE, return an empty array.
+The only valid question_mode pairing is primary_move="follow-up" with question_mode="follow-up"; every other
+primary_move requires question_mode="none". Independently decide whether one short reciprocal-question is
+licensed by the three continuation fields and the Self Domain. Understand the current situation, record the
+adaptive balance, and submit one next action for {speaker}.

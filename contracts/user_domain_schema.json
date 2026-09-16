@@ -1,0 +1,209 @@
+{
+  "name": "realtalk_ours_agentic_user_domain_v2",
+  "strict": true,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "core": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "value",
+            "confidence",
+            "evidence_ids"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "regulation": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "value",
+            "confidence",
+            "evidence_ids"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "cognition": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "value",
+            "confidence",
+            "evidence_ids"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "identity": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "value",
+            "confidence",
+            "evidence_ids"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "behavior": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "evidence_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "value",
+            "confidence",
+            "evidence_ids"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "update_summary": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "revised": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "uncertainties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "added",
+          "revised",
+          "removed",
+          "uncertainties"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "core",
+      "regulation",
+      "cognition",
+      "identity",
+      "behavior",
+      "update_summary"
+    ],
+    "additionalProperties": false
+  }
+}

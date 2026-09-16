@@ -1,0 +1,97 @@
+{
+  "status": "complete",
+  "scope": "full_reconstructed_table2_protocol_aligned_comparison",
+  "judge_protocol": "realtalk_appendix_c_full_prompt_within_session_v3",
+  "model_requested": "gpt-4o-mini",
+  "messages_input": 519,
+  "messages_scored": 519,
+  "judgments_expected": 3114,
+  "judgments_complete": 3114,
+  "unresolved_errors": 0,
+  "aggregation_for_table2": "speaker_macro_mean_and_population_std",
+  "by_speaker": {
+    "Emi": {
+      "reflectiveness_accuracy": 0.675676,
+      "grounding_accuracy": 0.72973,
+      "empathy_absolute_difference": 1.459459
+    },
+    "Nicolas": {
+      "reflectiveness_accuracy": 0.683761,
+      "grounding_accuracy": 0.606838,
+      "empathy_absolute_difference": 1.017094
+    },
+    "Kevin": {
+      "reflectiveness_accuracy": 0.72,
+      "grounding_accuracy": 0.4,
+      "empathy_absolute_difference": 1.48
+    },
+    "Akib": {
+      "reflectiveness_accuracy": 0.567568,
+      "grounding_accuracy": 0.621622,
+      "empathy_absolute_difference": 1.216216
+    },
+    "Muhhamed": {
+      "reflectiveness_accuracy": 0.594595,
+      "grounding_accuracy": 0.675676,
+      "empathy_absolute_difference": 0.945946
+    },
+    "Nebraas": {
+      "reflectiveness_accuracy": 0.745098,
+      "grounding_accuracy": 0.568627,
+      "empathy_absolute_difference": 1.294118
+    },
+    "Paola": {
+      "reflectiveness_accuracy": 0.695652,
+      "grounding_accuracy": 0.652174,
+      "empathy_absolute_difference": 1.26087
+    },
+    "Vanessa": {
+      "reflectiveness_accuracy": 0.732759,
+      "grounding_accuracy": 0.62931,
+      "empathy_absolute_difference": 1.12069
+    },
+    "elise": {
+      "reflectiveness_accuracy": 0.888889,
+      "grounding_accuracy": 0.5,
+      "empathy_absolute_difference": 1.083333
+    },
+    "Fahim Khan": {
+      "reflectiveness_accuracy": 0.675,
+      "grounding_accuracy": 0.575,
+      "empathy_absolute_difference": 1.275
+    }
+  },
+  "speaker_macro": {
+    "reflectiveness_accuracy": {
+      "mean": 0.6979,
+      "std_population": 0.08324
+    },
+    "grounding_accuracy": {
+      "mean": 0.595898,
+      "std_population": 0.08837
+    },
+    "empathy_absolute_difference": {
+      "mean": 1.215273,
+      "std_population": 0.167253
+    }
+  },
+  "message_micro": {
+    "reflectiveness_accuracy": 0.701349,
+    "grounding_accuracy": 0.60501,
+    "empathy_absolute_difference": 1.165703
+  },
+  "paper_table2_reference": {
+    "without_finetuning": {
+      "reflectiveness_accuracy": 0.62,
+      "grounding_accuracy": 0.4,
+      "empathy_absolute_difference": 1.8
+    },
+    "with_finetuning": {
+      "reflectiveness_accuracy": 0.77,
+      "grounding_accuracy": 0.62,
+      "empathy_absolute_difference": 1.24
+    }
+  },
+  "comparison_warning": "Complete reconstructed 519-message protocol; comparison is protocol-aligned, but the paper does not disclose an identical base-model runtime.",
+  "created_at_utc": "2026-08-14T05:27:05.388725+00:00"
+}

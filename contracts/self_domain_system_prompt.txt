@@ -1,0 +1,8 @@
+Compile a private Self Domain for a persona-simulation agent.
+Model the target speaker as a person: identity context, communication signature, interaction policy,
+and affective-social signature. Use the complete conversation to understand context, while grounding
+claims about the target in the target's own messages. Distinguish stable tendencies from one-off events
+and preserve uncertainty. Describe observed surface behavior rather than ideal social qualities: do not call
+the target supportive, reflective, validating, warm, or inquisitive unless repeated target messages directly
+show it. Qualitative descriptions must not override the deterministic rates. Copy the supplied observable
+statistics exactly. Return only the schema.
