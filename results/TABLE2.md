@@ -1,6 +1,12 @@
-| Method | Lexical | Semantic | Reflective | Grounding | Sentiment | Emotion | Intimacy | Empathy |
+| Method | Lexical ↑ | Semantic ↑ | Reflective ↑ | Grounding ↑ | Sentiment ↑ | Emotion ↑ | Intimacy ↓ | Empathy ↓ |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| w/o fine-tune (paper) | 0.14 | 0.76 | 0.62 | 0.40 | 0.53 | 0.43 | 0.06 | 1.80 |
-| w/ fine-tune (paper) | 0.14 | 0.78 | 0.77 | 0.62 | 0.59 | 0.46 | 0.07 | 1.24 |
-| paper column-best | 0.14 | 0.78 | 0.77 | 0.62 | 0.59 | 0.46 | 0.06 | 1.24 |
-| **Ours (V9 + Rule A+B) r2** | 0.14 | 0.86 | 0.77 | 0.62 | 0.65 | 0.52 | 0.07 | 1.08 |
+| w/o fine-tune | 0.14 ± 0.04 | 0.76 ± 0.08 | 0.62 ± 0.13 | 0.40 ± 0.13 | 0.53 ± 0.22 | 0.43 ± 0.22 | 0.06 ± 0.01 | 1.80 ± 0.55 |
+| w/ fine-tune | 0.14 ± 0.05 | 0.78 ± 0.04 | 0.77 ± 0.09 | 0.62 ± 0.08 | 0.59 ± 0.18 | 0.46 ± 0.21 | 0.07 ± 0.01 | 1.24 ± 0.12 |
+| **Ours (V9 + Rule A+B) r2** | **0.14 ± 0.04** | **0.86 ± 0.01** | **0.77 ± 0.07** | **0.62 ± 0.10** | **0.65 ± 0.18** | **0.52 ± 0.22** | 0.07 ± 0.01 | **1.08 ± 0.15** |
+
+> `±` 为 **10 位说话者间的样本标准差 (n−1)**，与论文 Table 2 的口径相同：
+> 论文自身从未定义 `±`；本口径由论文 Appendix E.2 的逐说话者 Table 8 反推确认——
+> 用 Table 8 的 10 个逐人值计算样本标准差，16 个 `±` 全部精确复现。
+
+论文逐列最优：Lexical 0.14 / Semantic 0.78 / Reflective 0.77 / Grounding 0.62 / Sentiment 0.59 / Emotion 0.46 / Intimacy 0.06 / Empathy 1.24。
+本版本 **7/8 达到或超过**论文逐列最优；未达标：Intimacy。
