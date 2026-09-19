@@ -1,0 +1,14 @@
+{
+  "reflectiveness_accuracy": {
+    "mean": 0.7729407947671022,
+    "std_n1": 0.0679773680852859
+  },
+  "grounding_accuracy": {
+    "mean": 0.6204220763838455,
+    "std_n1": 0.09982896875810604
+  },
+  "empathy_absolute_difference": {
+    "mean": 1.0841765790090157,
+    "std_n1": 0.15104133479487672
+  }
+}

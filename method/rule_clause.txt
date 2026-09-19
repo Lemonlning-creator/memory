@@ -1,0 +1,19 @@
+== RULE_A_CLAUSE (Rule A) ==
+
+ADDITIONAL CONSTRAINT FOR THIS MESSAGE:
+The partner's most recent message does not ask you a question. Therefore do not include
+any first-person statement about your own feelings, preferences, intentions, motivations,
+or self-observation (for example "I think I'll ...", "I should probably ...",
+"I'm the opposite ...", "for me ..."). Continue the partner's topic without describing
+your own internal state, and do not add a self-focused update.
+
+== RULE_AB_CLAUSE (Rule A+B, 本实验采用) ==
+
+ADDITIONAL CONSTRAINTS FOR THIS MESSAGE:
+The partner's most recent message does not ask you a question. Therefore:
+(1) do not include any first-person statement about your own feelings, preferences,
+    intentions, motivations, or self-observation (for example "I think I'll ...",
+    "I should probably ...", "I'm the opposite ...", "for me ...");
+(2) do not add new information, a new topic, advice, or an elaboration of your own,
+    and do not confirm or restate what the partner already said. Give only a brief
+    reaction that stays inside what the partner already said.
